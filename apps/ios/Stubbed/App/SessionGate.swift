@@ -17,6 +17,8 @@ struct SessionGate: View {
       case .needsProfile:
         WelcomeView()
       case .ready:
+        // The session gives each sign-in a fresh router, so tabs and pushed
+        // screens never carry over from the last session.
         RootView()
       case .failed(let message):
         VStack(spacing: Space.l) {

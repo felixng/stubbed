@@ -72,13 +72,45 @@ extension UIColor {
   }
 }
 
+/// Native grouping (apps/ios/CLAUDE.md, "Design direction").
+enum Grouped {
+  static let radius: CGFloat = 16
+  static let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+}
+
 extension View {
-  /// The web's `shadow-sm`: cards and grouped lists, with a `separator` border.
-  func cardStyle() -> some View {
+  /// An inset grouped container: `secondarySystemGroupedBackground`, 16pt
+  /// continuous corners, a hairline border, no shadow.
+  func groupedCard() -> some View {
     self
-      .background(Palette.surface, in: .rect(cornerRadius: Radius.md))
-      .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(Palette.separator))
-      .shadow(color: Palette.shadow.opacity(0.08), radius: 1, y: 1)
-      .shadow(color: Palette.shadow.opacity(0.14), radius: 11, y: 10)
+      .background(Color(.secondarySystemGroupedBackground), in: Grouped.shape)
+      .clipShape(Grouped.shape)
+      .overlay(Grouped.shape.strokeBorder(Color(.separator).opacity(0.35), lineWidth: 0.5))
+  }
+
+  /// Older name for `groupedCard()`, kept while screens move over.
+  func cardStyle() -> some View { groupedCard() }
+
+  /// Highlights a tappable row while it's pressed, like a list row.
+  func pressableRow() -> some View { buttonStyle(PressableRowStyle()) }
+}
+
+/// A row or card that dims to the system fill while pressed.
+struct PressableRowStyle: ButtonStyle {
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .contentShape(.rect)
+      .background(configuration.isPressed ? Color(.systemFill) : .clear)
+      .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
+  }
+}
+
+/// The trailing chevron on tappable rows and cards.
+struct RowChevron: View {
+  var body: some View {
+    Image(systemName: "chevron.right")
+      .font(.footnote.weight(.semibold))
+      .foregroundStyle(.tertiary)
+      .accessibilityHidden(true)
   }
 }

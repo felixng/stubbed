@@ -9,7 +9,7 @@ final class LogUITests: XCTestCase {
     let app = launchApp()
     signOutIfNeeded(app)
     try signIn(app)
-    XCTAssertTrue(app.navigationBars["Home"].waitForExistence(timeout: 15))
+    XCTAssertTrue(onHome(app))
     app.buttons["Log"].tap()
     XCTAssertTrue(app.navigationBars["Track a show"].waitForExistence(timeout: 10))
     XCTAssertTrue(app.buttons["Start with a photo"].exists)

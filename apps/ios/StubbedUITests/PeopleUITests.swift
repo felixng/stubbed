@@ -10,7 +10,7 @@ final class PeopleUITests: XCTestCase {
     let app = launchApp()
     signOutIfNeeded(app)
     try signIn(app)
-    XCTAssertTrue(app.navigationBars["Home"].waitForExistence(timeout: 15))
+    XCTAssertTrue(onHome(app))
     return app
   }
 

@@ -277,3 +277,6 @@ Owner's call, after follows: include reactions and comments rather than defer th
 
 ### 2026-10-14: iOS Google sign-in without the GoogleSignIn SDK
 The iOS app signs in with Google through Supabase's own OAuth flow, shown in a secure browser sheet (`ASWebAuthenticationSession`) that returns to `stubbed://auth-callback`, instead of Google's iOS SDK. Why: no new dependency, no separate iOS OAuth client in Google Cloud, and it's the same flow the web uses. Cost: a browser sheet instead of Google's native account picker. Owner setup: add `stubbed://auth-callback` to the hosted project's Auth → URL Configuration → Redirect URLs (local `supabase/config.toml` already has it). Apple stays native (`signInWithIdToken`).
+
+### 2026-10-16: The iOS app's UI diverges from the web
+Owner's call. The iOS app keeps the web's features, data and rules (Postgres stays the shared source), but its UI is now designed as a native iOS app (Apple Fitness and Personal Best as references) rather than a copy of the web's mobile layout: system grouped backgrounds, inset grouped containers without drop shadows, a native tab bar with Log as a tab that opens a sheet, Dynamic Type and SF Symbols throughout. Share cards still match the web, since they're the images people post. The rules are in `apps/ios/CLAUDE.md`, "Design direction".

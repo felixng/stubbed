@@ -100,6 +100,16 @@ extension XCTestCase {
     element.tap()
   }
 
+  /// Waits for the Home tab after sign-in, saving a screenshot if it never
+  /// shows.
+  @MainActor
+  @discardableResult
+  func onHome(_ app: XCUIApplication, timeout: TimeInterval = 15) -> Bool {
+    let shown = app.navigationBars["Home"].waitForExistence(timeout: timeout)
+    if !shown { snapshot("not-home") }
+    return shown
+  }
+
   /// Saves the screen as build/ui/<name>.png.
   @MainActor
   func snapshot(_ name: String) {

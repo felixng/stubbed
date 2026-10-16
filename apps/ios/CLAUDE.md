@@ -2,6 +2,18 @@
 
 Native SwiftUI app, iOS 17+, iPhone only. Scope and backend rules are in [`README.md`](README.md); the root `CLAUDE.md` still applies.
 
+## Design direction: native iOS, not the web
+
+The app no longer mirrors the web app's UI. Data, features and rules stay the same as the web (and live in Postgres), but every screen should feel like a modern, premium native iOS app, in the spirit of Apple Fitness or Personal Best. Don't port web layout patterns: no custom card drop shadows, no floating action buttons, no hand-sized fonts. When the web and iOS disagree on presentation, iOS follows these rules (logged in `docs/DECISIONS.md`, 2026-10-16). Share cards are the exception: they're images people post, so they keep matching the web's designs.
+
+1. **Navigation.** Each tab is a `NavigationStack` with a standard `.navigationTitle` in `.large` display mode. Screen actions (find people, add, edit, settings) go in the navigation bar with `.toolbar { ToolbarItem … }`, not as buttons in the content.
+2. **Backgrounds and grouping.** Screens use `Color(.systemGroupedBackground)`. Grouped content sits in inset containers on `Color(.secondarySystemGroupedBackground)`, clipped with `RoundedRectangle(cornerRadius: 16, style: .continuous)`, with at most a hairline border. No drop shadows. Use `Design/Theme.swift` (`.groupedCard()`, `Screen`), not one-off backgrounds.
+3. **Tab bar and logging.** A native `TabView` (Home, Log, Profile). Log is a tab item that opens the log sheet rather than a screen; there is no floating button over the tab bar.
+4. **Type and icons.** Dynamic Type text styles only (`.largeTitle`, `.title2.bold()`, `.title3`, `.headline`, `.body`, `.subheadline`, `.footnote`, `.caption`); no fixed point sizes in screens. Icons are SF Symbols (`heart.fill`, `bubble.left`, `plus`, `chevron.right`…), not drawn shapes.
+5. **Colour.** Text uses the system semantic colours (`.primary`, `.secondary`, `.tertiary`); the coral `Palette.tint` is the accent for interactive elements and highlights only. Everything must read in dark mode too.
+6. **Interactivity cues.** Tappable rows and cards end in a `chevron.right` (`.footnote`, `.tertiary`) and use a `Button` or `NavigationLink` with a pressed state (`.pressableRow()` highlights on press; icon buttons use `.borderless`). Destructive and confirmation steps use system dialogs.
+7. **System components first.** `ContentUnavailableView` for empty and error states, `ProgressView` for loading, `List`/`Form` where a screen is a list or settings, `.searchable`, `.refreshable`, `.confirmationDialog`, `ShareLink`/the share sheet, `PhotosPicker`.
+
 ## The dev loop (no Xcode UI needed)
 
 Run from `apps/ios`. Every command is headless, so it works from a remote session on the Mac.
@@ -36,7 +48,7 @@ You can't tap the Simulator yourself. To check a screen deeper in the app, write
 - New Swift packages are dependencies: ask the owner first (root `CLAUDE.md`). `supabase-swift` is the only one so far.
 - Swift 6 language mode with strict concurrency. Two-space indentation.
 - Layout: `Stubbed/App` (entry point, tabs), `Design` (tokens in `Theme.swift`, shared views in `Components.swift`, `Screen`), `Data` (Supabase client, config, logging), `Screens` (one folder or file per area).
-- Colours, radii and spacing come from `Palette`, `Radius` and `Space` (the web's tokens), never literals.
+- Spacing comes from `Space`; the accent is `Palette.tint`. Backgrounds and text use system colours (see Design direction). `Palette`'s other web tokens remain only for screens not yet moved to the native style and for share cards.
 - Keep logic that the web also needs in Postgres (see README). The Swift side renders and calls RPCs.
 
 ## Signing

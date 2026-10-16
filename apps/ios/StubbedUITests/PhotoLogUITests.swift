@@ -11,7 +11,7 @@ final class PhotoLogUITests: XCTestCase {
     let app = launchApp()
     signOutIfNeeded(app)
     try signIn(app)
-    XCTAssertTrue(app.navigationBars["Home"].waitForExistence(timeout: 15))
+    XCTAssertTrue(onHome(app))
     app.buttons["Log"].tap()
     let start = app.buttons["Start with a photo"]
     XCTAssertTrue(start.waitForExistence(timeout: 10), app.debugDescription)

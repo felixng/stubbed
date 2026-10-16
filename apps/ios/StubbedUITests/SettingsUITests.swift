@@ -18,7 +18,7 @@ final class SettingsUITests: XCTestCase {
       app.scrollViews.firstMatch.swipeUp()
       app.buttons["Continue"].tap()
     }
-    XCTAssertTrue(app.navigationBars["Home"].waitForExistence(timeout: 15))
+    XCTAssertTrue(onHome(app))
     app.buttons["Profile"].tap()
     let edit = app.buttons["Edit profile"].firstMatch
     XCTAssertTrue(edit.waitForExistence(timeout: 10))
