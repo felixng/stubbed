@@ -26,7 +26,7 @@ export const LEGAL: Legal = {
   email: "support@getstubbed.app",
   governingLaw: "England and Wales (United Kingdom)",
   courts: "the courts of England and Wales",
-  updated: "14 October 2026",
+  updated: "18 October 2026",
   minimumAge: 16,
 };
 

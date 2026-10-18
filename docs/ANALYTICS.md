@@ -1,10 +1,11 @@
 # Analytics
 
-Two parts, both free (see `docs/DECISIONS.md`, "Basic analytics"):
+Three parts, all free (see `docs/DECISIONS.md`, "Basic analytics"):
 
 | What | Where | Covers |
 |---|---|---|
 | Page traffic | **Vercel Web Analytics** (`@vercel/analytics`, `SiteAnalytics`) | Visitors, page views, referrers, countries, devices for public pages: the landing page, legal pages and public profiles (`/@handle`). `/app`, `/login`, `/auth` and `/welcome` are excluded. Cookieless, so no consent banner. |
+| Page traffic, second view | **Google Analytics 4** (`SiteAnalytics`, `NEXT_PUBLIC_GA_MEASUREMENT_ID`) | The same public pages, same exclusions. Consent Mode stays at `denied`, so no cookies and no banner; Google gets cookieless pings only (see below). |
 | Product events | **Supabase `events` table** (`track()` in `apps/web/src/lib/analytics.ts`) | Things signed-in people do in the app, recorded the same way from web and (later) iOS. |
 
 Anything the database already records is counted from its own table, not duplicated as an event: entries (`entries.created_at`), trips (`collections`), waitlist sign-ups and where they came from (`waitlist.source`).
@@ -12,7 +13,12 @@ Anything the database already records is counted from its own table, not duplica
 ## Setup
 
 1. Vercel → the project → **Analytics** → **Enable** (Web Analytics; the Hobby plan is free, ~50k events a month). Nothing is sent until this is on, and nothing is sent from local dev.
-2. Apply the migration (`supabase db push`, or via CI/the dashboard as usual). Until it's applied, `track()` just logs a warning; saving entries is never affected.
+2. Google Analytics: create a GA4 property for Stubbed at analytics.google.com (Admin → Create → Property, then a **Web** data stream for the production domain). Copy the stream's Measurement ID (`G-…`) into Vercel as `NEXT_PUBLIC_GA_MEASUREMENT_ID`, **Production** only, and redeploy. In the stream's Enhanced measurement settings, turn off "Page changes based on browser history events": the app sends page views itself so it can skip signed-in pages. Leave Google Signals and ads links off.
+3. Apply the migration (`supabase db push`, or via CI/the dashboard as usual). Until it's applied, `track()` just logs a warning; saving entries is never affected.
+
+### What Google Analytics shows
+
+Consent is never granted, so GA receives cookieless pings with no client id. GA4 doesn't show those as users or sessions in its standard reports: they count in Realtime, and feed Google's behavioural modelling only once traffic passes its thresholds (roughly 1,000 events a day with consent denied, for at least 7 of the last 28 days). Until then, Vercel is the source of truth for visitors; GA is mainly useful for Realtime, and for Search Console and Google Ads links later. Granting consent would need a cookie banner and a privacy-policy change, which is a product decision.
 
 ## Events
 
