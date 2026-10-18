@@ -21,7 +21,7 @@ struct AvatarPicker: View {
           .overlay(alignment: .bottomTrailing) {
             Image(systemName: "camera.fill")
               .font(.footnote.weight(.semibold))
-              .foregroundStyle(.white)
+              .foregroundStyle(Palette.onTint)
               .frame(width: 32, height: 32)
               .background(Palette.tint, in: .circle)
               .overlay(Circle().strokeBorder(Color(.systemGroupedBackground), lineWidth: 2))

@@ -9,7 +9,7 @@ struct SessionGate: View {
     Group {
       switch session.phase {
       case .starting:
-        Palette.background
+        Color(.systemGroupedBackground)
           .ignoresSafeArea()
           .overlay { Wordmark(size: 36) }
       case .signedOut:
@@ -23,15 +23,15 @@ struct SessionGate: View {
       case .failed(let message):
         VStack(spacing: Space.l) {
           Text(message)
-            .font(.stubSubheadline)
-            .foregroundStyle(Palette.labelSecondary)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
           Button("Try again") { Task { await session.reload() } }
             .buttonStyle(.tintedPill)
         }
         .padding(Space.xxl)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Palette.background)
+        .background(Color(.systemGroupedBackground))
       }
     }
     .animation(.default, value: session.phase)

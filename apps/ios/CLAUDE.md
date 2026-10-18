@@ -48,7 +48,7 @@ You can't tap the Simulator yourself. To check a screen deeper in the app, write
 - New Swift packages are dependencies: ask the owner first (root `CLAUDE.md`). `supabase-swift` is the only one so far.
 - Swift 6 language mode with strict concurrency. Two-space indentation.
 - Layout: `Stubbed/App` (entry point, tabs), `Design` (tokens in `Theme.swift`, shared views in `Components.swift`, `Screen`), `Data` (Supabase client, config, logging), `Screens` (one folder or file per area).
-- Spacing comes from `Space`; the accent is `Palette.tint`. Backgrounds and text use system colours (see Design direction). `Palette`'s other web tokens remain only for screens not yet moved to the native style and for share cards.
+- Spacing comes from `Space`; the accent is `Palette.tint` (with `tintText`, `tintFill`, `onTint` for text on the tint, and `star`). Backgrounds and text use system colours (see Design direction); the web's other tokens are gone. Settings-like screens are a `Form`; their actions (Save, Create) go in the navigation bar.
 - Keep logic that the web also needs in Postgres (see README). The Swift side renders and calls RPCs.
 
 ## Signing

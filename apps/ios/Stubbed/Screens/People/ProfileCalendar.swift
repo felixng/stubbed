@@ -57,7 +57,7 @@ struct ProfileCalendar: View {
             } label: {
               Text("\(day)")
                 .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.white)
+                .foregroundStyle(Palette.onTint)
                 .frame(width: 40, height: 40)
                 .background(Palette.tint, in: .circle)
             }

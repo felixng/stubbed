@@ -150,7 +150,7 @@ struct LogView: View {
             .frame(maxWidth: 280)
           Text("Choose photo")
             .font(.headline)
-            .foregroundStyle(.white)
+            .foregroundStyle(Palette.onTint)
             .padding(.horizontal, Space.xxl)
             .frame(minHeight: 50)
             .background(Palette.tint, in: .capsule)

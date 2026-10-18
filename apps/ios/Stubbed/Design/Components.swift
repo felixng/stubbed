@@ -83,7 +83,7 @@ struct Chip: View {
 
   private var label: some View {
     Text(title)
-      .font(.stubFootnote.weight(.medium))
+      .font(.footnote.weight(.medium))
       .foregroundStyle(selected ? Color(.systemBackground) : .primary)
       .padding(.horizontal, Space.m)
       .frame(minHeight: 28)
@@ -138,11 +138,11 @@ struct ShowRow: View {
       Poster(title: title, url: photo)
       VStack(alignment: .leading, spacing: Space.xs) {
         Text(title)
-          .font(.stubHeadline)
+          .font(.headline)
         let meta = [venue, date].compactMap { $0 }.joined(separator: " · ")
         if !meta.isEmpty {
           Text(meta)
-            .font(.stubSubheadline)
+            .font(.subheadline)
             .foregroundStyle(.secondary)
             .lineLimit(1)
         }
@@ -180,7 +180,7 @@ struct EmptyState<Content: View>: View {
 struct PrimaryButtonStyle: ButtonStyle {
   func makeBody(configuration: Configuration) -> some View {
     configuration.label
-      .font(.stubHeadline)
+      .font(.headline)
       .foregroundStyle(Palette.onTint)
       .padding(.horizontal, Space.xl)
       .frame(minHeight: 50)

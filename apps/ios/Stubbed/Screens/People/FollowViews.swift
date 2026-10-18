@@ -76,7 +76,7 @@ struct FollowButtonStyle: ButtonStyle {
       .lineLimit(1)
       .fixedSize()
       .font(.subheadline.weight(.semibold))
-      .foregroundStyle(filled ? Color.white : Color.primary)
+      .foregroundStyle(filled ? Palette.onTint : Color.primary)
       .padding(.horizontal, Space.l)
       .frame(minHeight: 34)
       .background(

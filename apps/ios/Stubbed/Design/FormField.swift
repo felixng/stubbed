@@ -13,17 +13,17 @@ struct FormField<Control: View>: View {
   var body: some View {
     VStack(alignment: .leading, spacing: Space.s) {
       HStack(alignment: .firstTextBaseline) {
-        Text(label).foregroundStyle(Palette.label)
-          + Text(optional ? " (optional)" : "").fontWeight(.regular).foregroundStyle(Palette.labelSecondary)
+        Text(label).foregroundStyle(.primary)
+          + Text(optional ? " (optional)" : "").fontWeight(.regular).foregroundStyle(.secondary)
         Spacer()
         if let counter {
           Text(counter)
-            .font(.stubFootnote)
-            .foregroundStyle(Palette.labelSecondary)
+            .font(.footnote)
+            .foregroundStyle(.secondary)
             .monospacedDigit()
         }
       }
-      .font(.stubSubheadline.weight(.medium))
+      .font(.subheadline.weight(.medium))
       .accessibilityHidden(true)
 
       control
@@ -31,22 +31,25 @@ struct FormField<Control: View>: View {
 
       if let message {
         Text(message)
-          .font(.stubFootnote)
-          .foregroundStyle(isError ? Palette.destructive : Palette.labelSecondary)
+          .font(.footnote)
+          .foregroundStyle(isError ? Color.red : Color.secondary)
       }
     }
   }
 }
 
 extension View {
-  /// The web's input: `surface`, a `separator` border, 12pt corners.
+  /// A text field outside a Form: the grouped row background, 12pt
+  /// continuous corners and a hairline border.
   func fieldStyle(minHeight: CGFloat = 50) -> some View {
     self
-      .font(.stubBody)
-      .foregroundStyle(Palette.label)
+      .font(.body)
+      .foregroundStyle(.primary)
       .padding(.horizontal, Space.l)
       .frame(minHeight: minHeight)
-      .background(Palette.surface, in: .rect(cornerRadius: Radius.md))
-      .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(Palette.separator))
+      .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: Radius.md, style: .continuous))
+      .overlay(
+        RoundedRectangle(cornerRadius: Radius.md, style: .continuous)
+          .strokeBorder(Color(.separator).opacity(0.35), lineWidth: 0.5))
   }
 }
