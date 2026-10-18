@@ -32,7 +32,7 @@ export type TripCardData = {
   handle: string | null;
   shows: TripCardShow[]; // logged shows, in date order
   venues: number;
-  nights: number; // distinct dates with a logged show
+  nights: number; // the trip's length, end date minus start date (0 for one day)
   average: number | null;
 };
 
@@ -371,7 +371,7 @@ function drawCollage(ctx: Ctx, p: Palette, d: TripCardData, shows: Show[]) {
     drawHeader(ctx, p, d, shows.length, PAD, [
       { value: shows.length, label: shows.length === 1 ? "show" : "shows" },
       { value: d.venues, label: d.venues === 1 ? "venue" : "venues" },
-      { value: d.nights, label: d.nights === 1 ? "night" : "nights" },
+      ...(d.nights > 0 ? [{ value: d.nights, label: d.nights === 1 ? "night" : "nights" }] : []),
     ]) + GAP;
   const bottom = FOOTER_TOP - 12;
   let picks = shows;
