@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: PageProps<"/t/[id]">): Promis
   if (!found) return { title: "Not found — Stubbed", robots: { index: false } };
   const { trip, owner, stats, version } = found;
   const where = place(stats);
-  const headline = `${plural(stats.shows, "show")} in ${plural(stats.nights, "night")}${where ? ` in ${where}` : ""}`;
+  const headline = `${plural(stats.shows, "show")}${stats.nights > 0 ? ` in ${plural(stats.nights, "night")}` : ""}${where ? ` in ${where}` : ""}`;
   const title = `${trip.name} — @${owner.handle} on Stubbed`;
   const description = `${headline}, ${formatTripDates(trip)}. @${owner.handle}’s trip on Stubbed.`;
   const image = { url: `/api/og/trip/${trip.id}?v=${version}`, width: 1200, height: 630, alt: `${trip.name}: ${headline}` };
@@ -54,7 +54,7 @@ async function Trip({ params }: PageProps<"/t/[id]">) {
   const numbers: [string, string][] = [
     [String(stats.shows), stats.shows === 1 ? "Show" : "Shows"],
     [String(stats.venues), stats.venues === 1 ? "Theatre" : "Theatres"],
-    [String(stats.nights), stats.nights === 1 ? "Night" : "Nights"],
+    ...(stats.nights > 0 ? [[String(stats.nights), stats.nights === 1 ? "Night" : "Nights"] as [string, string]] : []),
     ...(stats.average != null ? [[stats.average.toFixed(1), "Avg rating"] as [string, string]] : []),
   ];
 
