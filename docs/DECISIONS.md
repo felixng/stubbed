@@ -248,7 +248,7 @@ Owner's call: build follows before the iOS app, so iOS copies a complete web MVP
 ### 2026-10-14: Home is the feed; the diary moves to the Profile tab
 Owner's call, on top of follows (above). Hevy style.
 - **Home is the feed** (`feed_entries()` in `20261014170000_feed.sql`, so iOS matches): your own logged shows, private ones included and marked "Private", plus the shows RLS lets you see from everyone you follow, newest first, the latest 30. Including your own shows means the feed is never empty for a solo user. Upcoming shows stay out. Your shows open in the app; others' open their public page, or don't link when the profile is private.
-- **Find people** (`/app/people`, `search_profiles()`): handle prefix or any part of the name, each with the Follow / Requested / Following button. A "Follow people you go to the theatre with" card shows on Home until you follow someone.
+- **Find people** (`/app/people`, `search_profiles()`, replaced by the header search on 2026-10-18): handle prefix or any part of the name, each with the Follow / Requested / Following button. A "Follow people you go to the theatre with" card shows on Home until you follow someone.
 - **Profile tab:** avatar, handle, name, bio, shows / followers / following (linking to the lists), follow requests to approve, "Edit profile" and "View public profile", then a **Diary | Trips** switch (`?view=trips`). Your details, privacy and account deletion moved to `/app/settings`; the Follow button's "Edit profile" on your own `/@handle` goes there too.
 - Not yet: notifications for new followers or requests, blocking, reactions or comments (still a decision for #4), feed pages beyond the latest 30 (now done, below).
 
@@ -294,3 +294,19 @@ Owner's ask (#85): a tighter feed card. `PublicEntryCard` (Home feed, profiles, 
 - **Without a photo**, the show, where and stars stay as text under the header; the reactions and caption follow as above.
 - On trip pages the caption has no handle, matching the header being left out there.
 - iOS (`HomeView`) isn't changed yet.
+
+### 2026-10-18: People search in the header
+Owner's ask (#86): find people from a search box rather than a block on Home, like Hevy's sidebar search. The owner left the details to Claude.
+- **Where:** a search box in the app header (placeholder "Search", labelled "Search people by handle or name" for screen readers, since "Search people" doesn't fit beside the wordmark on a phone) on every page, between the wordmark and the menu. Matches (handle prefix or any part of the name, `search_profiles()`) drop down under the header, each with the Follow / Requested / Following button. On a phone the list spans the header's width.
+- **Behaviour:** opening a profile clears the search. Tapping elsewhere or pressing Escape closes the list, and a half-typed search comes back when you focus the box again. The shell doesn't read the session (so it prerenders), so the box takes your id from the browser session on the first search, to leave you out and read your follow statuses.
+- **Removed:** the "Follow people you go to the theatre with" card and the "Find people" link on Home, and the `/app/people` page. An empty feed with no follows points to the search box instead.
+- **People only for now.** Shows and venues could join the same box later.
+- iOS isn't changed yet.
+
+### 2026-10-18: Comments inline on the feed
+Owner's ask (#87): comments under each show in the Home feed, with a box to post one, as on Hevy, instead of only on the entry's page. The owner left the details to Claude. Migration `20261018120000_comment_previews.sql`.
+- **What shows:** each public show in the feed shows its latest 2 comments (oldest first), after the caption and trip chips. With more, "View all N comments" opens the whole thread in place (read in the browser). The comment box is always there, one line that grows as you type: Enter posts, Shift+Enter is a new line, and Comment focuses the box. Your private shows still take no comments.
+- **Read path:** `entry_comment_previews(entry_ids, per_entry)` returns the latest comments per entry with their authors, in one call per feed page. It runs as the caller (security invoker), so the `entry_comments` policies decide what comes back, exactly as reading the table does; at most 10 per entry. pgTAP: `comment_previews_test.sql`.
+- **State:** the feed card keeps the thread itself (`FeedThread`): posting adds your comment and deleting removes one without refreshing, since older feed pages load in the browser where a refresh doesn't reach. Leaving Home and coming back keeps everything, including an unfinished comment, because nothing there is a finished task to clear (no `useFreshOnReturn`).
+- **Elsewhere:** profiles, trip pages and the entry's page are unchanged; their Comment button still opens the thread on the entry's page.
+- iOS isn't changed yet.
