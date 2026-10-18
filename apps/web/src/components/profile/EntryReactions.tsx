@@ -13,8 +13,9 @@ const ACTION =
 // Like and comment, under a public entry, as on Hevy. Liking shows at once and
 // writes in the background; the refreshed page then brings the real counts.
 // Signed-out visitors go to sign in and come back. Comments live on the
-// entry's page (`commentsHref`). With `shareHref` (your own shows), Share
-// follows Comment and opens the share screen.
+// entry's page (`commentsHref`), or, with `onComment` (the feed, which shows
+// them inline), Comment calls it to start a comment there. With `shareHref`
+// (your own shows), Share follows Comment and opens the share screen.
 export function EntryReactions({
   entryId,
   reactions,
@@ -22,6 +23,7 @@ export function EntryReactions({
   commentsHref,
   loginHref,
   shareHref,
+  onComment,
 }: {
   entryId: string;
   reactions: Reactions;
@@ -29,6 +31,7 @@ export function EntryReactions({
   commentsHref: string;
   loginHref: string;
   shareHref?: string;
+  onComment?: () => void;
 }) {
   const router = useRouter();
   // The viewer's own like, shown until the refreshed counts arrive. A new
@@ -72,6 +75,23 @@ export function EntryReactions({
       />
     </svg>
   );
+  const commentInner = (
+    <>
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" className="text-label-secondary">
+        <path
+          d="M4 12c0-4.1 3.6-7.5 8-7.5s8 3.4 8 7.5-3.6 7.5-8 7.5c-1.2 0-2.4-.3-3.4-.7L4 20l1.1-3.6C4.4 15.1 4 13.6 4 12Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <span aria-hidden="true">{state.comments > 0 ? state.comments : ""}</span>
+      <span className="sr-only">
+        Comments ({state.comments} {state.comments === 1 ? "comment" : "comments"})
+      </span>
+    </>
+  );
   const likeLabel = `${state.likes} ${state.likes === 1 ? "like" : "likes"}`;
 
   return (
@@ -89,21 +109,15 @@ export function EntryReactions({
           <span className="sr-only">Sign in to like ({likeLabel})</span>
         </Link>
       )}
-      <Link href={commentsHref} className={ACTION}>
-        <svg aria-hidden="true" viewBox="0 0 24 24" width="22" height="22" className="text-label-secondary">
-          <path
-            d="M4 12c0-4.1 3.6-7.5 8-7.5s8 3.4 8 7.5-3.6 7.5-8 7.5c-1.2 0-2.4-.3-3.4-.7L4 20l1.1-3.6C4.4 15.1 4 13.6 4 12Z"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinejoin="round"
-          />
-        </svg>
-        <span aria-hidden="true">{state.comments > 0 ? state.comments : ""}</span>
-        <span className="sr-only">
-          Comments ({state.comments} {state.comments === 1 ? "comment" : "comments"})
-        </span>
-      </Link>
+      {onComment ? (
+        <button type="button" onClick={onComment} className={`${ACTION} cursor-pointer`}>
+          {commentInner}
+        </button>
+      ) : (
+        <Link href={commentsHref} className={ACTION}>
+          {commentInner}
+        </Link>
+      )}
       {shareHref && <ShareAction href={shareHref} />}
     </div>
   );
