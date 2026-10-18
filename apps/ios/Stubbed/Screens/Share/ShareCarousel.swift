@@ -114,7 +114,7 @@ struct ShareCarousel: View {
       HStack(spacing: Space.s) {
         ForEach(0..<shown.count, id: \.self) { i in
           Circle()
-            .fill(i == active ? Palette.tint : Palette.outline.opacity(0.4))
+            .fill(i == active ? AnyShapeStyle(Palette.tint) : AnyShapeStyle(.quaternary))
             .frame(width: 8, height: 8)
         }
       }
@@ -122,23 +122,23 @@ struct ShareCarousel: View {
 
       (Text("Share your \(subject == .show ? "show" : "trip") · Tag ") + Text(stubbedInstagram).fontWeight(.semibold))
         .font(.callout)
-        .foregroundStyle(Palette.label)
+        .foregroundStyle(.primary)
 
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(alignment: .top, spacing: Space.m) {
           if subject == .show {
             action("Background", selected: !transparent) {
               ZStack {
-                if transparent { Checkerboard() } else { Palette.label }
+                if transparent { Checkerboard() } else { Color.primary }
                 Image(systemName: "line.diagonal")
-                  .font(.system(size: 22, weight: .medium))
-                  .foregroundStyle(.white)
+                  .font(.title2.weight(.medium))
+                  .foregroundStyle(Color(.systemBackground))
               }
             } perform: {
               transparent.toggle()
             }
             .disabled(cards == nil)
-            Palette.separator.frame(width: 1, height: 48).padding(.top, 4)
+            Divider().frame(height: 48).padding(.top, 4)
           }
           action("Stories") {
             ZStack {
@@ -148,7 +148,7 @@ struct ShareCarousel: View {
                   Color(red: 0.84, green: 0.14, blue: 0.62), Color(red: 0.16, green: 0.35, blue: 0.92),
                 ], center: UnitPoint(x: 0.3, y: 1.07), startRadius: 0, endRadius: 70)
               Image(systemName: "camera")
-                .font(.system(size: 24, weight: .medium))
+                .font(.title2.weight(.medium))
                 .foregroundStyle(.white)
             }
           } perform: {
@@ -177,8 +177,8 @@ struct ShareCarousel: View {
       .padding(.horizontal, -Space.l)
 
       Text(notice ?? " ")
-        .font(.stubFootnote)
-        .foregroundStyle(Palette.labelSecondary)
+        .font(.footnote)
+        .foregroundStyle(.secondary)
         .accessibilityHidden(notice == nil)
     }
     .onChange(of: notice) { _, value in
@@ -208,14 +208,14 @@ struct ShareCarousel: View {
           .scaledToFit()
           .accessibilityLabel("Share card \(index + 1) of \(cards?.count ?? 0), \(card.name.lowercased())\(clear ? ", no background" : "")")
       } else {
-        Palette.fill.overlay {
+        Color(.tertiarySystemFill).overlay {
           Text(failed ? "Couldn’t draw this card." : "Drawing…")
-            .font(.stubSubheadline)
-            .foregroundStyle(Palette.labelSecondary)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
         }
       }
     }
-    .clipShape(.rect(cornerRadius: 20))
+    .clipShape(.rect(cornerRadius: 20, style: .continuous))
   }
 
   private func action<Icon: View>(
@@ -227,8 +227,8 @@ struct ShareCarousel: View {
           .frame(width: 56, height: 56)
           .clipShape(Circle())
         Text(label)
-          .font(.stubFootnote)
-          .foregroundStyle(Palette.label)
+          .font(.footnote)
+          .foregroundStyle(.primary)
           .lineLimit(1)
           .fixedSize()
       }
@@ -241,10 +241,10 @@ struct ShareCarousel: View {
   private func action(_ label: String, systemImage: String, perform: @escaping () -> Void) -> some View {
     action(label) {
       ZStack {
-        Palette.fill
+        Color(.secondarySystemGroupedBackground)
         Image(systemName: systemImage)
-          .font(.system(size: 22))
-          .foregroundStyle(Palette.label)
+          .font(.title3.weight(.medium))
+          .foregroundStyle(Palette.tintText)
       }
     } perform: {
       perform()

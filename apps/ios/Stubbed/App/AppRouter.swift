@@ -6,7 +6,7 @@ import Observation
 /// save or delete, so a screen you come back to is never stale.
 @MainActor @Observable
 final class AppRouter {
-  enum Tab { case home, profile }
+  enum Tab: Hashable { case home, log, profile }
 
   /// What the entry screen says on arrival.
   enum Notice: Hashable { case saved, planned, photoFailed }

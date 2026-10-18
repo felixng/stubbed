@@ -14,20 +14,23 @@ struct PublicProfileView: View {
 
   var body: some View {
     ScrollViewReader { proxy in
-      Screen(title: "@\(handle)") {
+      Screen(title: "@\(handle)", titleMode: .inline) {
         switch state {
         case .loading:
           LoadingText()
         case .failed(let message):
-          EmptyState(title: "Couldn’t load this profile") { Text(message) }
+          EmptyState(title: "Couldn’t load this profile", systemImage: "wifi.exclamationmark") { Text(message) }
         case .loaded(nil):
-          EmptyState(title: "No one here") { Text("There’s no profile at @\(handle).") }
+          EmptyState(title: "No one here", systemImage: "person.crop.circle.badge.questionmark") {
+            Text("There’s no profile at @\(handle).")
+          }
         case .loaded(let page?):
           header(page)
+          if let stats = page.stats { statsCard(stats) }
           if page.stats == nil {
-            EmptyState(title: "This profile is private") { Text(privateMessage(page)) }
+            EmptyState(title: "This profile is private", systemImage: "lock") { Text(privateMessage(page)) }
           } else if page.entries.isEmpty {
-            EmptyState(title: "No public shows yet") {
+            EmptyState(title: "No public shows yet", systemImage: "theatermasks") {
               Text("When @\(page.profile.handle) tracks a public show, it’ll appear here.")
             }
           } else {
@@ -35,8 +38,7 @@ struct PublicProfileView: View {
               withAnimation { proxy.scrollTo(id, anchor: .top) }
             }
             Text("Recent shows")
-              .font(.stubTitle2)
-              .foregroundStyle(Palette.label)
+              .font(.title3.bold())
               .accessibilityAddTraits(.isHeader)
             ForEach(page.entries) { entry in
               PostCard(
@@ -48,7 +50,6 @@ struct PublicProfileView: View {
           }
         }
       }
-      .navigationBarTitleDisplayMode(.inline)
     }
     .refreshable { await load() }
     .task(id: router.dataVersion) { await load() }
@@ -64,7 +65,7 @@ struct PublicProfileView: View {
         } else {
           HStack(spacing: 2) {
             ForEach(Array(cover), id: \.self) { url in
-              AsyncImage(url: url) { $0.resizable().scaledToFill() } placeholder: { Palette.fill }
+              AsyncImage(url: url) { $0.resizable().scaledToFill() } placeholder: { Color(.tertiarySystemFill) }
                 .frame(maxWidth: .infinity, maxHeight: 112)
                 .clipped()
             }
@@ -74,31 +75,39 @@ struct PublicProfileView: View {
       }
       .accessibilityHidden(true)
 
-      VStack(alignment: .leading, spacing: Space.l) {
+      VStack(alignment: .leading, spacing: Space.m) {
         HStack(alignment: .bottom) {
-          Avatar(name: p.name, url: p.avatarURL, size: 88)
-            .overlay(Circle().strokeBorder(Palette.surface, lineWidth: 4))
-            .padding(.top, -44)
+          Avatar(name: p.name, url: p.avatarURL, size: 80)
+            .overlay(Circle().strokeBorder(Color(.secondarySystemGroupedBackground), lineWidth: 4))
+            .padding(.top, -40)
           Spacer()
           FollowButton(profile: p, viewer: page.viewer)
         }
         VStack(alignment: .leading, spacing: 2) {
-          Text(verbatim: "@\(p.handle)")
-            .font(.stubTitle)
-            .foregroundStyle(Palette.label)
-            .accessibilityAddTraits(.isHeader)
+          HStack(spacing: Space.s) {
+            Text(verbatim: "@\(p.handle)")
+              .font(.title2.bold())
+              .accessibilityAddTraits(.isHeader)
+            if p.isPrivate {
+              Image(systemName: "lock.fill")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+                .accessibilityLabel("Private profile")
+            }
+          }
           if let name = p.displayName, !name.isEmpty {
-            Text(name).font(.stubSubheadline).foregroundStyle(Palette.labelSecondary)
+            Text(name).font(.subheadline).foregroundStyle(.secondary)
           }
         }
         if let bio = p.bio, !bio.isEmpty {
-          Text(bio).font(.stubBody).foregroundStyle(Palette.label)
+          Text(bio).font(.body)
         }
         if let link = p.link, let url = URL(string: link) {
-          Link(Self.displayLink(link), destination: url)
-            .font(.stubSubheadline.weight(.semibold))
-            .foregroundStyle(Palette.tintText)
-            .lineLimit(1)
+          Link(destination: url) {
+            Label(Self.displayLink(link), systemImage: "link")
+              .font(.subheadline.weight(.semibold))
+              .lineLimit(1)
+          }
         }
         HStack(spacing: Space.l) {
           NavigationLink(value: AppRouter.Route.follows(handle: p.handle, list: .followers)) {
@@ -109,36 +118,41 @@ struct PublicProfileView: View {
           }
         }
         .buttonStyle(.plain)
-        if let stats = page.stats {
-          HStack(spacing: Space.xxxl) {
-            stat(stats.shows, "Shows")
-            stat(stats.venues, "Theatres")
-            stat(stats.cities, "Cities")
-          }
-        }
       }
       .padding(.horizontal, Space.l)
-      .padding(.bottom, Space.xl)
+      .padding(.bottom, Space.l)
     }
-    .background(Palette.surface)
-    .clipShape(.rect(cornerRadius: Radius.md))
-    .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(Palette.separator))
-    .shadow(color: Palette.shadow.opacity(0.08), radius: 1, y: 1)
+    .groupedCard()
+  }
+
+  /// Shows, theatres and cities in one grouped card, like your Profile's counts.
+  private func statsCard(_ stats: PublicPages.ProfileStats) -> some View {
+    HStack(spacing: 0) {
+      stat(stats.shows, "Shows")
+      Divider().padding(.vertical, Space.m)
+      stat(stats.venues, "Theatres")
+      Divider().padding(.vertical, Space.m)
+      stat(stats.cities, "Cities")
+    }
+    .fixedSize(horizontal: false, vertical: true)
+    .groupedCard()
   }
 
   private func count(_ value: Int, _ label: String) -> some View {
-    (Text("\(value)").fontWeight(.semibold).foregroundStyle(Palette.label)
-      + Text(" \(label)").foregroundStyle(Palette.labelSecondary))
-      .font(.stubSubheadline)
+    (Text("\(value)").fontWeight(.semibold).foregroundStyle(.primary)
+      + Text(" \(label)").foregroundStyle(.secondary))
+      .font(.subheadline)
       .monospacedDigit()
       .frame(minHeight: Space.touch)
   }
 
   private func stat(_ value: Int, _ label: String) -> some View {
-    VStack(alignment: .leading, spacing: 0) {
-      Text("\(value)").font(.stubTitle2).foregroundStyle(Palette.label).monospacedDigit()
-      Text(label).font(.stubFootnote).foregroundStyle(Palette.labelSecondary)
+    VStack(spacing: 2) {
+      Text("\(value)").font(.title2.bold()).monospacedDigit()
+      Text(label).font(.footnote).foregroundStyle(.secondary)
     }
+    .frame(maxWidth: .infinity)
+    .padding(.vertical, Space.m)
     .accessibilityElement(children: .combine)
   }
 

@@ -40,6 +40,13 @@ struct ProfileView: View {
       }
     }
     .toolbar {
+      if section == .diary, hasSeen {
+        ToolbarItem(placement: .topBarLeading) {
+          Button(selecting ? "Cancel" : "Select") {
+            if selecting { endSelecting() } else { selecting = true }
+          }
+        }
+      }
       ToolbarItem(placement: .primaryAction) {
         Menu {
           Button("Sign out", role: .destructive) { Task { await session.signOut() } }
@@ -56,6 +63,8 @@ struct ProfileView: View {
     .task(id: router.dataVersion) { await load() }
   }
 
+  private var hasSeen: Bool { diary.value?.entries.contains { !$0.planned } ?? false }
+
   // MARK: - Header
 
   @ViewBuilder private var headerView: some View {
@@ -63,38 +72,44 @@ struct ProfileView: View {
     case .loading:
       LoadingText()
     case .failed(let message):
-      Text(message).font(.stubSubheadline).foregroundStyle(Palette.labelSecondary)
+      Text(message).font(.subheadline).foregroundStyle(.secondary)
     case .loaded(let h):
       VStack(alignment: .leading, spacing: Space.l) {
         HStack(spacing: Space.l) {
-          Avatar(name: h.profile.name, url: h.profile.avatarURL, size: 80)
+          Avatar(name: h.profile.name, url: h.profile.avatarURL, size: 72)
           VStack(alignment: .leading, spacing: 2) {
             Text(verbatim: "@\(h.profile.handle)")
-              .font(.stubTitle)
-              .foregroundStyle(Palette.label)
+              .font(.title2.bold())
               .lineLimit(1)
               .accessibilityAddTraits(.isHeader)
             if let name = h.profile.displayName, !name.isEmpty {
-              Text(name).font(.stubSubheadline).foregroundStyle(Palette.labelSecondary).lineLimit(1)
+              Text(name).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
             }
             if h.profile.isPrivate {
-              Text("Private profile").font(.stubFootnote).foregroundStyle(Palette.labelSecondary)
+              Label("Private profile", systemImage: "lock.fill")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
             }
           }
         }
         if let bio = h.profile.bio, !bio.isEmpty {
-          Text(bio).font(.stubBody).foregroundStyle(Palette.label)
+          Text(bio).font(.body)
         }
-        HStack(spacing: Space.xxxl) {
+        HStack(spacing: 0) {
           stat(h.shows, h.shows == 1 ? "Show" : "Shows")
+          Divider().padding(.vertical, Space.m)
           NavigationLink(value: AppRouter.Route.follows(handle: h.profile.handle, list: .followers)) {
             stat(h.counts.followers, h.counts.followers == 1 ? "Follower" : "Followers")
           }
+          .pressableRow()
+          Divider().padding(.vertical, Space.m)
           NavigationLink(value: AppRouter.Route.follows(handle: h.profile.handle, list: .following)) {
             stat(h.counts.following, "Following")
           }
+          .pressableRow()
         }
-        .buttonStyle(.plain)
+        .fixedSize(horizontal: false, vertical: true)
+        .groupedCard()
         // Only private profiles get requests; going public approves them all.
         if !h.requests.isEmpty {
           FollowRequests(people: h.requests)
@@ -109,16 +124,19 @@ struct ProfileView: View {
     }
   }
 
+  /// One column of the counts card.
   private func stat(_ value: Int, _ label: String) -> some View {
-    VStack(alignment: .leading, spacing: 0) {
+    VStack(spacing: 2) {
       Text(value.formatted())
-        .font(.stubTitle2)
-        .foregroundStyle(Palette.label)
+        .font(.title2.bold())
+        .foregroundStyle(.primary)
         .monospacedDigit()
       Text(label)
-        .font(.stubFootnote)
-        .foregroundStyle(Palette.labelSecondary)
+        .font(.footnote)
+        .foregroundStyle(.secondary)
     }
+    .frame(maxWidth: .infinity)
+    .padding(.vertical, Space.m)
     .accessibilityElement(children: .combine)
   }
 
@@ -129,17 +147,17 @@ struct ProfileView: View {
     case .loading:
       LoadingText()
     case .failed(let message):
-      EmptyState(title: "Couldn’t load your diary") { Text(message) }
+      EmptyState(title: "Couldn’t load your diary", systemImage: "wifi.exclamationmark") { Text(message) }
     case .loaded(let data):
       // Upcoming soonest first; the shows you've seen newest first.
       let upcoming = data.entries.filter(\.planned).reversed()
       let seen = data.entries.filter { !$0.planned }
       if data.entries.isEmpty {
         EmptyState(title: "No shows yet") {
-          Button("Add your first theatre visit") { router.startLog() }
-            .font(.stubSubheadline.weight(.semibold))
-            .foregroundStyle(Palette.tintText)
           Text("Going to one soon? Track it with its date.")
+          Button("Add your first theatre visit") { router.startLog() }
+            .buttonStyle(.borderedProminent)
+            .padding(.top, Space.s)
         }
       } else {
         if !upcoming.isEmpty {
@@ -149,12 +167,12 @@ struct ProfileView: View {
                 withAnimation { upcomingOpen.toggle() }
               } label: {
                 HStack(spacing: Space.s) {
+                  Text("Upcoming").font(.title3.bold()).foregroundStyle(.primary)
+                  Text("\(upcoming.count)").font(.subheadline).foregroundStyle(.secondary)
                   Image(systemName: "chevron.right")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Palette.labelSecondary)
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(Palette.tintText)
                     .rotationEffect(.degrees(upcomingOpen ? 90 : 0))
-                  Text("Upcoming").font(.stubTitle2).foregroundStyle(Palette.label)
-                  Text("\(upcoming.count)").font(.stubSubheadline).foregroundStyle(Palette.labelSecondary)
                 }
                 .frame(minHeight: Space.touch)
               }
@@ -162,9 +180,8 @@ struct ProfileView: View {
               .accessibilityLabel("Upcoming, \(upcoming.count)")
               .accessibilityValue(upcomingOpen ? "Expanded" : "Collapsed")
               Spacer()
-              Button("+ Plan a trip") { router.newTrip() }
-                .font(.stubSubheadline.weight(.semibold))
-                .foregroundStyle(Palette.tintText)
+              Button("Plan a trip", systemImage: "plus") { router.newTrip() }
+                .font(.subheadline.weight(.semibold))
             }
             if upcomingOpen {
               EntryList(entries: Array(upcoming), photos: data.photos)
@@ -172,20 +189,14 @@ struct ProfileView: View {
           }
         }
         if seen.isEmpty {
-          EmptyState(title: "Nothing seen yet") { Text("Your shows appear here once you’ve been.") }
-        } else {
-          HStack {
-            Text(selecting ? (picked.isEmpty ? "Pick shows" : "\(picked.count) selected") : "")
-              .font(.stubSubheadline)
-              .foregroundStyle(Palette.labelSecondary)
-            Spacer()
-            Button(selecting ? "Cancel" : "Select") {
-              if selecting { endSelecting() } else { selecting = true }
-            }
-            .font(.stubSubheadline.weight(.semibold))
-            .foregroundStyle(Palette.tintText)
-            .frame(minHeight: Space.touch)
+          EmptyState(title: "Nothing seen yet", systemImage: "ticket") {
+            Text("Your shows appear here once you’ve been.")
           }
+        } else {
+          Text(selecting ? (picked.isEmpty ? "Pick shows" : "\(picked.count) selected") : "Seen")
+            .font(selecting ? .subheadline : .title3.bold())
+            .foregroundStyle(selecting ? .secondary : .primary)
+            .frame(minHeight: Space.touch)
           EntryList(entries: seen, photos: data.photos, selection: selecting ? $picked : nil)
         }
       }
@@ -202,21 +213,22 @@ struct ProfileView: View {
     let covering = trips.filter { trip in dates.allSatisfy(trip.covers) }
     return VStack(spacing: Space.s) {
       if let selectError {
-        Text(selectError).font(.stubFootnote).foregroundStyle(Palette.destructive)
+        Text(selectError).font(.footnote).foregroundStyle(.red)
       }
       HStack(spacing: Space.m) {
-        Button("Add to trip") { choosingTrip = true }
-          .buttonStyle(.primary)
-        Button("Delete", role: .destructive) { confirmDelete = true }
-          .buttonStyle(PillButtonStyle())
-          .foregroundStyle(Palette.destructive)
+        Button("Add to trip", systemImage: "suitcase") { choosingTrip = true }
+          .buttonStyle(.borderedProminent)
+          .frame(maxWidth: .infinity, alignment: .leading)
+        Button("Delete", systemImage: "trash", role: .destructive) { confirmDelete = true }
+          .buttonStyle(.bordered)
       }
+      .controlSize(.large)
       .disabled(picked.isEmpty)
     }
     .padding(.horizontal, Space.l)
     .padding(.vertical, Space.m)
-    .background(Palette.background)
-    .overlay(alignment: .top) { Palette.separator.frame(height: 1) }
+    .background(.bar)
+    .overlay(alignment: .top) { Divider() }
     .confirmationDialog("Add \(picked.count) to a trip", isPresented: $choosingTrip, titleVisibility: .visible) {
       ForEach(covering) { trip in
         Button(trip.name) { Task { await add(to: trip) } }

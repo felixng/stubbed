@@ -11,17 +11,17 @@ struct PeopleView: View {
 
   var body: some View {
     Screen(title: "Find people") {
-      Text("Follow people to see the shows they track in your feed.")
-        .font(.stubSubheadline)
-        .foregroundStyle(Palette.labelSecondary)
-        .padding(.top, -Space.m)
       let q = query.trimmingCharacters(in: .whitespaces)
       if q.count >= 2, searched, results.isEmpty {
-        EmptyState(title: "No one found") { Text("Try their handle, like @felix.") }
-      } else if !results.isEmpty {
+        ContentUnavailableView.search(text: q)
+      } else if results.isEmpty {
+        EmptyState(title: "Find people", systemImage: "person.2") {
+          Text("Follow people to see the shows they track in your feed. Search by name or handle.")
+        }
+      } else {
         VStack(spacing: 0) {
           ForEach(Array(results.enumerated()), id: \.element.id) { index, person in
-            if index > 0 { Palette.separator.frame(height: 1).padding(.leading, 72) }
+            if index > 0 { Divider().padding(.leading, 72) }
             PersonRow(person: person) {
               if person.id != session.userId {
                 FollowButton(person: person, viewer: viewers[person.id] ?? Viewer(isOwner: false, status: .none))
@@ -29,7 +29,7 @@ struct PeopleView: View {
             }
           }
         }
-        .cardStyle()
+        .groupedCard()
       }
     }
     .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search by name or @handle")
@@ -71,21 +71,22 @@ struct PersonRow<Trailing: View>: View {
           Avatar(name: person.name, url: person.avatarURL, size: 44)
           VStack(alignment: .leading, spacing: 0) {
             Text(verbatim: "@\(person.handle)")
-              .font(.stubSubheadline.weight(.semibold))
-              .foregroundStyle(Palette.label)
+              .font(.subheadline.weight(.semibold))
+              .foregroundStyle(.primary)
               .lineLimit(1)
             if let name = person.displayName, !name.isEmpty {
-              Text(name).font(.stubFootnote).foregroundStyle(Palette.labelSecondary).lineLimit(1)
+              Text(name).font(.footnote).foregroundStyle(.secondary).lineLimit(1)
             }
           }
           Spacer(minLength: 0)
         }
+        .padding(.leading, Space.l)
+        .padding(.vertical, Space.m)
         .contentShape(.rect)
       }
-      .buttonStyle(.plain)
+      .pressableRow()
       trailing
+        .padding(.trailing, Space.l)
     }
-    .padding(.horizontal, Space.l)
-    .padding(.vertical, Space.m)
   }
 }

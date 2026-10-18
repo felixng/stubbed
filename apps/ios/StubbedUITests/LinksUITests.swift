@@ -10,7 +10,7 @@ final class LinksUITests: XCTestCase {
     let app = launchApp()
     signOutIfNeeded(app)
     try signIn(app)
-    XCTAssertTrue(app.navigationBars["Home"].waitForExistence(timeout: 15))
+    XCTAssertTrue(onHome(app))
 
     app.open(URL(string: "stubbed://@ios_friend")!)
     XCTAssertTrue(app.staticTexts["Fringe every August."].waitForExistence(timeout: 15))

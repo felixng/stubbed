@@ -23,142 +23,151 @@ struct SettingsView: View {
   @FocusState private var focus: Field?
 
   var body: some View {
-    Screen(title: "Edit profile") {
+    Group {
       if let profile = loaded, let userId = session.userId {
-        form(profile, userId: userId)
-        accountSection
-        deleteSection(profile)
+        ScrollViewReader { proxy in
+          Form {
+            form(profile, userId: userId)
+            accountSection
+            deleteSection
+          }
+          .scrollDismissesKeyboard(.interactively)
+          // The result shows at the top, above the fields.
+          .onChange(of: status?.text) { _, text in
+            if text != nil { withAnimation { proxy.scrollTo("status", anchor: .top) } }
+          }
+        }
+        .toolbar {
+          ToolbarItem(placement: .confirmationAction) {
+            if saving {
+              ProgressView()
+            } else {
+              Button("Save") { Task { await save(userId: userId) } }
+                .fontWeight(.semibold)
+                .disabled(handleProblem != nil)
+            }
+          }
+        }
       } else {
-        LoadingText()
+        ProgressView()
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
+          .background(Color(.systemGroupedBackground))
       }
     }
-    .scrollDismissesKeyboard(.interactively)
+    .navigationTitle("Edit profile")
+    .navigationBarTitleDisplayMode(.inline)
     .task { await load() }
     .sheet(isPresented: $deleting) {
       if let profile = loaded { DeleteAccountSheet(handle: profile.handle) }
     }
   }
 
-  private func form(_ profile: Profile, userId: UUID) -> some View {
-    VStack(alignment: .leading, spacing: Space.xl) {
+  @ViewBuilder private func form(_ profile: Profile, userId: UUID) -> some View {
+    Section {
       AvatarPicker(userId: userId, name: name.isEmpty ? handle : name, url: $avatarURL)
+        .buttonStyle(.borderless)
+        .listRowBackground(Color.clear)
+    }
 
-      FormField(
-        label: "Handle", message: handleProblem ?? "Your profile is at /@\(handle.isEmpty ? "handle" : handle).",
-        isError: handleProblem != nil
-      ) {
-        HStack(spacing: 2) {
-          Text(verbatim: "@").foregroundStyle(Palette.labelSecondary).accessibilityHidden(true)
-          TextField("Handle", text: $handle, prompt: Text(verbatim: "sillyelphaba"))
-            .textInputAutocapitalization(.never)
-            .autocorrectionDisabled()
-            .focused($focus, equals: .handle)
-            .onChange(of: handle) { _, value in
-              let normalized = String(ProfileRules.normalizeHandle(value).prefix(20))
-              if normalized != value { handle = normalized }
-            }
+    if let status {
+      Section {
+        Label {
+          Text(status.text).foregroundStyle(status.ok ? Color.primary : Color.red)
+        } icon: {
+          Image(systemName: status.ok ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+            .foregroundStyle(status.ok ? Color.green : Color.red)
         }
-        .fieldStyle()
       }
+      .id("status")
+    }
 
-      FormField(label: "Name") {
-        TextField("Name", text: $name, prompt: Text("Your name"))
-          .textContentType(.name)
-          .focused($focus, equals: .name)
-          .onChange(of: name) { _, v in if v.count > ProfileRules.nameMax { name = String(v.prefix(ProfileRules.nameMax)) } }
-          .fieldStyle()
-      }
-
-      FormField(label: "Bio", optional: true, counter: "\(bio.count)/\(ProfileRules.bioMax)") {
-        TextField("Bio", text: $bio, prompt: Text("Musicals, mostly. Always the front row."), axis: .vertical)
-          .lineLimit(3, reservesSpace: true)
-          .focused($focus, equals: .bio)
-          .onChange(of: bio) { _, v in if v.count > ProfileRules.bioMax { bio = String(v.prefix(ProfileRules.bioMax)) } }
-          .padding(.vertical, Space.m)
-          .fieldStyle()
-      }
-
-      FormField(label: "Link", optional: true) {
-        TextField("Link", text: $link, prompt: Text(verbatim: "instagram.com/yourname"))
-          .keyboardType(.URL)
+    Section {
+      HStack(spacing: 2) {
+        Text(verbatim: "@").foregroundStyle(.secondary).accessibilityHidden(true)
+        TextField("Handle", text: $handle, prompt: Text(verbatim: "sillyelphaba"))
           .textInputAutocapitalization(.never)
           .autocorrectionDisabled()
-          .focused($focus, equals: .link)
-          .fieldStyle()
+          .focused($focus, equals: .handle)
+          .accessibilityLabel("Handle")
+          .onChange(of: handle) { _, value in
+            let normalized = String(ProfileRules.normalizeHandle(value).prefix(20))
+            if normalized != value { handle = normalized }
+          }
       }
+    } header: {
+      Text("Handle")
+    } footer: {
+      Text(handleProblem ?? "Your profile is at /@\(handle.isEmpty ? "handle" : handle).")
+        .foregroundStyle(handleProblem != nil ? Color.red : Color.secondary)
+    }
 
-      Toggle(isOn: $isPrivate) {
-        VStack(alignment: .leading, spacing: 2) {
-          Text("Private profile").font(.stubBody.weight(.medium)).foregroundStyle(Palette.label)
-          Text("Only you and followers you approve see your shows, trips and stats. Others see your handle, name, bio and link.")
-            .font(.stubFootnote)
-            .foregroundStyle(Palette.labelSecondary)
+    Section("Name") {
+      TextField("Name", text: $name, prompt: Text("Your name"))
+        .textContentType(.name)
+        .focused($focus, equals: .name)
+        .accessibilityLabel("Name")
+        .onChange(of: name) { _, v in if v.count > ProfileRules.nameMax { name = String(v.prefix(ProfileRules.nameMax)) } }
+    }
+
+    Section {
+      TextField("Bio", text: $bio, prompt: Text("Musicals, mostly. Always the front row."), axis: .vertical)
+        .lineLimit(3, reservesSpace: true)
+        .focused($focus, equals: .bio)
+        .accessibilityLabel("Bio")
+        .onChange(of: bio) { _, v in if v.count > ProfileRules.bioMax { bio = String(v.prefix(ProfileRules.bioMax)) } }
+    } header: {
+      HStack {
+        Text("Bio (optional)")
+        Spacer()
+        Text("\(bio.count)/\(ProfileRules.bioMax)").monospacedDigit()
+      }
+    }
+
+    Section("Link (optional)") {
+      TextField("Link", text: $link, prompt: Text(verbatim: "instagram.com/yourname"))
+        .keyboardType(.URL)
+        .textInputAutocapitalization(.never)
+        .autocorrectionDisabled()
+        .focused($focus, equals: .link)
+        .accessibilityLabel("Link")
+    }
+
+    Section {
+      Toggle("Private profile", isOn: $isPrivate)
+        .tint(Palette.tint)
+    } footer: {
+      VStack(alignment: .leading, spacing: Space.s) {
+        Text("Only you and followers you approve see your shows, trips and stats. Others see your handle, name, bio and link.")
+        if profile.isPrivate, !isPrivate {
+          Text("Going public approves any follow requests waiting for you.")
         }
       }
-      .tint(Palette.tint)
-      .padding(Space.l)
-      .cardStyle()
-      if profile.isPrivate, !isPrivate {
-        Text("Going public approves any follow requests waiting for you.")
-          .font(.stubFootnote)
-          .foregroundStyle(Palette.labelSecondary)
-      }
-
-      if let status {
-        Text(status.text)
-          .font(.stubFootnote)
-          .foregroundStyle(status.ok ? Palette.labelSecondary : Palette.destructive)
-      }
-      Button(saving ? "Saving…" : "Save") { Task { await save(userId: userId) } }
-        .buttonStyle(.primary)
-        .disabled(saving || handleProblem != nil)
     }
   }
 
   private var accountSection: some View {
-    VStack(alignment: .leading, spacing: 0) {
+    Section {
       ForEach([("Privacy", "privacy"), ("Terms", "terms"), ("FAQ", "faq")], id: \.1) { title, path in
         Link(destination: AppConfig.current.webURL.appendingPathComponent(path)) {
           HStack {
-            Text(title).foregroundStyle(Palette.label)
+            Text(title).foregroundStyle(.primary)
             Spacer()
-            Image(systemName: "arrow.up.right").foregroundStyle(Palette.labelSecondary)
+            Image(systemName: "arrow.up.right")
+              .font(.footnote.weight(.semibold))
+              .foregroundStyle(.tertiary)
           }
-          .font(.stubBody)
-          .padding(.horizontal, Space.l)
-          .frame(minHeight: 50)
         }
-        Palette.separator.frame(height: 1).padding(.leading, Space.l)
       }
-      Button {
-        Task { await session.signOut() }
-      } label: {
-        Text("Sign out")
-          .font(.stubBody)
-          .foregroundStyle(Palette.tintText)
-          .padding(.horizontal, Space.l)
-          .frame(maxWidth: .infinity, minHeight: 50, alignment: .leading)
-      }
+      Button("Sign out") { Task { await session.signOut() } }
     }
-    .cardStyle()
   }
 
-  private func deleteSection(_ profile: Profile) -> some View {
-    VStack(alignment: .leading, spacing: Space.s) {
-      Text("Delete account")
-        .font(.stubTitle2)
-        .foregroundStyle(Palette.label)
-        .accessibilityAddTraits(.isHeader)
+  private var deleteSection: some View {
+    Section {
+      Button("Delete account", role: .destructive) { deleting = true }
+    } footer: {
       Text("Permanently delete your profile, diary, trips and photos. This can’t be undone.")
-        .font(.stubSubheadline)
-        .foregroundStyle(Palette.labelSecondary)
-      Button("Delete account") { deleting = true }
-        .buttonStyle(PillButtonStyle())
-        .foregroundStyle(Palette.destructive)
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(.top, Space.xl)
-    .overlay(alignment: .top) { Palette.separator.frame(height: 1) }
   }
 
   private var handleProblem: String? {
@@ -231,27 +240,37 @@ struct DeleteAccountSheet: View {
 
   var body: some View {
     NavigationStack {
-      VStack(alignment: .leading, spacing: Space.l) {
-        Text("Delete your account?")
-          .font(.stubTitle2)
-          .foregroundStyle(Palette.label)
-        Text("This permanently deletes your profile, diary, trips, photos, follows, likes and comments.")
-          .font(.stubSubheadline)
-          .foregroundStyle(Palette.labelSecondary)
-        FormField(label: "Type your handle, @\(handle), to confirm", message: error, isError: true) {
+      Form {
+        Section {
           TextField("Confirm handle", text: $typed, prompt: Text(verbatim: handle))
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled()
-            .fieldStyle()
+            .accessibilityLabel("Type your handle, @\(handle), to confirm")
+        } header: {
+          Text("Type your handle, @\(handle), to confirm")
+        } footer: {
+          if let error {
+            Text(error).foregroundStyle(.red)
+          } else {
+            Text("This permanently deletes your profile, diary, trips, photos, follows, likes and comments.")
+          }
         }
-        Button(busy ? "Deleting…" : "Delete account") { Task { await delete() } }
-          .buttonStyle(DestructiveButtonStyle())
+        Section {
+          Button(role: .destructive) {
+            Task { await delete() }
+          } label: {
+            HStack {
+              Spacer()
+              if busy { ProgressView() } else { Text("Delete account").fontWeight(.semibold) }
+              Spacer()
+            }
+          }
           .disabled(busy || ProfileRules.normalizeHandle(typed) != handle.lowercased())
           .accessibilityIdentifier("confirm-delete-account")
-        Spacer()
+        }
       }
-      .padding(Space.l)
-      .background(Palette.background)
+      .navigationTitle("Delete your account?")
+      .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
       }
@@ -288,16 +307,5 @@ struct DeleteAccountSheet: View {
       return self.error = "Couldn’t delete your account. Try again."
     }
     session.accountDeleted()
-  }
-}
-
-/// A filled destructive capsule, for the final step of a deletion.
-struct DestructiveButtonStyle: ButtonStyle {
-  func makeBody(configuration: Configuration) -> some View {
-    configuration.label
-      .font(.stubHeadline)
-      .foregroundStyle(.white)
-      .frame(maxWidth: .infinity, minHeight: 50)
-      .background(Palette.destructive.opacity(configuration.isPressed ? 0.8 : 1), in: .capsule)
   }
 }

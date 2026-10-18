@@ -22,7 +22,7 @@ struct RatingInput: View {
             let fill = (value ?? 0) - Double(i)
             Image(systemName: fill >= 1 ? "star.fill" : fill >= 0.5 ? "star.leadinghalf.filled" : "star")
               .font(.system(size: size * 0.85))
-              .foregroundStyle(fill >= 0.5 ? Palette.star : Palette.outline)
+              .foregroundStyle(fill >= 0.5 ? Palette.star : Color(.systemGray3))
               .frame(width: size, height: size)
           }
         }
@@ -50,8 +50,8 @@ struct RatingInput: View {
       .frame(width: size * 5, height: size)
 
       Text(value.map { "\($0.formatted()) / 5" } ?? "No rating")
-        .font(.stubSubheadline)
-        .foregroundStyle(Palette.labelSecondary)
+        .font(.subheadline)
+        .foregroundStyle(.secondary)
         .monospacedDigit()
     }
     .frame(minHeight: Space.touch)

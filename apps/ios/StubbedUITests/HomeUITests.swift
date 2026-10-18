@@ -10,7 +10,7 @@ final class HomeUITests: XCTestCase {
     let app = launchApp()
     signOutIfNeeded(app)
     try signIn(app)
-    XCTAssertTrue(app.navigationBars["Home"].waitForExistence(timeout: 15))
+    XCTAssertTrue(onHome(app))
 
     let friend = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "@ios_friend")).firstMatch
     XCTAssertTrue(friend.waitForExistence(timeout: 15))

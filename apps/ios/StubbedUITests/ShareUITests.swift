@@ -9,7 +9,7 @@ final class ShareUITests: XCTestCase {
     let app = launchApp()
     signOutIfNeeded(app)
     try signIn(app)
-    XCTAssertTrue(app.navigationBars["Home"].waitForExistence(timeout: 15))
+    XCTAssertTrue(onHome(app))
     app.buttons["Profile"].tap()
     scrollAndTap(button(app, startingWith: "Operation Mincemeat"), in: app)
 

@@ -139,12 +139,12 @@ private func row(_ primary: String, _ secondary: String?, emphasis: Bool = false
   Button(action: action) {
     VStack(alignment: .leading, spacing: 2) {
       Text(primary)
-        .font(.stubHeadline)
-        .foregroundStyle(emphasis ? Palette.tintText : Palette.label)
+        .font(.headline)
+        .foregroundStyle(emphasis ? Palette.tintText : .primary)
       if let secondary {
         Text(secondary)
-          .font(.stubSubheadline)
-          .foregroundStyle(Palette.labelSecondary)
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
       }
     }
     .frame(maxWidth: .infinity, minHeight: Space.touch, alignment: .leading)

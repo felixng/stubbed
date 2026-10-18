@@ -9,45 +9,50 @@ struct TripsList: View {
 
   var body: some View {
     VStack(alignment: .trailing, spacing: Space.m) {
-      Button("+ New trip") { router.newTrip() }
-        .font(.stubSubheadline.weight(.semibold))
-        .foregroundStyle(Palette.tintText)
+      Button("New trip", systemImage: "plus") { router.newTrip() }
+        .font(.subheadline.weight(.semibold))
         .frame(minHeight: Space.touch)
       switch trips {
       case .loading:
         LoadingText()
       case .failed(let message):
-        EmptyState(title: "Couldn’t load your trips") { Text(message) }
+        EmptyState(title: "Couldn’t load your trips", systemImage: "wifi.exclamationmark") { Text(message) }
       case .loaded(let list) where list.isEmpty:
-        EmptyState(title: "No trips yet") {
+        EmptyState(title: "No trips yet", systemImage: "suitcase") {
           Text("Group shows from a trip or festival, like “NYC Oct 2026”. Pick them in your diary, or start a trip here.")
         }
       case .loaded(let list):
         VStack(spacing: 0) {
           ForEach(Array(list.enumerated()), id: \.element.id) { index, item in
-            if index > 0 { Palette.separator.frame(height: 1) }
+            if index > 0 { Divider().padding(.leading, Space.l + 36 + Space.l) }
             NavigationLink(value: AppRouter.Route.trip(item.trip.id)) {
               HStack(spacing: Space.l) {
+                Image(systemName: "suitcase.fill")
+                  .font(.body)
+                  .foregroundStyle(Palette.tintText)
+                  .frame(width: 36, height: 36)
+                  .background(Palette.tintFill, in: .rect(cornerRadius: 8, style: .continuous))
+                  .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 2) {
-                  Text(item.trip.name).font(.stubHeadline).foregroundStyle(Palette.label).lineLimit(1)
-                  Text(item.trip.dates).font(.stubSubheadline).foregroundStyle(Palette.labelSecondary).lineLimit(1)
+                  Text(item.trip.name).font(.headline).foregroundStyle(.primary).lineLimit(1)
+                  Text(item.trip.dates).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
                 }
                 Spacer()
                 Text("\(item.count) \(item.count == 1 ? "show" : "shows")")
-                  .font(.stubSubheadline)
-                  .foregroundStyle(Palette.labelSecondary)
+                  .font(.subheadline)
+                  .foregroundStyle(.secondary)
                   .monospacedDigit()
+                RowChevron()
               }
               .padding(.horizontal, Space.l)
               .padding(.vertical, Space.m)
               .frame(minHeight: Space.touch)
-              .contentShape(.rect)
             }
-            .buttonStyle(.plain)
+            .pressableRow()
             .accessibilityElement(children: .combine)
           }
         }
-        .cardStyle()
+        .groupedCard()
       }
     }
     .task(id: router.dataVersion) { await load() }

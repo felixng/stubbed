@@ -19,12 +19,12 @@ struct AvatarPicker: View {
       PhotosPicker(selection: $item, matching: .images) {
         Avatar(name: name.isEmpty ? "?" : name, url: url, size: size)
           .overlay(alignment: .bottomTrailing) {
-            Image(systemName: "camera")
-              .font(.system(size: 14, weight: .semibold))
+            Image(systemName: "camera.fill")
+              .font(.footnote.weight(.semibold))
               .foregroundStyle(Palette.onTint)
               .frame(width: 32, height: 32)
               .background(Palette.tint, in: .circle)
-              .overlay(Circle().strokeBorder(Palette.background, lineWidth: 2))
+              .overlay(Circle().strokeBorder(Color(.systemGroupedBackground), lineWidth: 2))
           }
           .opacity(busy ? 0.6 : 1)
       }
@@ -38,13 +38,12 @@ struct AvatarPicker: View {
           Button("Remove") { Task { await remove() } }
         }
       }
-      .font(.stubSubheadline.weight(.medium))
-      .foregroundStyle(Palette.tintText)
+      .font(.subheadline.weight(.medium))
 
       if let status {
         Text(status.text)
-          .font(.stubFootnote)
-          .foregroundStyle(status.ok ? Palette.labelSecondary : Palette.destructive)
+          .font(.footnote)
+          .foregroundStyle(status.ok ? Color.secondary : Color.red)
       }
     }
     .frame(maxWidth: .infinity)

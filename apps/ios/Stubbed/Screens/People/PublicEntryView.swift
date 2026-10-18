@@ -12,14 +12,14 @@ struct PublicEntryView: View {
 
   var body: some View {
     ScrollViewReader { proxy in
-    Screen(title: "") {
+    Screen(title: "", titleMode: .inline) {
       switch state {
       case .loading:
         LoadingText()
       case .failed(let message):
-        EmptyState(title: "Couldn’t load this show") { Text(message) }
+        EmptyState(title: "Couldn’t load this show", systemImage: "wifi.exclamationmark") { Text(message) }
       case .loaded(nil):
-        EmptyState(title: "This show isn’t available") {
+        EmptyState(title: "This show isn’t available", systemImage: "eye.slash") {
           Text("It may be private, or it may have been deleted.")
         }
       case .loaded(let page?):
@@ -32,11 +32,20 @@ struct PublicEntryView: View {
             // "Comment" and the likes link open at the thread, like #comments.
             if showComments { withAnimation { proxy.scrollTo("comments", anchor: .top) } }
           }
-        NavigationLink("More from @\(page.owner.handle)", value: AppRouter.Route.profile(handle: page.owner.handle))
-          .buttonStyle(.tintedPill)
+        NavigationLink(value: AppRouter.Route.profile(handle: page.owner.handle)) {
+          HStack(spacing: Space.m) {
+            Avatar(name: page.owner.name, url: page.owner.avatarURL, size: 32)
+            Text("More from @\(page.owner.handle)").font(.body).foregroundStyle(.primary)
+            Spacer(minLength: 0)
+            RowChevron()
+          }
+          .padding(.horizontal, Space.l)
+          .padding(.vertical, Space.m)
+        }
+        .pressableRow()
+        .groupedCard()
       }
     }
-    .navigationBarTitleDisplayMode(.inline)
     }
     .refreshable { await load() }
     .task(id: router.dataVersion) { await load() }
@@ -71,15 +80,15 @@ struct CommentThread: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: Space.l) {
-      (Text("Comments").foregroundStyle(Palette.label)
-        + Text(comments.isEmpty ? "" : " · \(comments.count)").foregroundStyle(Palette.labelSecondary))
-        .font(.stubHeadline)
+      (Text("Comments").foregroundStyle(.primary)
+        + Text(comments.isEmpty ? "" : " · \(comments.count)").foregroundStyle(.secondary))
+        .font(.headline)
         .accessibilityAddTraits(.isHeader)
       if !likers.isEmpty { likedBy }
       if comments.isEmpty {
         Text("No comments yet. Say something nice.")
-          .font(.stubSubheadline)
-          .foregroundStyle(Palette.labelSecondary)
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
       } else {
         ForEach(comments) { comment in row(comment) }
       }
@@ -87,7 +96,7 @@ struct CommentThread: View {
     }
     .padding(Space.l)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .cardStyle()
+    .groupedCard()
     // `presenting` hands the comment to the button: the binding is cleared
     // before the button's action runs.
     .confirmationDialog(
@@ -102,15 +111,16 @@ struct CommentThread: View {
   /// "Liked by @a, @b and 3 others"
   private var likedBy: some View {
     let others = likes - likers.count
-    var text = Text("Liked by ").foregroundStyle(Palette.labelSecondary)
+    var text = Text("Liked by ").foregroundStyle(.secondary)
     for (i, person) in likers.enumerated() {
       if i > 0 {
-        text = text + Text(i == likers.count - 1 && others <= 0 ? " and " : ", ").foregroundStyle(Palette.labelSecondary)
+        text = text + Text(i == likers.count - 1 && others <= 0 ? " and " : ", ").foregroundStyle(.secondary)
       }
-      text = text + Text(verbatim: "@\(person.handle)").fontWeight(.semibold).foregroundStyle(Palette.label)
+      text = text + Text(verbatim: "@\(person.handle)").fontWeight(.semibold).foregroundStyle(.primary)
     }
-    if others > 0 { text = text + Text(" and \(others) \(others == 1 ? "other" : "others")").foregroundStyle(Palette.labelSecondary) }
-    return text.font(.stubSubheadline)
+    if others > 0 { text = text + Text(" and \(others) \(others == 1 ? "other" : "others")").foregroundStyle(.secondary) }
+    return Label { text } icon: { Image(systemName: "heart.fill").foregroundStyle(Palette.tint) }
+      .font(.subheadline)
   }
 
   private func row(_ comment: Comment) -> some View {
@@ -123,12 +133,11 @@ struct CommentThread: View {
       .buttonStyle(.plain)
       .accessibilityLabel("@\(comment.author.handle)’s profile")
       VStack(alignment: .leading, spacing: 2) {
-        (Text(verbatim: "@\(comment.author.handle)").fontWeight(.semibold).foregroundStyle(Palette.label)
-          + Text(" · \(Comment.timeAgo(comment.createdAt))").foregroundStyle(Palette.labelSecondary))
-          .font(.stubFootnote)
+        (Text(verbatim: "@\(comment.author.handle)").fontWeight(.semibold).foregroundStyle(.primary)
+          + Text(" · \(Comment.timeAgo(comment.createdAt))").foregroundStyle(.secondary))
+          .font(.footnote)
         Text(comment.body)
-          .font(.stubBody)
-          .foregroundStyle(Palette.label)
+          .font(.body)
       }
       Spacer(minLength: 0)
       if canDelete {
@@ -136,8 +145,8 @@ struct CommentThread: View {
           deleting = comment
         } label: {
           Image(systemName: "trash")
-            .font(.system(size: 15))
-            .foregroundStyle(Palette.labelSecondary)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
             .frame(width: Space.touch, height: Space.touch)
         }
         .buttonStyle(.plain)
@@ -152,16 +161,18 @@ struct CommentThread: View {
       TextField("Comment", text: $draft, prompt: Text("Add a comment…"), axis: .vertical)
         .lineLimit(1...5)
         .focused($typing)
+        .padding(.horizontal, Space.l)
         .padding(.vertical, Space.m)
-        .fieldStyle(minHeight: Space.touch)
+        .frame(minHeight: Space.touch)
+        .background(Color(.tertiarySystemFill), in: .rect(cornerRadius: 20, style: .continuous))
         .onChange(of: draft) { _, value in
           if value.count > ReactionsAPI.commentMax { draft = String(value.prefix(ReactionsAPI.commentMax)) }
         }
       HStack {
         if let error {
-          Text(error).font(.stubFootnote).foregroundStyle(Palette.destructive)
+          Text(error).font(.footnote).foregroundStyle(.red)
         } else if draft.count > ReactionsAPI.commentMax - 50 {
-          Text("\(draft.count)/\(ReactionsAPI.commentMax)").font(.stubFootnote).foregroundStyle(Palette.labelSecondary)
+          Text("\(draft.count)/\(ReactionsAPI.commentMax)").font(.footnote).foregroundStyle(.secondary)
         }
         Spacer()
         Button(posting ? "Posting…" : "Post") { Task { await post() } }

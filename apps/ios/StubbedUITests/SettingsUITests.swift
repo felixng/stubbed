@@ -18,7 +18,7 @@ final class SettingsUITests: XCTestCase {
       app.scrollViews.firstMatch.swipeUp()
       app.buttons["Continue"].tap()
     }
-    XCTAssertTrue(app.navigationBars["Home"].waitForExistence(timeout: 15))
+    XCTAssertTrue(onHome(app))
     app.buttons["Profile"].tap()
     let edit = app.buttons["Edit profile"].firstMatch
     XCTAssertTrue(edit.waitForExistence(timeout: 10))
@@ -32,7 +32,7 @@ final class SettingsUITests: XCTestCase {
     let app = try editProfile()
     let row = app.switches.matching(NSPredicate(format: "label BEGINSWITH %@", "Private profile")).firstMatch
     XCTAssertTrue(row.waitForExistence(timeout: 10))
-    app.scrollViews.firstMatch.swipeUp()
+    app.collectionViews.firstMatch.swipeUp()
     // The switch sits at the row's trailing edge.
     let toggle = row.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
     toggle.tap()
