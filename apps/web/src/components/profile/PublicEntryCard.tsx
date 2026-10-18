@@ -2,13 +2,20 @@ import Link from "next/link";
 
 import { RatingStars } from "@/components/ui/RatingStars";
 import { formatDate, SHOW_TYPE_LABELS, type EntryRow } from "@/lib/entries";
-import type { Reactions } from "@/lib/reactions";
+import type { Comment, Reactions } from "@/lib/reactions";
 import { Avatar } from "./Avatar";
 import { EntryReactions, ShareAction } from "./EntryReactions";
+import { FeedThread } from "./FeedThread";
 
 // Who is looking (null when signed out) and the entry's likes and comments,
-// for the Like and Comment row under the card.
-export type CardSocial = { viewerId: string | null; reactions: Reactions };
+// for the Like and Comment row under the card. With `thread` (the feed), the
+// entry's latest comments show inline with a box to add one; `ownerId` lets
+// the owner delete any of them.
+export type CardSocial = {
+  viewerId: string | null;
+  reactions: Reactions;
+  thread?: { ownerId: string; latest: Comment[] };
+};
 
 // One public entry, as a post, laid out like Instagram: who and when, then the
 // photo edge to edge with the show, where and stars on it (over a dark
@@ -25,7 +32,8 @@ export type CardSocial = { viewerId: string | null; reactions: Reactions };
 // right and `shareHref` adds Share next to Comment (or on its own when the show
 // takes no likes or comments).
 // With `social`, the card ends with Like and Comment; signed-out visitors
-// sign in and come back to `loginNext`.
+// sign in and come back to `loginNext`. With `social.thread`, the comments
+// follow the caption and trips, inline.
 export function PublicEntryCard({
   entry,
   photoUrl,
@@ -81,6 +89,39 @@ export function PublicEntryCard({
       </p>
       {entry.rating != null && <RatingStars value={entry.rating} size={20} className="mt-1" />}
     </div>
+  );
+  const loginHref = `/login?next=${encodeURIComponent(loginNext ?? `/e/${entry.id}`)}`;
+  // The note as a caption after the handle, then the trip chips.
+  const caption = (
+    <>
+      {entry.note && (
+        <p className="text-body whitespace-pre-line text-label">
+          {!inTrip && <span className="font-semibold">@{handle} </span>}
+          {entry.note}
+        </p>
+      )}
+      {trips.length > 0 && (
+        <ul className="flex flex-wrap gap-2" aria-label="Trips and labels">
+          {trips.map((c) => {
+            const to = tripHref(c.id);
+            return (
+              <li key={c.id}>
+                {to ? (
+                  <Link
+                    href={to}
+                    className="inline-flex min-h-7 items-center rounded-pill bg-fill px-3 text-footnote font-medium text-label hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                  >
+                    {c.name}
+                  </Link>
+                ) : (
+                  <span className="inline-flex min-h-7 items-center rounded-pill bg-fill px-3 text-footnote font-medium text-label">{c.name}</span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </>
   );
   return (
     <article
@@ -149,48 +190,38 @@ export function PublicEntryCard({
       )}
       {hasFooter && (
         <div className="flex flex-col gap-3 px-4">
-          {social ? (
-            <EntryReactions
+          {social?.thread ? (
+            <FeedThread
               entryId={entry.id}
-              reactions={social.reactions}
+              ownerId={social.thread.ownerId}
               viewerId={social.viewerId}
-              commentsHref={page ? "#comments" : `/e/${entry.id}#comments`}
-              loginHref={`/login?next=${encodeURIComponent(loginNext ?? `/e/${entry.id}`)}`}
+              reactions={social.reactions}
+              latest={social.thread.latest}
+              loginHref={loginHref}
               shareHref={shareHref}
-            />
+            >
+              {caption}
+            </FeedThread>
           ) : (
-            shareHref && (
-              <div className="-mx-3 -mb-2 flex items-center gap-1 text-label">
-                <ShareAction href={shareHref} />
-              </div>
-            )
-          )}
-          {entry.note && (
-            <p className="text-body whitespace-pre-line text-label">
-              {!inTrip && <span className="font-semibold">@{handle} </span>}
-              {entry.note}
-            </p>
-          )}
-          {trips.length > 0 && (
-            <ul className="flex flex-wrap gap-2" aria-label="Trips and labels">
-              {trips.map((c) => {
-                const to = tripHref(c.id);
-                return (
-                  <li key={c.id}>
-                    {to ? (
-                      <Link
-                        href={to}
-                        className="inline-flex min-h-7 items-center rounded-pill bg-fill px-3 text-footnote font-medium text-label hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-                      >
-                        {c.name}
-                      </Link>
-                    ) : (
-                      <span className="inline-flex min-h-7 items-center rounded-pill bg-fill px-3 text-footnote font-medium text-label">{c.name}</span>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
+            <>
+              {social ? (
+                <EntryReactions
+                  entryId={entry.id}
+                  reactions={social.reactions}
+                  viewerId={social.viewerId}
+                  commentsHref={page ? "#comments" : `/e/${entry.id}#comments`}
+                  loginHref={loginHref}
+                  shareHref={shareHref}
+                />
+              ) : (
+                shareHref && (
+                  <div className="-mx-3 -mb-2 flex items-center gap-1 text-label">
+                    <ShareAction href={shareHref} />
+                  </div>
+                )
+              )}
+              {caption}
+            </>
           )}
         </div>
       )}

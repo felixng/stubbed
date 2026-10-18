@@ -39,7 +39,7 @@ export function AppTabBar() {
 // Rendered with no active tab while the page prerenders (the path is only
 // known per request), then with the real path.
 export function AppTabBarLinks({ pathname }: { pathname: string }) {
-  const home = pathname === "/app" || pathname.startsWith("/app/people");
+  const home = pathname === "/app";
   // Trip pages and settings sit under Profile.
   const profile = ["/app/profile", "/app/trips", "/app/settings"].some((p) => pathname.startsWith(p));
   const log = pathname.startsWith("/app/log");

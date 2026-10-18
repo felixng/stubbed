@@ -16,7 +16,7 @@ const LINK_BUTTON =
 // writes the row, then refreshes the page so counts and shows catch up.
 // Signed-out visitors go to sign in and come back here; the owner gets a
 // link to edit their profile. `onChanged` lets a list that read the status in
-// the browser (people search) read it again, since a refresh doesn't reach it.
+// the browser (the header's people search) read it again, since a refresh doesn't reach it.
 export function FollowButton({
   profileId,
   handle,
