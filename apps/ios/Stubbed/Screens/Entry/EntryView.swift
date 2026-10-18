@@ -32,7 +32,7 @@ struct EntryView: View {
       case .loading:
         LoadingText()
       case .failed(let message):
-        EmptyState(title: "Couldn’t load this show") { Text(message) }
+        EmptyState(title: "Couldn’t load this show", systemImage: "exclamationmark.triangle") { Text(message) }
       case .loaded(let entry):
         content(entry)
       }
@@ -54,18 +54,15 @@ struct EntryView: View {
     }
 
     if entry.planned {
-      VStack(alignment: .leading, spacing: Space.m) {
-        Text(
-          "You’re going on \(Day.formatWeekday(entry.date)). Once you’ve been, track it with your rating and share it."
-        )
-        .font(.stubSubheadline)
-        .foregroundStyle(Palette.label)
-        Button("Edit") { router.edit(entry) }
-          .buttonStyle(.tintedPill)
+      Label {
+        Text("You’re going on \(Day.formatWeekday(entry.date)). Once you’ve been, track it with your rating and share it.")
+          .font(.subheadline)
+      } icon: {
+        Image(systemName: "calendar").foregroundStyle(Palette.tintText)
       }
       .padding(Space.l)
       .frame(maxWidth: .infinity, alignment: .leading)
-      .cardStyle()
+      .groupedCard()
     } else if let share {
       ShareCarousel(subject: .show, cards: cards, failed: cardsFailed, text: share.text, link: share.link)
     }
@@ -73,93 +70,115 @@ struct EntryView: View {
     VStack(alignment: .leading, spacing: Space.m) {
       VStack(alignment: .leading, spacing: Space.xs) {
         Text(entry.show.title)
-          .font(.stubTitle2)
-          .foregroundStyle(Palette.label)
+          .font(.title2.bold())
           .accessibilityAddTraits(.isHeader)
         Text([entry.show.type.label, entry.whereText].compactMap { $0 }.joined(separator: " · "))
-          .font(.stubSubheadline)
-          .foregroundStyle(Palette.labelSecondary)
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
         Text(Day.formatLong(entry.date))
-          .font(.stubSubheadline)
-          .foregroundStyle(Palette.labelSecondary)
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
         if let rating = entry.rating {
           RatingStars(value: rating, size: 18).padding(.top, Space.xs)
         }
       }
       if let note = entry.note {
-        Text(note)
-          .font(.stubBody)
-          .foregroundStyle(Palette.label)
+        Text(note).font(.body)
       }
+    }
+    .padding(Space.l)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .groupedCard()
+
+    VStack(spacing: 0) {
       // Public shows have a page with likes and comments.
       if let reactions, entry.visibility == .public, !entry.planned {
         NavigationLink(value: AppRouter.Route.publicEntry(entry.id, comments: true)) {
-          Text(
+          row(
             reactions.likes + reactions.comments == 0
               ? "No likes or comments yet"
-              : "\(reactions.likes) \(reactions.likes == 1 ? "like" : "likes") · \(reactions.comments) \(reactions.comments == 1 ? "comment" : "comments")"
-          )
-          .font(.stubSubheadline.weight(.semibold))
-          .foregroundStyle(Palette.tintText)
-          .frame(minHeight: Space.touch)
+              : "\(reactions.likes) \(reactions.likes == 1 ? "like" : "likes") · \(reactions.comments) \(reactions.comments == 1 ? "comment" : "comments")",
+            systemImage: "heart", chevron: true)
         }
+        .pressableRow()
+        Divider().padding(.leading, Space.l + 28 + Space.m)
       }
-      FlowLayout(spacing: Space.s) {
-        ForEach(entry.trips, id: \.id) { trip in
-          NavigationLink(value: AppRouter.Route.trip(trip.id)) {
-            Text(trip.name)
-              .font(.stubFootnote.weight(.medium))
-              .foregroundStyle(Palette.label)
-              .padding(.horizontal, Space.m)
-              .frame(minHeight: 28)
-              .background(Palette.fill, in: .capsule)
-          }
+      ForEach(entry.trips, id: \.id) { trip in
+        NavigationLink(value: AppRouter.Route.trip(trip.id)) {
+          row(trip.name, systemImage: "suitcase", chevron: true)
         }
-        Text(
-          entry.planned
-            ? "Only you can see upcoming shows."
-            : entry.visibility == .public ? "Public" : "Private. Sharing the image doesn’t change that."
-        )
-        .font(.stubFootnote)
-        .foregroundStyle(Palette.labelSecondary)
-        .frame(minHeight: 28)
+        .pressableRow()
+        Divider().padding(.leading, Space.l + 28 + Space.m)
       }
+      row(
+        entry.planned
+          ? "Only you can see upcoming shows."
+          : entry.visibility == .public ? "Public" : "Private. Sharing the image doesn’t change that.",
+        systemImage: entry.visibility == .public && !entry.planned ? "globe" : "lock",
+        secondary: true)
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(.top, Space.l)
-    .overlay(alignment: .top) { Palette.separator.frame(height: 1) }
+    .groupedCard()
 
-    VStack(alignment: .leading, spacing: Space.s) {
-      Button(deleting ? "Deleting…" : "Delete", role: .destructive) { confirmDelete = true }
-        .font(.stubSubheadline.weight(.semibold))
-        .foregroundStyle(Palette.destructive)
-        .frame(minHeight: Space.touch)
-        .disabled(deleting)
-      if let deleteError {
-        Text(deleteError).font(.stubFootnote).foregroundStyle(Palette.destructive)
-      }
+    Button(role: .destructive) {
+      confirmDelete = true
+    } label: {
+      Text(deleting ? "Deleting…" : "Delete")
+        .font(.body)
+        .frame(maxWidth: .infinity, minHeight: Space.touch)
     }
+    .pressableRow()
+    .foregroundStyle(.red)
+    .groupedCard()
+    .disabled(deleting)
     .confirmationDialog("Delete \(entry.show.title)?", isPresented: $confirmDelete, titleVisibility: .visible) {
       Button("Delete", role: .destructive) { Task { await delete(entry) } }
     } message: {
       Text("This removes it from your diary, with its photo. It can’t be undone.")
     }
+    if let deleteError {
+      Text(deleteError).font(.footnote).foregroundStyle(.red)
+    }
+  }
+
+  /// A row in the details list: an icon, the text and, if it opens
+  /// something, a chevron.
+  private func row(_ text: String, systemImage: String, chevron: Bool = false, secondary: Bool = false) -> some View {
+    HStack(spacing: Space.m) {
+      Image(systemName: systemImage)
+        .font(.body)
+        .foregroundStyle(secondary ? AnyShapeStyle(.secondary) : AnyShapeStyle(Palette.tintText))
+        .frame(width: 28)
+        .accessibilityHidden(true)
+      Text(text)
+        .font(secondary ? .subheadline : .body)
+        .foregroundStyle(secondary ? .secondary : .primary)
+        .multilineTextAlignment(.leading)
+      Spacer(minLength: 0)
+      if chevron { RowChevron() }
+    }
+    .padding(.horizontal, Space.l)
+    .padding(.vertical, Space.m)
+    .frame(minHeight: Space.touch)
   }
 
   private func banner(_ notice: AppRouter.Notice, planned: Bool) -> some View {
     let failed = notice == .photoFailed
-    return Text(
-      failed
-        ? "Saved, but the photo didn’t upload. Edit the entry to add it again."
-        : planned ? "Added to Upcoming in your diary." : "Saved to your diary. Share it?"
-    )
-    .font(.stubSubheadline.weight(failed ? .regular : .medium))
-    .foregroundStyle(failed ? Palette.destructive : Palette.label)
+    return Label {
+      Text(
+        failed
+          ? "Saved, but the photo didn’t upload. Edit the entry to add it again."
+          : planned ? "Added to Upcoming in your diary." : "Saved to your diary. Share it?"
+      )
+      .font(.subheadline.weight(failed ? .regular : .medium))
+    } icon: {
+      Image(systemName: failed ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
+        .foregroundStyle(failed ? Color.orange : Color.green)
+    }
     .padding(.horizontal, Space.l)
     .padding(.vertical, Space.m)
     .frame(maxWidth: .infinity, alignment: .leading)
-    .background(failed ? Palette.fill : Palette.tintFill, in: .rect(cornerRadius: Radius.md))
-    .accessibilityAddTraits(.isStaticText)
+    .groupedCard()
+    .accessibilityElement(children: .combine)
   }
 
   private func load() async {

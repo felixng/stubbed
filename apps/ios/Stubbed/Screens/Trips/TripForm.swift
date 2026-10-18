@@ -25,45 +25,38 @@ struct TripForm: View {
 
   var body: some View {
     NavigationStack {
-      ScrollView {
-        VStack(alignment: .leading, spacing: Space.xl) {
-          FormField(label: "Name") {
-            TextField("Name", text: $name, prompt: Text(verbatim: "NYC Oct 2026"))
-              .focused($nameFocused)
-              .submitLabel(.done)
-              .onChange(of: name) { _, value in if value.count > 100 { name = String(value.prefix(100)) } }
-              .fieldStyle()
-          }
-          HStack(spacing: Space.m) {
-            FormField(label: "From") {
-              DatePicker("From", selection: $start, displayedComponents: .date).labelsHidden()
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            FormField(label: "To") {
-              DatePicker("To", selection: $end, in: start..., displayedComponents: .date).labelsHidden()
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-          }
-          .tint(Palette.tintText)
-          Text(note)
-            .font(.stubFootnote)
-            .foregroundStyle(Palette.labelSecondary)
-          if let error {
-            Text(error).font(.stubFootnote).foregroundStyle(Palette.destructive)
-          }
-          Button(saving ? "Saving…" : request.editing != nil ? "Save changes" : "Create trip") {
-            Task { await save() }
-          }
-          .buttonStyle(.primary)
-          .disabled(saving)
+      Form {
+        Section {
+          TextField("Name", text: $name, prompt: Text(verbatim: "NYC Oct 2026"))
+            .accessibilityLabel("Name")
+            .focused($nameFocused)
+            .submitLabel(.done)
+            .onChange(of: name) { _, value in if value.count > 100 { name = String(value.prefix(100)) } }
         }
-        .padding(Space.l)
+        Section {
+          DatePicker("From", selection: $start, displayedComponents: .date)
+          DatePicker("To", selection: $end, in: start..., displayedComponents: .date)
+        } footer: {
+          Text(note)
+        }
+        if let error {
+          Section {
+            Text(error).foregroundStyle(.red)
+          }
+        }
       }
-      .background(Palette.background)
       .navigationTitle(request.editing != nil ? "Edit trip" : "New trip")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+        ToolbarItem(placement: .confirmationAction) {
+          if saving {
+            ProgressView()
+          } else {
+            Button(request.editing != nil ? "Save" : "Create") { Task { await save() } }
+              .fontWeight(.semibold)
+          }
+        }
       }
       .onChange(of: start) { _, value in if end < value { end = value } }
       .onAppear { if request.editing == nil { nameFocused = true } }

@@ -23,6 +23,8 @@ final class ProfileUITests: XCTestCase {
     scrollAndTap(hamilton, in: app)
     XCTAssertTrue(app.staticTexts["Lin's replacement was brilliant. Front mezz, row B."].waitForExistence(timeout: 10))
     snapshot("entry")
+    app.swipeUp()
+    snapshot("entry-details")
     XCTAssertTrue(app.buttons["NYC Oct 2026"].waitForExistence(timeout: 5), app.debugDescription)
   }
 }
