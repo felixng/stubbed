@@ -32,7 +32,7 @@ final class SettingsUITests: XCTestCase {
     let app = try editProfile()
     let row = app.switches.matching(NSPredicate(format: "label BEGINSWITH %@", "Private profile")).firstMatch
     XCTAssertTrue(row.waitForExistence(timeout: 10))
-    app.scrollViews.firstMatch.swipeUp()
+    app.collectionViews.firstMatch.swipeUp()
     // The switch sits at the row's trailing edge.
     let toggle = row.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
     toggle.tap()
