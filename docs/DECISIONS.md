@@ -294,3 +294,6 @@ Owner's ask (#85): a tighter feed card. `PublicEntryCard` (Home feed, profiles, 
 - **Without a photo**, the show, where and stars stay as text under the header; the reactions and caption follow as above.
 - On trip pages the caption has no handle, matching the header being left out there.
 - iOS (`HomeView`) isn't changed yet.
+
+### 2026-10-18: Google Analytics 4, cookieless, alongside Vercel
+Owner's call. GA4 is added to the public pages next to Vercel Web Analytics, which stays. To keep "no analytics cookies, no consent banner" (2026-10-13), Consent Mode is set to `denied` for every type before anything is sent and is never granted, so GA stores nothing on the device and gets cookieless pings only; `ads_data_redaction` is on. No new dependency: `gtag.js` loads through `next/script`, and the queue is set up in `SiteAnalytics`. Page views are sent by hand (`send_page_view: false`) on public paths only, and `ga-disable-<id>` is set while on `/app`, `/login`, `/auth` or `/welcome`, so a client-side move into the app reports nothing. Off until `NEXT_PUBLIC_GA_MEASUREMENT_ID` is set. Trade-off: with consent denied, GA's standard reports stay mostly empty until traffic is high enough for its modelling (see `docs/ANALYTICS.md`). The privacy policy names Google as a processor for visit statistics.
