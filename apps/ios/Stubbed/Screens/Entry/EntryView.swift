@@ -27,7 +27,7 @@ struct EntryView: View {
   @State private var deleteError: String?
 
   var body: some View {
-    Screen(title: "") {
+    Screen(title: "", titleMode: .inline) {
       switch state {
       case .loading:
         LoadingText()
@@ -37,7 +37,6 @@ struct EntryView: View {
         content(entry)
       }
     }
-    .navigationBarTitleDisplayMode(.inline)
     .toolbar {
       if let entry = state.value {
         ToolbarItem(placement: .primaryAction) {

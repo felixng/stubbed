@@ -6,6 +6,8 @@ import SwiftUI
 struct Screen<Content: View>: View {
   let title: String
   var spacing: CGFloat = Space.l
+  /// `.inline` for screens whose content already leads with the title.
+  var titleMode: NavigationBarItem.TitleDisplayMode = .large
   @ViewBuilder var content: Content
 
   var body: some View {
@@ -21,6 +23,6 @@ struct Screen<Content: View>: View {
     }
     .background(Color(.systemGroupedBackground))
     .navigationTitle(title)
-    .navigationBarTitleDisplayMode(.large)
+    .navigationBarTitleDisplayMode(titleMode)
   }
 }

@@ -35,19 +35,18 @@ struct ProfileCalendar: View {
     let today = Day.today()
 
     VStack(alignment: .leading, spacing: Space.m) {
-      Text("Calendar").font(.stubHeadline).foregroundStyle(Palette.label)
+      Text("Calendar").font(.headline)
       HStack {
         navButton("chevron.left", "Previous month", disabled: month <= earliest) { shown = Self.add(month, -1) }
         Spacer()
         Text(Self.title(year, m))
-          .font(.callout.weight(.medium))
-          .foregroundStyle(Palette.label)
+          .font(.callout.weight(.semibold))
         Spacer()
         navButton("chevron.right", "Next month", disabled: month >= last) { shown = Self.add(month, 1) }
       }
       LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: 7), spacing: Space.xs) {
         ForEach(Array(Self.weekdays.enumerated()), id: \.offset) { _, d in
-          Text(d).font(.caption.weight(.medium)).foregroundStyle(Palette.labelSecondary).accessibilityHidden(true)
+          Text(d).font(.caption.weight(.semibold)).foregroundStyle(.tertiary).accessibilityHidden(true)
         }
         ForEach(0..<lead, id: \.self) { _ in Color.clear.frame(height: 40).accessibilityHidden(true) }
         ForEach(1...days, id: \.self) { day in
@@ -57,8 +56,8 @@ struct ProfileCalendar: View {
               onSelect(seen[0].id)
             } label: {
               Text("\(day)")
-                .font(.stubSubheadline.weight(.semibold))
-                .foregroundStyle(Palette.onTint)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.white)
                 .frame(width: 40, height: 40)
                 .background(Palette.tint, in: .circle)
             }
@@ -66,8 +65,8 @@ struct ProfileCalendar: View {
             .accessibilityLabel("\(day) \(Self.title(year, m)): \(seen.map(\.title).joined(separator: ", "))")
           } else {
             Text("\(day)")
-              .font(.stubSubheadline.weight(date == today ? .semibold : .regular))
-              .foregroundStyle(date == today ? Palette.tintText : Palette.label)
+              .font(.subheadline.weight(date == today ? .semibold : .regular))
+              .foregroundStyle(date == today ? Palette.tintText : .primary)
               .frame(width: 40, height: 40)
               .accessibilityHidden(true)
           }
@@ -75,24 +74,21 @@ struct ProfileCalendar: View {
       }
       .monospacedDigit()
       Text(inMonth == 0 ? "No shows this month" : "\(inMonth) \(inMonth == 1 ? "show" : "shows") this month")
-        .font(.stubFootnote)
-        .foregroundStyle(Palette.labelSecondary)
+        .font(.footnote)
+        .foregroundStyle(.secondary)
     }
     .padding(Space.l)
-    .cardStyle()
+    .groupedCard()
   }
 
   private func navButton(_ symbol: String, _ label: String, disabled: Bool, action: @escaping () -> Void) -> some View {
     Button(action: action) {
       Image(systemName: symbol)
-        .font(.system(size: 16, weight: .semibold))
-        .foregroundStyle(Palette.label)
+        .font(.body.weight(.semibold))
         .frame(width: Space.touch, height: Space.touch)
-        .background(Palette.fill, in: .circle)
     }
-    .buttonStyle(.plain)
+    .buttonStyle(.borderless)
     .disabled(disabled)
-    .opacity(disabled ? 0.4 : 1)
     .accessibilityLabel(label)
   }
 
