@@ -63,16 +63,26 @@ enum Grouped {
 
 extension View {
   /// An inset grouped container: `secondarySystemGroupedBackground`, 16pt
-  /// continuous corners, a hairline border, no shadow.
+  /// continuous corners and a 1pt stroke at 6% of the label colour. No shadow.
   func groupedCard() -> some View {
     self
       .background(Color(.secondarySystemGroupedBackground), in: Grouped.shape)
       .clipShape(Grouped.shape)
-      .overlay(Grouped.shape.strokeBorder(Color(.separator).opacity(0.35), lineWidth: 0.5))
+      .overlay(Grouped.shape.strokeBorder(Color.primary.opacity(0.06), lineWidth: 1))
   }
 
   /// Highlights a tappable row while it's pressed, like a list row.
   func pressableRow() -> some View { buttonStyle(PressableRowStyle()) }
+}
+
+/// A whole card as one tap target: it eases down to 98% while pressed.
+struct CardPressStyle: ButtonStyle {
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .contentShape(.rect)
+      .scaleEffect(configuration.isPressed ? 0.98 : 1)
+      .animation(.spring(response: 0.3, dampingFraction: 0.7), value: configuration.isPressed)
+  }
 }
 
 /// A row or card that dims to the system fill while pressed.
