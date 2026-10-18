@@ -6,7 +6,7 @@ import { DeleteTripButton } from "@/components/app/DeleteTripButton";
 import { ShareSheet } from "@/components/app/share/ShareSheet";
 import { TripEntries } from "@/components/app/TripEntries";
 import { TripForm } from "@/components/app/TripForm";
-import { formatDate, formatTripDates, TRIP_SELECT, tripCovers, type Collection } from "@/lib/entries";
+import { formatDate, formatTripDates, TRIP_SELECT, tripCovers, tripNights, type Collection } from "@/lib/entries";
 import type { TripCardData } from "@/lib/share-card-trip";
 import { listOwnEntries, ownerContext } from "@/lib/supabase/data";
 
@@ -40,7 +40,8 @@ async function Trip({ params, searchParams }: PageProps<"/app/trips/[id]">) {
   // Stats count shows seen; planned ones are listed but not counted yet.
   const seen = entries.filter((e) => e.status === "logged");
   const venues = new Set(seen.flatMap((e) => (e.venue ? [e.venue.id] : []))).size;
-  const nights = new Set(seen.map((e) => e.date)).size;
+  // The trip's length, from its dates (not the days with a show).
+  const nights = tripNights(trip);
   const cities = new Set(seen.flatMap((e) => (e.venue?.city?.trim() ? [e.venue.city.trim()] : [])));
   const rated = seen.flatMap((e) => (e.rating != null ? [e.rating] : []));
   // The recap card (#16) covers the shows seen, in date order.
@@ -80,7 +81,7 @@ async function Trip({ params, searchParams }: PageProps<"/app/trips/[id]">) {
       <div className="flex gap-3">
         <Stat value={seen.length} label={seen.length === 1 ? "show" : "shows"} />
         <Stat value={venues} label={venues === 1 ? "venue" : "venues"} />
-        <Stat value={nights} label={nights === 1 ? "night" : "nights"} />
+        {nights > 0 && <Stat value={nights} label={nights === 1 ? "night" : "nights"} />}
       </div>
       {seen.length > 0 && <ShareSheet subject={{ kind: "trip", data: card, photoUrls }} slug={slug} publicHref={publicHref} />}
       <TripEntries tripId={trip.id} inTrip={entries} others={others} photos={Object.fromEntries(photos)} />

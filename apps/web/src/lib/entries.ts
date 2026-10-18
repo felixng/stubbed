@@ -168,6 +168,13 @@ export function tripsCovering(trips: Collection[], date: string) {
   return trips.filter((t) => tripCovers(t, date));
 }
 
+// How long a trip is in nights: end date minus start date (9–17 Oct is 8
+// nights; a one-day trip is 0). Dates are calendar days, so compare at noon UTC.
+export function tripNights(trip: Pick<Collection, "start_date" | "end_date">) {
+  const days = (new Date(`${trip.end_date}T12:00:00Z`).getTime() - new Date(`${trip.start_date}T12:00:00Z`).getTime()) / 86_400_000;
+  return Math.max(0, Math.round(days));
+}
+
 export function formatTripDates(trip: Pick<Collection, "start_date" | "end_date">) {
   const { start_date: from, end_date: to } = trip;
   if (from === to) return formatDate(from);
