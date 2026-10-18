@@ -57,6 +57,7 @@ async function Trip({ params, searchParams }: PageProps<"/app/trips/[id]">) {
       rating: e.rating,
     })),
     venues,
+    nights,
     average: rated.length ? rated.reduce((a, b) => a + b, 0) / rated.length : null,
   };
   const photoUrls = seen.map((e) => (e.photo_path ? (photos.get(e.photo_path) ?? null) : null));
