@@ -135,132 +135,126 @@ struct LogView: View {
     VStack(spacing: Space.l) {
       PhotosPicker(selection: $photoItem, matching: .images) {
         VStack(spacing: Space.m) {
-          Image(systemName: "camera")
-            .font(.system(size: 36, weight: .light))
-            .foregroundStyle(Palette.labelSecondary)
+          Image(systemName: "camera.fill")
+            .font(.largeTitle)
+            .foregroundStyle(Palette.tintText)
+            .frame(width: 72, height: 72)
+            .background(Palette.tintFill, in: .circle)
           Text("Start with a photo")
-            .font(.stubHeadline)
-            .foregroundStyle(Palette.label)
+            .font(.title3.bold())
+            .foregroundStyle(.primary)
           Text("The curtain, the stage, the Playbill or your ticket. We’ll fill in what we can.")
-            .font(.stubSubheadline)
-            .foregroundStyle(Palette.labelSecondary)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
             .frame(maxWidth: 280)
           Text("Choose photo")
-            .font(.stubHeadline)
-            .foregroundStyle(Palette.onTint)
+            .font(.headline)
+            .foregroundStyle(.white)
             .padding(.horizontal, Space.xxl)
             .frame(minHeight: 50)
             .background(Palette.tint, in: .capsule)
             .padding(.top, Space.s)
         }
         .padding(.horizontal, Space.xxl)
-        .frame(maxWidth: .infinity, minHeight: 288)
-        .background(Palette.surface, in: .rect(cornerRadius: Radius.md))
-        .overlay(
-          RoundedRectangle(cornerRadius: Radius.md).strokeBorder(Palette.outline, style: StrokeStyle(lineWidth: 1, dash: [5, 4])))
+        .padding(.vertical, Space.xxl)
+        .frame(maxWidth: .infinity)
       }
       .buttonStyle(.plain)
+      .groupedCard()
       .accessibilityLabel("Start with a photo")
       .accessibilityHint("The curtain, the stage, the Playbill or your ticket.")
 
       Button("No photo? Fill in by hand") { started = true }
-        .font(.stubSubheadline.weight(.semibold))
-        .foregroundStyle(Palette.tintText)
+        .font(.subheadline.weight(.semibold))
         .frame(minHeight: Space.touch)
       Spacer()
     }
     .padding(Space.l)
     .frame(maxWidth: .infinity, maxHeight: .infinity)
-    .background(Palette.background)
+    .background(Color(.systemGroupedBackground))
   }
 
   private var form: some View {
-      ScrollView {
-        VStack(alignment: .leading, spacing: Space.xxl) {
-          photoRow
-          showField
-          venueField
-          dateField
-          ratingField
-          noteField
-          if !offeredTrips.isEmpty { tripsField }
-          visibilityField
-          if let error {
-            Text(error)
-              .font(.stubFootnote)
-              .foregroundStyle(Palette.destructive)
-          }
+    Form {
+      photoSection
+      showSection
+      venueSection
+      dateSection
+      ratingSection
+      noteSection
+      if !offeredTrips.isEmpty { tripsSection }
+      visibilitySection
+      if let error {
+        Section {
+          Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red)
         }
-        .frame(maxWidth: 640)
-        .padding(.horizontal, Space.l)
-        .padding(.vertical, Space.xl)
-        .frame(maxWidth: .infinity)
       }
-      .scrollDismissesKeyboard(.interactively)
-      .background(Palette.background)
-      .safeAreaInset(edge: .bottom) {
-        Button(saving ? "Saving…" : editing != nil ? "Save changes" : planned ? "Add to Upcoming" : "Save") {
-          Task { await save() }
+    }
+    .scrollDismissesKeyboard(.interactively)
+    .toolbar {
+      ToolbarItem(placement: .confirmationAction) {
+        if saving {
+          ProgressView()
+        } else {
+          Button(editing == nil && planned ? "Add" : "Save") { Task { await save() } }
+            .fontWeight(.semibold)
+            .accessibilityHint(planned ? "Adds it to Upcoming" : "")
         }
-        .buttonStyle(.primary)
-        .disabled(saving)
-        .padding(.horizontal, Space.l)
-        .padding(.top, Space.m)
-        .padding(.bottom, Space.s)
-        .background(Palette.background)
-        .overlay(alignment: .top) { Palette.separator.frame(height: 1) }
       }
+    }
   }
 
   // MARK: - Fields
 
-  private var photoRow: some View {
-    HStack(alignment: .top, spacing: Space.l) {
-      Group {
-        if let preview {
-          Image(uiImage: preview).resizable().scaledToFill()
-        } else if let existingPhoto {
-          AsyncImage(url: existingPhoto) { $0.resizable().scaledToFill() } placeholder: { Palette.fill }
-        } else {
-          Image(systemName: "camera")
-            .font(.system(size: 26))
-            .foregroundStyle(Palette.labelSecondary)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Palette.fill)
+  private var photoSection: some View {
+    Section {
+      HStack(alignment: .center, spacing: Space.l) {
+        Group {
+          if let preview {
+            Image(uiImage: preview).resizable().scaledToFill()
+          } else if let existingPhoto {
+            AsyncImage(url: existingPhoto) { $0.resizable().scaledToFill() } placeholder: { Color(.tertiarySystemFill) }
+          } else {
+            Image(systemName: "photo")
+              .font(.title2)
+              .foregroundStyle(.secondary)
+              .frame(maxWidth: .infinity, maxHeight: .infinity)
+              .background(Color(.tertiarySystemFill))
+          }
         }
-      }
-      .frame(width: 96, height: 96)
-      .clipShape(.rect(cornerRadius: Radius.sm))
-      .accessibilityHidden(true)
+        .frame(width: 72, height: 72)
+        .clipShape(.rect(cornerRadius: Radius.sm, style: .continuous))
+        .accessibilityHidden(true)
 
-      VStack(alignment: .leading, spacing: Space.xs) {
-        HStack(spacing: Space.l) {
-          PhotosPicker(hasPhoto ? "Change photo" : "Add photo", selection: $photoItem, matching: .images)
-            .foregroundStyle(Palette.tintText)
-          if hasPhoto {
-            Button("Remove", role: .destructive) {
-              clearPhotoResults()
-              photo = nil
-              preview = nil
-              existingPhoto = nil
+        VStack(alignment: .leading, spacing: Space.xs) {
+          HStack(spacing: Space.l) {
+            PhotosPicker(hasPhoto ? "Change photo" : "Add photo", selection: $photoItem, matching: .images)
+            if hasPhoto {
+              Button("Remove", role: .destructive) {
+                clearPhotoResults()
+                photo = nil
+                preview = nil
+                existingPhoto = nil
+              }
+              .foregroundStyle(.red)
             }
-            .foregroundStyle(Palette.destructive)
           }
-        }
-        .font(.stubSubheadline.weight(.semibold))
-        .frame(minHeight: Space.touch)
-        if let photoError {
-          Text(photoError)
-            .font(.stubFootnote)
-            .foregroundStyle(Palette.destructive)
-        } else if let status = detectStatus {
-          HStack(spacing: Space.s) {
-            if status.working { ProgressView().controlSize(.mini) }
-            Text(status.text)
+          .buttonStyle(.borderless)
+          .font(.subheadline.weight(.semibold))
+          .frame(minHeight: Space.touch)
+          if let photoError {
+            Text(photoError)
+              .font(.footnote)
+              .foregroundStyle(.red)
+          } else if let status = detectStatus {
+            HStack(spacing: Space.s) {
+              if status.working { ProgressView().controlSize(.mini) }
+              Text(status.text)
+            }
+            .font(.footnote)
+            .foregroundStyle(.secondary)
           }
-          .font(.stubFootnote)
-          .foregroundStyle(Palette.labelSecondary)
         }
       }
     }
@@ -268,8 +262,8 @@ struct LogView: View {
 
   private var hasPhoto: Bool { preview != nil || existingPhoto != nil }
 
-  private var showField: some View {
-    labelled("Show") {
+  private var showSection: some View {
+    Section("Show") {
       if let show {
         SelectedValue(primary: show.title, secondary: show.id == nil ? "New show" : show.type.label) {
           picking = .show
@@ -285,16 +279,16 @@ struct LogView: View {
         SearchButton(title: "Search shows") { picking = .show }
         if detect == .identifying {
           Label("Working out the show from your photo…", systemImage: "sparkle.magnifyingglass")
-            .font(.stubFootnote)
-            .foregroundStyle(Palette.labelSecondary)
+            .font(.footnote)
+            .foregroundStyle(.secondary)
         }
       }
       if let suggestion, let title = suggestion.showTitle, show == nil || showDiffers {
-        HStack(spacing: Space.s) {
+        VStack(alignment: .leading, spacing: Space.s) {
           Chip(title: showDiffers ? "Photo suggests \(title)" : "Maybe \(title)?") { Task { await take(suggestion) } }
           Text(suggestion.reason)
-            .font(.stubFootnote)
-            .foregroundStyle(Palette.labelSecondary)
+            .font(.footnote)
+            .foregroundStyle(.secondary)
             .lineLimit(2)
         }
       }
@@ -306,22 +300,20 @@ struct LogView: View {
     return show.title.lowercased() != title.lowercased()
   }
 
-  private var venueField: some View {
-    labelled("Venue", optional: planned) {
+  private var venueSection: some View {
+    Section {
       if let venue {
         SelectedValue(primary: venue.name, secondary: venue.isNew ? "New venue" : venue.place) {
           picking = .venue
         }
         // A venue added by hand needs a city and country for stats.
         if venue.isNew {
-          HStack(spacing: Space.m) {
-            FormField(label: "City") {
-              TextField("City", text: binding(\.city)).textContentType(.addressCity).fieldStyle()
-            }
-            FormField(label: "Country") {
-              TextField("Country", text: binding(\.country)).textContentType(.countryName).fieldStyle()
-            }
-          }
+          TextField("City", text: binding(\.city))
+            .textContentType(.addressCity)
+            .accessibilityLabel("City")
+          TextField("Country", text: binding(\.country))
+            .textContentType(.countryName)
+            .accessibilityLabel("Country")
         }
       } else {
         SearchButton(title: "Search venues") { picking = .venue }
@@ -339,6 +331,8 @@ struct LogView: View {
           pickVenue(venueSuggestion)
         }
       }
+    } header: {
+      Text(planned ? "Venue (optional)" : "Venue")
     }
   }
 
@@ -346,12 +340,9 @@ struct LogView: View {
     Binding(get: { venue?[keyPath: key] ?? "" }, set: { venue?[keyPath: key] = $0 })
   }
 
-  private var dateField: some View {
-    labelled("Date") {
+  private var dateSection: some View {
+    Section {
       DatePicker("Date", selection: Binding(get: { Day.date(date) }, set: { setDate(Day.string($0)) }), displayedComponents: .date)
-        .datePickerStyle(.compact)
-        .labelsHidden()
-        .tint(Palette.tintText)
       ChipRow(label: "Quick dates") {
         Chip(title: "Today", selected: date == today) { setDate(today) }
         Chip(title: "Yesterday", selected: date == Day.today(offset: -1)) { setDate(Day.today(offset: -1)) }
@@ -359,79 +350,57 @@ struct LogView: View {
     }
   }
 
-  @ViewBuilder private var ratingField: some View {
-    if planned {
-      Text("That’s after today, so this goes in Upcoming. Rate it after you’ve been.")
-        .font(.stubSubheadline)
-        .foregroundStyle(Palette.label)
-        .padding(.horizontal, Space.l)
-        .padding(.vertical, Space.m)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Palette.tintFill, in: .rect(cornerRadius: Radius.md))
-    } else {
-      labelled("Rating") {
+  private var ratingSection: some View {
+    Section("Rating") {
+      if planned {
+        Label("That’s after today, so this goes in Upcoming. Rate it after you’ve been.", systemImage: "calendar")
+          .font(.subheadline)
+      } else {
         RatingInput(value: $rating)
       }
     }
   }
 
-  private var noteField: some View {
-    labelled("Note", optional: true) {
+  private var noteSection: some View {
+    Section("Note (optional)") {
       TextField("Note", text: $note, prompt: Text("What stayed with you?"), axis: .vertical)
-        .lineLimit(2...10)
-        .padding(.vertical, Space.m)
-        .fieldStyle()
+        .lineLimit(3...10)
         .accessibilityLabel("Note")
     }
   }
 
-  private var tripsField: some View {
-    labelled("Part of a trip?") {
-      ChipRow(label: "Trips") {
-        ForEach(offeredTrips) { trip in
-          Chip(title: trip.name, selected: tripIds.contains(trip.id)) {
-            touchedTrips = true
-            if tripIds.contains(trip.id) { tripIds.remove(trip.id) } else { tripIds.insert(trip.id) }
+  private var tripsSection: some View {
+    Section("Part of a trip?") {
+      ForEach(offeredTrips) { trip in
+        let on = tripIds.contains(trip.id)
+        Button {
+          touchedTrips = true
+          if on { tripIds.remove(trip.id) } else { tripIds.insert(trip.id) }
+        } label: {
+          HStack {
+            Label(trip.name, systemImage: "suitcase").foregroundStyle(.primary)
+            Spacer()
+            if on { Image(systemName: "checkmark").fontWeight(.semibold) }
           }
         }
+        .accessibilityAddTraits(on ? .isSelected : [])
       }
     }
   }
 
-  private var visibilityField: some View {
-    labelled("Who can see this") {
-      HStack(spacing: Space.s) {
-        ForEach([Visibility.public, .private], id: \.self) { option in
-          let selected = visibility == option
-          Button {
-            touchedVisibility = true
-            visibility = option
-          } label: {
-            Text(option == .public ? "Public" : "Private")
-              .font(.stubSubheadline.weight(.semibold))
-              .foregroundStyle(selected ? Palette.background : Palette.label)
-              .frame(maxWidth: .infinity, minHeight: Space.touch)
-              .background(selected ? Palette.label : Palette.fill, in: .capsule)
-          }
-          .buttonStyle(.plain)
-          .accessibilityAddTraits(selected ? .isSelected : [])
-        }
+  private var visibilitySection: some View {
+    Section {
+      SwiftUI.Picker("Who can see this", selection: Binding(get: { visibility }, set: { touchedVisibility = true; visibility = $0 })) {
+        Text("Public").tag(Visibility.public)
+        Text("Private").tag(Visibility.private)
       }
+      .pickerStyle(.segmented)
+      .listRowBackground(Color.clear)
+      .listRowInsets(EdgeInsets())
+    } header: {
+      Text("Who can see this")
+    } footer: {
       Text(visibility == .public ? "Anyone with the link can see this entry." : "Only you can see this entry.")
-        .font(.stubFootnote)
-        .foregroundStyle(Palette.labelSecondary)
-    }
-  }
-
-  private func labelled<Content: View>(_ title: String, optional: Bool = false, @ViewBuilder content: () -> Content)
-    -> some View
-  {
-    VStack(alignment: .leading, spacing: Space.s) {
-      (Text(title).foregroundStyle(Palette.label)
-        + Text(optional ? " (optional)" : "").fontWeight(.regular).foregroundStyle(Palette.labelSecondary))
-        .font(.stubSubheadline.weight(.medium))
-        .accessibilityAddTraits(.isHeader)
-      content()
     }
   }
 
@@ -684,51 +653,48 @@ struct LogView: View {
   }
 }
 
-/// A picked show or venue, with "Change" to pick again.
+/// A picked show or venue: tap the row to pick again.
 struct SelectedValue: View {
   let primary: String
   let secondary: String?
   let onChange: () -> Void
 
   var body: some View {
-    HStack(spacing: Space.m) {
-      VStack(alignment: .leading, spacing: 2) {
-        Text(primary)
-          .font(.stubHeadline)
-          .foregroundStyle(Palette.label)
-        if let secondary {
-          Text(secondary)
-            .font(.stubSubheadline)
-            .foregroundStyle(Palette.labelSecondary)
+    Button(action: onChange) {
+      HStack(spacing: Space.m) {
+        VStack(alignment: .leading, spacing: 2) {
+          Text(primary)
+            .font(.headline)
+            .foregroundStyle(.primary)
+          if let secondary {
+            Text(secondary)
+              .font(.subheadline)
+              .foregroundStyle(.secondary)
+          }
         }
+        Spacer()
+        Text("Change").font(.subheadline).foregroundStyle(.secondary)
+        RowChevron()
       }
-      Spacer()
-      Button("Change", action: onChange)
-        .font(.stubSubheadline.weight(.semibold))
-        .foregroundStyle(Palette.tintText)
-        .accessibilityLabel("Change \(primary)")
     }
-    .padding(.horizontal, Space.l)
-    .padding(.vertical, Space.m)
-    .frame(minHeight: 50)
-    .background(Palette.surface, in: .rect(cornerRadius: Radius.md))
-    .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(Palette.separator))
+    .accessibilityLabel("Change \(primary)")
   }
 }
 
-/// A field-shaped button that opens a search sheet.
+/// A form row that opens a search sheet.
 struct SearchButton: View {
   let title: String
   let action: () -> Void
 
   var body: some View {
     Button(action: action) {
-      Label(title, systemImage: "magnifyingglass")
-        .foregroundStyle(Palette.labelSecondary)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .fieldStyle()
+      HStack {
+        Label(title, systemImage: "magnifyingglass")
+        Spacer()
+        RowChevron()
+      }
     }
-    .buttonStyle(.plain)
+    .accessibilityLabel(title)
   }
 }
 

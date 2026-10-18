@@ -38,16 +38,15 @@ final class LogUITests: XCTestCase {
     fill(app.textFields["City"], with: "London")
     fill(app.textFields["Country"], with: "United Kingdom")
 
-    // Wait for the keyboard to finish closing: the Save bar slides down
-    // through the stars as it goes.
     XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 5))
-    // Scroll the stars out from under the Save bar.
-    app.scrollViews.firstMatch.swipeUp()
+    app.collectionViews.firstMatch.swipeUp()
     let rating = app.otherElements["Rating"]
-    rating.coordinate(withNormalizedOffset: CGVector(dx: 0.3, dy: 0.5)).tap()
+    // The control is the whole form row; the stars start after the row's
+    // 20pt inset and are 36pt each, so 81pt into them is 2.5.
+    rating.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0.5)).withOffset(CGVector(dx: 20 + 81, dy: 0)).tap()
     snapshot("log-form")
 
-    app.buttons["Save"].tap()
+    app.navigationBars.buttons["Save"].tap()
     XCTAssertTrue(app.staticTexts["Saved to your diary. Share it?"].waitForExistence(timeout: 15))
     XCTAssertTrue(app.staticTexts[title].exists)
     snapshot("entry-saved")
@@ -56,9 +55,9 @@ final class LogUITests: XCTestCase {
     XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Musical · \(theatre), ")).firstMatch.exists)
 
     app.buttons["Edit"].firstMatch.tap()
-    XCTAssertTrue(app.buttons["Save changes"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.navigationBars["Edit"].buttons["Save"].waitForExistence(timeout: 10))
     app.otherElements["Rating"].swipeRight()  // drag to five stars
-    app.buttons["Save changes"].tap()
+    app.navigationBars["Edit"].buttons["Save"].tap()
     XCTAssertTrue(app.otherElements["Rated 5 out of 5"].waitForExistence(timeout: 15))
 
     app.buttons["Delete"].firstMatch.tap()
