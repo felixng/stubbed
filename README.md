@@ -1,6 +1,6 @@
 # Stubbed
 
-Your theatre diary: log every show, rate it, group it into trips, and share it. Project brief: [`CLAUDE.md`](CLAUDE.md). Architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+Your theatre diary: log every show, rate it, group it into trips, and share it. Project brief: [Stubbed: Project Brief](https://docs.google.com/document/d/1NdEgeTRMkKQ5TL87Urwpe7WG9fcrejPsZKsmrO2Enak/edit) (Google Doc). Architecture: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 ## Monorepo layout
 

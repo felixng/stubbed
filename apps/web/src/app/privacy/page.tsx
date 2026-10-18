@@ -189,10 +189,13 @@ export default function PrivacyPage() {
         <List>
           <li>
             <strong>Visits to our public pages</strong> (the home page, these
-            legal pages and public profiles), using Vercel Web Analytics: the
-            page, the referring website, and your country, device type and
-            browser. It uses no cookies, and doesn’t identify you or follow you
-            across websites or from one day to the next. Pages inside your
+            legal pages and public profiles), using Vercel Web Analytics and
+            Google Analytics: the page, the referring website, and your
+            country, device type and browser. Both run without cookies, and we
+            don’t identify you or follow you across websites or from one day to
+            the next. Google Analytics runs with storage and advertising
+            features switched off, so Google gets a cookieless signal it can’t
+            tie to a returning visitor or use for ads. Pages inside your
             account aren’t counted.
           </li>
           <li>
@@ -259,6 +262,10 @@ export default function PrivacyPage() {
           </li>
           <li>
             <strong>Vercel</strong>: website hosting and visit statistics.
+          </li>
+          <li>
+            <strong>Google</strong>: visit statistics for our public pages
+            (Google Analytics, without cookies).
           </li>
           <li>
             <strong>Kit</strong>: keeps the waitlist and sends its emails.

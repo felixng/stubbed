@@ -23,7 +23,7 @@ export async function GET(_request: Request, { params }: RouteContext<"/api/og/t
   const grid = tiles.length >= 3;
   const tile = (n: number) => (grid ? 313 : n === 2 ? { w: 630, h: 313 } : 630);
 
-  const headline = `${stats.shows} ${stats.shows === 1 ? "show" : "shows"} in ${stats.nights} ${stats.nights === 1 ? "night" : "nights"}`;
+  const headline = `${stats.shows} ${stats.shows === 1 ? "show" : "shows"}${stats.nights > 0 ? ` in ${stats.nights} ${stats.nights === 1 ? "night" : "nights"}` : ""}`;
   const place = stats.cities.length === 1 ? stats.cities[0] : stats.cities.length > 1 ? `${stats.cities.length} cities` : null;
   const details = [
     `${stats.venues} ${stats.venues === 1 ? "theatre" : "theatres"}`,

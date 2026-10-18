@@ -6,8 +6,9 @@ import { useState, useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 // Deletes a comment: the commenter's own, or any comment on the viewer's own
-// entry (Postgres decides). Nobody is told.
-export function DeleteCommentButton({ commentId, mine }: { commentId: string; mine: boolean }) {
+// entry (Postgres decides). Nobody is told. With `onDeleted` (the feed's
+// inline comments, which keep their own list) that runs instead of a refresh.
+export function DeleteCommentButton({ commentId, mine, onDeleted }: { commentId: string; mine: boolean; onDeleted?: () => void }) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [refreshing, startRefresh] = useTransition();
@@ -22,6 +23,11 @@ export function DeleteCommentButton({ commentId, mine }: { commentId: string; mi
         if (error) {
           setSaving(false);
           window.alert("Couldn’t delete. Try again.");
+          return;
+        }
+        if (onDeleted) {
+          setSaving(false);
+          onDeleted();
           return;
         }
         startRefresh(() => {

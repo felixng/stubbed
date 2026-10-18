@@ -2,7 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { connection } from "next/server";
 import { cache } from "react";
 
-import { ENTRY_SELECT, signPhotos, toEntryRow, TRIP_SELECT, type Collection, type EntryRow } from "@/lib/entries";
+import { ENTRY_SELECT, signPhotos, toEntryRow, TRIP_SELECT, tripNights, type Collection, type EntryRow } from "@/lib/entries";
 import { viewerContext } from "@/lib/follows";
 import { createPublicClient } from "@/lib/supabase/public";
 
@@ -149,7 +149,7 @@ export const getPublicTrip = cache(async (id: string): Promise<PublicTrip | null
     stats: {
       shows: entries.length,
       venues: new Set(entries.flatMap((e) => (e.venue ? [e.venue.id] : []))).size,
-      nights: new Set(entries.map((e) => e.date)).size,
+      nights: tripNights(tripRow), // the trip's length from its dates, as on the trip page
       cities,
       average: rated.length ? rated.reduce((a, b) => a + b, 0) / rated.length : null,
     },

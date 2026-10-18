@@ -4,13 +4,15 @@ import { useEffect, useId, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
-import { TRIP_SELECT, tripCovers, type Collection } from "@/lib/entries";
+import { formatDate, TRIP_SELECT, tripCovers, type Collection } from "@/lib/entries";
 import type { Identification } from "@/lib/identify";
 import {
   centroid,
+  describeMissing,
   groupPhotos,
   MAX_IDENTIFY_PHOTOS,
   mergeReadings,
+  missingFields,
   pickSpread,
   visitAccuracy,
   type Extracted,
@@ -18,13 +20,14 @@ import {
   type Reading,
 } from "@/lib/import/drafts";
 import { pickBest, type Attempt } from "@/lib/import/compare";
+import { importErrorText } from "@/lib/import/errors";
 import { EMAIL_FILE_ACCEPT, parseEmailFile, type ParsedEmail } from "@/lib/import/email-parse";
 import type { EmailExtraction } from "@/lib/import/extract-email";
 import { lookupNearby, preparePhoto, requestIdentify, type PreparedPhoto } from "@/lib/import/photo-pipeline";
 import { resolveShow, resolveVenue, runPool, saveDraft, SaveError } from "@/lib/import/resolve";
 import { createClient } from "@/lib/supabase/client";
 import { useFreshOnReturn } from "@/lib/use-fresh-on-return";
-import { DraftCard, type Draft } from "./DraftCard";
+import { DraftCard, draftCardId, type Draft } from "./DraftCard";
 import { CompareGrid } from "./CompareGrid";
 import { COMPARE_ALL, DEFAULT_CHAIN, ModelPicker, type ProvidersInfo } from "./ModelPicker";
 
@@ -60,6 +63,11 @@ const STATE_TEXT: Record<Job["state"], string> = {
 const EMAIL_CONCURRENCY = 3;
 const PHOTO_CONCURRENCY = 3;
 
+// One photo per entry for now, even for shots from the same evening: several
+// photos per entry is planned as a later (likely paid) feature. Turned off in
+// the UI only; visit grouping and merging stay in lib/import for then.
+const GROUP_VISITS = false;
+
 const isImage = (f: File) => f.type.startsWith("image/") || /\.(jpe?g|png|heic|heif|webp|gif)$/i.test(f.name);
 
 // A photo's own time isn't the curtain time, so `time` stays empty: it would
@@ -78,6 +86,25 @@ function fromIdentification(result: Identification, date: string | null): Extrac
     price: null,
     confidence: result.confidence,
     reason: result.reason,
+  };
+}
+
+// A source nothing could be read from still becomes a draft, so the show can
+// be logged by hand with its photos, nearby theatres and date kept.
+function blank(date: string | null): Extracted {
+  return {
+    show_title: null,
+    show_type: null,
+    venue_name: null,
+    venue_osm_id: null,
+    city: null,
+    country: null,
+    date,
+    time: null,
+    seats: null,
+    price: null,
+    confidence: "low",
+    reason: "",
   };
 }
 
@@ -119,7 +146,8 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
   existingRef.current = existing;
   // Per source: how to turn an attempt into drafts, and the drafts it made,
   // so "Use this" can swap one model's reading for another's.
-  const appliers = useRef(new Map<string, (attempt: Attempt) => Promise<string[]>>());
+  // A null attempt makes a blank draft to fill in by hand.
+  const appliers = useRef(new Map<string, (attempt: Attempt | null) => Promise<string[]>>());
   const jobDrafts = useRef(new Map<string, string[]>());
 
   useEffect(() => {
@@ -165,9 +193,13 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
   // A new reading either joins a draft for the same show and date (a
   // reminder for a booking already read) or becomes a new draft, which is
   // then matched to the catalogue.
-  async function addReading(reading: Reading, extra: Pick<Draft, "nearby" | "place" | "photos">): Promise<{ key: string; created: boolean }> {
+  async function addReading(reading: Reading, extra: Pick<Draft, "nearby" | "place" | "photos" | "unread">): Promise<{ key: string; created: boolean }> {
     const same = draftsRef.current.find(
-      (d) => d.status !== "saved" && mergeReadings([d.reading, reading]).length === 1,
+      (d) =>
+        d.status !== "saved" &&
+        // One photo per entry: a photo only joins a draft that has none (its booking email).
+        (GROUP_VISITS || !extra.photos.length || !d.photos.length) &&
+        mergeReadings([d.reading, reading]).length === 1,
     );
     if (same) {
       // Functional update: other jobs may be updating drafts at the same time.
@@ -251,8 +283,9 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
   }
 
   // Turns one attempt into drafts, replacing drafts an earlier choice made
-  // for this source (unless saved, or shared with another source).
-  async function chooseAttempt(ref: string, attempt: Attempt | null) {
+  // for this source (unless saved, or shared with another source). With no
+  // attempt, `manual` leaves a blank draft to fill in by hand.
+  async function chooseAttempt(ref: string, attempt: Attempt | null, manual = false) {
     const previous = new Set(jobDrafts.current.get(ref) ?? []);
     if (previous.size) {
       draftsRef.current = draftsRef.current.filter((d) => !previous.has(d.key) || d.status === "saved");
@@ -260,7 +293,7 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
     }
     jobDrafts.current.set(ref, []);
     updateJob(ref, { chosen: attempt?.model ?? null, found: attempt?.shows.length ?? 0 });
-    if (!attempt) return;
+    if (!attempt && !manual) return;
     const created = await appliers.current.get(ref)?.(attempt);
     jobDrafts.current.set(ref, created ?? []);
   }
@@ -273,7 +306,9 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
       state: done ? "done" : "failed",
       detail: best ? best.note : (attempts.find((a) => a.note)?.note ?? null),
     });
-    await chooseAttempt(ref, best);
+    // A photo visit is always worth logging; an email only when reading it
+    // failed (not when it simply wasn't a booking).
+    await chooseAttempt(ref, best, kind === "identify" || !done);
   }
 
   async function readEmails(files: File[], text?: string) {
@@ -309,7 +344,11 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
     await runPool(batch.filter((p) => p.text), EMAIL_CONCURRENCY, async (email) => {
       updateJob(email.ref, { state: "reading" });
       appliers.current.set(email.ref, async (attempt) => {
-        const source = { kind: "email" as const, ref: email.ref, fileName: email.fileName, subject: email.subject, from: email.from, sent: email.sent, trimmed: email.trimmed, readBy: attempt.readBy };
+        const source = { kind: "email" as const, ref: email.ref, fileName: email.fileName, subject: email.subject, from: email.from, sent: email.sent, trimmed: email.trimmed, readBy: attempt?.readBy ?? null };
+        if (!attempt) {
+          const added = await addReading({ extracted: blank(null), sources: [source] }, { nearby: [], place: { city: null, country: null }, photos: [], unread: true });
+          return added.created ? [added.key] : [];
+        }
         const keys: string[] = [];
         for (const extracted of attempt.shows) {
           const added = await addReading({ extracted, sources: [source] }, { nearby: [], place: { city: extracted.city, country: extracted.country }, photos: [] });
@@ -332,7 +371,8 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
                 ? "Too many at once. Try again in a few minutes."
                 : code === "model_unavailable" || code === "invalid_model"
                   ? `Can’t use ${m}: no API key, or not a valid model.`
-                  : `Couldn’t read this email.${detail ? ` ${detail}` : ""}`,
+                  : // Admins also see the provider's raw reply, to debug a model.
+                    `${importErrorText("email", detail)}${admin && detail ? ` ${detail}` : ""}`,
           );
         }
         const { result, model: readBy } = (await res.json()) as { result: EmailExtraction | null; model: string | null };
@@ -367,10 +407,14 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
         failed.push(file.name);
       }
     });
-    const groups = groupPhotos(items.map((p) => ({ ...p, ...p.meta })));
+    const when = (p: PhotoItem) => `${p.meta.date ?? "9999"} ${p.meta.time ?? "99:99"}`;
+    // Without grouping, each photo is its own visit, in time order.
+    const groups = GROUP_VISITS
+      ? groupPhotos(items.map((p) => ({ ...p, ...p.meta })))
+      : [...items].sort((a, b) => when(a).localeCompare(when(b))).map((p) => [{ ...p, ...p.meta }]);
     updateJob(prepRef, {
       state: failed.length && !items.length ? "failed" : "done",
-      label: `${items.length} photo${items.length === 1 ? "" : "s"} read, ${groups.length} visit${groups.length === 1 ? "" : "s"}`,
+      label: `${items.length} photo${items.length === 1 ? "" : "s"} read${GROUP_VISITS ? `, ${groups.length} visit${groups.length === 1 ? "" : "s"}` : ""}`,
       detail: failed.length
         ? `Couldn’t open ${failed.join(", ")}. HEIC only opens in Safari; export as JPEG for other browsers.`
         : null,
@@ -418,11 +462,12 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
           date: p.meta.date,
           time: p.meta.time,
           hasLocation: p.meta.lat != null,
-          readBy: attempt.readBy,
+          readBy: attempt?.readBy ?? null,
         }));
+        const extracted = attempt?.shows[0];
         const added = await addReading(
-          { extracted: attempt.shows[0], sources },
-          { nearby, place, photos: group.map((p) => ({ stored: p.stored, previewUrl: p.previewUrl })) },
+          { extracted: extracted ?? { ...blank(dated.meta.date), city: place.city, country: place.country }, sources },
+          { nearby, place, photos: group.map((p) => ({ stored: p.stored, previewUrl: p.previewUrl })), unread: !extracted },
         );
         return added.created ? [added.key] : [];
       });
@@ -436,7 +481,7 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
               ? "Show detection isn’t set up yet (no API key)."
               : outcome.error === "model_unavailable"
                 ? `Can’t use ${m} for photos: no API key, or it can’t read images.`
-                : `Couldn’t work out the show.${outcome.detail ? ` ${outcome.detail}` : ""}`,
+                : `${importErrorText("photo", outcome.detail)}${admin && outcome.detail ? ` ${outcome.detail}` : ""}`,
           );
         }
         const r = outcome.result;
@@ -463,19 +508,18 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
     (d.show?.id && d.date && existing.find((x) => x.show_id === d.show!.id && x.date === d.date)?.id) || null;
 
   const toSave = drafts.filter((d) => d.include && d.status !== "saved" && d.status !== "resolving");
+  // Ticked drafts that Save found incomplete and still are.
+  const blocked = toSave.filter((d) => d.flagged && missingFields(d).length);
   const busy = jobs.some((j) => j.state !== "done" && j.state !== "failed");
 
   async function saveAll() {
     if (!userId) return setNotice("You’re signed out. Sign in again to save.");
-    const incomplete = toSave.filter((d) => !d.show || !d.venue || !d.date);
+    // Each card marks what it still needs; the list above Save links to them.
+    const incomplete = toSave.filter((d) => missingFields(d).length);
     if (incomplete.length) {
-      incomplete.forEach((d) => updateDraft(d.key, { error: "Needs a show, venue and date, or untick Save." }));
-      return setNotice(`${incomplete.length} ticked draft${incomplete.length === 1 ? " is" : "s are"} missing a show, venue or date.`);
-    }
-    const handAdded = toSave.filter((d) => d.venue && !d.venue.id && !d.venue.osm_id && (!d.venue.city?.trim() || !d.venue.country?.trim()));
-    if (handAdded.length) {
-      handAdded.forEach((d) => updateDraft(d.key, { error: "Add the new venue’s city and country." }));
-      return setNotice("Some new venues need a city and country.");
+      setNotice(null);
+      incomplete.forEach((d) => updateDraft(d.key, { flagged: true }));
+      return goToDraft(incomplete[0].key);
     }
 
     setSaving(true);
@@ -519,6 +563,24 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
     );
   }
 
+  function goToDraft(key: string) {
+    // After the render that marks it.
+    requestAnimationFrame(() => {
+      const card = document.getElementById(draftCardId(key));
+      card?.scrollIntoView({ behavior: "smooth", block: "start" });
+      card?.focus({ preventScroll: true });
+    });
+  }
+
+  // How a draft is named in the list of ones that can't be saved yet.
+  function draftName(d: Draft) {
+    const title = d.show?.title ?? d.reading.extracted.show_title;
+    const source = d.reading.sources[0];
+    const from = source?.kind === "email" ? (source.subject ?? source.fileName) : `${d.photos.length} photo${d.photos.length === 1 ? "" : "s"}`;
+    const when = d.date ? formatDate(d.date, { day: "numeric", month: "short", year: "numeric" }) : null;
+    return [title ?? `Unknown show (${from})`, when].filter(Boolean).join(", ");
+  }
+
   function reset() {
     urls.current.forEach((u) => URL.revokeObjectURL(u));
     urls.current = [];
@@ -556,7 +618,7 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
         >
           <p className="text-headline text-label">Drop files here</p>
           <p className="max-w-[420px] text-subheadline text-label-secondary">
-            Confirmation emails saved as .eml, an .mbox export, or a saved .html page. Or photos from the theatre: we read their date and location, and group shots from the same visit.
+            Confirmation emails saved as .eml, an .mbox export, or a saved .html page. Or photos from the theatre: we read their date and location. Each photo becomes its own show to review.
           </p>
           <div className="mt-1 flex flex-wrap justify-center gap-2">
             <label className="inline-flex min-h-11 cursor-pointer items-center rounded-pill bg-tint-fill px-4 text-[15px] leading-5 font-semibold text-tint-text hover:bg-fill focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus">
@@ -680,7 +742,8 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
                             .filter(Boolean)
                             .join(" · ") || "Done"
                         : j.state === "failed"
-                          ? (j.detail ?? "Failed")
+                          ? // Its blank draft is in the review list below.
+                            `${j.detail ?? "Failed"}${j.kind === "photos" && j.thumbs ? " Add it yourself below." : ""}`
                           : STATE_TEXT[j.state]}
                     </p>
                   </div>
@@ -707,7 +770,7 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
             Review {drafts.length} show{drafts.length === 1 ? "" : "s"}
           </h2>
           <p className="text-footnote text-label-secondary">
-            Ticked shows are saved; nothing is saved until you press Save. Guesses aren’t filled in: tap “Maybe…” to use one.
+            Ticked shows are saved; nothing is saved until you press Save. Guesses aren’t filled in: tap “Maybe…” to use one. Anything we couldn’t read is here too, to fill in yourself.
           </p>
           {drafts.map((d) => (
             <DraftCard
@@ -740,6 +803,29 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
             </div>
           )}
         </section>
+      )}
+
+      {blocked.length > 0 && (
+        <div role="alert" className="flex flex-col gap-2 rounded-md border-2 border-destructive bg-surface p-4 shadow-sm">
+          <p className="text-subheadline font-semibold text-destructive">
+            {blocked.length} ticked show{blocked.length === 1 ? " needs" : "s need"} more before saving
+          </p>
+          <ul className="flex flex-col">
+            {blocked.map((d) => (
+              <li key={d.key}>
+                <button
+                  type="button"
+                  onClick={() => goToDraft(d.key)}
+                  className="flex min-h-11 w-full flex-col items-start justify-center py-1 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                >
+                  <span className="text-body font-semibold text-tint-text underline">{draftName(d)}</span>
+                  <span className="text-footnote text-label-secondary">Needs {describeMissing(missingFields(d))}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <p className="text-footnote text-label-secondary">Fill them in, or untick Save on them to save the rest.</p>
+        </div>
       )}
 
       {notice && (

@@ -168,3 +168,28 @@ export function pickSpread<T>(items: T[], max: number): T[] {
   if (max === 1) return [items[0]];
   return Array.from({ length: max }, (_, i) => items[Math.round((i * (items.length - 1)) / (max - 1))]);
 }
+
+// What a ticked draft still needs before it can be saved. "place": a venue
+// added by hand needs its city and country.
+export type MissingField = "show" | "venue" | "place" | "date";
+
+export function missingFields(d: {
+  show: unknown;
+  venue: { id?: string | null; osm_id?: string | null; city?: string | null; country?: string | null } | null;
+  date: string;
+}): MissingField[] {
+  const out: MissingField[] = [];
+  if (!d.show) out.push("show");
+  if (!d.venue) out.push("venue");
+  else if (!d.venue.id && !d.venue.osm_id && (!d.venue.city?.trim() || !d.venue.country?.trim())) out.push("place");
+  if (!d.date) out.push("date");
+  return out;
+}
+
+const NEEDS: Record<MissingField, string> = { show: "a show", venue: "a venue", place: "the venue’s city and country", date: "a date" };
+
+// "a show and a venue", for the review screen.
+export function describeMissing(fields: MissingField[]): string {
+  const parts = fields.map((f) => NEEDS[f]);
+  return parts.length > 1 ? `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}` : (parts[0] ?? "");
+}

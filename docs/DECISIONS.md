@@ -1,17 +1,15 @@
 # Decisions
 
-A short log of choices made and why. Newest at the bottom. See `CLAUDE.md` for the project brief.
+A short log of choices made and why, mostly about how things are built. Newest at the bottom. Product context (what and why) lives in the Google Drive [Stubbed folder](https://drive.google.com/drive/folders/1uYsjPogzITCDc_DNE5_gQtJrdEocfxRI); see "Where context lives" in `CLAUDE.md`.
 
 ## Open decisions
 
 | # | Question | Needed by | Notes |
 |---|----------|-----------|-------|
 | 1 | Confirm architecture in `docs/ARCHITECTURE.md` (Next.js on Vercel Hobby + Supabase Free) | Now | Proposed 2026-10-12 |
-| 4 | Email import method: paste-in vs. forwarding address vs. Gmail connect | Phase 2 | Brief suggests starting with paste-in |
-| 5 | Reactions / comments: include or defer | Phase 3 | |
-| 6 | Badges: app-defined only, or user/group-defined too? | When badges are scheduled | Idea; see `CLAUDE.md` "Ideas to explore" |
+| 6 | Badges: app-defined only, or user/group-defined too? | When badges are scheduled | Idea; see the brief's "Ideas to explore" |
 | 7 | Discord: channel webhook vs. Discord login vs. server/bot integration | When Discord is scheduled | Idea; tied to groups |
-| 8 | Monetisation: charge at all? Which features (extra photos, import credits, long-range insights), subscription vs. one-off, prices | Before any paid feature | Ideas only; see `docs/MONETISATION.md` |
+| 8 | Monetisation: charge at all? Which features (extra photos, import credits, long-range insights), subscription vs. one-off, prices | Before any paid feature | Ideas only; see [Stubbed: Monetisation Ideas](https://docs.google.com/document/d/1LJanHT3SpBYSQB7SiRVaeX-1PFZTPQ-cBLXlSC50KAM/edit) (Google Doc) |
 
 ## Log
 
@@ -150,7 +148,7 @@ The landing page was too thin for search engines or AI assistants to describe (1
 - Structured data is now a graph: `WebSite`, `Organization`, `WebApplication` (no offers, since sign-ups aren't open) and `FAQPage`. Add `sameAs` links to `Organization` once there are social accounts.
 - Title 56 characters, description 158, the hero phone image has alt text.
 - The page is ~650 words. An audit tool asked for 800; padding a landing page reads worse to people and AI, so it stops there.
-- FAQ commitments to check: "logging your shows and getting your own data out will always be free" (from the ground rules in `docs/MONETISATION.md`), CSV export ("you'll be able to"), and "a native iPhone app is planned".
+- FAQ commitments to check: "logging your shows and getting your own data out will always be free" (from the ground rules in [Stubbed: Monetisation Ideas](https://docs.google.com/document/d/1LJanHT3SpBYSQB7SiRVaeX-1PFZTPQ-cBLXlSC50KAM/edit)), CSV export ("you'll be able to"), and "a native iPhone app is planned".
 
 ### 2026-10-13: Terms of Service and Privacy Policy
 Added `/terms` and `/privacy`, linked from the footer, plus a privacy link under the waitlist form. Written to cover the UK (UK GDPR, DPA 2018, PECR, Consumer Rights Act, Online Safety Act), the EU (GDPR, consumer law, DSA notice and action) and the US (CCPA/CPRA and other state laws, CalOPPA, COPPA, DMCA notice). Choices: minimum age 16 everywhere (simplest age that works for GDPR consent across the EU and keeps clear of COPPA); governing law England and Wales, with consumers keeping their local mandatory protections and courts; essential cookies only, so no cookie banner. Contact email is support@getstubbed.app. The owner's call: leave out the operator's legal name and postal address for the private beta; UK/EU GDPR and the UK E-Commerce Regulations expect both, so add them to `apps/web/src/lib/legal.ts` before public launch (the pages show them once set). Not legal advice: have a lawyer review before public launch. Update the policy in the same change whenever a feature starts collecting or sharing something new.
@@ -250,7 +248,7 @@ Owner's call: build follows before the iOS app, so iOS copies a complete web MVP
 ### 2026-10-14: Home is the feed; the diary moves to the Profile tab
 Owner's call, on top of follows (above). Hevy style.
 - **Home is the feed** (`feed_entries()` in `20261014170000_feed.sql`, so iOS matches): your own logged shows, private ones included and marked "Private", plus the shows RLS lets you see from everyone you follow, newest first, the latest 30. Including your own shows means the feed is never empty for a solo user. Upcoming shows stay out. Your shows open in the app; others' open their public page, or don't link when the profile is private.
-- **Find people** (`/app/people`, `search_profiles()`): handle prefix or any part of the name, each with the Follow / Requested / Following button. A "Follow people you go to the theatre with" card shows on Home until you follow someone.
+- **Find people** (`/app/people`, `search_profiles()`, replaced by the header search on 2026-10-18): handle prefix or any part of the name, each with the Follow / Requested / Following button. A "Follow people you go to the theatre with" card shows on Home until you follow someone.
 - **Profile tab:** avatar, handle, name, bio, shows / followers / following (linking to the lists), follow requests to approve, "Edit profile" and "View public profile", then a **Diary | Trips** switch (`?view=trips`). Your details, privacy and account deletion moved to `/app/settings`; the Follow button's "Edit profile" on your own `/@handle` goes there too.
 - Not yet: notifications for new followers or requests, blocking, reactions or comments (still a decision for #4), feed pages beyond the latest 30 (now done, below).
 
@@ -278,5 +276,49 @@ Owner's call, after follows: include reactions and comments rather than defer th
 ### 2026-10-14: iOS Google sign-in without the GoogleSignIn SDK
 The iOS app signs in with Google through Supabase's own OAuth flow, shown in a secure browser sheet (`ASWebAuthenticationSession`) that returns to `stubbed://auth-callback`, instead of Google's iOS SDK. Why: no new dependency, no separate iOS OAuth client in Google Cloud, and it's the same flow the web uses. Cost: a browser sheet instead of Google's native account picker. Owner setup: add `stubbed://auth-callback` to the hosted project's Auth → URL Configuration → Redirect URLs (local `supabase/config.toml` already has it). Apple stays native (`signInWithIdToken`).
 
+### 2026-10-15: One photo per entry in the import tool
+Owner's call. The import tool no longer groups photos from the same evening into one draft: each photo is its own draft (and its own identify call), and a photo only joins a draft that has no photo yet (its booking email). Several photos per entry is planned for later, likely as a paid feature (see "Monetisation ideas" in the project brief), so this is switched off in the UI only (`GROUP_VISITS` in `ImportTool.tsx`); `groupPhotos` and multi-photo identify stay in `lib/import`.
+
+### 2026-10-15: The project brief moves to a Google Doc
+Owner's call: the brief is now the Google Doc [Stubbed: Project Brief](https://docs.google.com/document/d/1NdEgeTRMkKQ5TL87Urwpe7WG9fcrejPsZKsmrO2Enak/edit), one source of truth that's easy to share outside the repo. It was rewritten to match what's built (iOS parity as the current focus, Social largely done, the data model as built, the Phase 1 gaps). `CLAUDE.md` now links to it and keeps only the standing working agreements, so every Claude Code session still loads those. Replaces "Project brief lives in `CLAUDE.md`". Open decisions 4 (email import: paste-in and file upload are built) and 5 (likes and comments, decided 2026-10-14) are closed.
+
+### 2026-10-16: Product context in Google Drive, code and tech context in the repo
+Owner's call, building on the brief's move to a Google Doc. The [Stubbed folder](https://drive.google.com/drive/folders/1uYsjPogzITCDc_DNE5_gQtJrdEocfxRI) on Google Drive holds the product and project context (what, why, audience, status, roadmap, ideas, brand, monetisation) for any tool to read: design, marketing, copywriting, SEO. The repo holds the code and tech context. The rule is spelled out in `CLAUDE.md` ("Where context lives") and at the top of the brief.
+- `docs/MONETISATION.md` moved to the Google Doc [Stubbed: Monetisation Ideas](https://docs.google.com/document/d/1LJanHT3SpBYSQB7SiRVaeX-1PFZTPQ-cBLXlSC50KAM/edit) in that folder.
+- The brief's data model and tech approach moved into `CLAUDE.md` ("Tech overview"); the brief keeps a short non-technical summary.
+
 ### 2026-10-16: The iOS app's UI diverges from the web
 Owner's call. The iOS app keeps the web's features, data and rules (Postgres stays the shared source), but its UI is now designed as a native iOS app (Apple Fitness and Personal Best as references) rather than a copy of the web's mobile layout: system grouped backgrounds, inset grouped containers without drop shadows, a native tab bar with Log as a tab that opens a sheet, Dynamic Type and SF Symbols throughout. Share cards still match the web, since they're the images people post. The rules are in `apps/ios/CLAUDE.md`, "Design direction".
+
+### 2026-10-18: Entry cards laid out like Instagram posts
+Owner's ask (#85): a tighter feed card. `PublicEntryCard` (Home feed, profiles, trip pages, entry pages) now runs header, then the photo edge to edge, then Like / Comment / Share, then the note as a caption after the bold handle, then trip chips.
+- **Show, where and stars sit on the photo**, over a black gradient (80% at the bottom) with a light text shadow, so they read on bright photos too. The gradient is dark in either appearance, so on it the stars use the dark appearance's `star` and white empty stars (set by overriding `--star` and `--outline` on the overlay).
+- **The whole photo opens the show**: the title link is stretched over it.
+- **Without a photo**, the show, where and stars stay as text under the header; the reactions and caption follow as above.
+- On trip pages the caption has no handle, matching the header being left out there.
+- iOS (`HomeView`) isn't changed yet.
+
+### 2026-10-18: People search in the header
+Owner's ask (#86): find people from a search box rather than a block on Home, like Hevy's sidebar search. The owner left the details to Claude.
+- **Where:** a search box in the app header (placeholder "Search", labelled "Search people by handle or name" for screen readers, since "Search people" doesn't fit beside the wordmark on a phone) on every page, between the wordmark and the menu. Matches (handle prefix or any part of the name, `search_profiles()`) drop down under the header, each with the Follow / Requested / Following button. On a phone the list spans the header's width.
+- **Behaviour:** opening a profile clears the search. Tapping elsewhere or pressing Escape closes the list, and a half-typed search comes back when you focus the box again. The shell doesn't read the session (so it prerenders), so the box takes your id from the browser session on the first search, to leave you out and read your follow statuses.
+- **Removed:** the "Follow people you go to the theatre with" card and the "Find people" link on Home, and the `/app/people` page. An empty feed with no follows points to the search box instead.
+- **People only for now.** Shows and venues could join the same box later.
+- iOS isn't changed yet.
+
+### 2026-10-18: Comments inline on the feed
+Owner's ask (#87): comments under each show in the Home feed, with a box to post one, as on Hevy, instead of only on the entry's page. The owner left the details to Claude. Migration `20261018120000_comment_previews.sql`.
+- **What shows:** each public show in the feed shows its latest 2 comments (oldest first), after the caption and trip chips. With more, "View all N comments" opens the whole thread in place (read in the browser). The comment box is always there, one line that grows as you type: Enter posts, Shift+Enter is a new line, and Comment focuses the box. Your private shows still take no comments.
+- **Read path:** `entry_comment_previews(entry_ids, per_entry)` returns the latest comments per entry with their authors, in one call per feed page. It runs as the caller (security invoker), so the `entry_comments` policies decide what comes back, exactly as reading the table does; at most 10 per entry. pgTAP: `comment_previews_test.sql`.
+- **State:** the feed card keeps the thread itself (`FeedThread`): posting adds your comment and deleting removes one without refreshing, since older feed pages load in the browser where a refresh doesn't reach. Leaving Home and coming back keeps everything, including an unfinished comment, because nothing there is a finished task to clear (no `useFreshOnReturn`).
+- **Elsewhere:** profiles, trip pages and the entry's page are unchanged; their Comment button still opens the thread on the entry's page.
+- iOS isn't changed yet.
+
+### 2026-10-18: Google Analytics 4, cookieless, alongside Vercel
+Owner's call. GA4 is added to the public pages next to Vercel Web Analytics, which stays. To keep "no analytics cookies, no consent banner" (2026-10-13), Consent Mode is set to `denied` for every type before anything is sent and is never granted, so GA stores nothing on the device and gets cookieless pings only; `ads_data_redaction` is on. No new dependency: `gtag.js` loads through `next/script`, and the queue is set up in `SiteAnalytics`. Page views are sent by hand (`send_page_view: false`) on public paths only, and `ga-disable-<id>` is set while on `/app`, `/login`, `/auth` or `/welcome`, so a client-side move into the app reports nothing. Off until `NEXT_PUBLIC_GA_MEASUREMENT_ID` is set. Trade-off: with consent denied, GA's standard reports stay mostly empty until traffic is high enough for its modelling (see `docs/ANALYTICS.md`). The privacy policy names Google as a processor for visit statistics.
+
+### 2026-10-18: Trip collage card, stats in the header and bigger polaroids
+Owner's call. The Collage card (`trip-collage`) shows the trip's shows, venues and nights as large accent-coloured numbers on the right of its header, with the label under each, matching the stat tiles on the trip page; the subtitle drops its "· N shows". The header keeps its height. `TripCardData` gains `nights`, the trip's length from its dates (end minus start, so 9–17 Oct is 8; hidden for a one-day trip), not the days with a logged show. The trip page's Nights tile, the public trip page and its link preview use the same number ("N shows in D nights"; a one-day trip drops the nights). The 7- and 8-show layouts are now two brick rows of 144×192 polaroids (were 110×146), overlapping sideways so four fit across. Other trip designs and iOS are unchanged.
+
+### 2026-10-18: Domain under the wordmark on share cards
+Owner's call. Every share card (entry and trip, web and iOS) shows `@getstubbed.app` in small type under the `stubbed` wordmark, in the card's secondary colour, so a shared image leads back to the site. The handle stays on the right, level with the wordmark. The wordmark moves up a little and the domain uses some of the bottom padding, so the content area of each card is unchanged. The string lives in `CARD_DOMAIN` (`lib/share-card.ts`) and `cardDomain` (`EntryCard.swift`). The 2026-10 social-handle note above still holds: `@stubbedapp` is in the caption and shared text, not on the card.

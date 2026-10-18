@@ -13,7 +13,9 @@ const INSTAGRAM = "@stubbedapp";
 
 type Rendered = { file: File; url: string };
 // `clear`: the same card without its background (entry cards only).
-type Variants = { photo: Rendered; clear: Rendered | null };
+// `stories`: `photo` with square corners, for the Stories button, since
+// Instagram turns transparent corners black. `clear` goes as it is.
+type Variants = { photo: Rendered; stories: Rendered; clear: Rendered | null };
 
 // What's being shared: one entry, or a trip recap (#16) with one photo URL
 // per show, in the same order as `data.shows`.
@@ -63,6 +65,7 @@ export function ShareSheet({
           const name = `stubbed-${slug}-${design.id}`;
           out.push({
             photo: make(await renderCard(design.id, subject.data, photo), `${name}.png`),
+            stories: make(await renderCard(design.id, subject.data, photo, { square: true }), `${name}-story.png`),
             clear: make(await renderCard(design.id, subject.data, null, { transparent: true }), `${name}-clear.png`),
           });
         }
@@ -70,8 +73,12 @@ export function ShareSheet({
       } else {
         const photos = await Promise.all(subject.photoUrls.map((u) => (u ? loadPhoto(u) : null)));
         for (const design of TRIP_CARD_DESIGNS) {
-          const blob = await renderTripCard(design.id, subject.data, photos);
-          out.push({ photo: make(blob, `stubbed-${slug}-${design.id}.png`), clear: null });
+          const name = `stubbed-${slug}-${design.id}`;
+          out.push({
+            photo: make(await renderTripCard(design.id, subject.data, photos), `${name}.png`),
+            stories: make(await renderTripCard(design.id, subject.data, photos, { square: true }), `${name}-story.png`),
+            clear: null,
+          });
         }
         photos.forEach((p) => p && URL.revokeObjectURL(p.src));
       }
@@ -92,7 +99,9 @@ export function ShareSheet({
   }, [subject, slug]);
 
   const variants = cards?.[active];
-  const card = variants && ((transparent && variants.clear) || variants.photo);
+  const clear = transparent ? variants?.clear : null;
+  const card = clear || variants?.photo;
+  const storyCard = clear || variants?.stories;
   const canShareFiles =
     typeof navigator !== "undefined" && card ? Boolean(navigator.canShare?.({ files: [card.file] })) : false;
   const text =
@@ -119,24 +128,25 @@ export function ShareSheet({
     void track(createClient(), "card_shared", { action, design: designs[active].id, transparent: transparent && subject.kind === "entry" });
   }
 
-  function saveImage() {
-    if (!card) return;
+  function saveImage(image: Rendered) {
     const a = document.createElement("a");
-    a.href = card.url;
-    a.download = card.file.name;
+    a.href = image.url;
+    a.download = image.file.name;
     a.click();
   }
 
   function download() {
-    saveImage();
+    if (!card) return;
+    saveImage(card);
     record("download");
   }
 
   async function share(withText: boolean) {
-    if (!card) return;
+    const image = withText ? card : storyCard;
+    if (!image) return;
     setNotice(null);
     if (!canShareFiles) {
-      saveImage();
+      saveImage(image);
       record(withText ? "more" : "stories");
       setNotice(withText ? "Image saved." : "Image saved. Add it to your story from Instagram.");
       return;
@@ -144,7 +154,7 @@ export function ShareSheet({
     // Image only for stories: Instagram's share sheet entry drops the
     // image when text comes with it.
     try {
-      await navigator.share(withText ? { files: [card.file], text } : { files: [card.file] });
+      await navigator.share(withText ? { files: [image.file], text } : { files: [image.file] });
       record(withText ? "more" : "stories");
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;

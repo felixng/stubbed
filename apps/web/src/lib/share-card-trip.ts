@@ -6,6 +6,7 @@
 // match each other and the entry cards. Coordinates are in the designs'
 // 540px units, scaled up to 1080.
 import {
+  CARD_DOMAIN,
   CORAL,
   type Ctx,
   DISPLAY,
@@ -32,6 +33,7 @@ export type TripCardData = {
   handle: string | null;
   shows: TripCardShow[]; // logged shows, in date order
   venues: number;
+  nights: number; // the trip's length, end date minus start date (0 for one day)
   average: number | null;
 };
 
@@ -80,10 +82,13 @@ const LIGHT = {
 type Palette = typeof DARK;
 
 // `photos[i]` belongs to `data.shows[i]`; null where a show has none.
+// `square`: square corners, for Instagram Stories, which turns transparent
+// corners black.
 export async function renderTripCard(
   design: TripCardDesign["id"],
   data: TripCardData,
   photos: (HTMLImageElement | null)[],
+  { square = false } = {},
 ) {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = W * SCALE;
@@ -93,7 +98,8 @@ export async function renderTripCard(
   const shows = data.shows.map((s, i) => ({ ...s, photo: photos[i] ?? null }));
   const p = design === "trip-collage" || design === "trip-square" ? LIGHT : DARK;
 
-  roundRect(ctx, 0, 0, W, W, RADIUS);
+  const radius = square ? 0 : RADIUS;
+  roundRect(ctx, 0, 0, W, W, radius);
   ctx.fillStyle = p.ground;
   ctx.fill();
   ctx.save();
@@ -104,7 +110,7 @@ export async function renderTripCard(
   else drawList(ctx, p, data, shows);
   drawFooter(ctx, p, data.handle);
   ctx.restore();
-  strokeRound(ctx, 0, 0, W, W, RADIUS, p.separator);
+  strokeRound(ctx, 0, 0, W, W, radius, p.separator);
 
   return new Promise<Blob>((resolve, reject) =>
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Couldn’t make the image"))), "image/png"),
@@ -117,24 +123,57 @@ const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? o
 
 // Trip name, then "New York · 4–8 Oct 2026 · 4 shows" with the place in the
 // accent colour. Returns the header's bottom edge.
-function drawHeader(ctx: Ctx, p: Palette, d: TripCardData, count: number, top = PAD) {
+//
+// With `stats`, the counts stand out on the right of the header, large in the
+// accent colour with a small label under each, and the subtitle drops its
+// "· N shows" since the stats already say it. The header keeps its height.
+type HeaderStat = { value: number; label: string };
+
+function drawHeader(ctx: Ctx, p: Palette, d: TripCardData, count: number, top = PAD, stats?: HeaderStat[]) {
   ctx.textBaseline = "middle";
+  const subY = top + 34 + 2 + 9.5;
+
+  // Stats, right aligned, each column centred on its number and label.
+  let textW = INNER;
+  if (stats?.length) {
+    const colGap = 20;
+    let right = PAD + INNER;
+    ctx.textAlign = "center";
+    for (let i = stats.length - 1; i >= 0; i--) {
+      const s = stats[i];
+      const value = String(s.value);
+      setFont(ctx, 800, 34, DISPLAY, -1);
+      const vw = ctx.measureText(value).width;
+      setFont(ctx, 400, 12, TEXT, 0.06);
+      const w = Math.max(vw, ctx.measureText(s.label).width);
+      const cx = right - w / 2;
+      setFont(ctx, 800, 34, DISPLAY, -1);
+      ctx.fillStyle = p.accent;
+      ctx.fillText(value, cx, top + 17);
+      setFont(ctx, 400, 12, TEXT, 0.06);
+      ctx.fillStyle = p.secondary;
+      ctx.fillText(s.label, cx, subY);
+      right -= w + colGap;
+    }
+    ctx.textAlign = "left";
+    textW = right + colGap - PAD - 16;
+  }
+
   setFont(ctx, 700, 30, DISPLAY, 0.36);
   ctx.fillStyle = p.label;
-  ctx.fillText(fit(ctx, d.name, INNER), PAD, top + 17);
-  const subY = top + 34 + 2 + 9.5;
+  ctx.fillText(fit(ctx, d.name, textW), PAD, top + 17);
   let x = PAD;
   if (d.place) {
     setFont(ctx, 600, 14, TEXT, -0.17);
     ctx.fillStyle = p.accent;
-    const place = fit(ctx, d.place, INNER / 2);
+    const place = fit(ctx, d.place, textW / 2);
     ctx.fillText(place, x, subY);
     x += ctx.measureText(place).width + 4;
   }
   setFont(ctx, 400, 14, TEXT, -0.17);
   ctx.fillStyle = p.secondary;
-  const rest = `${d.place ? "· " : ""}${d.dates} · ${plural(count, "show")}`;
-  ctx.fillText(fit(ctx, rest, PAD + INNER - x), x, subY);
+  const rest = `${d.place ? "· " : ""}${d.dates}${stats ? "" : ` · ${plural(count, "show")}`}`;
+  ctx.fillText(fit(ctx, rest, PAD + textW - x), x, subY);
   return top + 34 + 2 + 19;
 }
 
@@ -248,7 +287,9 @@ type Polaroid = { left: number; top: number; rotate: number };
 const LARGE = { w: 200, h: 267, pad: 4 };
 const MEDIUM = { w: 168, h: 224, pad: 4 };
 const SMALL_4 = { w: 152, h: 202, pad: 4 };
-const SMALL = { w: 110, h: 146, pad: 3 };
+// 7 and 8 shows: two brick rows of 144 × 192 polaroids (was 110 × 146 in
+// three rows), overlapping sideways a little so four fit across the 484.
+const SMALL = { w: 144, h: 192, pad: 4 };
 const COLLAGES: Record<number, { size: typeof LARGE; at: Polaroid[] }> = {
   1: { size: { w: 240, h: 320, pad: 5 }, at: [{ left: 122, top: 25, rotate: -3 }] },
   2: {
@@ -299,26 +340,26 @@ const COLLAGES: Record<number, { size: typeof LARGE; at: Polaroid[] }> = {
   7: {
     size: SMALL,
     at: [
-      { left: 76, top: 0, rotate: -4 },
-      { left: 274, top: 8, rotate: 3 },
-      { left: 38, top: 121, rotate: -2 },
-      { left: 187, top: 111, rotate: 4 },
-      { left: 336, top: 121, rotate: -3 },
-      { left: 76, top: 224, rotate: 2 },
-      { left: 274, top: 226, rotate: -5 },
+      { left: 0, top: 0, rotate: -4 },
+      { left: 113, top: 8, rotate: 3 },
+      { left: 227, top: 0, rotate: -2 },
+      { left: 340, top: 6, rotate: 4 },
+      { left: 57, top: 178, rotate: -3 },
+      { left: 170, top: 184, rotate: 2 },
+      { left: 283, top: 178, rotate: -5 },
     ],
   },
   8: {
     size: SMALL,
     at: [
-      { left: 38, top: 0, rotate: -4 },
-      { left: 187, top: 8, rotate: 3 },
-      { left: 336, top: 0, rotate: -2 },
-      { left: 100, top: 121, rotate: 4 },
-      { left: 298, top: 111, rotate: -3 },
-      { left: 38, top: 224, rotate: 2 },
-      { left: 187, top: 226, rotate: -5 },
-      { left: 336, top: 224, rotate: 3 },
+      { left: 0, top: 0, rotate: -4 },
+      { left: 113, top: 8, rotate: 3 },
+      { left: 227, top: 0, rotate: -2 },
+      { left: 340, top: 6, rotate: 4 },
+      { left: 0, top: 180, rotate: 2 },
+      { left: 113, top: 176, rotate: -5 },
+      { left: 227, top: 184, rotate: 3 },
+      { left: 340, top: 178, rotate: -3 },
     ],
   },
 };
@@ -327,7 +368,12 @@ const COLLAGES: Record<number, { size: typeof LARGE; at: Polaroid[] }> = {
 // shows, the 8-show layout prefers shows with photos and the last
 // polaroid reads "+N".
 function drawCollage(ctx: Ctx, p: Palette, d: TripCardData, shows: Show[]) {
-  const top = drawHeader(ctx, p, d, shows.length) + GAP;
+  const top =
+    drawHeader(ctx, p, d, shows.length, PAD, [
+      { value: shows.length, label: shows.length === 1 ? "show" : "shows" },
+      { value: d.venues, label: d.venues === 1 ? "venue" : "venues" },
+      ...(d.nights > 0 ? [{ value: d.nights, label: d.nights === 1 ? "night" : "nights" }] : []),
+    ]) + GAP;
   const bottom = FOOTER_TOP - 12;
   let picks = shows;
   if (shows.length > 8) {
@@ -466,17 +512,22 @@ function drawThumb(ctx: Ctx, p: Palette, s: Show, x: number, y: number, w: numbe
   ctx.restore();
 }
 
-// Wordmark left, handle right, at the same place on every card.
+// Wordmark left with the domain under it, handle right, at the same place
+// on every card. The pair sits around FOOTER_MID, using some of the gap
+// above and the padding below so the content area stays the same.
 function drawFooter(ctx: Ctx, p: Palette, handle: string | null) {
   ctx.textBaseline = "middle";
   setFont(ctx, 800, 18, DISPLAY, -0.81);
   ctx.fillStyle = p.label;
-  ctx.fillText("stubbed", PAD, FOOTER_MID);
+  ctx.fillText("stubbed", PAD, FOOTER_MID - 5);
+  setFont(ctx, 500, 10, TEXT, 0);
+  ctx.fillStyle = p.secondary;
+  ctx.fillText(CARD_DOMAIN, PAD, FOOTER_MID + 10);
   if (handle) {
     setFont(ctx, 400, 13, TEXT, -0.08);
     ctx.fillStyle = p.secondary;
     ctx.textAlign = "right";
-    ctx.fillText(`@${handle}`, W - PAD, FOOTER_MID);
+    ctx.fillText(`@${handle}`, W - PAD, FOOTER_MID - 5);
     ctx.textAlign = "left";
   }
 }

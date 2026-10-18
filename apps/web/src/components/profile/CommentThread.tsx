@@ -69,7 +69,19 @@ export function CommentThread({
   );
 }
 
-function CommentItem({ comment, canDelete, mine }: { comment: Comment; canDelete: boolean; mine: boolean }) {
+// One comment: avatar, handle, how long ago, and the text. Also used by the
+// feed's inline comments, which pass `onDeleted`.
+export function CommentItem({
+  comment,
+  canDelete,
+  mine,
+  onDeleted,
+}: {
+  comment: Comment;
+  canDelete: boolean;
+  mine: boolean;
+  onDeleted?: () => void;
+}) {
   const { author } = comment;
   const name = author.display_name || `@${author.handle}`;
   return (
@@ -87,7 +99,7 @@ function CommentItem({ comment, canDelete, mine }: { comment: Comment; canDelete
         </p>
         <p className="text-body break-words whitespace-pre-line text-label">{comment.body}</p>
       </div>
-      {canDelete && <DeleteCommentButton commentId={comment.id} mine={mine} />}
+      {canDelete && <DeleteCommentButton commentId={comment.id} mine={mine} onDeleted={onDeleted} />}
     </li>
   );
 }
