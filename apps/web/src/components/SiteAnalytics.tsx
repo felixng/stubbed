@@ -1,7 +1,6 @@
 "use client";
 
 import { Suspense, useEffect } from "react";
-import Script from "next/script";
 import { usePathname } from "next/navigation";
 import { Analytics, type BeforeSendEvent } from "@vercel/analytics/next";
 
@@ -69,7 +68,10 @@ export function SiteAnalytics() {
       <Analytics beforeSend={publicOnly} />
       {GA_ID && (
         <>
-          <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
+          {/* A plain async script, not next/script, so the tag is in the
+              server HTML (React hoists it into <head>), where Google's
+              "Test your website" check looks for it. */}
+          <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} />
           <Suspense>
             <GooglePageViews id={GA_ID} />
           </Suspense>
