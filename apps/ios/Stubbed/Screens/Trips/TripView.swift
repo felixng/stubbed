@@ -42,7 +42,7 @@ struct TripView: View {
       case .loading:
         LoadingText()
       case .failed(let message):
-        EmptyState(title: "Couldn’t load this trip") { Text(message) }
+        EmptyState(title: "Couldn’t load this trip", systemImage: "exclamationmark.triangle") { Text(message) }
       case .loaded(let model):
         content(model)
       }
@@ -63,88 +63,98 @@ struct TripView: View {
 
   @ViewBuilder private func content(_ m: Model) -> some View {
     Text(m.trip.dates)
-      .font(.stubSubheadline)
-      .foregroundStyle(Palette.labelSecondary)
+      .font(.subheadline)
+      .foregroundStyle(.secondary)
       .padding(.top, -Space.l)
 
     if addFailed {
-      Text("Trip created, but the shows you picked weren’t added. Add them below.")
-        .font(.stubSubheadline)
-        .foregroundStyle(Palette.destructive)
+      Label("Trip created, but the shows you picked weren’t added. Add them below.", systemImage: "exclamationmark.triangle.fill")
+        .font(.subheadline)
+        .foregroundStyle(.orange)
         .padding(Space.l)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Palette.fill, in: .rect(cornerRadius: Radius.md))
+        .groupedCard()
     }
 
-    HStack(spacing: Space.m) {
+    HStack(spacing: 0) {
       stat(m.seen.count, m.seen.count == 1 ? "show" : "shows")
+      Divider().padding(.vertical, Space.m)
       stat(m.venues, m.venues == 1 ? "venue" : "venues")
+      Divider().padding(.vertical, Space.m)
       stat(m.nights, m.nights == 1 ? "night" : "nights")
     }
+    .fixedSize(horizontal: false, vertical: true)
+    .groupedCard()
 
     if !m.seen.isEmpty {
       TripShare(model: m)
     }
 
-    if !m.entries.isEmpty {
+    if mode != .add {
       HStack {
-        Text(mode == .remove ? (picked.isEmpty ? "Pick shows to take out of this trip" : "\(picked.count) selected") : "")
-          .font(.stubSubheadline)
-          .foregroundStyle(Palette.labelSecondary)
+        Text(mode == .remove ? (picked.isEmpty ? "Pick shows to take out" : "\(picked.count) selected") : "Shows")
+          .font(mode == .remove ? .subheadline : .title3.bold())
+          .foregroundStyle(mode == .remove ? .secondary : .primary)
         Spacer()
-        if mode != .add {
+        if mode == .idle, !m.others.isEmpty {
+          Button("Add shows", systemImage: "plus") {
+            picked = Set(m.others.map(\.id))
+            mode = .add
+          }
+          .labelStyle(.iconOnly)
+          .font(.body.weight(.semibold))
+          .frame(minWidth: Space.touch, minHeight: Space.touch)
+        }
+        if !m.entries.isEmpty {
           Button(mode == .remove ? "Cancel" : "Select") {
             if mode == .remove { reset() } else { mode = .remove }
           }
-          .font(.stubSubheadline.weight(.semibold))
-          .foregroundStyle(Palette.tintText)
+          .font(.subheadline.weight(.semibold))
           .frame(minHeight: Space.touch)
         }
       }
-      EntryList(entries: m.entries, photos: m.photos, selection: mode == .remove ? $picked : nil)
-    } else {
-      EmptyState(title: "No shows in this trip yet") {
-        Text("Add shows dated within the trip, or plan one: it’s offered this trip when its date falls inside.")
+      if !m.entries.isEmpty {
+        EntryList(entries: m.entries, photos: m.photos, selection: mode == .remove ? $picked : nil)
+      } else {
+        EmptyState(title: "No shows in this trip yet", systemImage: "suitcase") {
+          Text("Add shows dated within the trip, or plan one: it’s offered this trip when its date falls inside.")
+        }
       }
-    }
-
-    if mode == .idle, !m.others.isEmpty {
-      Button("Add shows") {
-        picked = Set(m.others.map(\.id))
-        mode = .add
-      }
-      .buttonStyle(.pill)
     }
 
     if mode == .add {
       HStack {
         Text("Shows within the trip’s dates")
-          .font(.stubHeadline)
-          .foregroundStyle(Palette.label)
+          .font(.title3.bold())
           .accessibilityAddTraits(.isHeader)
         Spacer()
         Button("Cancel") { reset() }
-          .font(.stubSubheadline.weight(.semibold))
-          .foregroundStyle(Palette.tintText)
+          .font(.subheadline.weight(.semibold))
+          .frame(minHeight: Space.touch)
       }
       EntryList(entries: m.others, photos: m.photos, selection: $picked)
     }
 
-    Button("Delete trip", role: .destructive) { confirmDelete = true }
-      .font(.stubSubheadline.weight(.semibold))
-      .foregroundStyle(Palette.destructive)
-      .frame(minHeight: Space.touch)
-      .confirmationDialog("Delete \(m.trip.name)?", isPresented: $confirmDelete, titleVisibility: .visible) {
-        Button("Delete trip", role: .destructive) { Task { await delete() } }
-      } message: {
-        Text("Its shows stay in your diary.")
-      }
+    Button(role: .destructive) {
+      confirmDelete = true
+    } label: {
+      Text("Delete trip")
+        .frame(maxWidth: .infinity, minHeight: Space.touch)
+    }
+    .pressableRow()
+    .foregroundStyle(.red)
+    .groupedCard()
+    .confirmationDialog("Delete \(m.trip.name)?", isPresented: $confirmDelete, titleVisibility: .visible) {
+      Button("Delete trip", role: .destructive) { Task { await delete() } }
+    } message: {
+      Text("Its shows stay in your diary.")
+    }
   }
 
   private var selectionBar: some View {
     VStack(spacing: Space.s) {
       if let error {
-        Text(error).font(.stubFootnote).foregroundStyle(Palette.destructive)
+        Text(error).font(.footnote).foregroundStyle(.red)
       }
       let n = picked.count
       Button(
@@ -154,23 +164,25 @@ struct TripView: View {
       ) {
         Task { await apply() }
       }
-      .buttonStyle(.primary)
+      .buttonStyle(.borderedProminent)
+      .controlSize(.large)
+      .frame(maxWidth: .infinity)
       .disabled(n == 0 || busy)
     }
     .padding(.horizontal, Space.l)
     .padding(.vertical, Space.m)
-    .background(Palette.background)
-    .overlay(alignment: .top) { Palette.separator.frame(height: 1) }
+    .background(.bar)
+    .overlay(alignment: .top) { Divider() }
   }
 
+  /// One column of the counts card.
   private func stat(_ value: Int, _ label: String) -> some View {
-    VStack(spacing: 0) {
-      Text("\(value)").font(.stubTitle2).foregroundStyle(Palette.label).monospacedDigit()
-      Text(label).font(.stubFootnote).foregroundStyle(Palette.labelSecondary)
+    VStack(spacing: 2) {
+      Text("\(value)").font(.title2.bold()).monospacedDigit()
+      Text(label).font(.footnote).foregroundStyle(.secondary)
     }
     .frame(maxWidth: .infinity)
     .padding(.vertical, Space.m)
-    .cardStyle()
     .accessibilityElement(children: .combine)
   }
 

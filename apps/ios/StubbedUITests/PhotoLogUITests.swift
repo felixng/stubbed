@@ -11,7 +11,7 @@ final class PhotoLogUITests: XCTestCase {
     let app = launchApp()
     signOutIfNeeded(app)
     try signIn(app)
-    XCTAssertTrue(app.navigationBars["Home"].waitForExistence(timeout: 15))
+    XCTAssertTrue(onHome(app))
     app.buttons["Log"].tap()
     let start = app.buttons["Start with a photo"]
     XCTAssertTrue(start.waitForExistence(timeout: 10), app.debugDescription)
@@ -24,7 +24,11 @@ final class PhotoLogUITests: XCTestCase {
     // The picker's grid reports its cells as not hittable; tap the centre.
     picked.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
 
-    XCTAssertTrue(button(app, startingWith: "Change Richard Rodgers Theatre").waitForExistence(timeout: 20))
+    // With the web server reachable, OpenStreetMap may find a second
+    // theatre in range: then the app offers chips instead of choosing.
+    let filled = button(app, startingWith: "Change Richard Rodgers Theatre")
+    let chip = button(app, startingWith: "Richard Rodgers Theatre ·")
+    XCTAssertTrue(filled.waitForExistence(timeout: 20) || chip.exists)
     XCTAssertTrue(app.buttons["Yesterday"].exists)
     let status = app.staticTexts.matching(
       NSPredicate(format: "label IN %@", ["Couldn’t work out the show.", "Show detection isn’t set up yet."])

@@ -11,6 +11,20 @@ The Xcode project is set up (`Stubbed.xcodeproj`, supabase-swift, local and host
 
 Debug builds use local Supabase; Release builds use the hosted project. [`CLAUDE.md`](CLAUDE.md) has the full command-line loop, the config files and the project conventions.
 
+## Getting it on your phone (TestFlight)
+
+One-off setup in [App Store Connect](https://appstoreconnect.apple.com): create the app (bundle ID `com.felixng.stubbed`, team `AAW3XNQ6D3`) and an internal testing group with yourself in it. Sign in to Xcode with your Apple account (Xcode → Settings → Accounts).
+
+Then, from `apps/ios`:
+
+```sh
+scripts/dev archive
+```
+
+It archives a Release build (hosted Supabase, `Config/Release.xcconfig`), signs it with automatic signing and uploads it. The build number is the current date and time, so each upload is new. It shows up in TestFlight after a few minutes of processing.
+
+Before the first external testers or App Review: replace the placeholder icon (`scripts/make-app-icon.swift` draws it), fill in App Privacy in App Store Connect to match `Stubbed/PrivacyInfo.xcprivacy`, and finish the sign-in setup on #64.
+
 ## Scope of the first version
 
 Replicates the web owner app (`apps/web/src/app/app`). The work is tracked in the epic [#80](https://github.com/felixng/stubbed/issues/80), one issue per area:

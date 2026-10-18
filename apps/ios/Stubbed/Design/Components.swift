@@ -9,7 +9,7 @@ struct Wordmark: View {
     Text(verbatim: "stubbed")
       .font(.system(size: max(16, size), weight: .heavy))
       .tracking(-0.045 * max(16, size))
-      .foregroundStyle(Palette.label)
+      .foregroundStyle(.primary)
       .accessibilityLabel("Stubbed")
   }
 }
@@ -27,7 +27,7 @@ struct RatingStars: View {
         let fill = rating - Double(i)
         Image(systemName: fill >= 1 ? "star.fill" : fill >= 0.5 ? "star.leadinghalf.filled" : "star")
           .font(.system(size: size))
-          .foregroundStyle(fill >= 0.5 ? Palette.star : Palette.outline)
+          .foregroundStyle(fill >= 0.5 ? Palette.star : Color(.systemGray3))
       }
     }
     .accessibilityElement(children: .ignore)
@@ -48,7 +48,7 @@ struct Avatar: View {
         AsyncImage(url: url) { image in
           image.resizable().scaledToFill()
         } placeholder: {
-          Palette.fill
+          Color(.systemFill)
         }
       } else {
         Text(String(name.drop(while: { $0 == "@" }).prefix(1)).uppercased())
@@ -83,11 +83,11 @@ struct Chip: View {
 
   private var label: some View {
     Text(title)
-      .font(.stubFootnote.weight(.medium))
-      .foregroundStyle(selected ? Palette.background : Palette.label)
+      .font(.footnote.weight(.medium))
+      .foregroundStyle(selected ? Color(.systemBackground) : .primary)
       .padding(.horizontal, Space.m)
       .frame(minHeight: 28)
-      .background(selected ? Palette.label : Palette.fill, in: .capsule)
+      .background(selected ? Color.primary : Color(.tertiarySystemFill), in: .capsule)
   }
 }
 
@@ -103,18 +103,18 @@ struct Poster: View {
         AsyncImage(url: url) { image in
           image.resizable().scaledToFill()
         } placeholder: {
-          Palette.fill
+          Color(.systemFill)
         }
       } else {
         Text(Self.initials(title))
           .font(.system(size: width * 0.39, weight: .bold))
-          .foregroundStyle(Palette.outline)
+          .foregroundStyle(.secondary)
           .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .background(Palette.fill)
+          .background(Color(.tertiarySystemFill))
       }
     }
     .frame(width: width, height: width * 1.5)
-    .clipShape(.rect(cornerRadius: Radius.sm))
+    .clipShape(.rect(cornerRadius: Radius.sm, style: .continuous))
     .accessibilityHidden(true)
   }
 
@@ -138,13 +138,12 @@ struct ShowRow: View {
       Poster(title: title, url: photo)
       VStack(alignment: .leading, spacing: Space.xs) {
         Text(title)
-          .font(.stubHeadline)
-          .foregroundStyle(Palette.label)
+          .font(.headline)
         let meta = [venue, date].compactMap { $0 }.joined(separator: " · ")
         if !meta.isEmpty {
           Text(meta)
-            .font(.stubSubheadline)
-            .foregroundStyle(Palette.labelSecondary)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
             .lineLimit(1)
         }
         if planned {
@@ -160,26 +159,20 @@ struct ShowRow: View {
   }
 }
 
-/// The body of a screen with nothing in it yet.
+/// The body of a screen (or section) with nothing in it yet: a system
+/// `ContentUnavailableView` with an SF Symbol.
 struct EmptyState<Content: View>: View {
   let title: String
+  var systemImage = "theatermasks"
   @ViewBuilder var content: Content
 
   var body: some View {
-    VStack(spacing: Space.s) {
-      Text(title)
-        .font(.stubHeadline)
-        .foregroundStyle(Palette.label)
-      content
-        .font(.stubSubheadline)
-        .foregroundStyle(Palette.labelSecondary)
-        .frame(maxWidth: 320)
+    ContentUnavailableView {
+      Label(title, systemImage: systemImage)
+    } description: {
+      VStack(spacing: Space.s) { content }
     }
-    .multilineTextAlignment(.center)
-    .padding(.horizontal, Space.xxl)
-    .padding(.vertical, 48)
-    .frame(maxWidth: .infinity)
-    .cardStyle()
+    .padding(.vertical, Space.l)
   }
 }
 
@@ -187,7 +180,7 @@ struct EmptyState<Content: View>: View {
 struct PrimaryButtonStyle: ButtonStyle {
   func makeBody(configuration: Configuration) -> some View {
     configuration.label
-      .font(.stubHeadline)
+      .font(.headline)
       .foregroundStyle(Palette.onTint)
       .padding(.horizontal, Space.xl)
       .frame(minHeight: 50)
@@ -206,11 +199,13 @@ struct PillButtonStyle: ButtonStyle {
     configuration.label
       .lineLimit(1)
       .fixedSize()
-      .font(.system(size: 15, weight: .semibold))
-      .foregroundStyle(tinted ? Palette.tintText : Palette.label)
+      .font(.subheadline.weight(.semibold))
+      .foregroundStyle(tinted ? Palette.tintText : .primary)
       .padding(.horizontal, Space.l)
       .frame(maxWidth: stretch ? .infinity : nil, minHeight: Space.touch)
-      .background(configuration.isPressed || tinted ? Palette.tintFill : Palette.fill, in: .capsule)
+      .background(
+        configuration.isPressed ? Color(.systemFill) : tinted ? Palette.tintFill : Color(.tertiarySystemFill),
+        in: .capsule)
   }
 }
 
@@ -223,13 +218,11 @@ extension ButtonStyle where Self == PillButtonStyle {
   static var tintedPill: PillButtonStyle { .init(tinted: true) }
 }
 
-/// "Loading…" in secondary text, as on the web.
+/// A centred spinner while a section loads.
 struct LoadingText: View {
   var body: some View {
-    Text("Loading…")
-      .font(.stubSubheadline)
-      .foregroundStyle(Palette.labelSecondary)
-      .frame(maxWidth: .infinity, alignment: .leading)
+    ProgressView()
+      .frame(maxWidth: .infinity, minHeight: 120)
   }
 }
 
@@ -251,5 +244,5 @@ struct LoadingText: View {
     }
     .padding()
   }
-  .background(Palette.background)
+  .background(Color(.systemGroupedBackground))
 }

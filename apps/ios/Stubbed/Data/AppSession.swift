@@ -18,6 +18,13 @@ final class AppSession {
   private(set) var phase = Phase.starting
   private(set) var userId: UUID?
   private(set) var user: User?
+  /// Tabs, navigation and sheets for whoever is signed in. A new one on
+  /// every sign-in, so nothing carries over from the last session.
+  private(set) var router = AppRouter()
+  /// A link opened before sign-in, followed once the app is ready.
+  var pendingLink: AppRouter.Route?
+  /// Shows "Your account … has been deleted" on the sign-in screen.
+  private(set) var deletedNotice = false
 
   /// Follows sign-in, sign-out and token refreshes for the app's lifetime.
   func observe() async {
@@ -42,6 +49,7 @@ final class AppSession {
 
   /// The welcome screen saved a handle.
   func profileCompleted() {
+    router = AppRouter()
     phase = .ready
   }
 
@@ -54,6 +62,12 @@ final class AppSession {
     }
   }
 
+  /// The account is gone: clear the local session and say so at sign-in.
+  func accountDeleted() {
+    deletedNotice = true
+    Task { await signOut() }
+  }
+
   private func update(_ session: Session?) async {
     guard let session else {
       userId = nil
@@ -61,6 +75,7 @@ final class AppSession {
       phase = .signedOut
       return
     }
+    deletedNotice = false
     userId = session.user.id
     user = session.user
     do {
@@ -71,7 +86,9 @@ final class AppSession {
         .limit(1)
         .execute()
         .value
-      phase = rows.first?.handle == nil ? .needsProfile : .ready
+      let next: Phase = rows.first?.handle == nil ? .needsProfile : .ready
+      if next == .ready, phase != .ready { router = AppRouter() }
+      phase = next
     } catch {
       Log.data.error("Profile check failed: \(error.localizedDescription, privacy: .public)")
       phase = .failed("Couldn’t load your profile. Check your connection and try again.")

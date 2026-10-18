@@ -67,7 +67,7 @@ struct FollowButton: View {
   }
 }
 
-/// The tint capsule for Follow, `fill` once you follow or have asked.
+/// The tint capsule for Follow, a system fill once you follow or have asked.
 struct FollowButtonStyle: ButtonStyle {
   let filled: Bool
 
@@ -75,12 +75,16 @@ struct FollowButtonStyle: ButtonStyle {
     configuration.label
       .lineLimit(1)
       .fixedSize()
-      .font(.system(size: 15, weight: .semibold))
-      .foregroundStyle(filled ? Palette.onTint : Palette.label)
+      .font(.subheadline.weight(.semibold))
+      .foregroundStyle(filled ? Palette.onTint : Color.primary)
       .padding(.horizontal, Space.l)
-      .frame(minHeight: Space.touch)
+      .frame(minHeight: 34)
       .background(
-        filled ? (configuration.isPressed ? Palette.tintPressed : Palette.tint) : Palette.fill, in: .capsule)
+        filled ? (configuration.isPressed ? Palette.tintPressed : Palette.tint)
+          : configuration.isPressed ? Color(.systemFill) : Color(.tertiarySystemFill),
+        in: .capsule)
+      .frame(minHeight: Space.touch)
+      .contentShape(.rect)
   }
 }
 
@@ -110,23 +114,23 @@ struct FollowsListView: View {
       case .loading:
         LoadingText()
       case .failed(let message):
-        EmptyState(title: "Couldn’t load this list") { Text(message) }
+        EmptyState(title: "Couldn’t load this list", systemImage: "wifi.exclamationmark") { Text(message) }
       case .loaded(let m) where !m.visible:
-        EmptyState(title: "This profile is private") {
+        EmptyState(title: "This profile is private", systemImage: "lock") {
           Text("Follow @\(m.profile.handle) to see who they follow and who follows them.")
         }
       case .loaded(let m) where m.people.isEmpty:
-        EmptyState(title: list == .followers ? "No followers yet" : "Not following anyone yet") {
+        EmptyState(title: list == .followers ? "No followers yet" : "Not following anyone yet", systemImage: "person.2") {
           Text(list == .followers ? "People who follow @\(m.profile.handle) appear here." : "People @\(m.profile.handle) follows appear here.")
         }
       case .loaded(let m):
         VStack(spacing: 0) {
           ForEach(Array(m.people.enumerated()), id: \.element.id) { index, person in
-            if index > 0 { Palette.separator.frame(height: 1).padding(.leading, 72) }
+            if index > 0 { Divider().padding(.leading, 72) }
             PersonRow(person: person) {
               if list == .followers, m.profile.id == session.userId {
                 Button("Remove") { removing = person }
-                  .buttonStyle(.pill)
+                  .buttonStyle(FollowButtonStyle(filled: false))
                   .accessibilityLabel("Remove @\(person.handle)")
               } else if person.id != session.userId {
                 FollowButton(person: person, viewer: m.viewers[person.id] ?? Viewer(isOwner: false, status: .none))
@@ -134,7 +138,7 @@ struct FollowsListView: View {
             }
           }
         }
-        .cardStyle()
+        .groupedCard()
       }
     }
     .confirmationDialog(
@@ -183,26 +187,31 @@ struct FollowRequests: View {
   var body: some View {
     VStack(alignment: .leading, spacing: Space.m) {
       Text(people.count == 1 ? "1 follow request" : "\(people.count) follow requests")
-        .font(.stubHeadline)
-        .foregroundStyle(Palette.label)
+        .font(.title3.bold())
         .accessibilityAddTraits(.isHeader)
       VStack(spacing: 0) {
         ForEach(Array(people.enumerated()), id: \.element.id) { index, person in
-          if index > 0 { Palette.separator.frame(height: 1).padding(.leading, 72) }
+          if index > 0 { Divider().padding(.leading, 72) }
           PersonRow(person: person) {
             HStack(spacing: Space.s) {
               Button("Approve") { Task { await answer(person, approve: true) } }
                 .buttonStyle(FollowButtonStyle(filled: true))
                 .accessibilityLabel("Approve @\(person.handle)")
-              Button("Decline") { Task { await answer(person, approve: false) } }
-                .buttonStyle(.pill)
+              Button("Decline", systemImage: "xmark") { Task { await answer(person, approve: false) } }
+                .labelStyle(.iconOnly)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.secondary)
+                .frame(width: 34, height: 34)
+                .background(Color(.tertiarySystemFill), in: .circle)
+                .frame(width: Space.touch, height: Space.touch)
+                .buttonStyle(.borderless)
                 .accessibilityLabel("Decline @\(person.handle)")
             }
             .disabled(busy == person.id)
           }
         }
       }
-      .cardStyle()
+      .groupedCard()
     }
   }
 

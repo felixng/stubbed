@@ -86,6 +86,15 @@ extension XCTestCase {
   /// or the keyboard), then taps it.
   @MainActor
   func scrollAndTap(_ element: XCUIElement, in app: XCUIApplication) {
+    // Forms (collection views) only create rows as they scroll into view.
+    func scroller() -> XCUIElement {
+      app.collectionViews.firstMatch.exists ? app.collectionViews.firstMatch : app.scrollViews.firstMatch
+    }
+    var searched = 0
+    while !element.waitForExistence(timeout: searched == 0 ? 3 : 1), searched < 6 {
+      scroller().swipeUp()
+      searched += 1
+    }
     XCTAssertTrue(element.waitForExistence(timeout: 10), "\(element) never appeared")
     // isHittable doesn't notice the raised Log button, so compare frames.
     let bar = app.buttons["Log"]
@@ -94,10 +103,20 @@ extension XCTestCase {
     }
     var tries = 0
     while covered(), tries < 6 {
-      app.scrollViews.firstMatch.swipeUp(velocity: .slow)
+      scroller().swipeUp(velocity: .slow)
       tries += 1
     }
     element.tap()
+  }
+
+  /// Waits for the Home tab after sign-in, saving a screenshot if it never
+  /// shows.
+  @MainActor
+  @discardableResult
+  func onHome(_ app: XCUIApplication, timeout: TimeInterval = 15) -> Bool {
+    let shown = app.navigationBars["Home"].waitForExistence(timeout: timeout)
+    if !shown { snapshot("not-home") }
+    return shown
   }
 
   /// Saves the screen as build/ui/<name>.png.

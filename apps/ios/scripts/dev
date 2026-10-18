@@ -6,6 +6,9 @@
 #   scripts/dev test           Run the unit tests on the Simulator
 #   scripts/dev ui [Class[/test]]   Run UI tests (StubbedUITests) as the
 #                              local test users; screenshots go to build/ui/
+#   scripts/dev archive        Archive a Release build and upload it to
+#                              TestFlight (needs the owner's Apple account
+#                              signed in to Xcode)
 #   scripts/dev test-users     Create or reset the local test users
 #                              (ios-test@ and ios-new@stubbed.local)
 #   scripts/dev run [png]      Build, install, launch, then save a screenshot
@@ -155,20 +158,48 @@ case "$cmd" in
     rm -rf "$BUILD_DIR/ui" && mkdir -p "$BUILD_DIR/ui"
     # A copy started by `run` can't be closed by XCUITest and stalls it.
     xcrun simctl terminate "$udid" "$BUNDLE_ID" >/dev/null 2>&1 || true
-    test_users
+    test_users >/dev/null
     # Test photos (scripts/fixtures), added once per Simulator.
     if [ ! -f "$BUILD_DIR/.media-$udid" ]; then
       xcrun simctl addmedia "$udid" "$IOS_DIR"/scripts/fixtures/*.jpg && touch "$BUILD_DIR/.media-$udid"
     fi
-    # TEST_RUNNER_X reaches the UI test process as X.
-    TEST_RUNNER_STUBBED_EMAIL="$TEST_EMAIL" TEST_RUNNER_STUBBED_NEW_EMAIL="$NEW_EMAIL" \
-      TEST_RUNNER_STUBBED_PASSWORD="$TEST_PASSWORD" \
-      TEST_RUNNER_STUBBED_SCREENSHOTS="$BUILD_DIR/ui" \
-      xcb test "$udid" "-only-testing:StubbedUITests${1:+/$1}"
+    # Build once, then run each test class against freshly reset test data,
+    # so one class's changes (a deleted account, a trip edit) can't leak
+    # into the next. TEST_RUNNER_X reaches the UI test process as X.
+    xcb build-for-testing "$udid" >/dev/null || { tail -20 "$BUILD_DIR/logs/build-for-testing.log"; exit 1; }
+    if [ -n "${1:-}" ]; then
+      classes="$1"
+    else
+      classes="$(grep -ho 'final class [A-Za-z]*UITests' "$IOS_DIR"/StubbedUITests/*.swift | awk '{print $3}' | sort)"
+    fi
+    failed=0
+    : >"$BUILD_DIR/logs/ui-all.log"
+    for class in $classes; do
+      test_users >/dev/null
+      TEST_RUNNER_STUBBED_EMAIL="$TEST_EMAIL" TEST_RUNNER_STUBBED_NEW_EMAIL="$NEW_EMAIL" \
+        TEST_RUNNER_STUBBED_PASSWORD="$TEST_PASSWORD" \
+        TEST_RUNNER_STUBBED_SCREENSHOTS="$BUILD_DIR/ui" \
+        xcb test-without-building "$udid" "-only-testing:StubbedUITests/$class" || failed=1
+      cat "$BUILD_DIR/logs/test-without-building.log" >>"$BUILD_DIR/logs/ui-all.log"
+    done
     ls "$BUILD_DIR/ui"/*.png 2>/dev/null | sed 's/^/Screenshot: /' || true
+    [ $failed -eq 0 ] && echo "** UI TESTS SUCCEEDED **" || { echo "** UI TESTS FAILED **"; exit 1; }
     ;;
   test-users)
     test_users
+    ;;
+  archive)
+    # Release talks to the hosted Supabase project (Config/Release.xcconfig).
+    archive="$BUILD_DIR/Stubbed.xcarchive"
+    rm -rf "$archive"
+    xcodebuild archive -project "$IOS_DIR/Stubbed.xcodeproj" -scheme Stubbed -configuration Release \
+      -destination "generic/platform=iOS" -archivePath "$archive" -allowProvisioningUpdates \
+      CURRENT_PROJECT_VERSION="${BUILD_NUMBER:-$(date +%Y%m%d%H%M)}" >"$BUILD_DIR/logs/archive.log" 2>&1 \
+      || { grep -E "error:" "$BUILD_DIR/logs/archive.log" | head -20; echo "Archive failed. Full log: $BUILD_DIR/logs/archive.log" >&2; exit 1; }
+    xcodebuild -exportArchive -archivePath "$archive" -exportOptionsPlist "$IOS_DIR/Config/ExportOptions.plist" \
+      -exportPath "$BUILD_DIR/export" -allowProvisioningUpdates >"$BUILD_DIR/logs/export.log" 2>&1 \
+      || { grep -E "error" "$BUILD_DIR/logs/export.log" | head -20; echo "Upload failed. Full log: $BUILD_DIR/logs/export.log" >&2; exit 1; }
+    echo "Uploaded to App Store Connect. It appears in TestFlight once processed (a few minutes)."
     ;;
   run)
     udid="$(sim_udid)"

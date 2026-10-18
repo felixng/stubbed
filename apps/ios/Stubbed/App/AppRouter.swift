@@ -6,7 +6,7 @@ import Observation
 /// save or delete, so a screen you come back to is never stale.
 @MainActor @Observable
 final class AppRouter {
-  enum Tab { case home, profile }
+  enum Tab: Hashable { case home, log, profile }
 
   /// What the entry screen says on arrival.
   enum Notice: Hashable { case saved, planned, photoFailed }
@@ -83,6 +83,13 @@ final class AppRouter {
     guard isNew else { return }
     tab = .profile
     profilePath.append(.trip(id, addFailed: linksFailed))
+  }
+
+  /// Opens a link on the current tab, closing any sheet.
+  func open(_ route: Route) {
+    log = nil
+    tripForm = nil
+    if tab == .home { homePath.append(route) } else { profilePath.append(route) }
   }
 
   /// Something was written or deleted: screens reload.

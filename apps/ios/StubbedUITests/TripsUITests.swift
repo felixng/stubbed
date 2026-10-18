@@ -10,7 +10,7 @@ final class TripsUITests: XCTestCase {
     let app = launchApp()
     signOutIfNeeded(app)
     try signIn(app)
-    XCTAssertTrue(app.navigationBars["Home"].waitForExistence(timeout: 15))
+    XCTAssertTrue(onHome(app))
     app.buttons["Profile"].tap()
     XCTAssertTrue(app.staticTexts["@ios_test"].waitForExistence(timeout: 10))
     return app
@@ -49,7 +49,7 @@ final class TripsUITests: XCTestCase {
     XCTAssertTrue(name.waitForExistence(timeout: 10))
     name.typeText("London Sept")
     XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "The 1 show you picked")).firstMatch.exists)
-    app.buttons["Create trip"].tap()
+    app.navigationBars.buttons["Create"].tap()
 
     XCTAssertTrue(app.navigationBars["London Sept"].waitForExistence(timeout: 10))
     XCTAssertTrue(app.staticTexts["12 Sept 2026"].exists || app.staticTexts["12 Sep 2026"].exists)

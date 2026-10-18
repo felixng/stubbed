@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// A card of entries: photo (or initials), title, venue and date, stars (or
+/// An inset grouped list of entries: photo (or initials), title, venue and date, stars (or
 /// "Going" for a planned show), trip chips and "Private". Used by the diary
 /// and trip screens. With `selection`, rows tick instead of opening.
 struct EntryList: View {
@@ -11,37 +11,40 @@ struct EntryList: View {
   var body: some View {
     VStack(spacing: 0) {
       ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
-        if index > 0 { Palette.separator.frame(height: 1) }
+        if index > 0 { Divider().padding(.leading, Space.l + 56 + Space.l) }
         if let selection {
           let picked = selection.wrappedValue.contains(entry.id)
           Button {
             if picked { selection.wrappedValue.remove(entry.id) } else { selection.wrappedValue.insert(entry.id) }
           } label: {
             HStack(spacing: Space.l) {
-              EntryRow(entry: entry, photo: entry.photoPath.flatMap { photos[$0] })
               Image(systemName: picked ? "checkmark.circle.fill" : "circle")
-                .font(.system(size: 24))
-                .foregroundStyle(picked ? Palette.tint : Palette.separator)
+                .font(.title2)
+                .foregroundStyle(picked ? AnyShapeStyle(Palette.tint) : AnyShapeStyle(.tertiary))
+                .contentTransition(.symbolEffect(.replace))
+              EntryRow(entry: entry, photo: entry.photoPath.flatMap { photos[$0] })
             }
             .padding(.horizontal, Space.l)
             .padding(.vertical, Space.m)
-            .background(picked ? Palette.tintFill : .clear)
             .contentShape(.rect)
           }
-          .buttonStyle(.plain)
+          .pressableRow()
+          .sensoryFeedback(.selection, trigger: picked)
           .accessibilityAddTraits(picked ? .isSelected : [])
         } else {
           NavigationLink(value: AppRouter.Route.entry(entry.id)) {
-            EntryRow(entry: entry, photo: entry.photoPath.flatMap { photos[$0] })
-              .padding(.horizontal, Space.l)
-              .padding(.vertical, Space.m)
-              .contentShape(.rect)
+            HStack(spacing: Space.m) {
+              EntryRow(entry: entry, photo: entry.photoPath.flatMap { photos[$0] })
+              RowChevron()
+            }
+            .padding(.horizontal, Space.l)
+            .padding(.vertical, Space.m)
           }
-          .buttonStyle(.plain)
+          .pressableRow()
         }
       }
     }
-    .cardStyle()
+    .groupedCard()
   }
 }
 
@@ -54,12 +57,12 @@ struct EntryRow: View {
       Poster(title: entry.show.title, url: photo)
       VStack(alignment: .leading, spacing: Space.xs) {
         Text(entry.show.title)
-          .font(.stubHeadline)
-          .foregroundStyle(Palette.label)
+          .font(.headline)
+          .foregroundStyle(.primary)
           .lineLimit(1)
         Text([entry.venue?.name, Day.format(entry.date)].compactMap { $0 }.joined(separator: " · "))
-          .font(.stubSubheadline)
-          .foregroundStyle(Palette.labelSecondary)
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
           .lineLimit(1)
         FlowLayout(spacing: Space.s) {
           if entry.planned {
@@ -73,17 +76,17 @@ struct EntryRow: View {
             RatingStars(value: rating, size: 14).frame(minHeight: 20)
           }
           ForEach(entry.trips, id: \.id) { trip in
-            Text(trip.name)
-              .font(.caption)
-              .foregroundStyle(Palette.label)
+            Label(trip.name, systemImage: "suitcase")
+              .font(.caption.weight(.medium))
+              .foregroundStyle(.primary)
               .padding(.horizontal, Space.s)
               .frame(minHeight: 20)
-              .background(Palette.fill, in: .capsule)
+              .background(Color(.tertiarySystemFill), in: .capsule)
           }
           if entry.visibility == .private {
-            Text("Private")
+            Label("Private", systemImage: "lock.fill")
               .font(.caption)
-              .foregroundStyle(Palette.labelSecondary)
+              .foregroundStyle(.secondary)
               .frame(minHeight: 20)
           }
         }

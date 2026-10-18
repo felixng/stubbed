@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// One show as a post, like the web's PublicEntryCard: who and when, the
-/// show, where, stars, the note, the photo and trip chips, then Like and
-/// Comment on public shows. Used by the feed and public profiles.
+/// One show as a post: who and when, the show and where (tap for the
+/// show), stars, note, photo and trips, then Like and Comment on public
+/// shows. An inset grouped card; used by the feed, profiles and trips.
 struct PostCard: View {
   let entry: Entry
   let owner: Person
@@ -16,154 +16,169 @@ struct PostCard: View {
   var reactions: Reactions?
 
   @Environment(AppSession.self) private var session
-  @Environment(AppRouter.self) private var router
   @State private var shown: Reactions?
   @State private var writing = false
   @State private var likeError: String?
 
   private var route: AppRouter.Route { mine ? .entry(entry.id) : .publicEntry(entry.id) }
+  private var date: String { Day.formatPost(entry.date) }
 
   var body: some View {
-    VStack(alignment: .leading, spacing: Space.m) {
-      if inTrip == nil {
-        HStack(spacing: Space.m) {
-          NavigationLink(value: AppRouter.Route.profile(handle: owner.handle)) {
-            HStack(spacing: Space.m) {
-              Avatar(name: owner.name, url: owner.avatarURL, size: 40)
-              VStack(alignment: .leading, spacing: 0) {
-                Text(verbatim: "@\(owner.handle)")
-                  .font(.stubSubheadline.weight(.semibold))
-                  .foregroundStyle(Palette.label)
-                  .lineLimit(1)
-                Text(date)
-                  .font(.stubFootnote)
-                  .foregroundStyle(Palette.labelSecondary)
-              }
-            }
-          }
-          .buttonStyle(.plain)
-          .accessibilityLabel("@\(owner.handle), \(date)")
-          .accessibilityHint("Opens their profile")
-          Spacer()
-          if mine, entry.visibility == .private {
-            Text("Private")
-              .font(.stubFootnote.weight(.medium))
-              .foregroundStyle(Palette.labelSecondary)
-              .padding(.horizontal, Space.m)
-              .frame(minHeight: 28)
-              .background(Palette.fill, in: .capsule)
-          }
-        }
-      } else {
-        Text(date).font(.stubFootnote).foregroundStyle(Palette.labelSecondary)
-      }
+    VStack(alignment: .leading, spacing: 0) {
+      if inTrip == nil { header }
 
-      NavigationLink(value: route) {
-        VStack(alignment: .leading, spacing: Space.xs) {
-          Text(entry.show.title)
-            .font(.stubTitle2)
-            .foregroundStyle(Palette.label)
-            .multilineTextAlignment(.leading)
-          Text([entry.show.type.label, entry.whereText].compactMap { $0 }.joined(separator: " · "))
-            .font(.stubSubheadline)
-            .foregroundStyle(Palette.labelSecondary)
-            .multilineTextAlignment(.leading)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .contentShape(.rect)
-      }
-      .buttonStyle(.plain)
+      NavigationLink(value: route) { show }
+        .pressableRow()
 
-      if let rating = entry.rating { RatingStars(value: rating, size: 20) }
-      if let note = entry.note {
-        Text(note).font(.stubBody).foregroundStyle(Palette.label)
-      }
-      if let photo {
-        AsyncImage(url: photo) { $0.resizable().scaledToFill() } placeholder: { Palette.fill }
-          .frame(maxWidth: .infinity)
-          .aspectRatio(4 / 5, contentMode: .fit)
-          .frame(maxHeight: 480)
-          .clipShape(.rect(cornerRadius: Radius.md))
-          .accessibilityLabel("Photo from \(entry.show.title)")
-      }
       let trips = entry.trips.filter { $0.id != inTrip }
-      if !trips.isEmpty {
-        FlowLayout(spacing: Space.s) {
-          ForEach(trips, id: \.id) { trip in
-            if linkTrips {
-              NavigationLink(value: mine ? AppRouter.Route.trip(trip.id) : .publicTrip(trip.id)) { tripChip(trip.name) }
-                .buttonStyle(.plain)
-            } else {
-              tripChip(trip.name)
-            }
-          }
-        }
-      }
+      if !trips.isEmpty { tripChips(trips) }
+
       if let state = shown ?? reactions {
-        reactionsRow(state)
+        Divider().padding(.leading, Space.l)
+        actions(state)
       }
     }
-    .padding(Space.l)
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .cardStyle()
+    .groupedCard()
     .onChange(of: reactions) { _, _ in shown = nil }
   }
 
-  private var date: String { Day.formatPost(entry.date) }
+  // MARK: - Parts
 
-  private func tripChip(_ name: String) -> some View {
-    Text(name)
-      .font(.stubFootnote.weight(.medium))
-      .foregroundStyle(Palette.label)
-      .padding(.horizontal, Space.m)
-      .frame(minHeight: 28)
-      .background(Palette.fill, in: .capsule)
+  private var header: some View {
+    NavigationLink(value: AppRouter.Route.profile(handle: owner.handle)) {
+      HStack(spacing: Space.m) {
+        Avatar(name: owner.name, url: owner.avatarURL, size: 36)
+        VStack(alignment: .leading, spacing: 1) {
+          Text(verbatim: "@\(owner.handle)")
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.primary)
+            .lineLimit(1)
+          Text(date)
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+        }
+        Spacer(minLength: 0)
+        if mine, entry.visibility == .private {
+          Label("Private", systemImage: "lock.fill")
+            .font(.caption.weight(.medium))
+            .foregroundStyle(.secondary)
+        }
+      }
+      .padding(.horizontal, Space.l)
+      .padding(.top, Space.l)
+      .padding(.bottom, Space.s)
+    }
+    .pressableRow()
+    .accessibilityLabel("@\(owner.handle), \(date)")
+    .accessibilityHint("Opens their profile")
   }
 
-  /// Like and Comment, as on Hevy. A like shows at once and writes in the
-  /// background.
-  private func reactionsRow(_ state: Reactions) -> some View {
-    HStack(spacing: Space.xs) {
+  private var show: some View {
+    VStack(alignment: .leading, spacing: Space.m) {
+      HStack(alignment: .firstTextBaseline, spacing: Space.s) {
+        VStack(alignment: .leading, spacing: 2) {
+          Text(entry.show.title)
+            .font(.title3.bold())
+            .foregroundStyle(.primary)
+            .multilineTextAlignment(.leading)
+          Text([entry.show.type.label, entry.whereText].compactMap { $0 }.joined(separator: " · "))
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .multilineTextAlignment(.leading)
+        }
+        Spacer(minLength: 0)
+        RowChevron()
+      }
+      if inTrip != nil {
+        Text(date).font(.footnote).foregroundStyle(.secondary)
+      }
+      if let rating = entry.rating { RatingStars(value: rating, size: 17) }
+      if let note = entry.note {
+        Text(note)
+          .font(.body)
+          .foregroundStyle(.primary)
+          .multilineTextAlignment(.leading)
+      }
+      if let photo {
+        AsyncImage(url: photo) { $0.resizable().scaledToFill() } placeholder: { Color(.tertiarySystemFill) }
+          .frame(maxWidth: .infinity)
+          .aspectRatio(4 / 5, contentMode: .fit)
+          .frame(maxHeight: 460)
+          .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+          .accessibilityLabel("Photo from \(entry.show.title)")
+      }
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(.horizontal, Space.l)
+    .padding(.top, inTrip == nil ? Space.xs : Space.l)
+    .padding(.bottom, Space.l)
+  }
+
+  private func tripChips(_ trips: [Entry.TripRef]) -> some View {
+    FlowLayout(spacing: Space.s) {
+      ForEach(trips, id: \.id) { trip in
+        if linkTrips {
+          NavigationLink(value: mine ? AppRouter.Route.trip(trip.id) : .publicTrip(trip.id)) { tripChip(trip.name) }
+            .buttonStyle(.borderless)
+        } else {
+          tripChip(trip.name)
+        }
+      }
+    }
+    .padding(.horizontal, Space.l)
+    .padding(.bottom, Space.l)
+  }
+
+  private func tripChip(_ name: String) -> some View {
+    Label(name, systemImage: "suitcase")
+      .font(.footnote.weight(.medium))
+      .foregroundStyle(.primary)
+      .padding(.horizontal, Space.m)
+      .padding(.vertical, 6)
+      .background(Color(.tertiarySystemFill), in: .capsule)
+  }
+
+  /// Like and Comment. A like shows at once and writes in the background.
+  private func actions(_ state: Reactions) -> some View {
+    HStack(spacing: Space.xl) {
       Button {
         Task { await toggleLike(state) }
       } label: {
-        HStack(spacing: 6) {
+        Label {
+          Text(state.likes > 0 ? "\(state.likes)" : "Like").monospacedDigit()
+        } icon: {
           Image(systemName: state.liked ? "heart.fill" : "heart")
-            .font(.system(size: 20))
-            .foregroundStyle(state.liked ? Palette.tint : Palette.labelSecondary)
-          if state.likes > 0 { Text("\(state.likes)").monospacedDigit() }
+            .foregroundStyle(state.liked ? Palette.tint : .secondary)
+            .contentTransition(.symbolEffect(.replace))
         }
-        .padding(.horizontal, Space.m)
         .frame(minHeight: Space.touch)
-        .contentShape(.rect)
       }
-      .buttonStyle(.plain)
+      .buttonStyle(.borderless)
+      .sensoryFeedback(.selection, trigger: state.liked)
       .accessibilityLabel("Like")
       .accessibilityValue("\(state.likes) \(state.likes == 1 ? "like" : "likes")")
       .accessibilityAddTraits(state.liked ? .isSelected : [])
 
       NavigationLink(value: AppRouter.Route.publicEntry(entry.id, comments: true)) {
-        HStack(spacing: 6) {
-          Image(systemName: "bubble.left")
-            .font(.system(size: 19))
-            .foregroundStyle(Palette.labelSecondary)
-          if state.comments > 0 { Text("\(state.comments)").monospacedDigit() }
+        Label {
+          Text(state.comments > 0 ? "\(state.comments)" : "Comment").monospacedDigit()
+        } icon: {
+          Image(systemName: "bubble.left").foregroundStyle(.secondary)
         }
-        .padding(.horizontal, Space.m)
         .frame(minHeight: Space.touch)
-        .contentShape(.rect)
       }
-      .buttonStyle(.plain)
+      .buttonStyle(.borderless)
       .accessibilityLabel("Comment")
       .accessibilityValue("\(state.comments) \(state.comments == 1 ? "comment" : "comments")")
+
+      Spacer(minLength: 0)
       if let likeError {
-        Text(likeError).font(.stubFootnote).foregroundStyle(Palette.destructive)
+        Text(likeError).font(.footnote).foregroundStyle(.red)
       }
     }
-    .font(.stubSubheadline.weight(.semibold))
-    .foregroundStyle(Palette.label)
-    .padding(.horizontal, -Space.m)
-    .padding(.bottom, -Space.s)
+    .font(.subheadline.weight(.medium))
+    .foregroundStyle(.secondary)
+    .padding(.horizontal, Space.l)
   }
 
   private func toggleLike(_ state: Reactions) async {

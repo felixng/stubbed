@@ -30,11 +30,11 @@ struct WelcomeView: View {
         VStack(spacing: Space.m) {
           Wordmark(size: 36)
           Text("Set up your profile")
-            .font(.stubTitle2)
-            .foregroundStyle(Palette.label)
+            .font(.title2.bold())
+            .foregroundStyle(.primary)
           Text("Your handle goes on your share cards and profile link.")
-            .font(.stubSubheadline)
-            .foregroundStyle(Palette.labelSecondary)
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
         }
         .padding(.top, 48)
@@ -46,8 +46,8 @@ struct WelcomeView: View {
         }
 
         Button("Sign out") { Task { await session.signOut() } }
-          .font(.stubSubheadline)
-          .foregroundStyle(Palette.labelSecondary)
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
       }
       .frame(maxWidth: 420)
       .padding(.horizontal, Space.l)
@@ -55,7 +55,7 @@ struct WelcomeView: View {
       .frame(maxWidth: .infinity)
     }
     .scrollDismissesKeyboard(.interactively)
-    .background(Palette.background)
+    .background(Color(.systemGroupedBackground))
     // Keeps the focused field and its message (e.g. "That handle is taken")
     // above the keyboard.
     .onChange(of: focus) { _, field in
@@ -89,7 +89,7 @@ struct WelcomeView: View {
 
       FormField(label: "Handle", message: handleMessage, isError: handleIsError) {
         HStack(spacing: 2) {
-          Text(verbatim: "@").foregroundStyle(Palette.labelSecondary).accessibilityHidden(true)
+          Text(verbatim: "@").foregroundStyle(.secondary).accessibilityHidden(true)
           TextField("Handle", text: $handle, prompt: Text(verbatim: "yourname"))
             .textContentType(.username)
             .textInputAutocapitalization(.never)
@@ -136,8 +136,8 @@ struct WelcomeView: View {
 
       if let formError {
         Text(formError)
-          .font(.stubFootnote)
-          .foregroundStyle(Palette.destructive)
+          .font(.footnote)
+          .foregroundStyle(.red)
       }
 
       Button(saving ? "Saving…" : "Continue") { Task { await save(userId: userId) } }

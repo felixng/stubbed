@@ -8,6 +8,8 @@ import SwiftUI
 struct SignInView: View {
   private enum Field { case email, password }
 
+  @Environment(AppSession.self) private var session
+
   @State private var email = ""
   @State private var password = ""
   @State private var error: String?
@@ -21,10 +23,18 @@ struct SignInView: View {
         VStack(spacing: Space.m) {
           Wordmark(size: 44)
           Text("Sign in")
-            .font(.stubTitle2)
-            .foregroundStyle(Palette.label)
+            .font(.title2.bold())
         }
         .padding(.top, 48)
+
+        if session.deletedNotice {
+          Text("Your account and everything in it have been deleted.")
+            .font(.subheadline.weight(.medium))
+            .padding(.horizontal, Space.l)
+            .padding(.vertical, Space.m)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .groupedCard()
+        }
 
         VStack(spacing: Space.m) {
           SignInWithAppleButton(.continue, onRequest: prepareApple, onCompletion: finishApple)
@@ -44,14 +54,15 @@ struct SignInView: View {
         }
 
         HStack(spacing: Space.m) {
-          Palette.separator.frame(height: 1)
+          VStack { Divider() }
           Text("or")
-          Palette.separator.frame(height: 1)
+          VStack { Divider() }
         }
-        .font(.stubFootnote)
-        .foregroundStyle(Palette.labelSecondary)
+        .font(.footnote)
+        .foregroundStyle(.secondary)
 
         VStack(alignment: .leading, spacing: Space.l) {
+          VStack(spacing: 0) {
           field("Email") {
             TextField("Email", text: $email, prompt: Text(verbatim: "you@example.com"))
               .textContentType(.username)
@@ -69,10 +80,12 @@ struct SignInView: View {
               .submitLabel(.go)
               .onSubmit { Task { await signInWithPassword() } }
           }
+          }
+          .groupedCard()
           if let error {
             Text(error)
-              .font(.stubFootnote)
-              .foregroundStyle(Palette.destructive)
+              .font(.footnote)
+              .foregroundStyle(.red)
               .accessibilityAddTraits(.isStaticText)
           }
           Button {
@@ -89,25 +102,26 @@ struct SignInView: View {
       .frame(maxWidth: .infinity)
     }
     .scrollDismissesKeyboard(.interactively)
-    .background(Palette.background)
+    .background(Color(.systemGroupedBackground))
     .onChange(of: error) { _, message in
       if let message { AccessibilityNotification.Announcement(message).post() }
     }
   }
 
-  private func field<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
-    VStack(alignment: .leading, spacing: Space.s) {
+  /// A row of the grouped email and password card: label, then the field.
+  @ViewBuilder private func field<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
+    if title != "Email" { Divider().padding(.leading, Space.l) }
+    HStack(spacing: Space.m) {
       Text(title)
-        .font(.stubSubheadline.weight(.semibold))
-        .foregroundStyle(Palette.label)
+        .font(.body)
+        .frame(width: 88, alignment: .leading)
+        .accessibilityHidden(true)
       content()
-        .font(.stubBody)
-        .padding(.horizontal, Space.l)
-        .frame(minHeight: 50)
-        .background(Palette.surface, in: .rect(cornerRadius: Radius.md))
-        .overlay(RoundedRectangle(cornerRadius: Radius.md).strokeBorder(Palette.separator))
+        .font(.body)
         .accessibilityLabel(title)
     }
+    .padding(.horizontal, Space.l)
+    .frame(minHeight: 50)
   }
 
   // MARK: - Email + password
@@ -203,19 +217,20 @@ struct SignInView: View {
   }
 }
 
-/// The web's neutral button: `surface` capsule with a `separator` border.
+/// A secondary full-width capsule on the grouped background.
 struct NeutralButtonStyle: ButtonStyle {
   func makeBody(configuration: Configuration) -> some View {
     configuration.label
-      .font(.stubHeadline)
-      .foregroundStyle(Palette.label)
+      .font(.headline)
+      .foregroundStyle(.primary)
       .padding(.horizontal, Space.xl)
       .frame(minHeight: 50)
-      .background(configuration.isPressed ? Palette.fill : Palette.surface, in: .capsule)
-      .overlay(Capsule().strokeBorder(Palette.separator))
+      .background(
+        configuration.isPressed ? Color(.systemFill) : Color(.secondarySystemGroupedBackground), in: .capsule)
+      .overlay(Capsule().strokeBorder(Color(.separator).opacity(0.35), lineWidth: 0.5))
   }
 }
 
 #Preview {
-  SignInView()
+  SignInView().environment(AppSession())
 }

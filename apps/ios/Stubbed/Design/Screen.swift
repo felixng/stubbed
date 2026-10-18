@@ -1,23 +1,28 @@
 import SwiftUI
 
-/// A scrolling app screen on the `background` colour: a large title, then
-/// content in a column capped at the web's 640pt, with its 16pt gutters.
+/// A scrolling screen on the system grouped background, with a large
+/// navigation title. Content sits in a column with 16pt margins, capped for
+/// wide screens.
 struct Screen<Content: View>: View {
   let title: String
+  var spacing: CGFloat = Space.l
+  /// `.inline` for screens whose content already leads with the title.
+  var titleMode: NavigationBarItem.TitleDisplayMode = .large
   @ViewBuilder var content: Content
 
   var body: some View {
     ScrollView {
-      VStack(alignment: .leading, spacing: Space.xl) {
+      VStack(alignment: .leading, spacing: spacing) {
         content
       }
       .frame(maxWidth: 640)
       .padding(.horizontal, Space.l)
-      .padding(.vertical, Space.xl)
+      .padding(.top, Space.s)
+      .padding(.bottom, Space.xl)
       .frame(maxWidth: .infinity)
     }
-    .background(Palette.background)
+    .background(Color(.systemGroupedBackground))
     .navigationTitle(title)
-    .toolbarBackground(Palette.background, for: .navigationBar)
+    .navigationBarTitleDisplayMode(titleMode)
   }
 }

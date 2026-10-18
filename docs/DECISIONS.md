@@ -287,6 +287,9 @@ Owner's call, building on the brief's move to a Google Doc. The [Stubbed folder]
 - `docs/MONETISATION.md` moved to the Google Doc [Stubbed: Monetisation Ideas](https://docs.google.com/document/d/1LJanHT3SpBYSQB7SiRVaeX-1PFZTPQ-cBLXlSC50KAM/edit) in that folder.
 - The brief's data model and tech approach moved into `CLAUDE.md` ("Tech overview"); the brief keeps a short non-technical summary.
 
+### 2026-10-16: The iOS app's UI diverges from the web
+Owner's call. The iOS app keeps the web's features, data and rules (Postgres stays the shared source), but its UI is now designed as a native iOS app (Apple Fitness and Personal Best as references) rather than a copy of the web's mobile layout: system grouped backgrounds, inset grouped containers without drop shadows, a native tab bar with Log as a tab that opens a sheet, Dynamic Type and SF Symbols throughout. Share cards still match the web, since they're the images people post. The rules are in `apps/ios/CLAUDE.md`, "Design direction".
+
 ### 2026-10-18: Entry cards laid out like Instagram posts
 Owner's ask (#85): a tighter feed card. `PublicEntryCard` (Home feed, profiles, trip pages, entry pages) now runs header, then the photo edge to edge, then Like / Comment / Share, then the note as a caption after the bold handle, then trip chips.
 - **Show, where and stars sit on the photo**, over a black gradient (80% at the bottom) with a light text shadow, so they read on bright photos too. The gradient is dark in either appearance, so on it the stars use the dark appearance's `star` and white empty stars (set by overriding `--star` and `--outline` on the overlay).

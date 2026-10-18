@@ -17,6 +17,8 @@ CODE_SIGN_ENTITLEMENTS = Config/Stubbed.entitlements
 GENERATE_INFOPLIST_FILE = YES
 INFOPLIST_KEY_CFBundleDisplayName = Stubbed
 INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = Stubbed saves your share cards to Photos when you tap Download.
+// HTTPS only: no export-compliance questions on each upload.
+INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO
 INFOPLIST_KEY_LSApplicationCategoryType = public.app-category.lifestyle
 INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES
 INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES
