@@ -35,6 +35,8 @@ export const TEXT = "-apple-system, 'SF Pro Text', BlinkMacSystemFont, system-ui
 export const CORAL = "#FF6B4A";
 const STAR = "#FFD60A";
 export const SECONDARY = "#AEAEB2";
+// Shown small under the wordmark on every card, so a shared image leads back.
+export const CARD_DOMAIN = "@getstubbed.app";
 const SOFT_WHITE = "rgba(255, 255, 255, 0.85)";
 // Same star as the designs (24px viewBox).
 const STAR_PATH = "M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z";
@@ -90,12 +92,15 @@ function drawSquare(ctx: Ctx, d: CardData, bg: Background) {
   setFont(ctx, 800, 18, DISPLAY, -0.81);
   ctx.fillStyle = "#FFFFFF";
   ctx.textBaseline = "middle";
-  ctx.fillText("stubbed", pad, footerTop + 9);
+  ctx.fillText("stubbed", pad, footerTop + 4);
+  setFont(ctx, 500, 10, TEXT, 0);
+  ctx.fillStyle = SECONDARY;
+  ctx.fillText(CARD_DOMAIN, pad, footerTop + 19);
   if (d.handle) {
     setFont(ctx, 400, 13, TEXT, -0.08);
     ctx.fillStyle = SECONDARY;
     ctx.textAlign = "right";
-    ctx.fillText(`@${d.handle}`, U - pad, footerTop + 9);
+    ctx.fillText(`@${d.handle}`, U - pad, footerTop + 4);
     ctx.textAlign = "left";
   }
   ctx.fillStyle = "#38383A";
@@ -178,12 +183,15 @@ function drawHevy(ctx: Ctx, d: CardData, bg: Background, middle: "venue" | "seen
   ctx.textBaseline = "middle";
   setFont(ctx, 800, 28, DISPLAY, -1.26);
   ctx.fillStyle = "#FFFFFF";
-  ctx.fillText("stubbed", x, footerMid);
+  ctx.fillText("stubbed", x, footerMid - 10);
+  setFont(ctx, 500, 12, TEXT, 0);
+  ctx.fillStyle = SOFT_WHITE;
+  ctx.fillText(CARD_DOMAIN, x, footerMid + 11);
   if (d.handle) {
     setFont(ctx, 400, 20, TEXT, -0.32);
     ctx.fillStyle = SOFT_WHITE;
     ctx.textAlign = "right";
-    ctx.fillText(`@${d.handle}`, U - x, footerMid);
+    ctx.fillText(`@${d.handle}`, U - x, footerMid - 10);
     ctx.textAlign = "left";
   }
   const metaBottom = footerMid - 14 - 16;

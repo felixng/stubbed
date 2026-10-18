@@ -6,6 +6,7 @@
 // match each other and the entry cards. Coordinates are in the designs'
 // 540px units, scaled up to 1080.
 import {
+  CARD_DOMAIN,
   CORAL,
   type Ctx,
   DISPLAY,
@@ -511,17 +512,22 @@ function drawThumb(ctx: Ctx, p: Palette, s: Show, x: number, y: number, w: numbe
   ctx.restore();
 }
 
-// Wordmark left, handle right, at the same place on every card.
+// Wordmark left with the domain under it, handle right, at the same place
+// on every card. The pair sits around FOOTER_MID, using some of the gap
+// above and the padding below so the content area stays the same.
 function drawFooter(ctx: Ctx, p: Palette, handle: string | null) {
   ctx.textBaseline = "middle";
   setFont(ctx, 800, 18, DISPLAY, -0.81);
   ctx.fillStyle = p.label;
-  ctx.fillText("stubbed", PAD, FOOTER_MID);
+  ctx.fillText("stubbed", PAD, FOOTER_MID - 5);
+  setFont(ctx, 500, 10, TEXT, 0);
+  ctx.fillStyle = p.secondary;
+  ctx.fillText(CARD_DOMAIN, PAD, FOOTER_MID + 10);
   if (handle) {
     setFont(ctx, 400, 13, TEXT, -0.08);
     ctx.fillStyle = p.secondary;
     ctx.textAlign = "right";
-    ctx.fillText(`@${handle}`, W - PAD, FOOTER_MID);
+    ctx.fillText(`@${handle}`, W - PAD, FOOTER_MID - 5);
     ctx.textAlign = "left";
   }
 }
