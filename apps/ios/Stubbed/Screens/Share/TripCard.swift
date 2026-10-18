@@ -112,22 +112,31 @@ struct TripCardView: View {
 
   private static let headerBottom = pad + 34 + 2 + 19
 
+  /// Wordmark with the domain under it, around `footerMid` (the web's
+  /// `drawFooter`), so the content area stays the same.
   private var footer: some View {
-    HStack {
-      Text(verbatim: "stubbed")
-        .font(.system(size: 18, weight: .heavy))
-        .tracking(-0.81)
-        .foregroundStyle(ink.label)
-      Spacer()
-      if let handle = data.handle {
-        Text(verbatim: "@\(handle)")
-          .font(.system(size: 13))
-          .tracking(-0.08)
-          .foregroundStyle(ink.secondary)
+    VStack(alignment: .leading, spacing: 0) {
+      HStack {
+        Text(verbatim: "stubbed")
+          .font(.system(size: 18, weight: .heavy))
+          .tracking(-0.81)
+          .foregroundStyle(ink.label)
+        Spacer()
+        if let handle = data.handle {
+          Text(verbatim: "@\(handle)")
+            .font(.system(size: 13))
+            .tracking(-0.08)
+            .foregroundStyle(ink.secondary)
+        }
       }
+      .frame(height: 18)
+      Text(verbatim: cardDomain)
+        .font(.system(size: 10, weight: .medium))
+        .foregroundStyle(ink.secondary)
+        .frame(height: 12)
     }
-    .frame(width: Self.inner, height: 18)
-    .offset(x: Self.pad, y: Self.footerMid - 9)
+    .frame(width: Self.inner, alignment: .leading)
+    .offset(x: Self.pad, y: Self.footerMid - 14)
   }
 
   // MARK: - List

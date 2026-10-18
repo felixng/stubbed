@@ -36,6 +36,10 @@ enum EntryCardDesign: String, CaseIterable, Identifiable, Sendable {
   }
 }
 
+/// Shown small under the wordmark on every card (the web's `CARD_DOMAIN`),
+/// so a shared image leads back.
+let cardDomain = "@getstubbed.app"
+
 /// Fixed colours from the card designs: cards are always dark, whatever the
 /// app's theme.
 enum CardInk {
@@ -125,7 +129,7 @@ struct EntryCardView: View {
         }
         .frame(height: 22)
         .padding(.bottom, 15)
-        CardInk.rule.frame(height: 1).padding(.bottom, 14)
+        CardInk.rule.frame(height: 1).padding(.bottom, 9)
         HStack {
           Text(verbatim: "stubbed")
             .font(.system(size: 18, weight: .heavy))
@@ -140,8 +144,13 @@ struct EntryCardView: View {
           }
         }
         .frame(height: 18)
+        Text(verbatim: cardDomain)
+          .font(.system(size: 10, weight: .medium))
+          .foregroundStyle(CardInk.secondary)
+          .frame(height: 12)
       }
-      .padding(pad)
+      .padding([.horizontal, .top], pad)
+      .padding(.bottom, pad - 7)
       .cardTextShadow(transparent)
     }
     .clipShape(.rect(cornerRadius: transparent ? 0 : 20))
@@ -212,7 +221,7 @@ struct EntryCardView: View {
             .foregroundStyle(CardInk.softWhite)
             .lineLimit(1)
             .frame(height: 20, alignment: .leading)
-            .padding(.bottom, 16)
+            .padding(.bottom, 6)
           HStack {
             Text(verbatim: "stubbed")
               .font(.system(size: 28, weight: .heavy))
@@ -227,9 +236,13 @@ struct EntryCardView: View {
             }
           }
           .frame(height: 28)
+          Text(verbatim: cardDomain)
+            .font(.system(size: 12, weight: .medium))
+            .foregroundStyle(CardInk.softWhite)
+            .frame(height: 14)
         }
         .padding(.horizontal, side + 4)
-        .padding(.bottom, 24)
+        .padding(.bottom, 20)
       }
       .cardTextShadow(true)
     }
