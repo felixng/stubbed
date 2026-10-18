@@ -10,8 +10,11 @@ import { EntryReactions, ShareAction } from "./EntryReactions";
 // for the Like and Comment row under the card.
 export type CardSocial = { viewerId: string | null; reactions: Reactions };
 
-// One public entry, as a post: who and when, the show, where, stars, the note
-// and the photo. Used on profiles, trip pages and the entry's own page
+// One public entry, as a post, laid out like Instagram: who and when, then the
+// photo edge to edge with the show, where and stars on it (over a dark
+// gradient, so they read on any photo), then Like and Comment, the note as a
+// caption after the handle, and trip chips. Without a photo, the show, where
+// and stars sit under the header instead. Used on profiles, trip pages and the entry's own page
 // (`page`: the title is the page's h1 and doesn't link to itself). Only public
 // trips appear as chips (RLS hides links to private ones), each linking to its
 // trip page. On a trip page (`inTrip`), the header and that trip's chip are
@@ -57,118 +60,139 @@ export function PublicEntryCard({
   const Title = page ? "h1" : "h3";
   const trips = entry.collections.filter((c) => c.id !== inTrip);
   const where = [entry.venue?.name, entry.venue?.city].filter(Boolean).join(", ");
+  const onPhoto = Boolean(photoUrl);
+  const hasFooter = Boolean(social || shareHref || entry.note || trips.length > 0);
+  // On the photo, the title link covers the whole photo, so tapping the photo
+  // opens the show.
+  const titleLink = `underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus${onPhoto ? " after:absolute after:inset-0" : ""}`;
+  const show = (
+    <div className="flex flex-col gap-1">
+      <Title id={`entry-${entry.id}-title`} className={`${page ? "text-title" : "text-title-2"} font-display ${onPhoto ? "text-white" : "text-label"}`}>
+        {page || !href ? (
+          entry.show.title
+        ) : (
+          <Link href={href} className={titleLink}>
+            {entry.show.title}
+          </Link>
+        )}
+      </Title>
+      <p className={`text-subheadline ${onPhoto ? "text-white/85" : "text-label-secondary"}`}>
+        {SHOW_TYPE_LABELS[entry.show.type]} · {where}
+      </p>
+      {entry.rating != null && <RatingStars value={entry.rating} size={20} className="mt-1" />}
+    </div>
+  );
   return (
     <article
       id={`entry-${entry.id}`}
       aria-labelledby={`entry-${entry.id}-title`}
-      className="flex scroll-mt-20 flex-col gap-3 rounded-md border border-separator bg-surface p-4 shadow-sm target:outline-2 target:outline-offset-2 target:outline-focus"
+      className={`flex scroll-mt-20 flex-col gap-3 overflow-hidden rounded-md border border-separator bg-surface ${onPhoto && !hasFooter ? "" : "pb-4"} shadow-sm target:outline-2 target:outline-offset-2 target:outline-focus`}
     >
-      {inTrip ? (
-        <p className="text-footnote text-label-secondary">
-          <time dateTime={entry.date}>{formatDate(entry.date, { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</time>
-        </p>
-      ) : (
-        <header className="flex items-center gap-3">
-          <Link href={`/@${handle}`} className="shrink-0 rounded-pill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
-            <Avatar name={name} url={avatarUrl} size={40} />
-            <span className="sr-only">@{handle}’s profile</span>
-          </Link>
-          <div className="min-w-0">
-            <p className="truncate text-subheadline font-semibold text-label">
-              <Link href={`/@${handle}`} className="underline-offset-2 hover:underline">
-                @{handle}
-              </Link>
-            </p>
-            <p className="text-footnote text-label-secondary">
-              <time dateTime={entry.date}>{formatDate(entry.date, { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</time>
-            </p>
-          </div>
-          {(badge || editHref) && (
-            <div className="-mr-2 ml-auto flex shrink-0 items-center gap-1">
-              {badge && <span className="rounded-pill bg-fill px-3 text-footnote leading-7 font-medium text-label-secondary">{badge}</span>}
-              {editHref && (
-                <Link
-                  href={editHref}
-                  className="inline-flex size-11 items-center justify-center rounded-pill text-label-secondary transition-colors hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-                >
-                  <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
-                    <path
-                      d="M14.5 5.5l4 4M4 20l1-4.5L15.8 4.7a1.8 1.8 0 0 1 2.5 0l1 1a1.8 1.8 0 0 1 0 2.5L8.5 19 4 20Z"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <span className="sr-only">Edit {entry.show.title}</span>
-                </Link>
-              )}
-            </div>
-          )}
-        </header>
-      )}
-      <div className="flex flex-col gap-1">
-        <Title id={`entry-${entry.id}-title`} className={`${page ? "text-title" : "text-title-2"} font-display text-label`}>
-          {page || !href ? (
-            entry.show.title
-          ) : (
-            <Link href={href} className="underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
-              {entry.show.title}
+      <div className="flex flex-col gap-3 px-4 pt-4">
+        {inTrip ? (
+          <p className="text-footnote text-label-secondary">
+            <time dateTime={entry.date}>{formatDate(entry.date, { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</time>
+          </p>
+        ) : (
+          <header className="flex items-center gap-3">
+            <Link href={`/@${handle}`} className="shrink-0 rounded-pill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
+              <Avatar name={name} url={avatarUrl} size={40} />
+              <span className="sr-only">@{handle}’s profile</span>
             </Link>
-          )}
-        </Title>
-        <p className="text-subheadline text-label-secondary">
-          {SHOW_TYPE_LABELS[entry.show.type]} · {where}
-        </p>
-      </div>
-      {entry.rating != null && <RatingStars value={entry.rating} size={20} />}
-      {entry.note && <p className="text-body whitespace-pre-line text-label">{entry.note}</p>}
-      {photoUrl && (
-        // eslint-disable-next-line @next/next/no-img-element -- signed Storage URL, EXIF stripped on upload
-        <img
-          src={photoUrl}
-          alt={`Photo from ${entry.show.title}`}
-          loading="lazy"
-          className="aspect-4/5 max-h-[480px] w-full rounded-md bg-fill object-cover"
-        />
-      )}
-      {trips.length > 0 && (
-        <ul className="flex flex-wrap gap-2" aria-label="Trips and labels">
-          {trips.map((c) => {
-            const to = tripHref(c.id);
-            return (
-              <li key={c.id}>
-                {to ? (
+            <div className="min-w-0">
+              <p className="truncate text-subheadline font-semibold text-label">
+                <Link href={`/@${handle}`} className="underline-offset-2 hover:underline">
+                  @{handle}
+                </Link>
+              </p>
+              <p className="text-footnote text-label-secondary">
+                <time dateTime={entry.date}>{formatDate(entry.date, { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</time>
+              </p>
+            </div>
+            {(badge || editHref) && (
+              <div className="-mr-2 ml-auto flex shrink-0 items-center gap-1">
+                {badge && <span className="rounded-pill bg-fill px-3 text-footnote leading-7 font-medium text-label-secondary">{badge}</span>}
+                {editHref && (
                   <Link
-                    href={to}
-                    className="inline-flex min-h-7 items-center rounded-pill bg-fill px-3 text-footnote font-medium text-label hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                    href={editHref}
+                    className="inline-flex size-11 items-center justify-center rounded-pill text-label-secondary transition-colors hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
                   >
-                    {c.name}
+                    <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20">
+                      <path
+                        d="M14.5 5.5l4 4M4 20l1-4.5L15.8 4.7a1.8 1.8 0 0 1 2.5 0l1 1a1.8 1.8 0 0 1 0 2.5L8.5 19 4 20Z"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span className="sr-only">Edit {entry.show.title}</span>
                   </Link>
-                ) : (
-                  <span className="inline-flex min-h-7 items-center rounded-pill bg-fill px-3 text-footnote font-medium text-label">{c.name}</span>
                 )}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      {social ? (
-        <EntryReactions
-          entryId={entry.id}
-          reactions={social.reactions}
-          viewerId={social.viewerId}
-          commentsHref={page ? "#comments" : `/e/${entry.id}#comments`}
-          loginHref={`/login?next=${encodeURIComponent(loginNext ?? `/e/${entry.id}`)}`}
-          shareHref={shareHref}
-        />
-      ) : (
-        shareHref && (
-          <div className="-mx-3 -mb-2 flex items-center gap-1 text-label">
-            <ShareAction href={shareHref} />
+              </div>
+            )}
+          </header>
+        )}
+        {!onPhoto && show}
+      </div>
+      {photoUrl && (
+        <div className="relative bg-fill">
+          {/* eslint-disable-next-line @next/next/no-img-element -- signed Storage URL, EXIF stripped on upload */}
+          <img src={photoUrl} alt={`Photo from ${entry.show.title}`} loading="lazy" className="aspect-4/5 max-h-[600px] w-full object-cover" />
+          {/* The gradient is always dark, so the stars take the dark appearance's
+              star and white empty stars, whatever the page's appearance. */}
+          <div className="absolute inset-x-0 bottom-0 [--outline:rgb(255_255_255/0.75)] [--star:#ffd60a] bg-linear-to-t from-black/80 via-black/55 to-transparent px-4 pt-20 pb-4 [text-shadow:0_1px_2px_rgb(0_0_0/0.5)]">
+            {show}
           </div>
-        )
+        </div>
+      )}
+      {hasFooter && (
+        <div className="flex flex-col gap-3 px-4">
+          {social ? (
+            <EntryReactions
+              entryId={entry.id}
+              reactions={social.reactions}
+              viewerId={social.viewerId}
+              commentsHref={page ? "#comments" : `/e/${entry.id}#comments`}
+              loginHref={`/login?next=${encodeURIComponent(loginNext ?? `/e/${entry.id}`)}`}
+              shareHref={shareHref}
+            />
+          ) : (
+            shareHref && (
+              <div className="-mx-3 -mb-2 flex items-center gap-1 text-label">
+                <ShareAction href={shareHref} />
+              </div>
+            )
+          )}
+          {entry.note && (
+            <p className="text-body whitespace-pre-line text-label">
+              {!inTrip && <span className="font-semibold">@{handle} </span>}
+              {entry.note}
+            </p>
+          )}
+          {trips.length > 0 && (
+            <ul className="flex flex-wrap gap-2" aria-label="Trips and labels">
+              {trips.map((c) => {
+                const to = tripHref(c.id);
+                return (
+                  <li key={c.id}>
+                    {to ? (
+                      <Link
+                        href={to}
+                        className="inline-flex min-h-7 items-center rounded-pill bg-fill px-3 text-footnote font-medium text-label hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+                      >
+                        {c.name}
+                      </Link>
+                    ) : (
+                      <span className="inline-flex min-h-7 items-center rounded-pill bg-fill px-3 text-footnote font-medium text-label">{c.name}</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
       )}
     </article>
   );
