@@ -2,7 +2,7 @@ import { connection } from "next/server";
 
 import type { CardSocial } from "@/components/profile/PublicEntryCard";
 import { ENTRY_SELECT, signPhotos, toEntryRow, TRIP_SELECT, type Collection, type EntryRow } from "@/lib/entries";
-import { getReactions, NO_REACTIONS } from "@/lib/reactions";
+import { getReactions, listCommentPreviews, NO_REACTIONS } from "@/lib/reactions";
 import { createClient } from "@/lib/supabase/server";
 
 // Server-side reads for the owner app. Always scoped to the signed-in user:
@@ -119,7 +119,8 @@ type Client = Awaited<ReturnType<typeof ownerContext>>["supabase"];
 
 // One page of the home feed (feed_entries in Postgres, so iOS pages the same
 // way): your own shows and the ones RLS lets you see from people you follow,
-// newest first. `next` is null on the last page.
+// newest first, each public one with its latest comments for the inline
+// thread. `next` is null on the last page.
 export async function readFeedPage(supabase: Client, userId: string, cursor: FeedCursor | null): Promise<FeedPage> {
   const { data: rows, error } = await supabase
     .rpc("feed_entries", {
@@ -140,9 +141,11 @@ export async function readFeedPage(supabase: Client, userId: string, cursor: Fee
     : { data: [] };
   const byId = new Map(((owners ?? []) as FeedOwner[]).map((o) => [o.id, o]));
   const entries = raw.map((r) => toEntryRow(r as never));
-  const [photos, reactions] = await Promise.all([
+  const open = entries.flatMap((e) => (e.visibility === "public" ? [e.id] : []));
+  const [photos, reactions, comments] = await Promise.all([
     signPhotos(supabase, entries.map((e) => e.photo_path)),
-    getReactions(supabase, entries.flatMap((e) => (e.visibility === "public" ? [e.id] : []))),
+    getReactions(supabase, open),
+    listCommentPreviews(supabase, open),
   ]);
   const items = raw.flatMap((r, i) => {
     const owner = byId.get(r.user_id);
@@ -154,7 +157,14 @@ export async function readFeedPage(supabase: Client, userId: string, cursor: Fee
             owner,
             mine: r.user_id === userId,
             photoUrl: entry.photo_path ? (photos.get(entry.photo_path) ?? null) : null,
-            social: entry.visibility === "public" ? { viewerId: userId, reactions: reactions.get(entry.id) ?? NO_REACTIONS } : null,
+            social:
+              entry.visibility === "public"
+                ? {
+                    viewerId: userId,
+                    reactions: reactions.get(entry.id) ?? NO_REACTIONS,
+                    thread: { ownerId: r.user_id, latest: comments.get(entry.id) ?? [] },
+                  }
+                : null,
           },
         ]
       : [];
