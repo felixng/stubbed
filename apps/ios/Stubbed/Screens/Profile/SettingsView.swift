@@ -255,24 +255,23 @@ struct DeleteAccountSheet: View {
             Text("This permanently deletes your profile, diary, trips, photos, follows, likes and comments.")
           }
         }
-        Section {
-          Button(role: .destructive) {
-            Task { await delete() }
-          } label: {
-            HStack {
-              Spacer()
-              if busy { ProgressView() } else { Text("Delete account").fontWeight(.semibold) }
-              Spacer()
-            }
-          }
-          .disabled(busy || ProfileRules.normalizeHandle(typed) != handle.lowercased())
-          .accessibilityIdentifier("confirm-delete-account")
-        }
       }
       .navigationTitle("Delete your account?")
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+        ToolbarItem(placement: .confirmationAction) {
+          if busy {
+            ProgressView()
+          } else {
+            Button("Delete", role: .destructive) { Task { await delete() } }
+              .fontWeight(.semibold)
+              .tint(.red)
+              .disabled(ProfileRules.normalizeHandle(typed) != handle.lowercased())
+              .accessibilityLabel("Delete account")
+              .accessibilityIdentifier("confirm-delete-account")
+          }
+        }
       }
     }
     .presentationDetents([.medium, .large])

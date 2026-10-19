@@ -25,6 +25,9 @@ final class ProfileUITests: XCTestCase {
     snapshot("entry")
     app.swipeUp()
     snapshot("entry-details")
-    XCTAssertTrue(app.buttons["NYC Oct 2026"].waitForExistence(timeout: 5), app.debugDescription)
+    // The trip row is below the share cards; the Form builds rows as they scroll in.
+    let trip = app.buttons["NYC Oct 2026"]
+    for _ in 0..<4 where !trip.exists { app.collectionViews.firstMatch.swipeUp() }
+    XCTAssertTrue(trip.waitForExistence(timeout: 5), app.debugDescription)
   }
 }

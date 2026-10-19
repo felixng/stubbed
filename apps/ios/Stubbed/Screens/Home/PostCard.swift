@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// One show as a post: who and when, the photo edge to edge, the show,
-/// stars and note, then its trips and the like and comment counts along the
-/// bottom. The whole card opens the show; the avatar, trip pills and counts
-/// are their own targets. Used by the feed, profiles and trips.
+/// One show as a post: who and when, then the show beside its poster or
+/// photo thumbnail (title, venue and stars together), the note, and one
+/// footer row with the like and comment counts on the left and its trips on
+/// the right. The whole card opens the show; the avatar, counts and trip
+/// pills are their own targets. Used by the feed, profiles and trips.
 struct PostCard: View {
   let entry: Entry
   let owner: Person
@@ -26,12 +27,12 @@ struct PostCard: View {
 
   var body: some View {
     NavigationLink(value: route) {
-      VStack(alignment: .leading, spacing: 0) {
+      VStack(alignment: .leading, spacing: Space.m) {
         if inTrip == nil { header }
-        if let photo { photoView(photo) }
         show
         footer
       }
+      .padding(Space.l)
       .frame(maxWidth: .infinity, alignment: .leading)
       .groupedCard()
     }
@@ -45,8 +46,8 @@ struct PostCard: View {
     HStack(spacing: Space.m) {
       NavigationLink(value: AppRouter.Route.profile(handle: owner.handle)) {
         HStack(spacing: Space.m) {
-          Avatar(name: owner.name, url: owner.avatarURL, size: 36)
-          VStack(alignment: .leading, spacing: 1) {
+          Avatar(name: owner.name, url: owner.avatarURL, size: 32)
+          VStack(alignment: .leading, spacing: 0) {
             Text(verbatim: "@\(owner.handle)")
               .font(.subheadline.weight(.semibold))
               .foregroundStyle(.primary)
@@ -67,57 +68,50 @@ struct PostCard: View {
           .foregroundStyle(.secondary)
       }
     }
-    .padding(.horizontal, Space.l)
-    .padding(.vertical, Space.m)
   }
 
-  /// Full card width, no inset or corners of its own: the card clips it.
-  private func photoView(_ url: URL) -> some View {
-    Color(.tertiarySystemFill)
-      .aspectRatio(4 / 5, contentMode: .fit)
-      .frame(maxWidth: .infinity, maxHeight: 460)
-      .overlay {
-        AsyncImage(url: url) { $0.resizable().scaledToFill() } placeholder: { Color.clear }
-      }
-      .clipped()
-      .accessibilityLabel("Photo from \(entry.show.title)")
-  }
-
+  /// The poster (the show's photo, or its initials) beside the title, venue
+  /// and stars, then the note under both.
   private var show: some View {
     VStack(alignment: .leading, spacing: Space.s) {
-      VStack(alignment: .leading, spacing: 2) {
-        Text(entry.show.title)
-          .font(.headline)
-          .foregroundStyle(.primary)
-        Text([entry.show.type.label, entry.whereText].compactMap { $0 }.joined(separator: " · "))
-          .font(.subheadline)
-          .foregroundStyle(.secondary)
-        if inTrip != nil {
-          Text(date).font(.subheadline).foregroundStyle(.secondary)
+      HStack(alignment: .top, spacing: Space.m) {
+        Poster(title: entry.show.title, url: photo, width: 48, height: 64)
+          .accessibilityLabel(photo == nil ? "" : "Photo from \(entry.show.title)")
+        VStack(alignment: .leading, spacing: 2) {
+          Text(entry.show.title)
+            .font(.headline)
+            .foregroundStyle(.primary)
+            .lineLimit(2)
+          Text([entry.whereText, inTrip != nil ? date : nil].compactMap { $0 }.joined(separator: " · "))
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+            .lineLimit(2)
+          if let rating = entry.rating {
+            RatingStars(value: rating, size: 13).padding(.top, 2)
+          }
         }
+        Spacer(minLength: 0)
       }
-      if let rating = entry.rating { RatingStars(value: rating, size: 15) }
       if let note = entry.note {
         Text(note)
           .font(.subheadline)
           .foregroundStyle(.primary)
+          .lineLimit(4)
       }
     }
     .multilineTextAlignment(.leading)
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(.horizontal, Space.l)
-    .padding(.top, inTrip == nil && photo == nil ? 0 : Space.m)
   }
 
-  /// Trip pills on the left, like and comment counts on the right, with
-  /// no rule above them.
+  /// One row: counts on the left, trip pills on the right, no rule above.
   @ViewBuilder private var footer: some View {
     let trips = entry.trips.filter { $0.id != inTrip }
     let state = shown ?? reactions
-    HStack(alignment: .center, spacing: Space.m) {
-      if !trips.isEmpty {
-        FlowLayout(spacing: Space.s) {
-          ForEach(trips, id: \.id) { trip in
+    if state != nil || !trips.isEmpty {
+      HStack(spacing: Space.s) {
+        if let state { metrics(state) }
+        Spacer(minLength: Space.s)
+        if let trip = trips.first {
+          Group {
             if linkTrips {
               NavigationLink(value: mine ? AppRouter.Route.trip(trip.id) : .publicTrip(trip.id)) { pill(trip.name) }
                 .buttonStyle(.plain)
@@ -125,20 +119,20 @@ struct PostCard: View {
               pill(trip.name)
             }
           }
+          .layoutPriority(-1)
+          if trips.count > 1 {
+            Text("+\(trips.count - 1)")
+              .font(.caption.weight(.medium))
+              .foregroundStyle(.secondary)
+              .accessibilityLabel("and \(trips.count - 1) more \(trips.count == 2 ? "trip" : "trips")")
+          }
         }
       }
-      Spacer(minLength: 0)
-      if let state { metrics(state) }
+      .frame(minHeight: Space.touch)
+      .padding(.bottom, -Space.s)
     }
-    .padding(.horizontal, Space.l)
-    .padding(.top, Space.s)
-    .padding(.bottom, state == nil ? Space.l : Space.xs)
     if let likeError {
-      Text(likeError)
-        .font(.caption)
-        .foregroundStyle(.red)
-        .padding(.horizontal, Space.l)
-        .padding(.bottom, Space.m)
+      Text(likeError).font(.caption).foregroundStyle(.red)
     }
   }
 
@@ -146,6 +140,7 @@ struct PostCard: View {
     Label(name, systemImage: "suitcase")
       .font(.caption.weight(.medium))
       .foregroundStyle(.secondary)
+      .lineLimit(1)
       .padding(.horizontal, Space.m)
       .padding(.vertical, 6)
       .background(Color(.tertiarySystemFill), in: Capsule())
@@ -154,7 +149,7 @@ struct PostCard: View {
   /// Heart and bubble badges with their counts. A like shows at once and
   /// writes in the background.
   private func metrics(_ state: Reactions) -> some View {
-    HStack(spacing: Space.xs) {
+    HStack(spacing: Space.l) {
       Button {
         Task { await toggleLike(state) }
       } label: {
@@ -186,8 +181,7 @@ struct PostCard: View {
         .contentTransition(.numericText())
     }
     .font(.subheadline.weight(.medium))
-    .padding(.horizontal, Space.s)
-    .frame(minWidth: Space.touch, minHeight: Space.touch)
+    .frame(minWidth: Space.touch, minHeight: Space.touch, alignment: .leading)
     .contentShape(.rect)
   }
 

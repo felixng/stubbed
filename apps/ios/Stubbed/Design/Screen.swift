@@ -21,6 +21,7 @@ struct Screen<Content: View>: View {
       .padding(.bottom, Space.xl)
       .frame(maxWidth: .infinity)
     }
+    .tabBarClearance()
     .background(Color(.systemGroupedBackground))
     .navigationTitle(title)
     .navigationBarTitleDisplayMode(titleMode)

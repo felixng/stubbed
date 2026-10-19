@@ -47,6 +47,10 @@ struct PublicEntryView: View {
       }
     }
     }
+    // The comment box stays at the bottom, above the tab bar.
+    .safeAreaInset(edge: .bottom) {
+      if case .loaded(let page?) = state { CommentComposer(entryId: page.entry.id) }
+    }
     .refreshable { await load() }
     .task(id: router.dataVersion) { await load() }
   }
@@ -61,7 +65,7 @@ struct PublicEntryView: View {
 }
 
 /// The comments under a public entry, oldest first, with who liked it
-/// above them and a box to add one. The entry's owner can delete any
+/// above them; the box to add one is `CommentComposer`. The entry's owner can delete any
 /// comment; others delete their own (Postgres enforces both).
 struct CommentThread: View {
   let entryId: UUID
@@ -72,11 +76,8 @@ struct CommentThread: View {
   @State private var comments: [Comment] = []
   @State private var likers: [Person] = []
   @State private var likes = 0
-  @State private var draft = ""
-  @State private var posting = false
   @State private var error: String?
   @State private var deleting: Comment?
-  @FocusState private var typing: Bool
 
   var body: some View {
     VStack(alignment: .leading, spacing: Space.l) {
@@ -92,7 +93,6 @@ struct CommentThread: View {
       } else {
         ForEach(comments) { comment in row(comment) }
       }
-      composer
     }
     .padding(Space.l)
     .frame(maxWidth: .infinity, alignment: .leading)
@@ -156,32 +156,6 @@ struct CommentThread: View {
     .accessibilityElement(children: .contain)
   }
 
-  private var composer: some View {
-    VStack(alignment: .trailing, spacing: Space.s) {
-      TextField("Comment", text: $draft, prompt: Text("Add a comment…"), axis: .vertical)
-        .lineLimit(1...5)
-        .focused($typing)
-        .padding(.horizontal, Space.l)
-        .padding(.vertical, Space.m)
-        .frame(minHeight: Space.touch)
-        .background(Color(.tertiarySystemFill), in: .rect(cornerRadius: 20, style: .continuous))
-        .onChange(of: draft) { _, value in
-          if value.count > ReactionsAPI.commentMax { draft = String(value.prefix(ReactionsAPI.commentMax)) }
-        }
-      HStack {
-        if let error {
-          Text(error).font(.footnote).foregroundStyle(.red)
-        } else if draft.count > ReactionsAPI.commentMax - 50 {
-          Text("\(draft.count)/\(ReactionsAPI.commentMax)").font(.footnote).foregroundStyle(.secondary)
-        }
-        Spacer()
-        Button(posting ? "Posting…" : "Post") { Task { await post() } }
-          .buttonStyle(FollowButtonStyle(filled: true))
-          .disabled(posting || draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-      }
-    }
-  }
-
   private func load() async {
     async let list = ReactionsAPI.comments(entryId)
     async let people = ReactionsAPI.likers(entryId)
@@ -189,6 +163,67 @@ struct CommentThread: View {
     comments = (try? await list) ?? comments
     likers = await people
     likes = await counts[entryId]?.likes ?? 0
+  }
+
+  private func delete(_ comment: Comment) async {
+    do {
+      try await ReactionsAPI.deleteComment(comment.id)
+      router.dataChanged()
+    } catch {
+      self.error = "Couldn’t delete the comment. Try again."
+    }
+  }
+}
+
+/// The comment box, pinned above the tab bar: a growing field with the send
+/// arrow inline on its right.
+struct CommentComposer: View {
+  let entryId: UUID
+
+  @Environment(AppSession.self) private var session
+  @Environment(AppRouter.self) private var router
+  @State private var draft = ""
+  @State private var posting = false
+  @State private var error: String?
+  @FocusState private var typing: Bool
+
+  private var canPost: Bool { !posting && !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+
+  var body: some View {
+    VStack(alignment: .leading, spacing: Space.xs) {
+      if let error {
+        Text(error).font(.footnote).foregroundStyle(.red)
+      } else if draft.count > ReactionsAPI.commentMax - 50 {
+        Text("\(draft.count)/\(ReactionsAPI.commentMax)").font(.footnote).foregroundStyle(.secondary)
+      }
+      HStack(alignment: .bottom, spacing: Space.s) {
+        TextField("Comment", text: $draft, prompt: Text("Add a comment…"), axis: .vertical)
+          .lineLimit(1...5)
+          .focused($typing)
+          .onChange(of: draft) { _, value in
+            if value.count > ReactionsAPI.commentMax { draft = String(value.prefix(ReactionsAPI.commentMax)) }
+          }
+        Button {
+          Task { await post() }
+        } label: {
+          Image(systemName: "arrow.up.circle.fill")
+            .font(.title2)
+            .foregroundStyle(canPost ? AnyShapeStyle(Palette.tint) : AnyShapeStyle(.tertiary))
+        }
+        .buttonStyle(.plain)
+        .disabled(!canPost)
+        .accessibilityLabel(posting ? "Posting" : "Post")
+      }
+      .padding(.leading, Space.l)
+      .padding(.trailing, Space.xs)
+      .padding(.vertical, 6)
+      .frame(minHeight: Space.touch)
+      .background(Color(.secondarySystemGroupedBackground), in: .rect(cornerRadius: 22, style: .continuous))
+      .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Color.primary.opacity(0.06), lineWidth: 1))
+    }
+    .padding(.horizontal, Space.l)
+    .padding(.vertical, Space.s)
+    .background(.bar)
   }
 
   private func post() async {
@@ -204,15 +239,6 @@ struct CommentThread: View {
       router.dataChanged()
     } catch {
       self.error = "Couldn’t post your comment. Try again."
-    }
-  }
-
-  private func delete(_ comment: Comment) async {
-    do {
-      try await ReactionsAPI.deleteComment(comment.id)
-      router.dataChanged()
-    } catch {
-      self.error = "Couldn’t delete the comment. Try again."
     }
   }
 }

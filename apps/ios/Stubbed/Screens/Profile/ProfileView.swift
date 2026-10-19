@@ -48,8 +48,19 @@ struct ProfileView: View {
         }
       }
       ToolbarItem(placement: .primaryAction) {
+        NavigationLink(value: AppRouter.Route.settings) { Text("Edit") }
+          .accessibilityLabel("Edit profile")
+      }
+      ToolbarItem(placement: .primaryAction) {
         Menu {
-          Button("Sign out", role: .destructive) { Task { await session.signOut() } }
+          if let handle = header.value?.profile.handle {
+            NavigationLink(value: AppRouter.Route.profile(handle: handle)) {
+              Label("View public profile", systemImage: "person.crop.circle")
+            }
+          }
+          Button("Sign out", systemImage: "rectangle.portrait.and.arrow.right", role: .destructive) {
+            Task { await session.signOut() }
+          }
         } label: {
           Label("Account", systemImage: "ellipsis.circle")
         }
@@ -113,12 +124,6 @@ struct ProfileView: View {
         // Only private profiles get requests; going public approves them all.
         if !h.requests.isEmpty {
           FollowRequests(people: h.requests)
-        }
-        HStack(spacing: Space.m) {
-          NavigationLink("Edit profile", value: AppRouter.Route.settings)
-            .buttonStyle(PillButtonStyle(stretch: true))
-          NavigationLink("View public profile", value: AppRouter.Route.profile(handle: h.profile.handle))
-            .buttonStyle(PillButtonStyle(stretch: true))
         }
       }
     }
