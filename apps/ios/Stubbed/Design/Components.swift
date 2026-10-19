@@ -96,6 +96,8 @@ struct Poster: View {
   let title: String
   var url: URL?
   var width: CGFloat = 56
+  /// 2:3 unless set (the feed's stub thumbnail is 48×64).
+  var height: CGFloat?
 
   var body: some View {
     Group {
@@ -113,7 +115,7 @@ struct Poster: View {
           .background(Color(.tertiarySystemFill))
       }
     }
-    .frame(width: width, height: width * 1.5)
+    .frame(width: width, height: height ?? width * 1.5)
     .clipShape(.rect(cornerRadius: Radius.sm, style: .continuous))
     .accessibilityHidden(true)
   }

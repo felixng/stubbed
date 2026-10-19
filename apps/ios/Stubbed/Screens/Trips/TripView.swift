@@ -37,17 +37,20 @@ struct TripView: View {
   }
 
   var body: some View {
-    Screen(title: state.value?.trip.name ?? "Trip") {
+    Group {
       switch state {
       case .loading:
-        LoadingText()
+        ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
       case .failed(let message):
         EmptyState(title: "Couldn’t load this trip", systemImage: "exclamationmark.triangle") { Text(message) }
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
       case .loaded(let model):
-        content(model)
+        form(model)
       }
     }
-    .navigationBarTitleDisplayMode(.large)
+    .background(Color(.systemGroupedBackground))
+    .navigationTitle(state.value?.trip.name ?? "Trip")
+    .navigationBarTitleDisplayMode(.inline)
     .toolbar {
       if let trip = state.value?.trip {
         ToolbarItem(placement: .primaryAction) {
@@ -61,94 +64,117 @@ struct TripView: View {
     .task(id: router.dataVersion) { await load() }
   }
 
-  @ViewBuilder private func content(_ m: Model) -> some View {
-    Text(m.trip.dates)
-      .font(.subheadline)
-      .foregroundStyle(.secondary)
-      .padding(.top, -Space.l)
-
-    if addFailed {
-      Label("Trip created, but the shows you picked weren’t added. Add them below.", systemImage: "exclamationmark.triangle.fill")
-        .font(.subheadline)
-        .foregroundStyle(.orange)
-        .padding(Space.l)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .groupedCard()
-    }
-
-    HStack(spacing: 0) {
-      stat(m.seen.count, m.seen.count == 1 ? "show" : "shows")
-      Divider().padding(.vertical, Space.m)
-      stat(m.venues, m.venues == 1 ? "venue" : "venues")
-      Divider().padding(.vertical, Space.m)
-      stat(m.nights, m.nights == 1 ? "night" : "nights")
-    }
-    .fixedSize(horizontal: false, vertical: true)
-    .groupedCard()
-
-    if !m.seen.isEmpty {
-      TripShare(model: m)
-    }
-
-    if mode != .add {
-      HStack {
-        Text(mode == .remove ? (picked.isEmpty ? "Pick shows to take out" : "\(picked.count) selected") : "Shows")
-          .font(mode == .remove ? .subheadline : .title3.bold())
-          .foregroundStyle(mode == .remove ? .secondary : .primary)
-        Spacer()
-        if mode == .idle, !m.others.isEmpty {
-          Button("Add shows", systemImage: "plus") {
-            picked = Set(m.others.map(\.id))
-            mode = .add
+  /// Dates and counts, the recap cards, the shows, then Delete trip.
+  private func form(_ m: Model) -> some View {
+    Form {
+      Section {
+        VStack(alignment: .leading, spacing: Space.m) {
+          VStack(alignment: .leading, spacing: 2) {
+            Text(m.trip.name).font(.title3.bold()).accessibilityAddTraits(.isHeader)
+            Text(m.trip.dates).font(.subheadline).foregroundStyle(.secondary)
           }
-          .labelStyle(.iconOnly)
-          .font(.body.weight(.semibold))
-          .frame(minWidth: Space.touch, minHeight: Space.touch)
+          HStack(spacing: 0) {
+            stat(m.seen.count, m.seen.count == 1 ? "show" : "shows")
+            Divider()
+            stat(m.venues, m.venues == 1 ? "venue" : "venues")
+            Divider()
+            stat(m.nights, m.nights == 1 ? "night" : "nights")
+          }
+          .fixedSize(horizontal: false, vertical: true)
         }
-        if !m.entries.isEmpty {
-          Button(mode == .remove ? "Cancel" : "Select") {
-            if mode == .remove { reset() } else { mode = .remove }
-          }
-          .font(.subheadline.weight(.semibold))
-          .frame(minHeight: Space.touch)
+        .padding(.vertical, Space.xs)
+      } footer: {
+        if addFailed {
+          Text("Trip created, but the shows you picked weren’t added. Add them below.").foregroundStyle(.orange)
         }
       }
-      if !m.entries.isEmpty {
-        EntryList(entries: m.entries, photos: m.photos, selection: mode == .remove ? $picked : nil)
+
+      if !m.seen.isEmpty {
+        Section {
+          TripShare(model: m).padding(.horizontal, Space.l)
+        }
+        .listRowInsets(EdgeInsets())
+        .listRowBackground(Color.clear)
+      }
+
+      if mode == .add {
+        Section {
+          ForEach(m.others) { entry in pickRow(entry, photos: m.photos) }
+        } header: {
+          HStack {
+            Text("Shows within the trip’s dates")
+            Spacer()
+            Button("Cancel") { reset() }.textCase(nil)
+          }
+        }
       } else {
-        EmptyState(title: "No shows in this trip yet", systemImage: "suitcase") {
-          Text("Add shows dated within the trip, or plan one: it’s offered this trip when its date falls inside.")
+        Section {
+          if m.entries.isEmpty {
+            Text("No shows yet. Add shows dated within the trip, or plan one: it’s offered this trip when its date falls inside.")
+              .font(.subheadline)
+              .foregroundStyle(.secondary)
+          }
+          ForEach(m.entries) { entry in
+            if mode == .remove {
+              pickRow(entry, photos: m.photos)
+            } else {
+              NavigationLink(value: AppRouter.Route.entry(entry.id)) {
+                EntryRow(entry: entry, photo: entry.photoPath.flatMap { m.photos[$0] })
+              }
+            }
+          }
+        } header: {
+          HStack {
+            Text(mode == .remove ? (picked.isEmpty ? "Pick shows to take out" : "\(picked.count) selected") : "Shows")
+            Spacer()
+            if mode == .idle, !m.others.isEmpty {
+              Button("Add shows", systemImage: "plus") {
+                picked = Set(m.others.map(\.id))
+                mode = .add
+              }
+              .labelStyle(.iconOnly)
+            }
+            if !m.entries.isEmpty {
+              Button(mode == .remove ? "Cancel" : "Select") {
+                if mode == .remove { reset() } else { mode = .remove }
+              }
+            }
+          }
+          .textCase(nil)
         }
       }
-    }
 
-    if mode == .add {
-      HStack {
-        Text("Shows within the trip’s dates")
-          .font(.title3.bold())
-          .accessibilityAddTraits(.isHeader)
-        Spacer()
-        Button("Cancel") { reset() }
-          .font(.subheadline.weight(.semibold))
-          .frame(minHeight: Space.touch)
+      Section {
+        Button("Delete trip", role: .destructive) { confirmDelete = true }
+          .confirmationDialog("Delete \(m.trip.name)?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete trip", role: .destructive) { Task { await delete() } }
+          } message: {
+            Text("Its shows stay in your diary.")
+          }
+      } footer: {
+        Text("Its shows stay in your diary.")
       }
-      EntryList(entries: m.others, photos: m.photos, selection: $picked)
     }
+    .tabBarClearance()
+  }
 
-    Button(role: .destructive) {
-      confirmDelete = true
+  /// A show you can tick in or out while adding or taking shows out.
+  private func pickRow(_ entry: Entry, photos: [String: URL]) -> some View {
+    let on = picked.contains(entry.id)
+    return Button {
+      if on { picked.remove(entry.id) } else { picked.insert(entry.id) }
     } label: {
-      Text("Delete trip")
-        .frame(maxWidth: .infinity, minHeight: Space.touch)
+      HStack(spacing: Space.m) {
+        Image(systemName: on ? "checkmark.circle.fill" : "circle")
+          .font(.title2)
+          .foregroundStyle(on ? AnyShapeStyle(Palette.tint) : AnyShapeStyle(.tertiary))
+          .accessibilityHidden(true)
+        EntryRow(entry: entry, photo: entry.photoPath.flatMap { photos[$0] })
+      }
     }
-    .pressableRow()
-    .foregroundStyle(.red)
-    .groupedCard()
-    .confirmationDialog("Delete \(m.trip.name)?", isPresented: $confirmDelete, titleVisibility: .visible) {
-      Button("Delete trip", role: .destructive) { Task { await delete() } }
-    } message: {
-      Text("Its shows stay in your diary.")
-    }
+    .foregroundStyle(.primary)
+    .sensoryFeedback(.selection, trigger: on)
+    .accessibilityAddTraits(on ? .isSelected : [])
   }
 
   private var selectionBar: some View {

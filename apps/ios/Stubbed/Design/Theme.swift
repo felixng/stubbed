@@ -71,6 +71,12 @@ extension View {
       .overlay(Grouped.shape.strokeBorder(Color.primary.opacity(0.06), lineWidth: 1))
   }
 
+  /// Extra room under a scroll view's content, so its last rows (Delete
+  /// buttons included) scroll well clear of the tab bar.
+  func tabBarClearance() -> some View {
+    contentMargins(.bottom, 80, for: .scrollContent)
+  }
+
   /// Highlights a tappable row while it's pressed, like a list row.
   func pressableRow() -> some View { buttonStyle(PressableRowStyle()) }
 }

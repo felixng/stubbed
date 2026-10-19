@@ -10,7 +10,7 @@ struct PublicTripView: View {
   @State private var state: Loadable<PublicPages.TripPage?> = .loading
 
   var body: some View {
-    Screen(title: state.value??.trip.name ?? "Trip") {
+    Screen(title: state.value??.trip.name ?? "Trip", titleMode: .inline) {
       switch state {
       case .loading:
         LoadingText()
@@ -32,7 +32,6 @@ struct PublicTripView: View {
         }
       }
     }
-    .navigationBarTitleDisplayMode(.large)
     .refreshable { await load() }
     .task(id: router.dataVersion) { await load() }
   }
@@ -48,7 +47,6 @@ struct PublicTripView: View {
       Text([page.trip.dates, page.place].compactMap { $0 }.joined(separator: " · "))
         .font(.subheadline)
         .foregroundStyle(.secondary)
-        .padding(.top, -Space.l)
       NavigationLink(value: AppRouter.Route.profile(handle: page.owner.handle)) {
         HStack(spacing: Space.m) {
           Avatar(name: page.owner.name, url: page.owner.avatarURL, size: 40)

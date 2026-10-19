@@ -25,13 +25,13 @@ final class TripsUITests: XCTestCase {
     XCTAssertTrue(app.otherElements["2, shows"].exists || app.staticTexts["shows"].exists)
     snapshot("trip")
 
-    app.buttons["Select"].tap()
+    scrollAndTap(app.buttons["Select"], in: app)
     scrollAndTap(button(app, startingWith: "Hamilton"), in: app)
     app.buttons["Take 1 out of this trip"].tap()
     XCTAssertTrue(app.buttons["Add shows"].waitForExistence(timeout: 10))
     XCTAssertFalse(button(app, startingWith: "Hamilton").exists)
 
-    app.buttons["Add shows"].tap()
+    scrollAndTap(app.buttons["Add shows"], in: app)
     app.buttons["Add 1 to this trip"].tap()
     XCTAssertTrue(button(app, startingWith: "Hamilton").waitForExistence(timeout: 10))
   }
@@ -53,7 +53,9 @@ final class TripsUITests: XCTestCase {
 
     XCTAssertTrue(app.navigationBars["London Sept"].waitForExistence(timeout: 10))
     XCTAssertTrue(app.staticTexts["12 Sept 2026"].exists || app.staticTexts["12 Sep 2026"].exists)
-    XCTAssertTrue(button(app, startingWith: "Stereophonic").exists)
+    let show = button(app, startingWith: "Stereophonic")
+    for _ in 0..<4 where !show.exists { app.collectionViews.firstMatch.swipeUp() }
+    XCTAssertTrue(show.exists)
     snapshot("new-trip")
 
     scrollAndTap(app.buttons["Delete trip"], in: app)

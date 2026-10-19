@@ -27,16 +27,20 @@ struct EntryView: View {
   @State private var deleteError: String?
 
   var body: some View {
-    Screen(title: "", titleMode: .inline) {
+    Group {
       switch state {
       case .loading:
-        LoadingText()
+        ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
       case .failed(let message):
         EmptyState(title: "Couldn’t load this show", systemImage: "exclamationmark.triangle") { Text(message) }
+          .frame(maxWidth: .infinity, maxHeight: .infinity)
       case .loaded(let entry):
-        content(entry)
+        form(entry)
       }
     }
+    .background(Color(.systemGroupedBackground))
+    .navigationTitle(state.value?.show.title ?? "")
+    .navigationBarTitleDisplayMode(.inline)
     .toolbar {
       if let entry = state.value {
         ToolbarItem(placement: .primaryAction) {
@@ -47,117 +51,89 @@ struct EntryView: View {
     .task(id: router.dataVersion) { await load() }
   }
 
-  @ViewBuilder private func content(_ entry: Entry) -> some View {
-    if let notice {
-      banner(notice, planned: entry.planned)
-    }
-
-    if entry.planned {
-      Label {
-        Text("You’re going on \(Day.formatWeekday(entry.date)). Once you’ve been, track it with your rating and share it.")
-          .font(.subheadline)
-      } icon: {
-        Image(systemName: "calendar").foregroundStyle(Palette.tintText)
+  /// The show, then its share cards, then likes, trips and who can see it,
+  /// then Delete on its own.
+  private func form(_ entry: Entry) -> some View {
+    Form {
+      if let notice {
+        Section { banner(notice, planned: entry.planned) }
       }
-      .padding(Space.l)
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .groupedCard()
-    } else if let share {
-      ShareCarousel(subject: .show, cards: cards, failed: cardsFailed, text: share.text, link: share.link)
-    }
 
-    VStack(alignment: .leading, spacing: Space.m) {
-      VStack(alignment: .leading, spacing: Space.xs) {
-        Text(entry.show.title)
-          .font(.title2.bold())
-          .accessibilityAddTraits(.isHeader)
-        Text([entry.show.type.label, entry.whereText].compactMap { $0 }.joined(separator: " · "))
+      Section {
+        VStack(alignment: .leading, spacing: Space.xs) {
+          Text(entry.show.title)
+            .font(.title3.bold())
+            .accessibilityAddTraits(.isHeader)
+          Text([entry.show.type.label, entry.whereText].compactMap { $0 }.joined(separator: " · "))
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+          Text(Day.formatLong(entry.date))
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+          if let rating = entry.rating {
+            RatingStars(value: rating, size: 18).padding(.top, Space.xs)
+          }
+        }
+        .padding(.vertical, Space.xs)
+        if let note = entry.note {
+          Text(note).font(.body)
+        }
+        if entry.planned {
+          Label(
+            "You’re going on \(Day.formatWeekday(entry.date)). Once you’ve been, track it with your rating and share it.",
+            systemImage: "calendar"
+          )
           .font(.subheadline)
-          .foregroundStyle(.secondary)
-        Text(Day.formatLong(entry.date))
-          .font(.subheadline)
-          .foregroundStyle(.secondary)
-        if let rating = entry.rating {
-          RatingStars(value: rating, size: 18).padding(.top, Space.xs)
         }
       }
-      if let note = entry.note {
-        Text(note).font(.body)
-      }
-    }
-    .padding(Space.l)
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .groupedCard()
 
-    VStack(spacing: 0) {
-      // Public shows have a page with likes and comments.
-      if let reactions, entry.visibility == .public, !entry.planned {
-        NavigationLink(value: AppRouter.Route.publicEntry(entry.id, comments: true)) {
-          row(
-            reactions.likes + reactions.comments == 0
-              ? "No likes or comments yet"
-              : "\(reactions.likes) \(reactions.likes == 1 ? "like" : "likes") · \(reactions.comments) \(reactions.comments == 1 ? "comment" : "comments")",
-            systemImage: "heart", chevron: true)
+      if !entry.planned, let share {
+        Section {
+          ShareCarousel(subject: .show, cards: cards, failed: cardsFailed, text: share.text, link: share.link)
+            .padding(.horizontal, Space.l)
         }
-        .pressableRow()
-        Divider().padding(.leading, Space.l + 28 + Space.m)
+        .listRowInsets(EdgeInsets())
+        .listRowBackground(Color.clear)
       }
-      ForEach(entry.trips, id: \.id) { trip in
-        NavigationLink(value: AppRouter.Route.trip(trip.id)) {
-          row(trip.name, systemImage: "suitcase", chevron: true)
+
+      Section {
+        // Public shows have a page with likes and comments.
+        if let reactions, entry.visibility == .public, !entry.planned {
+          NavigationLink(value: AppRouter.Route.publicEntry(entry.id, comments: true)) {
+            Label(
+              reactions.likes + reactions.comments == 0
+                ? "No likes or comments yet"
+                : "\(reactions.likes) \(reactions.likes == 1 ? "like" : "likes") · \(reactions.comments) \(reactions.comments == 1 ? "comment" : "comments")",
+              systemImage: "heart")
+          }
         }
-        .pressableRow()
-        Divider().padding(.leading, Space.l + 28 + Space.m)
+        ForEach(entry.trips, id: \.id) { trip in
+          NavigationLink(value: AppRouter.Route.trip(trip.id)) {
+            Label(trip.name, systemImage: "suitcase")
+          }
+        }
+        Label(
+          entry.planned
+            ? "Only you can see upcoming shows."
+            : entry.visibility == .public ? "Public" : "Private. Sharing the image doesn’t change that.",
+          systemImage: entry.visibility == .public && !entry.planned ? "globe" : "lock"
+        )
+        .foregroundStyle(.secondary)
       }
-      row(
-        entry.planned
-          ? "Only you can see upcoming shows."
-          : entry.visibility == .public ? "Public" : "Private. Sharing the image doesn’t change that.",
-        systemImage: entry.visibility == .public && !entry.planned ? "globe" : "lock",
-        secondary: true)
-    }
-    .groupedCard()
 
-    Button(role: .destructive) {
-      confirmDelete = true
-    } label: {
-      Text(deleting ? "Deleting…" : "Delete")
-        .font(.body)
-        .frame(maxWidth: .infinity, minHeight: Space.touch)
+      Section {
+        Button(deleting ? "Deleting…" : "Delete show", role: .destructive) { confirmDelete = true }
+          .disabled(deleting)
+          .confirmationDialog("Delete \(entry.show.title)?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) { Task { await delete(entry) } }
+          } message: {
+            Text("This removes it from your diary, with its photo. It can’t be undone.")
+          }
+      } footer: {
+        if let deleteError { Text(deleteError).foregroundStyle(.red) }
+      }
     }
-    .pressableRow()
-    .foregroundStyle(.red)
-    .groupedCard()
-    .disabled(deleting)
-    .confirmationDialog("Delete \(entry.show.title)?", isPresented: $confirmDelete, titleVisibility: .visible) {
-      Button("Delete", role: .destructive) { Task { await delete(entry) } }
-    } message: {
-      Text("This removes it from your diary, with its photo. It can’t be undone.")
-    }
-    if let deleteError {
-      Text(deleteError).font(.footnote).foregroundStyle(.red)
-    }
-  }
-
-  /// A row in the details list: an icon, the text and, if it opens
-  /// something, a chevron.
-  private func row(_ text: String, systemImage: String, chevron: Bool = false, secondary: Bool = false) -> some View {
-    HStack(spacing: Space.m) {
-      Image(systemName: systemImage)
-        .font(.body)
-        .foregroundStyle(secondary ? AnyShapeStyle(.secondary) : AnyShapeStyle(Palette.tintText))
-        .frame(width: 28)
-        .accessibilityHidden(true)
-      Text(text)
-        .font(secondary ? .subheadline : .body)
-        .foregroundStyle(secondary ? .secondary : .primary)
-        .multilineTextAlignment(.leading)
-      Spacer(minLength: 0)
-      if chevron { RowChevron() }
-    }
-    .padding(.horizontal, Space.l)
-    .padding(.vertical, Space.m)
-    .frame(minHeight: Space.touch)
+    .tabBarClearance()
   }
 
   private func banner(_ notice: AppRouter.Notice, planned: Bool) -> some View {
@@ -173,10 +149,6 @@ struct EntryView: View {
       Image(systemName: failed ? "exclamationmark.triangle.fill" : "checkmark.circle.fill")
         .foregroundStyle(failed ? Color.orange : Color.green)
     }
-    .padding(.horizontal, Space.l)
-    .padding(.vertical, Space.m)
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .groupedCard()
     .accessibilityElement(children: .combine)
   }
 

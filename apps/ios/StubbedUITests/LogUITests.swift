@@ -60,7 +60,7 @@ final class LogUITests: XCTestCase {
     app.navigationBars["Edit"].buttons["Save"].tap()
     XCTAssertTrue(app.otherElements["Rated 5 out of 5"].waitForExistence(timeout: 15))
 
-    app.buttons["Delete"].firstMatch.tap()
+    scrollAndTap(app.buttons["Delete show"], in: app)
     app.sheets.buttons["Delete"].firstMatch.tap()
     XCTAssertFalse(app.staticTexts[title].waitForExistence(timeout: 3))
   }
