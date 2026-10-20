@@ -10,18 +10,19 @@ struct PeopleView: View {
   @State private var searched = false
 
   var body: some View {
-    Screen(title: "Find people") {
+    List {
       let q = query.trimmingCharacters(in: .whitespaces)
       if q.count >= 2, searched, results.isEmpty {
         ContentUnavailableView.search(text: q)
+          .listRowBackground(Color.clear)
       } else if results.isEmpty {
         EmptyState(title: "Find people", systemImage: "person.2") {
           Text("Follow people to see the shows they track in your feed. Search by name or handle.")
         }
+        .listRowBackground(Color.clear)
       } else {
-        VStack(spacing: 0) {
-          ForEach(Array(results.enumerated()), id: \.element.id) { index, person in
-            if index > 0 { Divider().padding(.leading, 72) }
+        Section {
+          ForEach(results) { person in
             PersonRow(person: person) {
               if person.id != session.userId {
                 FollowButton(person: person, viewer: viewers[person.id] ?? Viewer(isOwner: false, status: .none))
@@ -29,9 +30,10 @@ struct PeopleView: View {
             }
           }
         }
-        .groupedCard()
       }
     }
+    .listStyle(.insetGrouped)
+    .navigationTitle("Find people")
     .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search by name or @handle")
     .textInputAutocapitalization(.never)
     .autocorrectionDisabled()
@@ -58,35 +60,28 @@ struct PeopleView: View {
   }
 }
 
-/// A person in a list: avatar, @handle and name, opening their profile,
-/// with a trailing control (Follow, Remove, Approve…).
+/// A person as a list row: avatar, @handle and name, opening their
+/// profile (the system chevron), with a trailing control (Follow, Remove,
+/// Approve…) that takes its own taps.
 struct PersonRow<Trailing: View>: View {
   let person: Person
   @ViewBuilder var trailing: Trailing
 
   var body: some View {
-    HStack(spacing: Space.m) {
-      NavigationLink(value: AppRouter.Route.profile(handle: person.handle)) {
-        HStack(spacing: Space.m) {
-          Avatar(name: person.name, url: person.avatarURL, size: 44)
-          VStack(alignment: .leading, spacing: 0) {
-            Text(verbatim: "@\(person.handle)")
-              .font(.subheadline.weight(.semibold))
-              .foregroundStyle(.primary)
-              .lineLimit(1)
-            if let name = person.displayName, !name.isEmpty {
-              Text(name).font(.footnote).foregroundStyle(.secondary).lineLimit(1)
-            }
+    NavigationLink(value: AppRouter.Route.profile(handle: person.handle)) {
+      HStack(spacing: Space.m) {
+        Avatar(name: person.name, url: person.avatarURL, size: 40)
+        VStack(alignment: .leading, spacing: 0) {
+          Text(verbatim: "@\(person.handle)")
+            .font(.subheadline.weight(.semibold))
+            .lineLimit(1)
+          if let name = person.displayName, !name.isEmpty {
+            Text(name).font(.footnote).foregroundStyle(.secondary).lineLimit(1)
           }
-          Spacer(minLength: 0)
         }
-        .padding(.leading, Space.l)
-        .padding(.vertical, Space.m)
-        .contentShape(.rect)
+        Spacer(minLength: 0)
+        trailing
       }
-      .pressableRow()
-      trailing
-        .padding(.trailing, Space.l)
     }
   }
 }

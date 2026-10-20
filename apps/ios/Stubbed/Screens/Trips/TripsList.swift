@@ -1,58 +1,42 @@
 import SwiftUI
 
-/// Your trips, newest first, on the Profile tab next to the diary. Not a tab
-/// of their own: most visits aren't part of a trip.
+/// Your trips, newest first, as rows for the Profile tab's list (next to
+/// the diary, not a tab of their own: most visits aren't part of a trip).
 struct TripsList: View {
   @Environment(AppSession.self) private var session
   @Environment(AppRouter.self) private var router
   @State private var trips: Loadable<[Trips.Listed]> = .loading
 
   var body: some View {
-    VStack(alignment: .trailing, spacing: Space.m) {
-      Button("New trip", systemImage: "plus") { router.newTrip() }
-        .font(.subheadline.weight(.semibold))
-        .frame(minHeight: Space.touch)
+    Group {
       switch trips {
       case .loading:
-        LoadingText()
+        PlaceholderRows(count: 2)
       case .failed(let message):
         EmptyState(title: "Couldn’t load your trips", systemImage: "wifi.exclamationmark") { Text(message) }
-      case .loaded(let list) where list.isEmpty:
-        EmptyState(title: "No trips yet", systemImage: "suitcase") {
-          Text("Group shows from a trip or festival, like “NYC Oct 2026”. Pick them in your diary, or start a trip here.")
-        }
+          .listRowBackground(Color.clear)
       case .loaded(let list):
-        VStack(spacing: 0) {
-          ForEach(Array(list.enumerated()), id: \.element.id) { index, item in
-            if index > 0 { Divider().padding(.leading, Space.l + 36 + Space.l) }
+        Section {
+          ForEach(list) { item in
             NavigationLink(value: AppRouter.Route.trip(item.trip.id)) {
-              HStack(spacing: Space.l) {
-                Image(systemName: "suitcase.fill")
-                  .font(.body)
-                  .foregroundStyle(Palette.tintText)
-                  .frame(width: 36, height: 36)
-                  .background(Palette.tintFill, in: .rect(cornerRadius: 8, style: .continuous))
-                  .accessibilityHidden(true)
-                VStack(alignment: .leading, spacing: 2) {
-                  Text(item.trip.name).font(.headline).foregroundStyle(.primary).lineLimit(1)
-                  Text(item.trip.dates).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
+              LabeledContent {
+                Text("\(item.count) \(item.count == 1 ? "show" : "shows")").monospacedDigit()
+              } label: {
+                Label {
+                  Text(item.trip.name)
+                  Text(item.trip.dates)
+                } icon: {
+                  Image(systemName: "suitcase.fill").foregroundStyle(Palette.tintText)
                 }
-                Spacer()
-                Text("\(item.count) \(item.count == 1 ? "show" : "shows")")
-                  .font(.subheadline)
-                  .foregroundStyle(.secondary)
-                  .monospacedDigit()
-                RowChevron()
               }
-              .padding(.horizontal, Space.l)
-              .padding(.vertical, Space.m)
-              .frame(minHeight: Space.touch)
             }
-            .pressableRow()
-            .accessibilityElement(children: .combine)
+          }
+          Button("New trip", systemImage: "plus") { router.newTrip() }
+        } footer: {
+          if list.isEmpty {
+            Text("Group shows from a trip or festival, like “NYC Oct 2026”. Select them in your diary, or start a trip here.")
           }
         }
-        .groupedCard()
       }
     }
     .task(id: router.dataVersion) { await load() }

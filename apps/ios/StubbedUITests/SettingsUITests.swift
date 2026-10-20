@@ -19,7 +19,7 @@ final class SettingsUITests: XCTestCase {
       app.buttons["Continue"].tap()
     }
     XCTAssertTrue(onHome(app))
-    app.buttons["Profile"].tap()
+    openTab("Profile", in: app)
     let edit = app.buttons["Edit profile"].firstMatch
     XCTAssertTrue(edit.waitForExistence(timeout: 10))
     edit.tap()

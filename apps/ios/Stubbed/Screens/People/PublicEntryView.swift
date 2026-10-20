@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// A public show, like the web's /e/:id: the post, its comments (#75), and
-/// "More from @handle".
+/// A public show, like the web's /e/:id, as a grouped list: the post, who
+/// liked it and its comments (#75), and "More from @handle". The comment box
+/// is pinned to the bottom.
 struct PublicEntryView: View {
   let id: UUID
   var showComments = false
@@ -12,41 +13,50 @@ struct PublicEntryView: View {
 
   var body: some View {
     ScrollViewReader { proxy in
-    Screen(title: "", titleMode: .inline) {
-      switch state {
-      case .loading:
-        LoadingText()
-      case .failed(let message):
-        EmptyState(title: "Couldn’t load this show", systemImage: "wifi.exclamationmark") { Text(message) }
-      case .loaded(nil):
-        EmptyState(title: "This show isn’t available", systemImage: "eye.slash") {
-          Text("It may be private, or it may have been deleted.")
-        }
-      case .loaded(let page?):
-        PostCard(
-          entry: page.entry, owner: page.owner, photo: page.photo, mine: page.entry.userId == session.userId,
-          linkTrips: !page.owner.isPrivate || page.entry.userId == session.userId, reactions: page.reactions)
-        CommentThread(entryId: page.entry.id, ownerId: page.owner.id)
-          .id("comments")
-          .onAppear {
-            // "Comment" and the likes link open at the thread, like #comments.
-            if showComments { withAnimation { proxy.scrollTo("comments", anchor: .top) } }
+      List {
+        switch state {
+        case .loading:
+          PlaceholderRows(count: 3)
+        case .failed(let message):
+          EmptyState(title: "Couldn’t load this show", systemImage: "wifi.exclamationmark") { Text(message) }
+            .listRowBackground(Color.clear)
+        case .loaded(nil):
+          EmptyState(title: "This show isn’t available", systemImage: "eye.slash") {
+            Text("It may be private, or it may have been deleted.")
           }
-        NavigationLink(value: AppRouter.Route.profile(handle: page.owner.handle)) {
-          HStack(spacing: Space.m) {
-            Avatar(name: page.owner.name, url: page.owner.avatarURL, size: 32)
-            Text("More from @\(page.owner.handle)").font(.body).foregroundStyle(.primary)
-            Spacer(minLength: 0)
-            RowChevron()
+          .listRowBackground(Color.clear)
+        case .loaded(let page?):
+          Section {
+            PostCard(
+              entry: page.entry, owner: page.owner, photo: page.photo, mine: page.entry.userId == session.userId,
+              linkTrips: !page.owner.isPrivate || page.entry.userId == session.userId, reactions: page.reactions,
+              opensShow: page.entry.userId == session.userId)
           }
-          .padding(.horizontal, Space.l)
-          .padding(.vertical, Space.m)
+          .listRowInsets(EdgeInsets())
+          .listRowBackground(Color.clear)
+
+          CommentThread(entryId: page.entry.id, ownerId: page.owner.id)
+            .onAppear {
+              // "Comment" and the likes link open at the thread, like #comments.
+              if showComments { withAnimation { proxy.scrollTo("comments", anchor: .top) } }
+            }
+
+          Section {
+            NavigationLink(value: AppRouter.Route.profile(handle: page.owner.handle)) {
+              Label {
+                Text("More from @\(page.owner.handle)")
+              } icon: {
+                Avatar(name: page.owner.name, url: page.owner.avatarURL, size: 28)
+              }
+            }
+          }
         }
-        .pressableRow()
-        .groupedCard()
       }
+      .listStyle(.insetGrouped)
+      .tabBarClearance()
     }
-    }
+    .navigationTitle(state.value??.entry.show.title ?? "")
+    .navigationBarTitleDisplayMode(.inline)
     // The comment box stays at the bottom, above the tab bar.
     .safeAreaInset(edge: .bottom) {
       if case .loaded(let page?) = state { CommentComposer(entryId: page.entry.id) }
@@ -64,9 +74,10 @@ struct PublicEntryView: View {
   }
 }
 
-/// The comments under a public entry, oldest first, with who liked it
-/// above them; the box to add one is `CommentComposer`. The entry's owner can delete any
-/// comment; others delete their own (Postgres enforces both).
+/// The comments under a public entry, oldest first, as a list section with
+/// who liked it at the top; the box to add one is `CommentComposer`. Swipe
+/// or long press a comment to delete it: the entry's owner can delete any
+/// comment, others their own (Postgres enforces both).
 struct CommentThread: View {
   let entryId: UUID
   let ownerId: UUID
@@ -80,31 +91,20 @@ struct CommentThread: View {
   @State private var deleting: Comment?
 
   var body: some View {
-    VStack(alignment: .leading, spacing: Space.l) {
-      (Text("Comments").foregroundStyle(.primary)
-        + Text(comments.isEmpty ? "" : " · \(comments.count)").foregroundStyle(.secondary))
-        .font(.headline)
-        .accessibilityAddTraits(.isHeader)
+    Section {
       if !likers.isEmpty { likedBy }
       if comments.isEmpty {
         Text("No comments yet. Say something nice.")
           .font(.subheadline)
           .foregroundStyle(.secondary)
-      } else {
-        ForEach(comments) { comment in row(comment) }
       }
+      ForEach(comments) { comment in row(comment) }
+    } header: {
+      Text(comments.isEmpty ? "Comments" : "Comments · \(comments.count)")
+    } footer: {
+      if let error { Text(error).foregroundStyle(.red) }
     }
-    .padding(Space.l)
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .groupedCard()
-    // `presenting` hands the comment to the button: the binding is cleared
-    // before the button's action runs.
-    .confirmationDialog(
-      "Delete this comment?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
-      titleVisibility: .visible, presenting: deleting
-    ) { comment in
-      Button("Delete", role: .destructive) { Task { await delete(comment) } }
-    }
+    .id("comments")
     .task(id: router.dataVersion) { await load() }
   }
 
@@ -126,12 +126,9 @@ struct CommentThread: View {
   private func row(_ comment: Comment) -> some View {
     let mine = comment.author.id == session.userId
     let canDelete = mine || ownerId == session.userId
+    let deleteLabel = mine ? "Delete your comment" : "Delete comment by @\(comment.author.handle)"
     return HStack(alignment: .top, spacing: Space.m) {
-      NavigationLink(value: AppRouter.Route.profile(handle: comment.author.handle)) {
-        Avatar(name: comment.author.name, url: comment.author.avatarURL, size: 32)
-      }
-      .buttonStyle(.plain)
-      .accessibilityLabel("@\(comment.author.handle)’s profile")
+      Avatar(name: comment.author.name, url: comment.author.avatarURL, size: 32)
       VStack(alignment: .leading, spacing: 2) {
         (Text(verbatim: "@\(comment.author.handle)").fontWeight(.semibold).foregroundStyle(.primary)
           + Text(" · \(Comment.timeAgo(comment.createdAt))").foregroundStyle(.secondary))
@@ -139,21 +136,34 @@ struct CommentThread: View {
         Text(comment.body)
           .font(.body)
       }
-      Spacer(minLength: 0)
+    }
+    .padding(.vertical, 2)
+    .accessibilityElement(children: .combine)
+    .swipeActions {
       if canDelete {
-        Button {
-          deleting = comment
-        } label: {
-          Image(systemName: "trash")
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
-            .frame(width: Space.touch, height: Space.touch)
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(mine ? "Delete your comment" : "Delete comment by @\(comment.author.handle)")
+        // Not role: .destructive, which removes the row before the dialog can ask.
+        Button("Delete", systemImage: "trash") { deleting = comment }
+          .tint(.red)
+          .accessibilityLabel(deleteLabel)
       }
     }
-    .accessibilityElement(children: .contain)
+    .contextMenu {
+      Button("View @\(comment.author.handle)", systemImage: "person.crop.circle") {
+        router.open(.profile(handle: comment.author.handle))
+      }
+      if canDelete {
+        Button(deleteLabel, systemImage: "trash", role: .destructive) { deleting = comment }
+      }
+    }
+    // On the row itself: a dialog on the whole section doesn't present
+    // reliably from a List.
+    .confirmationDialog(
+      "Delete this comment?",
+      isPresented: Binding(get: { deleting?.id == comment.id }, set: { if !$0 { deleting = nil } }),
+      titleVisibility: .visible
+    ) {
+      Button("Delete", role: .destructive) { Task { await delete(comment) } }
+    }
   }
 
   private func load() async {
@@ -168,6 +178,7 @@ struct CommentThread: View {
   private func delete(_ comment: Comment) async {
     do {
       try await ReactionsAPI.deleteComment(comment.id)
+      error = nil
       router.dataChanged()
     } catch {
       self.error = "Couldn’t delete the comment. Try again."

@@ -49,7 +49,8 @@ struct SignInView: View {
             Text("Continue with Google")
               .frame(maxWidth: .infinity)
           }
-          .buttonStyle(NeutralButtonStyle())
+          .buttonStyle(.bordered)
+          .controlSize(.large)
           .disabled(busy)
         }
 
@@ -91,9 +92,10 @@ struct SignInView: View {
           Button {
             Task { await signInWithPassword() }
           } label: {
-            Text(busy ? "Signing in…" : "Sign in")
+            Text(busy ? "Signing in…" : "Sign in").frame(maxWidth: .infinity)
           }
-          .buttonStyle(.primary)
+          .buttonStyle(.borderedProminent)
+          .controlSize(.large)
           .disabled(busy)
         }
       }
@@ -214,20 +216,6 @@ struct SignInView: View {
       Log.app.error("Google sign-in failed: \(error.localizedDescription, privacy: .public)")
       self.error = "Couldn’t sign in with Google. Use the Google account that matches your Stubbed email."
     }
-  }
-}
-
-/// A secondary full-width capsule on the grouped background.
-struct NeutralButtonStyle: ButtonStyle {
-  func makeBody(configuration: Configuration) -> some View {
-    configuration.label
-      .font(.headline)
-      .foregroundStyle(.primary)
-      .padding(.horizontal, Space.xl)
-      .frame(minHeight: 50)
-      .background(
-        configuration.isPressed ? Color(.systemFill) : Color(.secondarySystemGroupedBackground), in: .capsule)
-      .overlay(Capsule().strokeBorder(Color(.separator).opacity(0.35), lineWidth: 0.5))
   }
 }
 

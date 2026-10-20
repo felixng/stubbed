@@ -54,7 +54,7 @@ final class PeopleUITests: XCTestCase {
     app.buttons["Approve @ios_fan"].tap()
     XCTAssertFalse(app.staticTexts["1 follow request"].waitForExistence(timeout: 5) && app.staticTexts["1 follow request"].isHittable)
 
-    let followers = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "2")).firstMatch
+    let followers = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Followers")).firstMatch
     XCTAssertTrue(followers.waitForExistence(timeout: 10))
     followers.tap()
     XCTAssertTrue(app.navigationBars["Followers"].waitForExistence(timeout: 10))

@@ -14,43 +14,64 @@ struct PublicProfileView: View {
 
   var body: some View {
     ScrollViewReader { proxy in
-      Screen(title: "@\(handle)", titleMode: .inline) {
+      List {
         switch state {
         case .loading:
-          LoadingText()
+          PlaceholderRows(count: 3)
         case .failed(let message):
           EmptyState(title: "Couldn’t load this profile", systemImage: "wifi.exclamationmark") { Text(message) }
+            .listRowBackground(Color.clear)
         case .loaded(nil):
           EmptyState(title: "No one here", systemImage: "person.crop.circle.badge.questionmark") {
             Text("There’s no profile at @\(handle).")
           }
+          .listRowBackground(Color.clear)
         case .loaded(let page?):
-          header(page)
-          if let stats = page.stats { statsCard(stats) }
+          Section { header(page) }
+            .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
+          if let stats = page.stats {
+            Section {
+              LabeledContent("Shows", value: stats.shows.formatted())
+              LabeledContent("Theatres", value: stats.venues.formatted())
+              LabeledContent("Cities", value: stats.cities.formatted())
+            }
+          }
           if page.stats == nil {
             EmptyState(title: "This profile is private", systemImage: "lock") { Text(privateMessage(page)) }
+              .listRowBackground(Color.clear)
           } else if page.entries.isEmpty {
             EmptyState(title: "No public shows yet", systemImage: "theatermasks") {
               Text("When @\(page.profile.handle) tracks a public show, it’ll appear here.")
             }
+            .listRowBackground(Color.clear)
           } else {
-            ProfileCalendar(entries: page.entries.map { .init(id: $0.id, date: $0.date, title: $0.show.title) }) { id in
-              withAnimation { proxy.scrollTo(id, anchor: .top) }
+            Section("Calendar") {
+              ProfileCalendar(entries: page.entries.map { .init(id: $0.id, date: $0.date, title: $0.show.title) }) { id in
+                withAnimation { proxy.scrollTo(id, anchor: .top) }
+              }
             }
-            Text("Recent shows")
-              .font(.title3.bold())
-              .accessibilityAddTraits(.isHeader)
-            ForEach(page.entries) { entry in
-              PostCard(
-                entry: entry, owner: page.profile.person, photo: entry.photoPath.flatMap { page.photos[$0] },
-                mine: page.viewer.isOwner, reactions: page.reactions[entry.id] ?? Reactions()
-              )
-              .id(entry.id)
+            Section("Recent shows") {
+              ForEach(page.entries) { entry in
+                PostCard(
+                  entry: entry, owner: page.profile.person, photo: entry.photoPath.flatMap { page.photos[$0] },
+                  mine: page.viewer.isOwner, reactions: page.reactions[entry.id] ?? Reactions()
+                )
+                .padding(.bottom, Space.l)
+                .id(entry.id)
+              }
             }
+            .listRowInsets(EdgeInsets())
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
           }
         }
       }
+      .listStyle(.insetGrouped)
+      .tabBarClearance()
     }
+    .navigationTitle("@\(handle)")
+    .navigationBarTitleDisplayMode(.inline)
     .refreshable { await load() }
     .task(id: router.dataVersion) { await load() }
   }
@@ -110,10 +131,11 @@ struct PublicProfileView: View {
           }
         }
         HStack(spacing: Space.l) {
-          NavigationLink(value: AppRouter.Route.follows(handle: p.handle, list: .followers)) {
+          // Buttons, not NavigationLinks: this sits in a List row, which would add chevrons.
+          Button { router.open(.follows(handle: p.handle, list: .followers)) } label: {
             count(page.follows.followers, page.follows.followers == 1 ? "follower" : "followers")
           }
-          NavigationLink(value: AppRouter.Route.follows(handle: p.handle, list: .following)) {
+          Button { router.open(.follows(handle: p.handle, list: .following)) } label: {
             count(page.follows.following, "following")
           }
         }
@@ -125,35 +147,12 @@ struct PublicProfileView: View {
     .groupedCard()
   }
 
-  /// Shows, theatres and cities in one grouped card, like your Profile's counts.
-  private func statsCard(_ stats: PublicPages.ProfileStats) -> some View {
-    HStack(spacing: 0) {
-      stat(stats.shows, "Shows")
-      Divider().padding(.vertical, Space.m)
-      stat(stats.venues, "Theatres")
-      Divider().padding(.vertical, Space.m)
-      stat(stats.cities, "Cities")
-    }
-    .fixedSize(horizontal: false, vertical: true)
-    .groupedCard()
-  }
-
   private func count(_ value: Int, _ label: String) -> some View {
     (Text("\(value)").fontWeight(.semibold).foregroundStyle(.primary)
       + Text(" \(label)").foregroundStyle(.secondary))
       .font(.subheadline)
       .monospacedDigit()
       .frame(minHeight: Space.touch)
-  }
-
-  private func stat(_ value: Int, _ label: String) -> some View {
-    VStack(spacing: 2) {
-      Text("\(value)").font(.title2.bold()).monospacedDigit()
-      Text(label).font(.footnote).foregroundStyle(.secondary)
-    }
-    .frame(maxWidth: .infinity)
-    .padding(.vertical, Space.m)
-    .accessibilityElement(children: .combine)
   }
 
   private func privateMessage(_ page: PublicPages.ProfilePage) -> String {

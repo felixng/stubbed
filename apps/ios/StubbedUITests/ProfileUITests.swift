@@ -14,11 +14,16 @@ final class ProfileUITests: XCTestCase {
 
     XCTAssertTrue(app.staticTexts["@ios_test"].waitForExistence(timeout: 10))
     XCTAssertTrue(app.staticTexts["iOS Test"].exists)
-    XCTAssertTrue(app.buttons["Upcoming, 1"].waitForExistence(timeout: 10))
-    let hamilton = button(app, startingWith: "Hamilton")
-    XCTAssertTrue(hamilton.waitForExistence(timeout: 10))
-    XCTAssertTrue(button(app, startingWith: "Hadestown").exists)
+    XCTAssertTrue(app.staticTexts["Upcoming"].waitForExistence(timeout: 10))
     snapshot("profile")
+    // The diary is a List: rows below the fold are built as they scroll in.
+    let hadestown = button(app, startingWith: "Hadestown")
+    let hamilton = button(app, startingWith: "Hamilton")
+    for _ in 0..<4 where !hadestown.exists { app.collectionViews.firstMatch.swipeUp() }
+    XCTAssertTrue(hadestown.exists, app.debugDescription)
+    for _ in 0..<4 where !hamilton.exists { app.collectionViews.firstMatch.swipeUp() }
+    XCTAssertTrue(hamilton.exists, app.debugDescription)
+    snapshot("profile-diary")
 
     scrollAndTap(hamilton, in: app)
     XCTAssertTrue(app.staticTexts["Lin's replacement was brilliant. Front mezz, row B."].waitForExistence(timeout: 10))

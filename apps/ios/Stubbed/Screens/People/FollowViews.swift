@@ -27,18 +27,24 @@ struct FollowButton: View {
     Group {
       if viewer.isOwner {
         NavigationLink("Edit profile", value: AppRouter.Route.settings)
-          .buttonStyle(.tintedPill)
+          .buttonStyle(.bordered)
       } else {
         let status = viewer.status
-        Button(status == .accepted ? "Following" : status == .pending ? "Requested" : "Follow") {
+        let title = status == .accepted ? "Following" : status == .pending ? "Requested" : "Follow"
+        let action = {
           if status == .accepted, person.isPrivate { confirmUnfollow = true } else { Task { await toggle() } }
         }
-        .buttonStyle(FollowButtonStyle(filled: status == .none))
-        .disabled(busy)
-        .accessibilityHint(
-          status == .accepted ? "Unfollow @\(person.handle)" : status == .pending ? "Cancel the follow request" : "")
+        // Follow is the one prominent action; once you follow or have asked, it steps back.
+        if status == .none {
+          Button(title, action: action).buttonStyle(.borderedProminent).fixedSize()
+        } else {
+          Button(title, action: action).buttonStyle(.bordered).fixedSize()
+        }
       }
     }
+    .controlSize(.small)
+    .disabled(busy)
+    .modifier(Hint(status: viewer.isOwner ? nil : viewer.status, handle: person.handle))
     .confirmationDialog(
       "Unfollow @\(person.handle)?", isPresented: $confirmUnfollow, titleVisibility: .visible
     ) {
@@ -67,24 +73,13 @@ struct FollowButton: View {
   }
 }
 
-/// The tint capsule for Follow, a system fill once you follow or have asked.
-struct FollowButtonStyle: ButtonStyle {
-  let filled: Bool
+private struct Hint: ViewModifier {
+  let status: Viewer.Status?
+  let handle: String
 
-  func makeBody(configuration: Configuration) -> some View {
-    configuration.label
-      .lineLimit(1)
-      .fixedSize()
-      .font(.subheadline.weight(.semibold))
-      .foregroundStyle(filled ? Palette.onTint : Color.primary)
-      .padding(.horizontal, Space.l)
-      .frame(minHeight: 34)
-      .background(
-        filled ? (configuration.isPressed ? Palette.tintPressed : Palette.tint)
-          : configuration.isPressed ? Color(.systemFill) : Color(.tertiarySystemFill),
-        in: .capsule)
-      .frame(minHeight: Space.touch)
-      .contentShape(.rect)
+  func body(content: Content) -> some View {
+    content.accessibilityHint(
+      status == .accepted ? "Unfollow @\(handle)" : status == .pending ? "Cancel the follow request" : "")
   }
 }
 
@@ -109,38 +104,47 @@ struct FollowsListView: View {
   private var title: String { list == .followers ? "Followers" : "Following" }
 
   var body: some View {
-    Screen(title: title) {
+    List {
       switch state {
       case .loading:
-        LoadingText()
+        PlaceholderRows()
       case .failed(let message):
         EmptyState(title: "Couldn’t load this list", systemImage: "wifi.exclamationmark") { Text(message) }
+          .listRowBackground(Color.clear)
       case .loaded(let m) where !m.visible:
         EmptyState(title: "This profile is private", systemImage: "lock") {
           Text("Follow @\(m.profile.handle) to see who they follow and who follows them.")
         }
+        .listRowBackground(Color.clear)
       case .loaded(let m) where m.people.isEmpty:
         EmptyState(title: list == .followers ? "No followers yet" : "Not following anyone yet", systemImage: "person.2") {
           Text(list == .followers ? "People who follow @\(m.profile.handle) appear here." : "People @\(m.profile.handle) follows appear here.")
         }
+        .listRowBackground(Color.clear)
       case .loaded(let m):
-        VStack(spacing: 0) {
-          ForEach(Array(m.people.enumerated()), id: \.element.id) { index, person in
-            if index > 0 { Divider().padding(.leading, 72) }
+        let mine = list == .followers && m.profile.id == session.userId
+        Section {
+          ForEach(m.people) { person in
             PersonRow(person: person) {
-              if list == .followers, m.profile.id == session.userId {
+              if mine {
                 Button("Remove") { removing = person }
-                  .buttonStyle(FollowButtonStyle(filled: false))
+                  .buttonStyle(.bordered)
+                  .controlSize(.small)
                   .accessibilityLabel("Remove @\(person.handle)")
               } else if person.id != session.userId {
                 FollowButton(person: person, viewer: m.viewers[person.id] ?? Viewer(isOwner: false, status: .none))
               }
             }
+            .swipeActions {
+              if mine { Button("Remove") { removing = person }.tint(.red) }
+            }
           }
         }
-        .groupedCard()
       }
     }
+    .listStyle(.insetGrouped)
+    .navigationTitle(title)
+    .navigationBarTitleDisplayMode(.inline)
     .confirmationDialog(
       "Remove @\(removing?.handle ?? "")?", isPresented: Binding(get: { removing != nil }, set: { if !$0 { removing = nil } }),
       titleVisibility: .visible, presenting: removing
@@ -176,7 +180,8 @@ struct FollowsListView: View {
   }
 }
 
-/// Follow requests waiting for you, on the Profile tab: approve or decline.
+/// Follow requests waiting for you, as rows for a Profile list section:
+/// approve or decline, with the same as swipe actions.
 struct FollowRequests: View {
   let people: [Person]
 
@@ -185,33 +190,26 @@ struct FollowRequests: View {
   @State private var busy: UUID?
 
   var body: some View {
-    VStack(alignment: .leading, spacing: Space.m) {
-      Text(people.count == 1 ? "1 follow request" : "\(people.count) follow requests")
-        .font(.title3.bold())
-        .accessibilityAddTraits(.isHeader)
-      VStack(spacing: 0) {
-        ForEach(Array(people.enumerated()), id: \.element.id) { index, person in
-          if index > 0 { Divider().padding(.leading, 72) }
-          PersonRow(person: person) {
-            HStack(spacing: Space.s) {
-              Button("Approve") { Task { await answer(person, approve: true) } }
-                .buttonStyle(FollowButtonStyle(filled: true))
-                .accessibilityLabel("Approve @\(person.handle)")
-              Button("Decline", systemImage: "xmark") { Task { await answer(person, approve: false) } }
-                .labelStyle(.iconOnly)
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .frame(width: 34, height: 34)
-                .background(Color(.tertiarySystemFill), in: .circle)
-                .frame(width: Space.touch, height: Space.touch)
-                .buttonStyle(.borderless)
-                .accessibilityLabel("Decline @\(person.handle)")
-            }
-            .disabled(busy == person.id)
-          }
+    ForEach(people) { person in
+      PersonRow(person: person) {
+        HStack(spacing: Space.s) {
+          Button("Approve") { Task { await answer(person, approve: true) } }
+            .buttonStyle(.borderedProminent)
+            .fixedSize()
+            .accessibilityLabel("Approve @\(person.handle)")
+          Button("Decline", systemImage: "xmark") { Task { await answer(person, approve: false) } }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.bordered)
+            .buttonBorderShape(.circle)
+            .accessibilityLabel("Decline @\(person.handle)")
         }
+        .controlSize(.small)
+        .disabled(busy == person.id)
       }
-      .groupedCard()
+      .swipeActions {
+        Button("Decline", role: .destructive) { Task { await answer(person, approve: false) } }
+        Button("Approve") { Task { await answer(person, approve: true) } }.tint(.green)
+      }
     }
   }
 

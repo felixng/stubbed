@@ -27,7 +27,7 @@ struct SessionGate: View {
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
           Button("Try again") { Task { await session.reload() } }
-            .buttonStyle(.tintedPill)
+            .buttonStyle(.bordered)
         }
         .padding(Space.xxl)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

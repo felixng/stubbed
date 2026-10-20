@@ -35,7 +35,6 @@ struct ProfileCalendar: View {
     let today = Day.today()
 
     VStack(alignment: .leading, spacing: Space.m) {
-      Text("Calendar").font(.headline)
       HStack {
         navButton("chevron.left", "Previous month", disabled: month <= earliest) { shown = Self.add(month, -1) }
         Spacer()
@@ -44,31 +43,22 @@ struct ProfileCalendar: View {
         Spacer()
         navButton("chevron.right", "Next month", disabled: month >= last) { shown = Self.add(month, 1) }
       }
-      LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: 7), spacing: Space.xs) {
-        ForEach(Array(Self.weekdays.enumerated()), id: \.offset) { _, d in
-          Text(d).font(.caption.weight(.semibold)).foregroundStyle(.tertiary).accessibilityHidden(true)
-        }
-        ForEach(0..<lead, id: \.self) { _ in Color.clear.frame(height: 40).accessibilityHidden(true) }
-        ForEach(1...days, id: \.self) { day in
-          let date = String(format: "%@-%02d", month, day)
-          if let seen = byDay[date] {
-            Button {
-              onSelect(seen[0].id)
-            } label: {
-              Text("\(day)")
-                .font(.subheadline.weight(.semibold))
-                .foregroundStyle(Palette.onTint)
-                .frame(width: 40, height: 40)
-                .background(Palette.tint, in: .circle)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("\(day) \(Self.title(year, m)): \(seen.map(\.title).joined(separator: ", "))")
-          } else {
-            Text("\(day)")
-              .font(.subheadline.weight(date == today ? .semibold : .regular))
-              .foregroundStyle(date == today ? Palette.tintText : .primary)
-              .frame(width: 40, height: 40)
+      // A plain Grid, not LazyVGrid: lazy grids inside a List cell loop on layout.
+      let cells: [Int?] = Array(repeating: nil, count: lead) + (1...days).map { Optional($0) }
+      let weeks = stride(from: 0, to: cells.count, by: 7).map { Array(cells[$0..<min($0 + 7, cells.count)]) }
+      Grid(horizontalSpacing: 0, verticalSpacing: Space.xs) {
+        GridRow {
+          ForEach(Array(Self.weekdays.enumerated()), id: \.offset) { _, d in
+            Text(d).font(.caption.weight(.semibold)).foregroundStyle(.tertiary).frame(maxWidth: .infinity)
               .accessibilityHidden(true)
+          }
+        }
+        ForEach(Array(weeks.enumerated()), id: \.offset) { _, week in
+          GridRow {
+            ForEach(0..<7, id: \.self) { i in
+              dayCell(i < week.count ? week[i] : nil, month: month, year: year, m: m, byDay: byDay, today: today)
+                .frame(maxWidth: .infinity)
+            }
           }
         }
       }
@@ -77,8 +67,36 @@ struct ProfileCalendar: View {
         .font(.footnote)
         .foregroundStyle(.secondary)
     }
-    .padding(Space.l)
-    .groupedCard()
+    .padding(.vertical, Space.xs)
+  }
+
+  @ViewBuilder private func dayCell(
+    _ day: Int?, month: String, year: Int, m: Int, byDay: [String: [Item]], today: String
+  ) -> some View {
+    if let day {
+      let date = String(format: "%@-%02d", month, day)
+      if let seen = byDay[date] {
+        Button {
+          onSelect(seen[0].id)
+        } label: {
+          Text("\(day)")
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Palette.onTint)
+            .frame(width: 40, height: 40)
+            .background(Palette.tint, in: .circle)
+        }
+        .buttonStyle(.borderless)
+        .accessibilityLabel("\(day) \(Self.title(year, m)): \(seen.map(\.title).joined(separator: ", "))")
+      } else {
+        Text("\(day)")
+          .font(.subheadline.weight(date == today ? .semibold : .regular))
+          .foregroundStyle(date == today ? Palette.tintText : .primary)
+          .frame(width: 40, height: 40)
+          .accessibilityHidden(true)
+      }
+    } else {
+      Color.clear.frame(width: 40, height: 40).accessibilityHidden(true)
+    }
   }
 
   private func navButton(_ symbol: String, _ label: String, disabled: Bool, action: @escaping () -> Void) -> some View {

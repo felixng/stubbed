@@ -77,36 +77,15 @@ extension View {
     contentMargins(.bottom, 80, for: .scrollContent)
   }
 
-  /// Highlights a tappable row while it's pressed, like a list row.
-  func pressableRow() -> some View { buttonStyle(PressableRowStyle()) }
 }
 
-/// A whole card as one tap target: it eases down to 98% while pressed.
+/// A whole card as one tap target: it scales to 98% while pressed, with the
+/// system's default animation.
 struct CardPressStyle: ButtonStyle {
   func makeBody(configuration: Configuration) -> some View {
     configuration.label
       .contentShape(.rect)
       .scaleEffect(configuration.isPressed ? 0.98 : 1)
-      .animation(.spring(response: 0.3, dampingFraction: 0.7), value: configuration.isPressed)
-  }
-}
-
-/// A row or card that dims to the system fill while pressed.
-struct PressableRowStyle: ButtonStyle {
-  func makeBody(configuration: Configuration) -> some View {
-    configuration.label
-      .contentShape(.rect)
-      .background(configuration.isPressed ? Color(.systemFill) : .clear)
-      .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
-  }
-}
-
-/// The trailing chevron on tappable rows and cards.
-struct RowChevron: View {
-  var body: some View {
-    Image(systemName: "chevron.right")
-      .font(.footnote.weight(.semibold))
-      .foregroundStyle(.tertiary)
-      .accessibilityHidden(true)
+      .animation(.default, value: configuration.isPressed)
   }
 }

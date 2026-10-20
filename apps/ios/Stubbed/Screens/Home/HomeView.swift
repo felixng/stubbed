@@ -19,10 +19,26 @@ struct HomeView: View {
     Group {
       switch state {
       case .loading:
-        ProgressView()
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .background(Color(.systemGroupedBackground))
-          .navigationTitle("Home")
+        // The feed's shape in grey while the first page loads.
+        Screen(title: "Home") {
+          ForEach(0..<3, id: \.self) { _ in
+            VStack(alignment: .leading, spacing: Space.m) {
+              Text(verbatim: "@placeholder · date").font(.subheadline)
+              HStack(alignment: .top, spacing: Space.m) {
+                RoundedRectangle(cornerRadius: Radius.sm, style: .continuous).fill(Color(.systemFill)).frame(width: 48, height: 64)
+                VStack(alignment: .leading, spacing: 4) {
+                  Text(verbatim: "Placeholder show title").font(.headline)
+                  Text(verbatim: "Placeholder theatre, city").font(.subheadline)
+                }
+              }
+            }
+            .padding(Space.l)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .groupedCard()
+          }
+          .redacted(reason: .placeholder)
+          .accessibilityHidden(true)
+        }
       case .failed:
         ContentUnavailableView {
           Label("Couldn’t load your feed", systemImage: "wifi.exclamationmark")

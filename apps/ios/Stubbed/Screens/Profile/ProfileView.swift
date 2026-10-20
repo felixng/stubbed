@@ -1,7 +1,9 @@
 import SwiftUI
 
-/// The Profile tab, like the web's /app/profile: who you are (avatar, handle,
-/// name, bio, counts), then your diary or your trips.
+/// The Profile tab, like Contacts' card on a grouped list: who you are
+/// (avatar, handle, name, bio), your counts, any follow requests, then your
+/// diary or your trips. Select puts the diary in edit mode, with Add to trip
+/// and Delete in the bottom bar, as Photos does.
 struct ProfileView: View {
   enum Section: String, CaseIterable { case diary = "Diary", trips = "Trips" }
 
@@ -11,11 +13,11 @@ struct ProfileView: View {
   @State private var section = Section.diary
   @State private var header: Loadable<Header> = .loading
   @State private var diary: Loadable<(entries: [Entry], photos: [String: URL])> = .loading
-  @State private var upcomingOpen = true
-  @State private var selecting = false
+  @State private var editMode = EditMode.inactive
   @State private var picked: Set<UUID> = []
   @State private var choosingTrip = false
   @State private var confirmDelete = false
+  @State private var deleting: Entry?
   @State private var trips: [Trip] = []
   @State private var selectError: String?
 
@@ -26,27 +28,90 @@ struct ProfileView: View {
     var requests: [Person]
   }
 
+  private var selecting: Bool { editMode.isEditing }
+
   var body: some View {
-    Screen(title: "Profile") {
-      headerView
-      Picker("Profile sections", selection: $section) {
-        ForEach(Section.allCases, id: \.self) { Text($0.rawValue) }
+    List(selection: $picked) {
+      headerSections
+      SwiftUI.Section {
+        Picker("Profile sections", selection: $section) {
+          ForEach(Section.allCases, id: \.self) { Text($0.rawValue) }
+        }
+        .pickerStyle(.segmented)
+        .disabled(selecting)
       }
-      .pickerStyle(.segmented)
+      .listRowInsets(EdgeInsets())
+      .listRowBackground(Color.clear)
 
       switch section {
-      case .diary: diaryView
+      case .diary: diarySections
       case .trips: TripsList()
       }
     }
-    .toolbar {
-      if section == .diary, hasSeen {
-        ToolbarItem(placement: .topBarLeading) {
-          Button(selecting ? "Cancel" : "Select") {
-            if selecting { endSelecting() } else { selecting = true }
-          }
-        }
+    .listStyle(.insetGrouped)
+    .environment(\.editMode, $editMode)
+    .navigationTitle("Profile")
+    .toolbar { toolbar }
+    // While selecting, the tab bar makes way for Add to Trip and Delete.
+    .toolbar(selecting ? .hidden : .visible, for: .tabBar)
+    .onChange(of: section) { _, _ in endSelecting() }
+    .refreshable { await load() }
+    .task(id: router.dataVersion) { await load() }
+    .confirmationDialog("Add \(picked.count) to a trip", isPresented: $choosingTrip, titleVisibility: .visible) {
+      let dates = chosen.map(\.date).sorted()
+      ForEach(trips.filter { trip in dates.allSatisfy(trip.covers) }) { trip in
+        Button(trip.name) { Task { await add(to: trip) } }
       }
+      Button("New trip") {
+        let ids = Array(picked)
+        endSelecting()
+        router.newTrip(start: dates.first, end: dates.last, entryIds: ids)
+      }
+    } message: {
+      Text("Trips that cover these dates, or a new one.")
+    }
+    .confirmationDialog(
+      "Delete \(picked.count == 1 ? "this show" : "these \(picked.count) shows")?", isPresented: $confirmDelete,
+      titleVisibility: .visible
+    ) {
+      Button("Delete", role: .destructive) { Task { await deleteEntries(chosen) } }
+    } message: {
+      Text("This can’t be undone.")
+    }
+    .confirmationDialog(
+      "Delete \(deleting?.show.title ?? "this show")?",
+      isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
+      titleVisibility: .visible, presenting: deleting
+    ) { entry in
+      Button("Delete", role: .destructive) { Task { await deleteEntries([entry]) } }
+    } message: { _ in
+      Text("This removes it from your diary, with its photo. It can’t be undone.")
+    }
+  }
+
+  @ToolbarContentBuilder private var toolbar: some ToolbarContent {
+    if section == .diary, !(diary.value?.entries.isEmpty ?? true) {
+      ToolbarItem(placement: .topBarLeading) {
+        Button(selecting ? "Done" : "Select") {
+          withAnimation { if selecting { endSelecting() } else { editMode = .active } }
+        }
+        .fontWeight(selecting ? .semibold : .regular)
+      }
+    }
+    if selecting {
+      ToolbarItem(placement: .bottomBar) {
+        Button("Add to trip", systemImage: "suitcase") { choosingTrip = true }
+          .labelStyle(.titleAndIcon)
+          .disabled(picked.isEmpty)
+      }
+      ToolbarItem(placement: .status) {
+        Text(picked.isEmpty ? "Select shows" : "\(picked.count) selected").font(.subheadline.weight(.semibold))
+      }
+      ToolbarItem(placement: .bottomBar) {
+        Button("Delete", systemImage: "trash", role: .destructive) { confirmDelete = true }
+          .disabled(picked.isEmpty)
+      }
+    } else {
       ToolbarItem(placement: .primaryAction) {
         NavigationLink(value: AppRouter.Route.settings) { Text("Edit") }
           .accessibilityLabel("Edit profile")
@@ -66,96 +131,72 @@ struct ProfileView: View {
         }
       }
     }
-    .safeAreaInset(edge: .bottom) {
-      if selecting, section == .diary { selectBar }
-    }
-    .onChange(of: section) { _, _ in endSelecting() }
-    .refreshable { await load() }
-    .task(id: router.dataVersion) { await load() }
   }
 
-  private var hasSeen: Bool { diary.value?.entries.contains { !$0.planned } ?? false }
+  private var chosen: [Entry] { diary.value?.entries.filter { picked.contains($0.id) } ?? [] }
 
   // MARK: - Header
 
-  @ViewBuilder private var headerView: some View {
+  @ViewBuilder private var headerSections: some View {
     switch header {
     case .loading:
-      LoadingText()
+      PlaceholderRows(count: 1)
     case .failed(let message):
-      Text(message).font(.subheadline).foregroundStyle(.secondary)
+      SwiftUI.Section { Text(message).foregroundStyle(.secondary) }
     case .loaded(let h):
-      VStack(alignment: .leading, spacing: Space.l) {
-        HStack(spacing: Space.l) {
-          Avatar(name: h.profile.name, url: h.profile.avatarURL, size: 72)
-          VStack(alignment: .leading, spacing: 2) {
-            Text(verbatim: "@\(h.profile.handle)")
-              .font(.title2.bold())
-              .lineLimit(1)
-              .accessibilityAddTraits(.isHeader)
-            if let name = h.profile.displayName, !name.isEmpty {
-              Text(name).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
+      SwiftUI.Section {
+        VStack(alignment: .leading, spacing: Space.m) {
+          HStack(spacing: Space.l) {
+            Avatar(name: h.profile.name, url: h.profile.avatarURL, size: 64)
+            VStack(alignment: .leading, spacing: 2) {
+              Text(verbatim: "@\(h.profile.handle)")
+                .font(.title2.bold())
+                .lineLimit(1)
+                .accessibilityAddTraits(.isHeader)
+              if let name = h.profile.displayName, !name.isEmpty {
+                Text(name).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
+              }
+              if h.profile.isPrivate {
+                Label("Private profile", systemImage: "lock.fill").font(.footnote).foregroundStyle(.secondary)
+              }
             }
-            if h.profile.isPrivate {
-              Label("Private profile", systemImage: "lock.fill")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-            }
+          }
+          if let bio = h.profile.bio, !bio.isEmpty {
+            Text(bio).font(.body)
           }
         }
-        if let bio = h.profile.bio, !bio.isEmpty {
-          Text(bio).font(.body)
+        .padding(.vertical, Space.xs)
+        LabeledContent("Shows", value: h.shows.formatted())
+        NavigationLink(value: AppRouter.Route.follows(handle: h.profile.handle, list: .followers)) {
+          LabeledContent("Followers", value: h.counts.followers.formatted())
         }
-        HStack(spacing: 0) {
-          stat(h.shows, h.shows == 1 ? "Show" : "Shows")
-          Divider().padding(.vertical, Space.m)
-          NavigationLink(value: AppRouter.Route.follows(handle: h.profile.handle, list: .followers)) {
-            stat(h.counts.followers, h.counts.followers == 1 ? "Follower" : "Followers")
-          }
-          .pressableRow()
-          Divider().padding(.vertical, Space.m)
-          NavigationLink(value: AppRouter.Route.follows(handle: h.profile.handle, list: .following)) {
-            stat(h.counts.following, "Following")
-          }
-          .pressableRow()
+        NavigationLink(value: AppRouter.Route.follows(handle: h.profile.handle, list: .following)) {
+          LabeledContent("Following", value: h.counts.following.formatted())
         }
-        .fixedSize(horizontal: false, vertical: true)
-        .groupedCard()
-        // Only private profiles get requests; going public approves them all.
-        if !h.requests.isEmpty {
+      }
+      .selectionDisabled()
+      // Only private profiles get requests; going public approves them all.
+      if !h.requests.isEmpty {
+        SwiftUI.Section(h.requests.count == 1 ? "1 follow request" : "\(h.requests.count) follow requests") {
           FollowRequests(people: h.requests)
         }
+        .selectionDisabled()
       }
     }
   }
 
-  /// One column of the counts card.
-  private func stat(_ value: Int, _ label: String) -> some View {
-    VStack(spacing: 2) {
-      Text(value.formatted())
-        .font(.title2.bold())
-        .foregroundStyle(.primary)
-        .monospacedDigit()
-      Text(label)
-        .font(.footnote)
-        .foregroundStyle(.secondary)
-    }
-    .frame(maxWidth: .infinity)
-    .padding(.vertical, Space.m)
-    .accessibilityElement(children: .combine)
-  }
-
   // MARK: - Diary
 
-  @ViewBuilder private var diaryView: some View {
+  @ViewBuilder private var diarySections: some View {
     switch diary {
     case .loading:
-      LoadingText()
+      PlaceholderRows()
     case .failed(let message):
       EmptyState(title: "Couldn’t load your diary", systemImage: "wifi.exclamationmark") { Text(message) }
+        .listRowBackground(Color.clear)
     case .loaded(let data):
       // Upcoming soonest first; the shows you've seen newest first.
-      let upcoming = data.entries.filter(\.planned).reversed()
+      let upcoming = Array(data.entries.filter(\.planned).reversed())
       let seen = data.entries.filter { !$0.planned }
       if data.entries.isEmpty {
         EmptyState(title: "No shows yet") {
@@ -164,100 +205,48 @@ struct ProfileView: View {
             .buttonStyle(.borderedProminent)
             .padding(.top, Space.s)
         }
+        .listRowBackground(Color.clear)
       } else {
-        if !upcoming.isEmpty {
-          VStack(alignment: .leading, spacing: Space.m) {
-            HStack {
-              Button {
-                withAnimation { upcomingOpen.toggle() }
-              } label: {
-                HStack(spacing: Space.s) {
-                  Text("Upcoming").font(.title3.bold()).foregroundStyle(.primary)
-                  Text("\(upcoming.count)").font(.subheadline).foregroundStyle(.secondary)
-                  Image(systemName: "chevron.right")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(Palette.tintText)
-                    .rotationEffect(.degrees(upcomingOpen ? 90 : 0))
-                }
-                .frame(minHeight: Space.touch)
-              }
-              .buttonStyle(.plain)
-              .accessibilityLabel("Upcoming, \(upcoming.count)")
-              .accessibilityValue(upcomingOpen ? "Expanded" : "Collapsed")
-              Spacer()
-              Button("Plan a trip", systemImage: "plus") { router.newTrip() }
-                .font(.subheadline.weight(.semibold))
-            }
-            if upcomingOpen {
-              EntryList(entries: Array(upcoming), photos: data.photos)
-            }
+        SwiftUI.Section("Upcoming") {
+          ForEach(upcoming) { row($0, photos: data.photos) }
+          if !selecting {
+            Button("Plan a trip", systemImage: "plus") { router.newTrip() }
           }
         }
-        if seen.isEmpty {
-          EmptyState(title: "Nothing seen yet", systemImage: "ticket") {
+        SwiftUI.Section {
+          ForEach(seen) { row($0, photos: data.photos) }
+        } header: {
+          Text("Seen")
+        } footer: {
+          if let selectError {
+            Text(selectError).foregroundStyle(.red)
+          } else if seen.isEmpty {
             Text("Your shows appear here once you’ve been.")
           }
-        } else {
-          Text(selecting ? (picked.isEmpty ? "Pick shows" : "\(picked.count) selected") : "Seen")
-            .font(selecting ? .subheadline : .title3.bold())
-            .foregroundStyle(selecting ? .secondary : .primary)
-            .frame(minHeight: Space.touch)
-          EntryList(entries: seen, photos: data.photos, selection: selecting ? $picked : nil)
         }
       }
     }
   }
 
-  // MARK: - Select
-
-  /// Group the picked shows into a trip (one that covers all their dates,
-  /// or a new one with dates to fit), or delete them together.
-  private var selectBar: some View {
-    let chosen = diary.value?.entries.filter { picked.contains($0.id) } ?? []
-    let dates = chosen.map(\.date).sorted()
-    let covering = trips.filter { trip in dates.allSatisfy(trip.covers) }
-    return VStack(spacing: Space.s) {
-      if let selectError {
-        Text(selectError).font(.footnote).foregroundStyle(.red)
-      }
-      HStack(spacing: Space.m) {
-        Button("Add to trip", systemImage: "suitcase") { choosingTrip = true }
-          .buttonStyle(.borderedProminent)
-          .frame(maxWidth: .infinity, alignment: .leading)
-        Button("Delete", systemImage: "trash", role: .destructive) { confirmDelete = true }
-          .buttonStyle(.bordered)
-      }
-      .controlSize(.large)
-      .disabled(picked.isEmpty)
+  /// A diary row: opens the entry; swipe or long press to edit or delete.
+  private func row(_ entry: Entry, photos: [String: URL]) -> some View {
+    NavigationLink(value: AppRouter.Route.entry(entry.id)) {
+      EntryRow(entry: entry, photo: entry.photoPath.flatMap { photos[$0] })
     }
-    .padding(.horizontal, Space.l)
-    .padding(.vertical, Space.m)
-    .background(.bar)
-    .overlay(alignment: .top) { Divider() }
-    .confirmationDialog("Add \(picked.count) to a trip", isPresented: $choosingTrip, titleVisibility: .visible) {
-      ForEach(covering) { trip in
-        Button(trip.name) { Task { await add(to: trip) } }
-      }
-      Button("New trip") {
-        let ids = Array(picked)
-        endSelecting()
-        router.newTrip(start: dates.first, end: dates.last, entryIds: ids)
-      }
-    } message: {
-      Text(covering.isEmpty ? "None of your trips covers these dates." : "Trips that cover these dates")
+    .tag(entry.id)
+    .swipeActions {
+      // Red but not role: .destructive, so the row stays while the dialog asks.
+      Button("Delete", systemImage: "trash") { deleting = entry }.tint(.red)
+      Button("Edit", systemImage: "pencil") { router.edit(entry) }
     }
-    .confirmationDialog(
-      "Delete \(picked.count == 1 ? "this show" : "these \(picked.count) shows")?", isPresented: $confirmDelete,
-      titleVisibility: .visible
-    ) {
-      Button("Delete", role: .destructive) { Task { await deletePicked(chosen) } }
-    } message: {
-      Text("This can’t be undone.")
+    .contextMenu {
+      Button("Edit", systemImage: "pencil") { router.edit(entry) }
+      Button("Delete", systemImage: "trash", role: .destructive) { deleting = entry }
     }
   }
 
   private func endSelecting() {
-    selecting = false
+    editMode = .inactive
     picked = []
     selectError = nil
   }
@@ -273,7 +262,7 @@ struct ProfileView: View {
     }
   }
 
-  private func deletePicked(_ entries: [Entry]) async {
+  private func deleteEntries(_ entries: [Entry]) async {
     do {
       for entry in entries { try await Entries.delete(entry) }
       endSelecting()
