@@ -140,8 +140,11 @@ struct WelcomeView: View {
           .foregroundStyle(.red)
       }
 
-      Button(saving ? "Saving…" : "Continue") { Task { await save(userId: userId) } }
-        .buttonStyle(.primary)
+      Button { Task { await save(userId: userId) } } label: {
+        Text(saving ? "Saving…" : "Continue").frame(maxWidth: .infinity)
+      }
+        .buttonStyle(.borderedProminent)
+        .controlSize(.large)
         .disabled(saving || ProfileRules.handleProblem(handle) != nil && !handle.isEmpty || availability == .taken || availability == .reserved)
     }
   }

@@ -269,11 +269,10 @@ struct LogView: View {
           picking = .show
         }
         if show.id == nil {
-          ChipRow(label: "Show type") {
-            ForEach(ShowType.ordered, id: \.self) { type in
-              Chip(title: type.label, selected: show.type == type) { self.show?.type = type }
-            }
+          SwiftUI.Picker("Type", selection: Binding(get: { show.type }, set: { self.show?.type = $0 })) {
+            ForEach(ShowType.ordered, id: \.self) { Text($0.label).tag($0) }
           }
+          .pickerStyle(.menu)
         }
       } else {
         SearchButton(title: "Search shows") { picking = .show }
@@ -284,12 +283,13 @@ struct LogView: View {
         }
       }
       if let suggestion, let title = suggestion.showTitle, show == nil || showDiffers {
-        VStack(alignment: .leading, spacing: Space.s) {
-          Chip(title: showDiffers ? "Photo suggests \(title)" : "Maybe \(title)?") { Task { await take(suggestion) } }
-          Text(suggestion.reason)
-            .font(.footnote)
-            .foregroundStyle(.secondary)
-            .lineLimit(2)
+        Button { Task { await take(suggestion) } } label: {
+          Label {
+            Text(showDiffers ? "Photo suggests \(title)" : "Maybe \(title)?")
+            Text(suggestion.reason).lineLimit(2)
+          } icon: {
+            Image(systemName: "sparkles")
+          }
         }
       }
     }
@@ -319,16 +319,16 @@ struct LogView: View {
         SearchButton(title: "Search venues") { picking = .venue }
         // Several theatres close by: one tap instead of a search.
         if nearby.count > 1 {
-          ChipRow(label: "Theatres near the photo") {
-            ForEach(nearby.prefix(3), id: \.self) { v in
-              Chip(title: "\(v.name) · \(v.distance ?? 0) m") { pickVenue(v) }
+          ForEach(nearby.prefix(3), id: \.self) { v in
+            Button { pickVenue(v) } label: {
+              Label("\(v.name) · \(v.distance ?? 0) m", systemImage: "mappin.and.ellipse")
             }
           }
         }
       }
       if let venueSuggestion, venue != nil {
-        Chip(title: "Photo suggests \(venueSuggestion.name)") {
-          pickVenue(venueSuggestion)
+        Button { pickVenue(venueSuggestion) } label: {
+          Label("Photo suggests \(venueSuggestion.name)", systemImage: "sparkles")
         }
       }
     } header: {
@@ -343,10 +343,20 @@ struct LogView: View {
   private var dateSection: some View {
     Section {
       DatePicker("Date", selection: Binding(get: { Day.date(date) }, set: { setDate(Day.string($0)) }), displayedComponents: .date)
-      ChipRow(label: "Quick dates") {
-        Chip(title: "Today", selected: date == today) { setDate(today) }
-        Chip(title: "Yesterday", selected: date == Day.today(offset: -1)) { setDate(Day.today(offset: -1)) }
+      // One-tap shortcuts for logging straight after a show.
+      HStack(spacing: Space.s) {
+        quickDate("Today", today)
+        quickDate("Yesterday", Day.today(offset: -1))
       }
+      .controlSize(.small)
+    }
+  }
+
+  @ViewBuilder private func quickDate(_ title: String, _ day: String) -> some View {
+    if date == day {
+      Button(title) { setDate(day) }.buttonStyle(.borderedProminent).accessibilityAddTraits(.isSelected)
+    } else {
+      Button(title) { setDate(day) }.buttonStyle(.bordered)
     }
   }
 
@@ -673,8 +683,7 @@ struct SelectedValue: View {
           }
         }
         Spacer()
-        Text("Change").font(.subheadline).foregroundStyle(.secondary)
-        RowChevron()
+        Text("Change").font(.subheadline)
       }
     }
     .accessibilityLabel("Change \(primary)")
@@ -688,66 +697,8 @@ struct SearchButton: View {
 
   var body: some View {
     Button(action: action) {
-      HStack {
-        Label(title, systemImage: "magnifyingglass")
-        Spacer()
-        RowChevron()
-      }
+      Label(title, systemImage: "magnifyingglass")
     }
     .accessibilityLabel(title)
-  }
-}
-
-/// Chips that wrap onto more lines.
-struct ChipRow<Content: View>: View {
-  let label: String
-  @ViewBuilder var content: Content
-
-  var body: some View {
-    FlowLayout(spacing: Space.s) { content }
-      .accessibilityElement(children: .contain)
-      .accessibilityLabel(label)
-  }
-}
-
-/// Lays children out left to right, wrapping onto new lines.
-struct FlowLayout: Layout {
-  var spacing: CGFloat = 8
-
-  func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-    let width = proposal.width ?? .infinity
-    var x: CGFloat = 0
-    var y: CGFloat = 0
-    var line: CGFloat = 0
-    var widest: CGFloat = 0
-    for view in subviews {
-      let size = view.sizeThatFits(.unspecified)
-      if x > 0, x + size.width > width {
-        y += line + spacing
-        x = 0
-        line = 0
-      }
-      x += size.width + spacing
-      widest = max(widest, x - spacing)
-      line = max(line, size.height)
-    }
-    return CGSize(width: min(widest, width), height: y + line)
-  }
-
-  func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-    var x = bounds.minX
-    var y = bounds.minY
-    var line: CGFloat = 0
-    for view in subviews {
-      let size = view.sizeThatFits(.unspecified)
-      if x > bounds.minX, x + size.width > bounds.maxX {
-        y += line + spacing
-        x = bounds.minX
-        line = 0
-      }
-      view.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(size))
-      x += size.width + spacing
-      line = max(line, size.height)
-    }
   }
 }

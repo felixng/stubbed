@@ -30,7 +30,7 @@ struct EntryView: View {
     Group {
       switch state {
       case .loading:
-        ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
+        List { PlaceholderRows(count: 3) }
       case .failed(let message):
         EmptyState(title: "Couldn’t load this show", systemImage: "exclamationmark.triangle") { Text(message) }
           .frame(maxWidth: .infinity, maxHeight: .infinity)

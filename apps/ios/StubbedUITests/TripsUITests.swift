@@ -41,7 +41,9 @@ final class TripsUITests: XCTestCase {
     let app = try openProfile()
     let select = app.buttons["Select"]
     scrollAndTap(select, in: app)
-    scrollAndTap(button(app, startingWith: "Stereophonic"), in: app)
+    // In edit mode the diary rows are selectable cells, not links.
+    let row = app.cells.containing(NSPredicate(format: "label BEGINSWITH %@", "Stereophonic")).firstMatch
+    scrollAndTap(row, in: app)
     app.buttons["Add to trip"].tap()
     app.buttons["New trip"].tap()
 
@@ -60,7 +62,7 @@ final class TripsUITests: XCTestCase {
 
     scrollAndTap(app.buttons["Delete trip"], in: app)
     app.sheets.buttons["Delete trip"].firstMatch.tap()
-    XCTAssertTrue(app.staticTexts["@ios_test"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.navigationBars["Profile"].waitForExistence(timeout: 10))
   }
 
   @MainActor

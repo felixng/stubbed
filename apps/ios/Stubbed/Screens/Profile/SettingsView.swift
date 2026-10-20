@@ -49,9 +49,7 @@ struct SettingsView: View {
           }
         }
       } else {
-        ProgressView()
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .background(Color(.systemGroupedBackground))
+        Form { PlaceholderRows(count: 4) }
       }
     }
     .navigationTitle("Edit profile")

@@ -132,3 +132,14 @@ extension XCTestCase {
     add(attachment)
   }
 }
+
+/// Taps a tab and waits for its screen. Straight after onboarding the tab
+/// bar can still be animating in and miss the first tap, so it tries twice.
+@MainActor
+func openTab(_ name: String, in app: XCUIApplication) {
+  for _ in 0..<2 {
+    app.buttons[name].tap()
+    if app.navigationBars[name].waitForExistence(timeout: 3) { return }
+  }
+  XCTFail("The \(name) tab didn't open")
+}

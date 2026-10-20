@@ -16,8 +16,11 @@ struct PostCard: View {
   /// Trip pills link to trip pages only where they'd open.
   var linkTrips = true
   var reactions: Reactions?
+  /// False on the show's own page, where the card has nowhere to go.
+  var opensShow = true
 
   @Environment(AppSession.self) private var session
+  @Environment(AppRouter.self) private var router
   @State private var shown: Reactions?
   @State private var writing = false
   @State private var likeError: String?
@@ -25,26 +28,36 @@ struct PostCard: View {
   private var route: AppRouter.Route { mine ? .entry(entry.id) : .publicEntry(entry.id) }
   private var date: String { Day.formatPost(entry.date) }
 
+  // Links are buttons that push through the router, not NavigationLinks: in
+  // a List, every NavigationLink in a row would get a disclosure chevron.
   var body: some View {
-    NavigationLink(value: route) {
-      VStack(alignment: .leading, spacing: Space.m) {
-        if inTrip == nil { header }
-        show
-        footer
+    Group {
+      if opensShow {
+        Button { router.open(route) } label: { card }
+          .buttonStyle(CardPressStyle())
+      } else {
+        card
       }
-      .padding(Space.l)
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .groupedCard()
     }
-    .buttonStyle(CardPressStyle())
     .onChange(of: reactions) { _, _ in shown = nil }
+  }
+
+  private var card: some View {
+    VStack(alignment: .leading, spacing: Space.m) {
+      if inTrip == nil { header }
+      show
+      footer
+    }
+    .padding(Space.l)
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .groupedCard()
   }
 
   // MARK: - Parts
 
   private var header: some View {
     HStack(spacing: Space.m) {
-      NavigationLink(value: AppRouter.Route.profile(handle: owner.handle)) {
+      Button { router.open(.profile(handle: owner.handle)) } label: {
         HStack(spacing: Space.m) {
           Avatar(name: owner.name, url: owner.avatarURL, size: 32)
           VStack(alignment: .leading, spacing: 0) {
@@ -113,13 +126,12 @@ struct PostCard: View {
         if let trip = trips.first {
           Group {
             if linkTrips {
-              NavigationLink(value: mine ? AppRouter.Route.trip(trip.id) : .publicTrip(trip.id)) { pill(trip.name) }
+              Button { router.open(mine ? .trip(trip.id) : .publicTrip(trip.id)) } label: { pill(trip.name) }
                 .buttonStyle(.plain)
             } else {
               pill(trip.name)
             }
           }
-          .layoutPriority(-1)
           if trips.count > 1 {
             Text("+\(trips.count - 1)")
               .font(.caption.weight(.medium))
@@ -161,7 +173,7 @@ struct PostCard: View {
       .accessibilityValue("\(state.likes) \(state.likes == 1 ? "like" : "likes")")
       .accessibilityAddTraits(state.liked ? .isSelected : [])
 
-      NavigationLink(value: AppRouter.Route.publicEntry(entry.id, comments: true)) {
+      Button { router.open(.publicEntry(entry.id, comments: true)) } label: {
         metric(state.comments, systemImage: "bubble.left", tint: nil)
       }
       .buttonStyle(.plain)

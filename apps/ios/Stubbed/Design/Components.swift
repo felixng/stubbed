@@ -19,6 +19,8 @@ struct Wordmark: View {
 struct RatingStars: View {
   let value: Double
   var size: CGFloat = 16
+  /// Grows and shrinks the stars with the person's text size.
+  @ScaledMetric(relativeTo: .body) private var scale: CGFloat = 1
 
   var body: some View {
     let rating = min(5, max(0, value))
@@ -26,7 +28,7 @@ struct RatingStars: View {
       ForEach(0..<5, id: \.self) { i in
         let fill = rating - Double(i)
         Image(systemName: fill >= 1 ? "star.fill" : fill >= 0.5 ? "star.leadinghalf.filled" : "star")
-          .font(.system(size: size))
+          .font(.system(size: size * scale))
           .foregroundStyle(fill >= 0.5 ? Palette.star : Color(.systemGray3))
       }
     }
@@ -64,33 +66,6 @@ struct Avatar: View {
   }
 }
 
-/// A capsule for a category, tag or filter. With an action it's a toggle;
-/// selected chips invert (never the tint).
-struct Chip: View {
-  let title: String
-  var selected = false
-  var action: (() -> Void)?
-
-  var body: some View {
-    if let action {
-      Button(action: action) { label }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(selected ? .isSelected : [])
-    } else {
-      label
-    }
-  }
-
-  private var label: some View {
-    Text(title)
-      .font(.footnote.weight(.medium))
-      .foregroundStyle(selected ? Color(.systemBackground) : .primary)
-      .padding(.horizontal, Space.m)
-      .frame(minHeight: 28)
-      .background(selected ? Color.primary : Color(.tertiarySystemFill), in: .capsule)
-  }
-}
-
 /// A 2:3 poster; with no image, the show's initials in `outline` on `fill`.
 struct Poster: View {
   let title: String
@@ -125,42 +100,6 @@ struct Poster: View {
   }
 }
 
-/// A diary or search row: poster, title, venue and date, rating (or
-/// "Upcoming" for a planned show).
-struct ShowRow: View {
-  let title: String
-  var venue: String?
-  var date: String?
-  var rating: Double?
-  var planned = false
-  var photo: URL?
-
-  var body: some View {
-    HStack(spacing: Space.l) {
-      Poster(title: title, url: photo)
-      VStack(alignment: .leading, spacing: Space.xs) {
-        Text(title)
-          .font(.headline)
-        let meta = [venue, date].compactMap { $0 }.joined(separator: " · ")
-        if !meta.isEmpty {
-          Text(meta)
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
-            .lineLimit(1)
-        }
-        if planned {
-          Chip(title: "Upcoming")
-        } else if let rating {
-          RatingStars(value: rating, size: 14)
-        }
-      }
-      Spacer(minLength: 0)
-    }
-    .padding(.vertical, Space.s)
-    .accessibilityElement(children: .combine)
-  }
-}
-
 /// The body of a screen (or section) with nothing in it yet: a system
 /// `ContentUnavailableView` with an SF Symbol.
 struct EmptyState<Content: View>: View {
@@ -178,46 +117,26 @@ struct EmptyState<Content: View>: View {
   }
 }
 
-/// The primary button: tint capsule with `on-tint` text.
-struct PrimaryButtonStyle: ButtonStyle {
-  func makeBody(configuration: Configuration) -> some View {
-    configuration.label
-      .font(.headline)
-      .foregroundStyle(Palette.onTint)
-      .padding(.horizontal, Space.xl)
-      .frame(minHeight: 50)
-      .frame(maxWidth: .infinity)
-      .background(configuration.isPressed ? Palette.tintPressed : Palette.tint, in: .capsule)
+/// Grey placeholder rows in the shape of the real ones, for a list's first
+/// load (no spinner over the screen).
+struct PlaceholderRows: View {
+  var count = 4
+
+  var body: some View {
+    Section {
+      ForEach(0..<count, id: \.self) { _ in
+        HStack(spacing: Space.m) {
+          Circle().fill(Color(.systemFill)).frame(width: 40, height: 40)
+          VStack(alignment: .leading, spacing: 4) {
+            Text(verbatim: "Placeholder title").font(.headline)
+            Text(verbatim: "Placeholder detail line").font(.subheadline)
+          }
+        }
+        .redacted(reason: .placeholder)
+        .accessibilityHidden(true)
+      }
+    }
   }
-}
-
-/// The secondary button: `fill` capsule, like "Edit profile".
-struct PillButtonStyle: ButtonStyle {
-  var tinted = false
-  /// Fills the width it's given, for side-by-side pairs.
-  var stretch = false
-
-  func makeBody(configuration: Configuration) -> some View {
-    configuration.label
-      .lineLimit(1)
-      .fixedSize()
-      .font(.subheadline.weight(.semibold))
-      .foregroundStyle(tinted ? Palette.tintText : .primary)
-      .padding(.horizontal, Space.l)
-      .frame(maxWidth: stretch ? .infinity : nil, minHeight: Space.touch)
-      .background(
-        configuration.isPressed ? Color(.systemFill) : tinted ? Palette.tintFill : Color(.tertiarySystemFill),
-        in: .capsule)
-  }
-}
-
-extension ButtonStyle where Self == PrimaryButtonStyle {
-  static var primary: PrimaryButtonStyle { .init() }
-}
-
-extension ButtonStyle where Self == PillButtonStyle {
-  static var pill: PillButtonStyle { .init() }
-  static var tintedPill: PillButtonStyle { .init(tinted: true) }
 }
 
 /// A centred spinner while a section loads.
@@ -229,22 +148,12 @@ struct LoadingText: View {
 }
 
 #Preview {
-  ScrollView {
-    VStack(alignment: .leading, spacing: 16) {
-      Wordmark(size: 30)
-      RatingStars(value: 3.5)
-      HStack {
-        Avatar(name: "felix", url: nil, size: 48)
-        Chip(title: "NYC Oct 2026")
-        Chip(title: "Selected", selected: true) {}
-      }
-      ShowRow(title: "Operation Mincemeat", venue: "Golden Theatre", date: "8 Oct 2026", rating: 4.5)
-      ShowRow(title: "Hamilton", venue: "Richard Rodgers", date: "20 Oct 2026", planned: true)
-      EmptyState(title: "Nothing here yet") { Text("Track a show and it appears here.") }
-      Button("Save") {}.buttonStyle(.primary)
-      Button("Edit profile") {}.buttonStyle(.pill)
-    }
-    .padding()
+  List {
+    Wordmark(size: 30)
+    RatingStars(value: 3.5)
+    Avatar(name: "felix", url: nil, size: 48)
+    Poster(title: "Operation Mincemeat", width: 48, height: 64)
+    EmptyState(title: "Nothing here yet") { Text("Track a show and it appears here.") }
+    PlaceholderRows()
   }
-  .background(Color(.systemGroupedBackground))
 }

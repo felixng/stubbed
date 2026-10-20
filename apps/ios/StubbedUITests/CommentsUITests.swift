@@ -29,10 +29,13 @@ final class CommentsUITests: XCTestCase {
     snapshot("comments")
 
     // The entry's owner can delete anyone's comment on it.
-    scrollAndTap(app.buttons["Delete comment by @ios_friend"], in: app)
+    // Comments delete with a swipe, then the confirmation.
+    app.staticTexts["Front mezz is the best seat in that house."].swipeLeft()
+    app.buttons["Delete comment by @ios_friend"].tap()
     app.sheets.buttons["Delete"].firstMatch.tap()
     XCTAssertFalse(app.staticTexts["Front mezz is the best seat in that house."].waitForExistence(timeout: 5))
-    scrollAndTap(app.buttons["Delete your comment"], in: app)
+    app.staticTexts["Agreed, row B was perfect."].swipeLeft()
+    app.buttons["Delete your comment"].tap()
     app.sheets.buttons["Delete"].firstMatch.tap()
     XCTAssertTrue(app.staticTexts["No comments yet. Say something nice."].waitForExistence(timeout: 10))
   }
