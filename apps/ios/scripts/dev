@@ -26,7 +26,7 @@ REPO_DIR="$(cd "$IOS_DIR/../.." && pwd)"
 BUILD_DIR="$IOS_DIR/build"
 DERIVED="$BUILD_DIR/DerivedData"
 SIM="${SIM:-iPhone 17 Pro}"
-BUNDLE_ID="com.felixng.stubbed"
+BUNDLE_ID="app.getstubbed"
 APP="$DERIVED/Build/Products/Debug-iphonesimulator/Stubbed.app"
 
 mkdir -p "$BUILD_DIR/logs"

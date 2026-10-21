@@ -257,7 +257,7 @@ Home loads 20 shows, then the next 20 as you scroll near the end, with a "Load m
 
 ### 2026-10-14: iOS project set up
 The Xcode project in `apps/ios` builds, tests and runs from the command line (`apps/ios/scripts/dev`), so Claude Code can work on it from a remote session on the Mac and check UI through Simulator screenshots.
-- **Bundle ID `com.felixng.stubbed`**, team `AAW3XNQ6D3`, automatic signing, iOS 17, iPhone only, portrait.
+- **Bundle ID `com.felixng.stubbed`** (now `app.getstubbed`, see 2026-10-21), team `AAW3XNQ6D3`, automatic signing, iOS 17, iPhone only, portrait.
 - **No project generator** (XcodeGen, Tuist): Xcode's synchronized folders pick up new files on disk, so the project file rarely changes. Build settings live in `Config/*.xcconfig`.
 - **Debug talks to local Supabase, Release to the hosted project.** Both keys are publishable (RLS protects data); an optional git-ignored `Secrets.xcconfig` overrides Debug, e.g. for a real phone.
 - **Swift types are generated** from the local schema (`scripts/dev types`). The script backticks enum cases like `public` and `private`, which the generator leaves as bare Swift keywords.
@@ -328,4 +328,7 @@ Reviewed the iOS app against `docs/IOS_NATIVE_GUIDE.md`. List-like screens are n
 - **The one custom container kept:** post cards in the Home feed (and where a post is shown on a profile, trip or entry page). A feed of posts is the Mail / Letterboxd case the guide allows: each card is one tap target with its own like, comment and trip controls, which a plain list row can't hold. Inside a `List` they push through the router with buttons, because a `NavigationLink` in a list row gets a disclosure chevron.
 - Swipe actions that ask first (delete a show or comment, remove a follower) are red but not `role: .destructive`, which removes the row before the confirmation can appear.
 - The calendar uses `Grid`, not `LazyVGrid`: a lazy grid inside a list cell crashed with a layout loop.
+
+### 2026-10-21: iOS bundle ID is `app.getstubbed`
+Owner's call, before the app was created in App Store Connect (after the first upload a bundle ID can't change). Replaces `com.felixng.stubbed`: the reverse of the domain we own, `getstubbed.app`, so it's ours and doesn't tie the app to a personal account. Test targets are `app.getstubbed.tests` and `app.getstubbed.uitests`, and the log subsystem matches. Universal links' app ID (`/.well-known/apple-app-site-association`) is `AAW3XNQ6D3.app.getstubbed`. Owner setup: register the ID in App Store Connect, and add it to Supabase → Auth → Apple client IDs (and any Google iOS OAuth client).
 
