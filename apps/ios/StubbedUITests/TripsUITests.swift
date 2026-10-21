@@ -70,6 +70,8 @@ final class TripsUITests: XCTestCase {
     let app = try openProfile()
     app.buttons["Trips"].tap()
     scrollAndTap(button(app, startingWith: "NYC Oct 2026"), in: app)
+    scrollAndTap(app.buttons["Share this trip"], in: app)
+    XCTAssertTrue(app.navigationBars["Share"].waitForExistence(timeout: 5))
     for n in 1...4 {
       let card = app.images.matching(NSPredicate(format: "label BEGINSWITH %@", "Share card \(n) of 4")).firstMatch
       XCTAssertTrue(card.waitForExistence(timeout: 15))

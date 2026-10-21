@@ -17,6 +17,7 @@ struct TripView: View {
   @State private var busy = false
   @State private var error: String?
   @State private var confirmDelete = false
+  @State private var sharing = false
 
   enum Mode { case idle, add, remove }
 
@@ -56,12 +57,20 @@ struct TripView: View {
         ToolbarItem(placement: .primaryAction) {
           Button("Edit") { router.editTrip(trip) }
         }
+        if !(state.value?.seen.isEmpty ?? true) {
+          ToolbarItem(placement: .primaryAction) {
+            Button("Share", systemImage: "square.and.arrow.up") { sharing = true }
+          }
+        }
       }
     }
     .safeAreaInset(edge: .bottom) {
       if mode != .idle { selectionBar }
     }
     .task(id: router.dataVersion) { await load() }
+    .sheet(isPresented: $sharing) {
+      if let model = state.value { ShareScreen { TripShare(model: model) } }
+    }
   }
 
   /// Dates and counts, the recap cards, the shows, then Delete trip.
@@ -91,10 +100,8 @@ struct TripView: View {
 
       if !m.seen.isEmpty {
         Section {
-          TripShare(model: m).padding(.horizontal, Space.l)
+          ShareRow(title: "Share this trip", preview: nil) { sharing = true }
         }
-        .listRowInsets(EdgeInsets())
-        .listRowBackground(Color.clear)
       }
 
       if mode == .add {

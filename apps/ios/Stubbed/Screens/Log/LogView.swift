@@ -214,7 +214,7 @@ struct LogView: View {
           if let preview {
             Image(uiImage: preview).resizable().scaledToFill()
           } else if let existingPhoto {
-            AsyncImage(url: existingPhoto) { $0.resizable().scaledToFill() } placeholder: { Color(.tertiarySystemFill) }
+            RemoteImage(url: existingPhoto)
           } else {
             Image(systemName: "photo")
               .font(.title2)

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// "stubbed" in lowercase, heavy, tight tracking, in `label`, never the tint.
 /// VoiceOver reads "Stubbed". Matches the web's Wordmark.
@@ -47,11 +48,7 @@ struct Avatar: View {
   var body: some View {
     Group {
       if let url {
-        AsyncImage(url: url) { image in
-          image.resizable().scaledToFill()
-        } placeholder: {
-          Color(.systemFill)
-        }
+        RemoteImage(url: url)
       } else {
         Text(String(name.drop(while: { $0 == "@" }).prefix(1)).uppercased())
           .font(.system(size: size * 0.42, weight: .bold))
@@ -77,11 +74,7 @@ struct Poster: View {
   var body: some View {
     Group {
       if let url {
-        AsyncImage(url: url) { image in
-          image.resizable().scaledToFill()
-        } placeholder: {
-          Color(.systemFill)
-        }
+        RemoteImage(url: url)
       } else {
         Text(Self.initials(title))
           .font(.system(size: width * 0.39, weight: .bold))
@@ -114,6 +107,43 @@ struct EmptyState<Content: View>: View {
       VStack(spacing: Space.s) { content }
     }
     .padding(.vertical, Space.l)
+  }
+}
+
+/// A photo from a URL, filled and cropped to its frame, on a grey
+/// placeholder of the same size. Unlike AsyncImage it keeps what it loaded
+/// (so a feed scrolled back doesn't reload) and retries when a scroll or a
+/// slow connection cancels the download.
+struct RemoteImage: View {
+  let url: URL?
+
+  @State private var image: UIImage?
+
+  private static let cache = NSCache<NSURL, UIImage>()
+
+  var body: some View {
+    Color(.tertiarySystemFill)
+      .overlay {
+        if let image {
+          Image(uiImage: image).resizable().scaledToFill().transition(.opacity)
+        }
+      }
+      .clipped()
+      .task(id: url) { await load() }
+  }
+
+  private func load() async {
+    guard let url else { return image = nil }
+    if let cached = Self.cache.object(forKey: url as NSURL) { return image = cached }
+    for attempt in 1...3 {
+      if let (data, _) = try? await URLSession.shared.data(from: url), let loaded = UIImage(data: data) {
+        Self.cache.setObject(loaded, forKey: url as NSURL)
+        withAnimation { image = loaded }
+        return
+      }
+      if Task.isCancelled { return }
+      try? await Task.sleep(for: .seconds(attempt))
+    }
   }
 }
 

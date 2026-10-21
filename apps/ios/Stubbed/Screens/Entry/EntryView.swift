@@ -22,6 +22,9 @@ struct EntryView: View {
     let text: String
     let link: URL?
   }
+  @State private var sharing = false
+  /// After saving a new show the Share screen opens once, as Hevy's does.
+  @State private var offeredShare = false
   @State private var confirmDelete = false
   @State private var deleting = false
   @State private var deleteError: String?
@@ -46,12 +49,31 @@ struct EntryView: View {
         ToolbarItem(placement: .primaryAction) {
           Button("Edit") { router.edit(entry) }
         }
+        if !entry.planned {
+          ToolbarItem(placement: .primaryAction) {
+            Button("Share", systemImage: "square.and.arrow.up") { sharing = true }
+              .disabled(share == nil)
+          }
+        }
       }
     }
     .task(id: router.dataVersion) { await load() }
+    .sheet(isPresented: $sharing) {
+      if let share {
+        ShareScreen {
+          ShareCarousel(subject: .show, cards: cards, failed: cardsFailed, text: share.text, link: share.link)
+        }
+      }
+    }
+    .onChange(of: share != nil) { _, ready in
+      if ready, notice == .saved, !offeredShare {
+        offeredShare = true
+        sharing = true
+      }
+    }
   }
 
-  /// The show, then its share cards, then likes, trips and who can see it,
+  /// The show, then the Share row, then likes, trips and who can see it,
   /// then Delete on its own.
   private func form(_ entry: Entry) -> some View {
     Form {
@@ -87,13 +109,10 @@ struct EntryView: View {
         }
       }
 
-      if !entry.planned, let share {
+      if !entry.planned, share != nil {
         Section {
-          ShareCarousel(subject: .show, cards: cards, failed: cardsFailed, text: share.text, link: share.link)
-            .padding(.horizontal, Space.l)
+          ShareRow(title: "Share this show", preview: cards?.first?.image) { sharing = true }
         }
-        .listRowInsets(EdgeInsets())
-        .listRowBackground(Color.clear)
       }
 
       Section {
@@ -142,7 +161,7 @@ struct EntryView: View {
       Text(
         failed
           ? "Saved, but the photo didn’t upload. Edit the entry to add it again."
-          : planned ? "Added to Upcoming in your diary." : "Saved to your diary. Share it?"
+          : planned ? "Added to Upcoming in your diary." : "Saved to your diary."
       )
       .font(.subheadline.weight(failed ? .regular : .medium))
     } icon: {

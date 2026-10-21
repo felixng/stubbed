@@ -45,6 +45,20 @@ final class PeopleUITests: XCTestCase {
     snapshot("public-entry")
   }
 
+  /// Your own public profile's header holds the link and Edit profile in
+  /// one List row: Edit profile must open Edit profile, not the link.
+  @MainActor
+  func testOwnPublicProfileEditOpensSettings() throws {
+    let app = try home()
+    openTab("Profile", in: app)
+    app.buttons["Account"].tap()
+    app.buttons["View public profile"].tap()
+    XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "instagram.com/ios_test")).firstMatch
+      .waitForExistence(timeout: 10))
+    app.buttons["Edit profile"].firstMatch.tap()
+    XCTAssertTrue(app.navigationBars["Edit profile"].waitForExistence(timeout: 10))
+  }
+
   @MainActor
   func testApproveARequestAndSeeFollowers() throws {
     let app = try home()

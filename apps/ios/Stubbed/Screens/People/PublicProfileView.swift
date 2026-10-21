@@ -86,7 +86,7 @@ struct PublicProfileView: View {
         } else {
           HStack(spacing: 2) {
             ForEach(Array(cover), id: \.self) { url in
-              AsyncImage(url: url) { $0.resizable().scaledToFill() } placeholder: { Color(.tertiarySystemFill) }
+              RemoteImage(url: url)
                 .frame(maxWidth: .infinity, maxHeight: 112)
                 .clipped()
             }
@@ -124,11 +124,14 @@ struct PublicProfileView: View {
           Text(bio).font(.body)
         }
         if let link = p.link, let url = URL(string: link) {
+          // Borderless, like every control in this header: it shares one List
+          // row, where a default-styled control takes taps on the whole row.
           Link(destination: url) {
             Label(Self.displayLink(link), systemImage: "link")
               .font(.subheadline.weight(.semibold))
               .lineLimit(1)
           }
+          .buttonStyle(.borderless)
         }
         HStack(spacing: Space.l) {
           // Buttons, not NavigationLinks: this sits in a List row, which would add chevrons.

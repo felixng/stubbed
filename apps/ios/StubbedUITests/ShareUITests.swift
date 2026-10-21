@@ -12,6 +12,9 @@ final class ShareUITests: XCTestCase {
     XCTAssertTrue(onHome(app))
     app.buttons["Profile"].tap()
     scrollAndTap(button(app, startingWith: "Operation Mincemeat"), in: app)
+    // The cards live on the Share screen, opened from the entry.
+    scrollAndTap(app.buttons["Share this show"], in: app)
+    XCTAssertTrue(app.navigationBars["Share"].waitForExistence(timeout: 5))
 
     let card = app.images.matching(NSPredicate(format: "label BEGINSWITH %@", "Share card 1 of 3")).firstMatch
     XCTAssertTrue(card.waitForExistence(timeout: 15))
