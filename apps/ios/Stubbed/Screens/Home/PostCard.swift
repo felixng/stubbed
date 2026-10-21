@@ -1,9 +1,10 @@
 import SwiftUI
 
-/// One show as a post: who and when, then the show beside its poster or
-/// photo thumbnail (title, venue and stars together), the note, and one
-/// footer row with the like and comment counts on the left and its trips on
-/// the right. The whole card opens the show; the avatar, counts and trip
+/// One show as a post, photo first like Instagram or Hevy: who and when,
+/// the photo at the card's full width, then the show (title, venue and
+/// stars together) and the note, and one footer row with the like and
+/// comment counts on the left and its trip on the right. Without a photo
+/// it's a text post. The whole card opens the show; the avatar, counts and trip
 /// pills are their own targets. Used by the feed, profiles and trips.
 struct PostCard: View {
   let entry: Entry
@@ -42,18 +43,33 @@ struct PostCard: View {
     .onChange(of: reactions) { _, _ in shown = nil }
   }
 
+  /// Photo first, as on Instagram and Hevy: the header, the photo across
+  /// the card's full width, then the show and note, then the footer.
   private var card: some View {
-    VStack(alignment: .leading, spacing: Space.m) {
-      if inTrip == nil { header }
-      show
-      footer
+    VStack(alignment: .leading, spacing: 0) {
+      if inTrip == nil {
+        header.padding(.horizontal, Space.l).padding(.vertical, Space.m)
+      }
+      if let photo {
+        // 4:5, the tallest crop Instagram uses, so the photo leads the card.
+        Color.clear
+          .aspectRatio(4 / 5, contentMode: .fit)
+          .overlay { RemoteImage(url: photo) }
+          .clipped()
+          .accessibilityElement()
+          .accessibilityLabel("Photo from \(entry.show.title)")
+      }
+      VStack(alignment: .leading, spacing: Space.s) {
+        show
+        footer
+      }
+      .padding(.horizontal, Space.l)
+      .padding(.top, photo == nil && inTrip == nil ? 0 : Space.m)
+      .padding(.bottom, Space.s)
     }
-    .padding(Space.l)
     .frame(maxWidth: .infinity, alignment: .leading)
     .groupedCard()
   }
-
-  // MARK: - Parts
 
   private var header: some View {
     HStack(spacing: Space.m) {
@@ -83,36 +99,29 @@ struct PostCard: View {
     }
   }
 
-  /// The poster (the show's photo, or its initials) beside the title, venue
-  /// and stars, then the note under both.
+  /// Title, where and stars together, then the note.
   private var show: some View {
-    VStack(alignment: .leading, spacing: Space.s) {
-      HStack(alignment: .top, spacing: Space.m) {
-        Poster(title: entry.show.title, url: photo, width: 48, height: 64)
-          .accessibilityLabel(photo == nil ? "" : "Photo from \(entry.show.title)")
-        VStack(alignment: .leading, spacing: 2) {
-          Text(entry.show.title)
-            .font(.headline)
-            .foregroundStyle(.primary)
-            .lineLimit(2)
-          Text([entry.whereText, inTrip != nil ? date : nil].compactMap { $0 }.joined(separator: " · "))
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
-            .lineLimit(2)
-          if let rating = entry.rating {
-            RatingStars(value: rating, size: 13).padding(.top, 2)
-          }
-        }
-        Spacer(minLength: 0)
+    VStack(alignment: .leading, spacing: Space.xs) {
+      VStack(alignment: .leading, spacing: 2) {
+        Text(entry.show.title)
+          .font(.headline)
+          .foregroundStyle(.primary)
+        Text([entry.whereText, inTrip != nil ? date : nil].compactMap { $0 }.joined(separator: " · "))
+          .font(.subheadline)
+          .foregroundStyle(.secondary)
+      }
+      if let rating = entry.rating {
+        RatingStars(value: rating, size: 15).padding(.vertical, 2)
       }
       if let note = entry.note {
         Text(note)
           .font(.subheadline)
           .foregroundStyle(.primary)
-          .lineLimit(4)
+          .lineLimit(6)
       }
     }
     .multilineTextAlignment(.leading)
+    .frame(maxWidth: .infinity, alignment: .leading)
   }
 
   /// One row: counts on the left, trip pills on the right, no rule above.
@@ -141,7 +150,6 @@ struct PostCard: View {
         }
       }
       .frame(minHeight: Space.touch)
-      .padding(.bottom, -Space.s)
     }
     if let likeError {
       Text(likeError).font(.caption).foregroundStyle(.red)

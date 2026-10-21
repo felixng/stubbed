@@ -47,7 +47,13 @@ final class LogUITests: XCTestCase {
     snapshot("log-form")
 
     app.navigationBars.buttons["Save"].tap()
-    XCTAssertTrue(app.staticTexts["Saved to your diary. Share it?"].waitForExistence(timeout: 15))
+    // A new show opens the Share screen straight away, as Hevy does.
+    XCTAssertTrue(app.navigationBars["Share"].waitForExistence(timeout: 15))
+    XCTAssertTrue(app.images.matching(NSPredicate(format: "label BEGINSWITH %@", "Share card 1 of 3")).firstMatch
+      .waitForExistence(timeout: 15))
+    snapshot("share-after-save")
+    app.navigationBars["Share"].buttons["Done"].tap()
+    XCTAssertTrue(app.staticTexts["Saved to your diary."].waitForExistence(timeout: 15))
     XCTAssertTrue(app.staticTexts[title].exists)
     snapshot("entry-saved")
     XCTAssertTrue(app.otherElements["Rated 2.5 out of 5"].exists)

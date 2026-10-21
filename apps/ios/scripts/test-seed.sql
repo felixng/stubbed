@@ -18,7 +18,8 @@ begin
     set handle = coalesce(handle, 'ios_friend'), display_name = 'Friend of iOS', bio = 'Fringe every August.',
         is_private = false
     where id = friend;
-  update public.profiles set display_name = 'iOS Test', bio = 'Musicals, mostly. Always the front row.'
+  update public.profiles set display_name = 'iOS Test', bio = 'Musicals, mostly. Always the front row.',
+    link = 'https://www.instagram.com/ios_test/'
     where id = uid;
 
   insert into public.shows (id, title, type) values

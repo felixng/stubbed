@@ -323,3 +323,64 @@ struct ActivityView: UIViewControllerRepresentable {
 extension Array {
   subscript(safe index: Int) -> Element? { indices.contains(index) ? self[index] : nil }
 }
+
+/// The Share screen, as Hevy's: a sheet (sharing is a task of its own) with
+/// the card at the full width of the screen, the designs to swipe through
+/// and the ways to send it, and Done in the bar.
+struct ShareScreen<Content: View>: View {
+  var title = "Share"
+  @ViewBuilder var content: Content
+
+  @Environment(\.dismiss) private var dismiss
+
+  var body: some View {
+    NavigationStack {
+      ScrollView {
+        content
+          .padding(.horizontal, Space.l)
+          .padding(.top, Space.s)
+          .padding(.bottom, Space.xl)
+      }
+      .background(Color(.systemGroupedBackground))
+      .navigationTitle(title)
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+      }
+    }
+  }
+}
+
+/// The row that opens the Share screen from a detail screen: the first card
+/// as a thumbnail, so it's clear what you'll get.
+struct ShareRow: View {
+  let title: String
+  let preview: UIImage?
+  let action: () -> Void
+
+  var body: some View {
+    Button(action: action) {
+      HStack(spacing: Space.m) {
+        Group {
+          if let preview {
+            Image(uiImage: preview).resizable().scaledToFill()
+          } else {
+            Color(.tertiarySystemFill).overlay {
+              Image(systemName: "photo.on.rectangle").foregroundStyle(.secondary)
+            }
+          }
+        }
+        .frame(width: 56, height: 56)
+        .clipShape(.rect(cornerRadius: Radius.sm, style: .continuous))
+        .accessibilityHidden(true)
+        VStack(alignment: .leading, spacing: 2) {
+          Text(title).foregroundStyle(.primary)
+          Text("Cards for Instagram Stories and more").font(.footnote).foregroundStyle(.secondary)
+        }
+        Spacer(minLength: 0)
+        Image(systemName: "square.and.arrow.up").foregroundStyle(.tint).accessibilityHidden(true)
+      }
+    }
+    .accessibilityLabel(title)
+  }
+}
