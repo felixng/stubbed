@@ -2,7 +2,7 @@
 // tells iOS which links open in the Stubbed app when it's installed, so a
 // shared entry, trip or profile opens in the app instead of Safari
 // (apps/ios, #77). Static.
-const APP_ID = "AAW3XNQ6D3.com.felixng.stubbed";
+const APP_ID = "AAW3XNQ6D3.app.getstubbed";
 
 export function GET() {
   return Response.json({

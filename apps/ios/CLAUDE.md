@@ -27,7 +27,7 @@ Run from `apps/ios`. Every command is headless, so it works from a remote sessio
 | `scripts/dev test-users` | Create or reset the local test users: `ios-test@stubbed.local` (handle `ios_test`) and `ios-new@stubbed.local` (no handle, recreated each run), password `stubbed-ios`. |
 | `scripts/dev run` | Build, install and launch on the Simulator, wait 3s (`WAIT=…`), save `build/screenshot.png`. **Read the PNG to check UI work.** |
 | `scripts/dev screenshot [path]` | Screenshot whatever is on the Simulator now. |
-| `scripts/dev logs [secs]` | The app's recent log lines. Log with `os.Logger(subsystem: "com.felixng.stubbed", …)` so they show up. |
+| `scripts/dev logs [secs]` | The app's recent log lines. Log with `os.Logger(subsystem: "app.getstubbed", …)` so they show up. |
 | `scripts/dev archive` | Archive a Release build and upload it to TestFlight. Needs the owner's Apple account in Xcode; leave it to the owner unless asked. |
 | `scripts/dev types` | Regenerate `Stubbed/Generated/Database.swift` from local Supabase after a migration. Never edit that file by hand. |
 
@@ -54,4 +54,4 @@ You can't tap the Simulator yourself. To check a screen deeper in the app, write
 
 ## Signing
 
-Simulator builds need no signing. Team `AAW3XNQ6D3`, bundle ID `com.felixng.stubbed`, automatic signing. Device or TestFlight builds need `-allowProvisioningUpdates` and the owner's Apple account in Xcode; leave those to the owner unless asked.
+Simulator builds need no signing. Team `AAW3XNQ6D3`, bundle ID `app.getstubbed`, automatic signing. Device or TestFlight builds need `-allowProvisioningUpdates` and the owner's Apple account in Xcode; leave those to the owner unless asked.

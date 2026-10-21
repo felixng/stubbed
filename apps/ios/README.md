@@ -13,7 +13,7 @@ Debug builds use local Supabase; Release builds use the hosted project. [`CLAUDE
 
 ## Getting it on your phone (TestFlight)
 
-One-off setup in [App Store Connect](https://appstoreconnect.apple.com): create the app (bundle ID `com.felixng.stubbed`, team `AAW3XNQ6D3`) and an internal testing group with yourself in it. Sign in to Xcode with your Apple account (Xcode → Settings → Accounts).
+One-off setup in [App Store Connect](https://appstoreconnect.apple.com): create the app (bundle ID `app.getstubbed`, team `AAW3XNQ6D3`) and an internal testing group with yourself in it. Sign in to Xcode with your Apple account (Xcode → Settings → Accounts).
 
 Then, from `apps/ios`:
 

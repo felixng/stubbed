@@ -14,7 +14,7 @@
 		<dict>
 			<!-- stubbed://auth-callback: Google sign-in returns here. -->
 			<key>CFBundleURLName</key>
-			<string>com.felixng.stubbed</string>
+			<string>app.getstubbed</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>stubbed</string>

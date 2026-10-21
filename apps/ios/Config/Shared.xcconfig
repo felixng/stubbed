@@ -2,7 +2,7 @@
 // include this and add the Supabase project each build talks to.
 
 PRODUCT_NAME = Stubbed
-PRODUCT_BUNDLE_IDENTIFIER = com.felixng.stubbed
+PRODUCT_BUNDLE_IDENTIFIER = app.getstubbed
 DEVELOPMENT_TEAM = AAW3XNQ6D3
 CODE_SIGN_STYLE = Automatic
 MARKETING_VERSION = 0.1.0

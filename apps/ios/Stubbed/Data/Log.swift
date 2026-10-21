@@ -2,8 +2,8 @@ import os
 
 /// App logging. `scripts/dev logs` shows anything logged under this subsystem.
 enum Log {
-  static let app = Logger(subsystem: "com.felixng.stubbed", category: "app")
-  static let data = Logger(subsystem: "com.felixng.stubbed", category: "data")
+  static let app = Logger(subsystem: "app.getstubbed", category: "app")
+  static let data = Logger(subsystem: "app.getstubbed", category: "data")
 }
 
 /// What a screen shows while it fetches: loading, the data, or why it failed.
