@@ -1,6 +1,6 @@
 # Design system ("Footlight Coral")
 
-The source of truth is the design system artifact: https://claude.ai/artifact/2r1EvQn2286Y29ZJNgPfP6. It is native first: built for the SwiftUI iOS app, with the web app and site mirroring it. Its `ios.md` has the Swift files (`FLColor`, `FLMetrics`, components); `web.md` has the web rules. If you change a token or rule, change it in the artifact first, then mirror it here, in `apps/web/src/app/globals.css` and in the Swift files.
+The source of truth is the design system artifact: https://claude.ai/artifact/2r1EvQn2286Y29ZJNgPfP6. It is native first: built for the SwiftUI iOS app, with the web app and site mirroring it. Its `ios.md` has the Swift files (`FLColor`, `FLMetrics`, components); `web.md` has the web rules. If you change a token or rule, change it in the artifact first, then mirror it here, in `apps/web/src/app/globals.css`, in `apps/web/src/lib/design-system.ts` (the public `/design-system` page and `/design-system.md`) and in the Swift files.
 
 ## Principles
 
