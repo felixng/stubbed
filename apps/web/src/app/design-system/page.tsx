@@ -33,7 +33,8 @@ import { CopyMarkdown } from "./CopyMarkdown";
 
 // The design system, shown with the real components, to share with people and
 // AI tools. Public but not linked or in the sitemap; /design-system.md is the
-// same content as plain markdown. Follows the visitor's appearance.
+// same content as plain markdown. Always light, like every page (the
+// design system's "Light by default" rule).
 export const metadata: Metadata = {
   title: "Design system — Stubbed",
   description: `${DESIGN_SYSTEM_NAME}, the design system of Stubbed: colour, type, spacing, components and rules.`,
@@ -177,7 +178,7 @@ export default function DesignSystemPage() {
   const markdown = designSystemMarkdown(new URL("/design-system", SITE_URL).href);
 
   return (
-    <div className="flex flex-1 flex-col bg-background">
+    <div data-theme="light" className="flex flex-1 flex-col bg-background">
       <header>
         <Container className="flex items-center justify-between gap-4 py-6 sm:py-8">
           <Wordmark size={28} href="/" />
@@ -219,7 +220,7 @@ export default function DesignSystemPage() {
 
           <Section id="colour" title="Colour">
             <p className="mt-2 max-w-[680px] text-callout text-label-secondary">
-              Semantic tokens with a light and a dark value. Use the token, never the raw hex.
+              Semantic tokens with a light and a dark value. Light is the one in use; dark is defined for later. Use the token, never the raw hex.
             </p>
             <div className="mt-4 overflow-hidden rounded-md border border-separator bg-surface">
               {COLORS.map((c, i) => (
@@ -319,7 +320,7 @@ export default function DesignSystemPage() {
 
           <Section id="components" title="Components">
             <p className="mt-2 max-w-[680px] text-callout text-label-secondary">
-              The web components, each a mirror of a SwiftUI one, in both appearances.
+              The web components, each a mirror of a SwiftUI one. Light is what ships; dark is shown for when it comes back.
             </p>
             <div className="mt-4 grid gap-6 lg:grid-cols-2">
               <ComponentPreview appearance="light" />

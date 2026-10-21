@@ -42,7 +42,7 @@ export function themeVars(appearance: "light" | "dark") {
 
 export const PRINCIPLES = [
   "**Native first.** Built for the SwiftUI iOS app; the web mirrors it. Token names match the iOS semantic colours (`FLColor` in Swift).",
-  "**Follows the system appearance.** Light and dark are equals; the web follows `prefers-color-scheme` and never picks for the visitor. Exception for now: the landing page, sign-in, the signed-in app and public profiles are always light.",
+  "**Light by default.** Every page and screen is light, whatever the device setting: on the web, `data-theme=\"light\"` on the page root; on iOS, `.preferredColorScheme(.light)`. The dark values are defined and kept working, but nothing ships dark for now.",
   "**One tint.** `tint` is coral in both appearances and fills the one primary action per screen. Where the brand colour is read as text, use `tint-text`. Nothing else is coral.",
   "**Copy:** terse and confident, sentence case, no emoji, no exclamation marks. Button labels are verbs. Numbers are digits and tabular. Sample handle: `@sillyelphaba`; never a real person's name.",
   "**Ratings** always show as five stars in half steps, never a bare number.",
@@ -171,7 +171,7 @@ export function designSystemMarkdown(pageUrl: string) {
     "",
     "## Colour",
     "",
-    "Semantic tokens, each with a light and a dark value. Use the token, never the raw hex. On the web they are CSS custom properties (`var(--tint)`) and Tailwind colours.",
+    "Semantic tokens, each with a light and a dark value; light is the one in use. Use the token, never the raw hex. On the web they are CSS custom properties (`var(--tint)`) and Tailwind colours.",
     "",
     table(
       ["Token", "Light", "Dark", "Tailwind", "Use"],
@@ -229,10 +229,9 @@ export function designSystemMarkdown(pageUrl: string) {
     ":root {",
     ...COLORS.map((c) => `  --${c.name}: ${c.light};`),
     "}",
-    "@media (prefers-color-scheme: dark) {",
-    "  :root {",
-    ...COLORS.map((c) => `    --${c.name}: ${c.dark};`),
-    "  }",
+    "/* Dark: defined, not in use yet. */",
+    "[data-theme=\"dark\"] {",
+    ...COLORS.map((c) => `  --${c.name}: ${c.dark};`),
     "}",
     "```",
     "",
