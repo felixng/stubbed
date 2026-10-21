@@ -226,9 +226,4 @@ enum Feed {
     return Page(items: items, next: next)
   }
 
-  /// How many people you follow (the "Find people" prompt shows at zero).
-  static func followingCount(_ userId: UUID) async -> Int {
-    (try? await supabase.from("follows").select("followee_id", head: true, count: .exact)
-      .eq("follower_id", value: userId).execute().count) ?? 0
-  }
 }

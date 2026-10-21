@@ -53,7 +53,6 @@ struct RootView: View {
           case .trip(let id, let addFailed): TripView(id: id, addFailed: addFailed)
           case .settings: SettingsView()
           case .profile(let handle): PublicProfileView(handle: handle)
-          case .people: PeopleView()
           case .publicEntry(let id, let comments): PublicEntryView(id: id, showComments: comments)
           case .publicTrip(let id): PublicTripView(id: id)
           case .follows(let handle, let list): FollowsListView(handle: handle, list: list)

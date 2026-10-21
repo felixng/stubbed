@@ -1,14 +1,16 @@
 import SwiftUI
 
 /// Home: the feed. Your shows and the shows of people you follow, newest
-/// first, a page at a time. Your diary lives on the Profile tab.
+/// first, a page at a time, under a search field for finding people (like
+/// Spotlight: type and matches replace the feed). Your diary lives on the
+/// Profile tab.
 struct HomeView: View {
   @Environment(AppSession.self) private var session
   @Environment(AppRouter.self) private var router
 
   @State private var items: [FeedItem] = []
   @State private var next: Feed.Cursor?
-  @State private var following = 0
+  @State private var query = ""
   @State private var state = LoadState.loading
   @State private var loadingMore = false
   @State private var moreFailed = false
@@ -16,6 +18,16 @@ struct HomeView: View {
   enum LoadState { case loading, loaded, failed }
 
   var body: some View {
+    SearchSwitch(query: query) { content }
+      .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search people")
+      .textInputAutocapitalization(.never)
+      .autocorrectionDisabled()
+      .navigationTitle("Home")
+      // Logging a show starts the feed over from the top.
+      .task(id: router.dataVersion) { await load() }
+  }
+
+  @ViewBuilder private var content: some View {
     Group {
       switch state {
       case .loading:
@@ -54,26 +66,15 @@ struct HomeView: View {
         feed
       }
     }
-    .toolbar {
-      ToolbarItem(placement: .topBarTrailing) {
-        NavigationLink(value: AppRouter.Route.people) {
-          Image(systemName: "person.badge.plus")
-        }
-        .accessibilityLabel("Find people")
-      }
-    }
-    // Logging a show starts the feed over from the top.
-    .task(id: router.dataVersion) { await load() }
   }
 
   private var feed: some View {
     Screen(title: "Home") {
-      if following == 0 { findPeople }
       if items.isEmpty {
         ContentUnavailableView {
           Label("Nothing here yet", systemImage: "theatermasks")
         } description: {
-          Text("Shows you track appear here, along with shows from people you follow.")
+          Text("Shows you track appear here, along with shows from people you follow. Find them with the search above.")
         } actions: {
           Button("Track a show") { router.startLog() }
             .buttonStyle(.borderedProminent)
@@ -94,32 +95,6 @@ struct HomeView: View {
     .refreshable { await load() }
   }
 
-  /// Shown until you follow someone: their shows make the feed worth opening.
-  private var findPeople: some View {
-    HStack(alignment: .top, spacing: Space.m) {
-      Image(systemName: "person.2.fill")
-        .font(.title3)
-        .foregroundStyle(Palette.tintText)
-        .frame(width: 44, height: 44)
-        .background(Palette.tintFill, in: .circle)
-        .accessibilityHidden(true)
-      VStack(alignment: .leading, spacing: Space.s) {
-        Text("Follow people you go to the theatre with")
-          .font(.headline)
-        Text("Their shows appear here next to yours.")
-          .font(.subheadline)
-          .foregroundStyle(.secondary)
-        NavigationLink("Find people", value: AppRouter.Route.people)
-          .buttonStyle(.borderedProminent)
-          .controlSize(.small)
-          .padding(.top, Space.xs)
-      }
-      Spacer(minLength: 0)
-    }
-    .padding(Space.l)
-    .groupedCard()
-  }
-
   /// Loads the next page as the end comes into view.
   private var pageEnd: some View {
     Group {
@@ -136,13 +111,11 @@ struct HomeView: View {
   private func load() async {
     guard let userId = session.userId else { return }
     async let page = Feed.page(after: nil, userId: userId)
-    async let count = Feed.followingCount(userId)
     do {
       let first = try await page
       items = first.items
       next = first.next
       moreFailed = false
-      following = await count
       state = .loaded
     } catch {
       if items.isEmpty { state = .failed }
@@ -164,3 +137,17 @@ struct HomeView: View {
     }
   }
 }
+
+/// The feed, or people matching the search while the search field is in
+/// use, as Spotlight swaps in its results.
+private struct SearchSwitch<Feed: View>: View {
+  let query: String
+  @ViewBuilder var feed: Feed
+
+  @Environment(\.isSearching) private var isSearching
+
+  var body: some View {
+    if isSearching { PeopleResults(query: query) } else { feed }
+  }
+}
+
