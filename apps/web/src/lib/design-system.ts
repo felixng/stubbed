@@ -129,7 +129,7 @@ export const COMPONENTS = [
   { name: "Poster", swift: "Poster", props: "title, poster", notes: "2:3 at `rounded-sm`. With no image, the show's initials in `outline` on `fill`." },
   { name: "ShowRow", swift: "EntryRow, in a List", props: "title, venue, date, rating, poster", notes: "56px poster, headline title, subheadline `venue · date` in `label-secondary`, then stars (or a \"Want to see\" chip). Lives in a `surface` list with `separator` hairlines." },
   { name: "ShowCard", swift: "none (the feed uses PostCard)", props: "same as ShowRow", notes: "160px portrait card for web shelves and carousels." },
-  { name: "TabBar", swift: "native TabView", props: "items, active, onSelect", notes: "Phone-width web app only (sidebar on desktop). At most four tabs; 24px line icons; selected tab in `tint-text`, others `label-secondary`." },
+  { name: "TabBar", swift: "native TabView", props: "items, active, onSelect", notes: "Web app below 768px only; from 768px a sidebar with the same items replaces it. At most four tabs; 24px line icons; selected tab in `tint-text`, others `label-secondary`." },
   { name: "Wordmark", swift: "Wordmark", props: "size px (min 16)", notes: "Lowercase text, screen readers hear \"Stubbed\"." },
 ];
 
