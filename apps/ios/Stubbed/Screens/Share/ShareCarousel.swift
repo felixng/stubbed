@@ -380,7 +380,10 @@ struct ShareRow: View {
         Spacer(minLength: 0)
         Image(systemName: "square.and.arrow.up").foregroundStyle(.tint).accessibilityHidden(true)
       }
+      .contentShape(.rect)
     }
+    // Plain, so a Form doesn't tint the whole label: only the icon is coral.
+    .buttonStyle(.plain)
     .accessibilityLabel(title)
   }
 }

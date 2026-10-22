@@ -41,7 +41,7 @@ export function themeVars(appearance: "light" | "dark") {
 }
 
 export const PRINCIPLES = [
-  "**Native first.** Built for the SwiftUI iOS app; the web mirrors it. Token names match the iOS semantic colours (`FLColor` in Swift).",
+  "**Native first.** Built for the SwiftUI iOS app. The web shares its features, data and rules, not its layouts. On iOS the background and text tokens are the system colours; the coral ones are `Palette` (see iOS).",
   "**Light by default.** Every page and screen is light, whatever the device setting: on the web, `data-theme=\"light\"` on the page root; on iOS, `.preferredColorScheme(.light)`. The dark values are defined and kept working, but nothing ships dark for now.",
   "**One tint.** `tint` is coral in both appearances and fills the one primary action per screen. Where the brand colour is read as text, use `tint-text`. Nothing else is coral.",
   "**Copy:** terse and confident, sentence case, no emoji, no exclamation marks. Button labels are verbs. Numbers are digits and tabular. Sample handle: `@sillyelphaba`; never a real person's name.",
@@ -123,25 +123,79 @@ export const SHADOW_RULES = [
 ];
 
 export const COMPONENTS = [
-  { name: "Button", swift: "FLButtonStyle", props: "variant primary | secondary | ghost | neutral; size md | sm", notes: "Capsule, 50px tall (sm 44px), headline weight. One `primary` per screen (`tint` fill, `on-tint` text, `shadow-btn`). `secondary` is `tint-fill` with `tint-text`; `ghost` is transparent with `tint-text`; `neutral` (surface, hairline border) is for third-party sign-in such as Google." },
-  { name: "Chip", swift: "FLChip", props: "selected, onClick, children", notes: "Capsule, 28px tall, footnote medium, on `fill`. Selected inverts (`label` background, `background` text), never `tint`. With onClick it is a toggle button (aria-pressed)." },
-  { name: "RatingStars", swift: "FLRatingStars", props: "value 0–5 in halves, size px", notes: "Five stars; filled in `star`, empty as a 1.5px `outline` stroke. Read-only; labelled \"Rated N out of 5\"." },
-  { name: "Poster", swift: "(inside FLShowRow)", props: "title, poster", notes: "2:3 at `rounded-sm`. With no image, the show's initials in `outline` on `fill`." },
-  { name: "ShowRow", swift: "FLShowRow", props: "title, venue, date, rating, poster", notes: "56px poster, headline title, subheadline `venue · date` in `label-secondary`, then stars (or a \"Want to see\" chip). Lives in a `surface` list with `separator` hairlines." },
-  { name: "ShowCard", swift: "none (iOS uses FLShowRow)", props: "same as ShowRow", notes: "160px portrait card for web shelves and carousels." },
+  { name: "Button", swift: "system `.borderedProminent` / `.bordered`", props: "variant primary | secondary | ghost | neutral; size md | sm", notes: "Capsule, 50px tall (sm 44px), headline weight. One `primary` per screen (`tint` fill, `on-tint` text, `shadow-btn`). `secondary` is `tint-fill` with `tint-text`; `ghost` is transparent with `tint-text`; `neutral` (surface, hairline border) is for third-party sign-in such as Google." },
+  { name: "Chip", swift: "none: plain metadata text, a `Picker` or small `.bordered` buttons", props: "selected, onClick, children", notes: "Capsule, 28px tall, footnote medium, on `fill`. Selected inverts (`label` background, `background` text), never `tint`. With onClick it is a toggle button (aria-pressed)." },
+  { name: "RatingStars", swift: "RatingStars", props: "value 0–5 in halves, size px", notes: "Five stars; filled in `star`, empty as a 1.5px `outline` stroke. Read-only; labelled \"Rated N out of 5\"." },
+  { name: "Poster", swift: "Poster", props: "title, poster", notes: "2:3 at `rounded-sm`. With no image, the show's initials in `outline` on `fill`." },
+  { name: "ShowRow", swift: "EntryRow, in a List", props: "title, venue, date, rating, poster", notes: "56px poster, headline title, subheadline `venue · date` in `label-secondary`, then stars (or a \"Want to see\" chip). Lives in a `surface` list with `separator` hairlines." },
+  { name: "ShowCard", swift: "none (the feed uses PostCard)", props: "same as ShowRow", notes: "160px portrait card for web shelves and carousels." },
   { name: "TabBar", swift: "native TabView", props: "items, active, onSelect", notes: "Phone-width web app only (sidebar on desktop). At most four tabs; 24px line icons; selected tab in `tint-text`, others `label-secondary`." },
-  { name: "Wordmark", swift: "FLWordmark", props: "size px (min 16)", notes: "Lowercase text, screen readers hear \"Stubbed\"." },
+  { name: "Wordmark", swift: "Wordmark", props: "size px (min 16)", notes: "Lowercase text, screen readers hear \"Stubbed\"." },
 ];
 
 export const ICON_RULES = [
-  "iOS: SF Symbols (`book`, `plus.circle`, `chart.bar`, `person` for the tabs).",
+  "iOS: SF Symbols, matched to the text style beside them (tabs: `house`, `plus.circle.fill`, `person.crop.circle`).",
   "Web: inline line icons drawn to match SF Symbols at 24px with a 1.5px stroke, round caps and joins. No icon package.",
 ];
 
 export const IOS_RULES = [
-  "The iOS UI is native, not a copy of the web: same features, data and rules, designed as a premium native app.",
-  "System grouped backgrounds, `List(.insetGrouped)`, no drop shadows, the native tab bar, Dynamic Type and SF Symbols.",
-  "System button styles (`.borderedProminent`, `.bordered`) tinted coral; sheets for self-contained tasks.",
+  "The iOS UI is native, not a copy of the web: same features, data and rules, designed as a premium native app (Apple Fitness, Health and Personal Best as references). The full guide is `docs/IOS_NATIVE_GUIDE.md`; the app's own rules are in `apps/ios/CLAUDE.md`.",
+  "**Structure.** A native `TabView` (Home, Log, Profile); Log is a tab that opens the log sheet. Each tab is a `NavigationStack`: large titles on the tab roots, inline titles on detail screens, actions in the navigation bar.",
+  "**Lists are Lists.** List-like screens are `List(.insetGrouped)` on the grouped background, with system chevrons from `NavigationLink`, `.swipeActions` and `.contextMenu`. Bulk select is the system edit mode with bottom-bar actions. Detail and edit screens are a `Form`.",
+  "**One custom container:** the feed post (`PostCard`), photo first like Instagram or Hevy: header, the photo at the card's full width (4:5), the show, stars and note, then counts and a trip tag on one row. The whole card is one tap target that scales to 98% when pressed.",
+  "**Surfaces.** `Color(.secondarySystemGroupedBackground)` with 16pt continuous corners and a 1pt stroke at 6% of the label colour (`.groupedCard()`). No drop shadows anywhere.",
+  "**Type and colour.** Dynamic Type text styles only; system semantic colours for text and backgrounds; coral only on interactive elements. Text on coral is `onTint` (dark), never white.",
+  "**Controls.** System button styles: one `.borderedProminent` per screen, otherwise `.bordered` or plain tinted text. Toggles, pickers, date pickers, `.searchable` (people search sits under Home's title, like Spotlight), `ShareLink`, `PhotosPicker`.",
+  "**Presentations.** Sheets for self-contained tasks, each with its own `NavigationStack` and Cancel / Save (or Done) in the bar: log a show, edit a trip, Share. Destructive steps confirm with a `.confirmationDialog`.",
+  "**Loading.** Grey placeholder rows in the shape of the content (`.redacted`), never a spinner over the screen. Likes update at once and sync in the background.",
+  "**Light only for now:** `.preferredColorScheme(.light)` at the root. Semantic colours keep dark mode a one-line change.",
+];
+
+/** How each colour token is expressed in SwiftUI. */
+export const IOS_TOKENS = [
+  { token: "background", swift: "Color(.systemGroupedBackground)", note: "Every screen" },
+  { token: "surface", swift: "Color(.secondarySystemGroupedBackground)", note: "List cells, cards (`.groupedCard()`)" },
+  { token: "fill", swift: "Color(.tertiarySystemFill)", note: "Placeholders, capsule tags" },
+  { token: "label", swift: "`.primary` / `Color(.label)`", note: "Primary text" },
+  { token: "label-secondary", swift: "`.secondary`", note: "Venue, date, captions" },
+  { token: "separator", swift: "system list separators", note: "Drawn by `List`; cards use a 6% label-colour stroke" },
+  { token: "tint", swift: "`Palette.tint`", note: "Accent fills: liked heart, calendar days, avatar badge" },
+  { token: "tint-text", swift: "`Palette.tintText`, set as the app `.tint`", note: "Buttons, links, the selected tab, `.borderedProminent` fills" },
+  { token: "tint-fill", swift: "`Palette.tintFill`", note: "Initials avatars, icon badges" },
+  { token: "on-tint", swift: "`Palette.onTint`", note: "Text and icons on `tint`" },
+  { token: "star", swift: "`Palette.star`", note: "Rating stars" },
+  { token: "destructive", swift: "`role: .destructive` / `.red`", note: "System red; the system styles destructive buttons" },
+];
+
+/** The SwiftUI building blocks, in apps/ios/Stubbed. */
+export const IOS_COMPONENTS = [
+  { name: "Screen", file: "Design/Screen.swift", notes: "A scrolling screen on the grouped background with a large (or inline) title and room above the tab bar. For screens that aren't lists, like the feed." },
+  { name: ".groupedCard()", file: "Design/Theme.swift", notes: "The inset grouped surface: secondary grouped background, 16pt continuous corners, 1pt stroke, no shadow." },
+  { name: "PostCard", file: "Screens/Home/PostCard.swift", notes: "A feed post, photo first. One tap target with `CardPressStyle`; the avatar, counts and trip tag push through the router (a `NavigationLink` inside a List row would gain a chevron)." },
+  { name: "EntryRow", file: "Screens/Entry/EntryList.swift", notes: "A diary or trip row in a List: 48×64 poster, headline title, `venue · date`, stars or \"Going\", then trips and privacy as caption metadata." },
+  { name: "Poster", file: "Design/Components.swift", notes: "The show's photo, or its initials on `tertiarySystemFill`, at 8pt continuous corners." },
+  { name: "Avatar", file: "Design/Components.swift", notes: "Circular profile photo, or the first letter in `tintText` on `tintFill`." },
+  { name: "RatingStars / RatingInput", file: "Design/Components.swift, Screens/Log/RatingInput.swift", notes: "Five SF Symbol stars in half steps, scaled with Dynamic Type. The input drags or taps, with a haptic, and is an adjustable control for VoiceOver." },
+  { name: "PersonRow / FollowButton", file: "Screens/People/", notes: "A person as a List row (avatar, @handle, name) with Follow (`.borderedProminent`), or Following / Requested (`.bordered`)." },
+  { name: "ShareScreen / ShareCarousel / ShareRow", file: "Screens/Share/ShareCarousel.swift", notes: "The Share sheet: the card at full width with 16pt margins, swipe between designs, then Stories, More, Download, Copy text and Link. A row with a thumbnail opens it from a detail screen." },
+  { name: "CommentComposer", file: "Screens/People/PublicEntryView.swift", notes: "A growing field with an inline send arrow, pinned above the tab bar with `.safeAreaInset(edge: .bottom)`." },
+  { name: "PlaceholderRows / EmptyState", file: "Design/Components.swift", notes: "Redacted grey rows for a first load; `ContentUnavailableView` with an SF Symbol for empty and error states." },
+  { name: "RemoteImage", file: "Design/Components.swift", notes: "Photos from a URL on a grey placeholder of the final size. Caches and retries, where `AsyncImage` gives up in a scrolling feed." },
+  { name: "Wordmark", file: "Design/Components.swift", notes: "Lowercase `stubbed`, heavy, tight tracking, in `label`; VoiceOver reads \"Stubbed\"." },
+];
+
+/** Screenshots of the iOS app (iPhone 17 Pro simulator, test data), in public/design-system/ios. */
+export const IOS_SCREENSHOTS = [
+  { file: "home.jpg", title: "Home", caption: "Large title, people search under it, feed posts on the grouped background.", width: 460, height: 1000 },
+  { file: "post-photo.jpg", title: "Feed post with a photo", caption: "Photo first at the card's full width; counts and a trip tag on one row.", width: 735, height: 1000 },
+  { file: "people-search.jpg", title: "People search", caption: "While searching, matching people with Follow replace the feed.", width: 964, height: 1000 },
+  { file: "profile.jpg", title: "Profile", caption: "An inset grouped List: header, counts as rows, follow requests, Diary and Trips.", width: 460, height: 1000 },
+  { file: "diary.jpg", title: "Diary rows", caption: "EntryRow in Upcoming and Seen sections; swipe or long press to edit or delete.", width: 460, height: 1000 },
+  { file: "entry.jpg", title: "A show", caption: "A Form: the show first, then Share, then likes, trips and privacy, then Delete.", width: 460, height: 1000 },
+  { file: "share.jpg", title: "Share", caption: "The Share sheet: the card at full width, then the ways to send it.", width: 460, height: 1000 },
+  { file: "log-form.jpg", title: "Log a show", caption: "A Form in a sheet: date with quick picks, rating, note, a segmented visibility picker.", width: 460, height: 1000 },
+  { file: "comments.jpg", title: "Comments", caption: "Comments as List rows (swipe to delete) and the composer pinned above the tab bar.", width: 460, height: 1000 },
+  { file: "edit-profile.jpg", title: "Edit profile", caption: "Settings-style Form with section footers for help text and Save in the bar.", width: 460, height: 1000 },
 ];
 
 function table(head: string[], rows: string[][]) {
@@ -222,6 +276,18 @@ export function designSystemMarkdown(pageUrl: string) {
     "## iOS",
     "",
     list(IOS_RULES),
+    "",
+    "### Tokens in SwiftUI",
+    "",
+    table(["Token", "SwiftUI", "Use"], IOS_TOKENS.map((t) => [`\`${t.token}\``, t.swift, t.note])),
+    "",
+    "### SwiftUI components",
+    "",
+    table(["Component", "File (apps/ios/Stubbed)", "Notes"], IOS_COMPONENTS.map((c) => [`\`${c.name}\``, c.file, c.notes])),
+    "",
+    "### Screenshots",
+    "",
+    list(IOS_SCREENSHOTS.map((s) => `[${s.title}](${new URL(`/design-system/ios/${s.file}`, pageUrl).href}): ${s.caption}`)),
     "",
     "## CSS variables",
     "",

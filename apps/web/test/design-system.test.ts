@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { COLORS, designSystemMarkdown } from "@/lib/design-system";
+import { COLORS, IOS_SCREENSHOTS, IOS_TOKENS, designSystemMarkdown } from "@/lib/design-system";
 
 const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
 
@@ -27,4 +27,17 @@ test("designSystemMarkdown: every token and the page link", () => {
   assert.match(md, /^# Stubbed design system/);
   assert.ok(md.includes("https://example.com/design-system"));
   for (const c of COLORS) assert.ok(md.includes(`--${c.name}: ${c.light};`), c.name);
+});
+
+test("iOS: every token is mapped and every screenshot exists", () => {
+  assert.deepEqual(
+    IOS_TOKENS.map((t) => t.token).sort(),
+    COLORS.map((c) => c.name).filter((n) => !["tint-pressed", "focus", "glow", "outline"].includes(n)).sort(),
+  );
+  for (const shot of IOS_SCREENSHOTS) {
+    assert.ok(existsSync(new URL(`../public/design-system/ios/${shot.file}`, import.meta.url)), shot.file);
+  }
+  const md = designSystemMarkdown("https://example.com/design-system");
+  assert.ok(md.includes("### Tokens in SwiftUI"));
+  assert.ok(md.includes("https://example.com/design-system/ios/home.jpg"));
 });

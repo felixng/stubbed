@@ -17,8 +17,8 @@ final class PeopleUITests: XCTestCase {
   @MainActor
   func testFindPeopleOpenProfileAndEntry() throws {
     let app = try home()
-    app.buttons["Find people"].firstMatch.tap()
-    let search = app.searchFields["Search by name or @handle"]
+    // People search is the field at the top of Home.
+    let search = app.searchFields["Search people"]
     XCTAssertTrue(search.waitForExistence(timeout: 10))
     search.tap()
     search.typeText("ios_fr")

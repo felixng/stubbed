@@ -14,7 +14,7 @@ final class HomeUITests: XCTestCase {
 
     let friend = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "@ios_friend")).firstMatch
     XCTAssertTrue(friend.waitForExistence(timeout: 15))
-    XCTAssertFalse(app.staticTexts["Follow people you go to the theatre with"].exists, "Already follows someone")
+    XCTAssertTrue(app.searchFields["Search people"].exists, "People search sits at the top of Home")
     snapshot("home")
 
     // Like the newest public show, then unlike it.

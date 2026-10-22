@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 
 import { Container } from "@/components/landing/Container";
 import { Button } from "@/components/ui/Button";
@@ -14,7 +15,10 @@ import {
   DESIGN_SYSTEM_NAME,
   FONT_STACK,
   ICON_RULES,
+  IOS_COMPONENTS,
   IOS_RULES,
+  IOS_SCREENSHOTS,
+  IOS_TOKENS,
   PRINCIPLES,
   RADII,
   SHADOWS,
@@ -376,7 +380,74 @@ export default function DesignSystemPage() {
           </Section>
 
           <Section id="ios" title="iOS">
+            <p className="mt-2 max-w-[680px] text-callout text-label-secondary">
+              The same tokens and rules, expressed natively: system containers, controls, type and colour, with coral
+              only where something can be tapped.
+            </p>
             <Rules items={IOS_RULES} />
+
+            <h3 className="mt-8 text-headline text-label">Tokens in SwiftUI</h3>
+            <div className="mt-3 overflow-hidden rounded-md border border-separator bg-surface">
+              {IOS_TOKENS.map((t, i) => (
+                <div
+                  key={t.token}
+                  className={`grid gap-1 px-4 py-3 sm:grid-cols-[160px_1fr_1fr] sm:gap-4 ${
+                    i ? "border-t border-separator" : ""
+                  }`}
+                >
+                  <p className="font-mono text-subheadline font-semibold text-label">{t.token}</p>
+                  <p className="text-subheadline text-label">
+                    <Inline text={t.swift} />
+                  </p>
+                  <p className="text-subheadline text-label-secondary">
+                    <Inline text={t.note} />
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <h3 className="mt-8 text-headline text-label">Screens</h3>
+            <p className="mt-1 max-w-[680px] text-subheadline text-label-secondary">
+              From the iPhone 17 Pro simulator with test data.
+            </p>
+            <div className="mt-4 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-5">
+              {IOS_SCREENSHOTS.map((shot) => (
+                <figure key={shot.file} className="flex flex-col gap-2">
+                  <Image
+                    src={`/design-system/ios/${shot.file}`}
+                    alt={`${shot.title}: ${shot.caption}`}
+                    width={shot.width}
+                    height={shot.height}
+                    sizes="(min-width: 1024px) 200px, (min-width: 640px) 30vw, 45vw"
+                    className="h-auto w-full rounded-md border border-separator bg-surface"
+                  />
+                  <figcaption className="flex flex-col gap-0.5">
+                    <span className="text-subheadline font-semibold text-label">{shot.title}</span>
+                    <span className="text-footnote text-label-secondary">{shot.caption}</span>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+
+            <h3 className="mt-10 text-headline text-label">SwiftUI components</h3>
+            <div className="mt-3 overflow-hidden rounded-md border border-separator bg-surface">
+              {IOS_COMPONENTS.map((c, i) => (
+                <div
+                  key={c.name}
+                  className={`grid gap-1 px-4 py-3 sm:grid-cols-[220px_1fr] sm:gap-4 ${
+                    i ? "border-t border-separator" : ""
+                  }`}
+                >
+                  <div>
+                    <p className="font-mono text-subheadline font-semibold text-label">{c.name}</p>
+                    <p className="text-caption text-label-secondary">{c.file}</p>
+                  </div>
+                  <p className="text-subheadline text-label-secondary">
+                    <Inline text={c.notes} />
+                  </p>
+                </div>
+              ))}
+            </div>
           </Section>
         </Container>
       </main>

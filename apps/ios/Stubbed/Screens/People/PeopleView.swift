@@ -1,10 +1,12 @@
 import SwiftUI
 
-/// Find people to follow (`search_profiles`); their public shows then
-/// appear in your feed.
-struct PeopleView: View {
+/// People matching a search (`search_profiles`), with Follow on each, as
+/// a list. Shown on Home while its search field is in use; their public
+/// shows then appear in your feed.
+struct PeopleResults: View {
+  let query: String
+
   @Environment(AppSession.self) private var session
-  @State private var query = ""
   @State private var results: [Person] = []
   @State private var viewers: [UUID: Viewer] = [:]
   @State private var searched = false
@@ -15,11 +17,11 @@ struct PeopleView: View {
       if q.count >= 2, searched, results.isEmpty {
         ContentUnavailableView.search(text: q)
           .listRowBackground(Color.clear)
-      } else if results.isEmpty {
-        EmptyState(title: "Find people", systemImage: "person.2") {
-          Text("Follow people to see the shows they track in your feed. Search by name or handle.")
+      } else if q.count < 2 {
+        Section {
+        } footer: {
+          Text("Search by name or @handle. Follow people you go to the theatre with and their shows appear in your feed.")
         }
-        .listRowBackground(Color.clear)
       } else {
         Section {
           ForEach(results) { person in
@@ -33,10 +35,6 @@ struct PeopleView: View {
       }
     }
     .listStyle(.insetGrouped)
-    .navigationTitle("Find people")
-    .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search by name or @handle")
-    .textInputAutocapitalization(.never)
-    .autocorrectionDisabled()
     .task(id: query) { await search() }
   }
 

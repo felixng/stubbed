@@ -335,9 +335,15 @@ Owner's call, before the app was created in App Store Connect (after the first u
 ### 2026-10-21: iOS share cards on a Share screen; photo-first feed posts
 Owner's ask, comparing with Hevy on a phone. The share cards move from the entry and trip screens to a **Share** sheet (sharing is a task of its own, so a sheet per the native guide), where the card spans the screen with 16pt margins, as Hevy's does. Entry and trip screens open it from a Share button in the bar and a "Share this show / trip" row with a thumbnail. A newly saved show opens it straight away, as Hevy does after a workout. **Feed posts are photo first**, as on Instagram and Hevy: the header, the photo at the card's full width (4:5), then the show, stars, note and the counts row; a show without a photo is a text post, with no grey thumbnail. Photos load through `RemoteImage`, which caches and retries, because `AsyncImage` in a scrolling feed gave up when a scroll cancelled the download and left an empty box.
 
-
 ### 2026-10-21: Public design system page at /design-system
 Owner's ask: a page to share the design system with other AI tools. `/design-system` shows the tokens (light and dark side by side), type styles, spacing, radius, shadows, icons and the real web components in both appearances; "Copy for AI tools" copies it as markdown, and `/design-system.md` serves the same markdown for tools that fetch a link. Both are built from one module, `lib/design-system.ts`, and a test fails if its colours drift from `globals.css`. The page is always light, like every other page, and is public but `noindex`, and isn't in the sitemap or linked from the site.
 
 ### 2026-10-21: Light by default is a design system rule
 Owner's call, after `/design-system` showed dark on a dark-mode device. Light is the default everywhere: every web page sets `data-theme="light"` on its root and iOS sets `.preferredColorScheme(.light)`. Replaces the "follows the system appearance" principle in `docs/DESIGN.md` and on the design system page. Dark tokens stay defined and working, and the page still shows them, for when dark mode comes back.
+
+### 2026-10-21: iOS people search lives in Home's search field
+Owner's ask: the "Follow people you go to the theatre with" banner took too much room. Home now has a search field under its title (`.searchable`, always shown), like Spotlight: while it's in use, matching people with Follow replace the feed; cancel and the feed is back. The banner, the person-plus toolbar button and the separate Find people screen are gone. Matches the web, where people search moved into the header (2026-10-18).
+
+### 2026-10-22: The design system page covers iOS
+The `/design-system` page (and its markdown) gains a full iOS section: the native rules, how each colour token is expressed in SwiftUI (system colours for backgrounds and text, `Palette` for the coral ones), the SwiftUI components with their files, and screenshots of the app's main screens from the simulator. The components table's SwiftUI column now names the real types (system button styles, `RatingStars`, `Poster`, `EntryRow`, `PostCard`, `Wordmark`) instead of planned `FL…` ones that were never built, and the iOS tab icons are the real ones. A test checks every token is mapped and every screenshot file exists.
+

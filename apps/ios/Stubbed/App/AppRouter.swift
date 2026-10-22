@@ -18,7 +18,6 @@ final class AppRouter {
     case trip(UUID, addFailed: Bool = false)
     case settings
     case profile(handle: String)
-    case people
     /// Someone's public show (yours too, as others see it); `comments`
     /// scrolls to the thread.
     case publicEntry(UUID, comments: Bool = false)
