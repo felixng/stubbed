@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
+
+import { Button } from "@/components/ui/Button";
 
 import { track } from "@/lib/analytics";
 import { CARD_DESIGNS, renderCard, type CardData } from "@/lib/share-card";
@@ -24,21 +25,20 @@ export type ShareSubject =
   | { kind: "trip"; data: TripCardData; photoUrls: (string | null)[] };
 
 // Hevy-style share screen: swipe between card designs, optionally drop the
-// background (entry cards), then send the card in view to an Instagram story, the share
-// sheet or the camera roll. Every card is drawn on the device, with and
+// background (entry cards), then send the card in view to an Instagram story
+// (the one primary action) or, under More, the share sheet, the camera roll,
+// the clipboard or the public link. Every card is drawn on the device, with and
 // without its background, before any button is tapped, so the share sheet
 // opens straight from the tap (iOS needs that). `publicHref` is the public
-// page (/e/[id] or /t/[id]) when there is one, for the Link button; null when
+// page (/e/[id] or /t/[id]) when there is one, for Copy link; null when
 // the entry or trip is private.
 export function ShareSheet({
   subject,
   slug,
-  editHref,
   publicHref = null,
 }: {
   subject: ShareSubject;
   slug: string;
-  editHref?: string;
   publicHref?: string | null;
 }) {
   const designs = subject.kind === "entry" ? CARD_DESIGNS : TRIP_CARD_DESIGNS;
@@ -47,7 +47,10 @@ export function ShareSheet({
   const [active, setActive] = useState(0);
   const [transparent, setTransparent] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [moreOpen, setMoreOpen] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
+  const moreButton = useRef<HTMLButtonElement>(null);
+  const moreId = useId();
 
   useEffect(() => {
     let cancelled = false;
@@ -109,6 +112,19 @@ export function ShareSheet({
       ? `${subject.data.venue ? `${subject.data.title} at ${subject.data.venue}` : subject.data.title}. Tracked on Stubbed ${INSTAGRAM}`
       : `${subject.data.name}: ${plural(subject.data.shows.length, "show")}${subject.data.place ? ` in ${subject.data.place}` : ""}. Tracked on Stubbed ${INSTAGRAM}`;
   const title = subject.kind === "entry" ? subject.data.title : subject.data.name;
+
+  function closeMore() {
+    setMoreOpen(false);
+    moreButton.current?.focus();
+  }
+
+  // An action from the More list closes the list first, so the page is back
+  // to the card and Stories when the share sheet or the notice appears, and
+  // a return to the page doesn't find the list still open.
+  function run(action: () => void) {
+    closeMore();
+    action();
+  }
 
   function goTo(i: number) {
     const el = scroller.current?.children[i] as HTMLElement | undefined;
@@ -240,72 +256,89 @@ export function ShareSheet({
         ))}
       </div>
 
-      <p className="text-center text-callout text-label">
-        Share your {subject.kind === "entry" ? "show" : "trip"} · Tag <span className="font-semibold">{INSTAGRAM}</span>
-      </p>
+      <Button onClick={() => share(false)} disabled={!storyCard} className="w-full">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8">
+          <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
+          <circle cx="12" cy="12" r="4" />
+          <circle cx="17.3" cy="6.7" r="0.9" fill="currentColor" stroke="none" />
+        </svg>
+        Share to Stories
+      </Button>
 
-      {/* Scrolls sideways on narrow phones, like Hevy's row. */}
-      <div className="-mx-4 flex items-start gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="flex justify-center gap-3">
         {subject.kind === "entry" && (
-          <>
-            <Action
-              label="Background"
-              onClick={() => setTransparent((t) => !t)}
-              disabled={!cards}
-              pressed={!transparent}
-            >
-              <span
-                className={`flex size-14 items-center justify-center rounded-pill text-white ${transparent ? "bg-[repeating-conic-gradient(#6b6b70_0%_25%,#48484c_0%_50%)] bg-[length:14px_14px]" : "bg-label"}`}
-              >
-                <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
-                  <path d="M5 13 13 5M5 19 19 5M11 19l8-8" />
-                </svg>
-              </span>
-            </Action>
-            <span aria-hidden="true" className="mt-1 h-12 w-px shrink-0 bg-separator" />
-          </>
+          <button
+            type="button"
+            onClick={() => setTransparent((t) => !t)}
+            disabled={!cards}
+            aria-pressed={transparent}
+            className={`${PILL} ${transparent ? "bg-label text-background" : "bg-fill text-label"}`}
+          >
+            <span
+              aria-hidden="true"
+              className="size-4 rounded-pill border border-outline bg-[repeating-conic-gradient(#ffffff_0%_25%,#c7c7cc_0%_50%)] bg-[length:8px_8px]"
+            />
+            Transparent
+          </button>
         )}
-        <Action label="Stories" onClick={() => share(false)} disabled={!card}>
-          <span className="flex size-14 items-center justify-center rounded-pill bg-[radial-gradient(circle_at_30%_107%,#fdf497_0%,#fdf497_5%,#fd5949_45%,#d6249f_60%,#285aeb_90%)] text-white">
-            <svg viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8">
-              <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
-              <circle cx="12" cy="12" r="4" />
-              <circle cx="17.3" cy="6.7" r="0.9" fill="currentColor" stroke="none" />
-            </svg>
-          </span>
-        </Action>
-        <Action label="More" onClick={() => share(true)} disabled={!card}>
-          <Circle>
+        <button
+          ref={moreButton}
+          type="button"
+          onClick={() => setMoreOpen((o) => !o)}
+          aria-expanded={moreOpen}
+          aria-controls={moreId}
+          className={`${PILL} bg-fill text-label`}
+        >
+          More
+          <svg
+            viewBox="0 0 24 24"
+            width="16"
+            height="16"
+            aria-hidden="true"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`transition-transform motion-reduce:transition-none ${moreOpen ? "rotate-180" : ""}`}
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </button>
+      </div>
+
+      {/* The other ways to send the card, one tap away so Stories stays the
+          one obvious action. */}
+      {moreOpen && (
+        <ul
+          id={moreId}
+          aria-label="More ways to share"
+          onKeyDown={(e) => {
+            if (e.key === "Escape") closeMore();
+          }}
+          className="flex flex-col rounded-md border border-separator bg-surface shadow-sm"
+        >
+          <MoreItem label="Share…" onClick={() => run(() => share(true))} disabled={!card}>
             <path d="M12 15V3.5M7.5 8 12 3.5 16.5 8M6 11.5H5v9h14v-9h-1" />
-          </Circle>
-        </Action>
-        <Action label="Download" onClick={download} disabled={!card}>
-          <Circle>
+          </MoreItem>
+          <MoreItem label="Download image" onClick={() => run(download)} disabled={!card}>
             <path d="M12 3.5V15M7.5 10.5 12 15l4.5-4.5M5 19.5h14" />
-          </Circle>
-        </Action>
-        <Action label="Copy text" onClick={copyText} disabled={false}>
-          <Circle>
+          </MoreItem>
+          <MoreItem label="Copy text" onClick={() => run(copyText)} disabled={false}>
             <rect x="8.5" y="8.5" width="11" height="11" rx="2.5" />
             <path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5" />
-          </Circle>
-        </Action>
-        {publicHref && (
-          <Action label="Link" onClick={copyLink} disabled={false}>
-            <Circle>
+          </MoreItem>
+          {publicHref && (
+            <MoreItem label="Copy link" onClick={() => run(copyLink)} disabled={false}>
               <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />
-            </Circle>
-          </Action>
-        )}
-        {editHref && (
-          <Link href={editHref} className={ACTION}>
-            <Circle>
-              <path d="M14.5 5.5l4 4M4.5 19.5l1-4.5L16 4.5a1.4 1.4 0 0 1 2 0l1.5 1.5a1.4 1.4 0 0 1 0 2L9 18.5z" />
-            </Circle>
-            Edit
-          </Link>
-        )}
-      </div>
+            </MoreItem>
+          )}
+        </ul>
+      )}
+
+      <p className="text-center text-footnote text-label-secondary">
+        Tag <span className="font-semibold text-label">{INSTAGRAM}</span> in your story.
+      </p>
 
       <p role="status" className="min-h-5 text-center text-footnote text-label-secondary">
         {notice}
@@ -316,43 +349,46 @@ export function ShareSheet({
 
 const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? "" : "s"}`;
 
-const ACTION =
-  "flex w-[72px] shrink-0 cursor-pointer flex-col items-center gap-1.5 rounded-md text-footnote text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-wait disabled:opacity-40";
+// Transparent and More: quiet capsules under the one coral button.
+const PILL =
+  "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-pill px-4 text-subheadline font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-wait disabled:opacity-40";
 
-function Action({
+function MoreItem({
   label,
   onClick,
   disabled,
-  pressed,
   children,
 }: {
   label: string;
   onClick: () => void;
   disabled: boolean;
-  pressed?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-pressed={pressed}
-      className={ACTION}
-    >
-      {children}
-      {label}
-    </button>
-  );
-}
-
-function Circle({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="flex size-14 items-center justify-center rounded-pill bg-fill text-label">
-      <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        {children}
-      </svg>
-    </span>
+    <li className="border-separator not-last:border-b">
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={disabled}
+        className="flex min-h-11 w-full cursor-pointer items-center gap-3 px-4 text-left text-body text-label hover:bg-fill focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus disabled:cursor-wait disabled:opacity-40"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          width="22"
+          height="22"
+          aria-hidden="true"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="shrink-0 text-label-secondary"
+        >
+          {children}
+        </svg>
+        {label}
+      </button>
+    </li>
   );
 }
 
