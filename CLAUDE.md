@@ -12,6 +12,8 @@ Stubbed's context is split in two, on purpose:
 
 **The rule:** if it's about *what* we build and *why*, it belongs in Drive. If it's about *how* it's built, it belongs here. Don't copy product context into the repo, or code detail into Drive.
 
+The one exception is [`PRODUCT.md`](PRODUCT.md): a lean distillation of the brief for design work (the Impeccable skill reads it). It defers to the brief; when the brief's users, positioning, principles or constraints change, update PRODUCT.md to match.
+
 - **Read the brief before planning or scoping work.** With the Google Drive connector, use `read_file_content` (brief: `1NdEgeTRMkKQ5TL87Urwpe7WG9fcrejPsZKsmrO2Enak`; folder: `1uYsjPogzITCDc_DNE5_gQtJrdEocfxRI`). Without it, ask the owner to paste the relevant section.
 - **When code changes what the product does** (a feature ships, a product decision is made, the focus moves), update the brief too: edit it when the session has the Google Docs connector, otherwise tell the owner which section to change.
 - Where the brief marks something **[Decision needed]**, ask the owner rather than assuming.

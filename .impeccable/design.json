@@ -1,0 +1,486 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-22T19:29:16+00:00",
+  "title": "Design System: Stubbed",
+  "extensions": {
+    "colorMeta": {
+      "background": {
+        "role": "neutral",
+        "displayName": "Lobby Paper",
+        "canonical": "#fff9f6",
+        "dark": "#000000",
+        "oklch": "oklch(98.6% 0.008 48.7)",
+        "tonalRamp": [
+          "oklch(15% 0.008 48.7)",
+          "oklch(26% 0.008 48.7)",
+          "oklch(38% 0.008 48.7)",
+          "oklch(50% 0.008 48.7)",
+          "oklch(62% 0.008 48.7)",
+          "oklch(74% 0.008 48.7)",
+          "oklch(85% 0.008 48.7)",
+          "oklch(95% 0.008 48.7)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Programme White",
+        "canonical": "#ffffff",
+        "dark": "#1c1c1e",
+        "oklch": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "oklch(15% 0.000 89.9)",
+          "oklch(26% 0.000 89.9)",
+          "oklch(38% 0.000 89.9)",
+          "oklch(50% 0.000 89.9)",
+          "oklch(62% 0.000 89.9)",
+          "oklch(74% 0.000 89.9)",
+          "oklch(85% 0.000 89.9)",
+          "oklch(95% 0.000 89.9)"
+        ]
+      },
+      "fill": {
+        "role": "neutral",
+        "displayName": "Blush Well",
+        "canonical": "#ffebe3",
+        "dark": "#2c2c2e",
+        "oklch": "oklch(95.4% 0.024 43.2)",
+        "tonalRamp": [
+          "oklch(15% 0.024 43.2)",
+          "oklch(26% 0.024 43.2)",
+          "oklch(38% 0.024 43.2)",
+          "oklch(50% 0.024 43.2)",
+          "oklch(62% 0.024 43.2)",
+          "oklch(74% 0.024 43.2)",
+          "oklch(85% 0.024 43.2)",
+          "oklch(95% 0.024 43.2)"
+        ]
+      },
+      "label": {
+        "role": "neutral",
+        "displayName": "Velvet Ink",
+        "canonical": "#1f1210",
+        "dark": "#ffffff",
+        "oklch": "oklch(19.9% 0.022 28.9)",
+        "tonalRamp": [
+          "oklch(15% 0.022 28.9)",
+          "oklch(26% 0.022 28.9)",
+          "oklch(38% 0.022 28.9)",
+          "oklch(50% 0.022 28.9)",
+          "oklch(62% 0.022 28.9)",
+          "oklch(74% 0.022 28.9)",
+          "oklch(85% 0.022 28.9)",
+          "oklch(95% 0.022 28.9)"
+        ]
+      },
+      "label-secondary": {
+        "role": "neutral",
+        "displayName": "Faded Velvet",
+        "canonical": "#5e4039",
+        "dark": "#aeaeb2",
+        "oklch": "oklch(40.3% 0.044 33.6)",
+        "tonalRamp": [
+          "oklch(15% 0.044 33.6)",
+          "oklch(26% 0.044 33.6)",
+          "oklch(38% 0.044 33.6)",
+          "oklch(50% 0.044 33.6)",
+          "oklch(62% 0.044 33.6)",
+          "oklch(74% 0.044 33.6)",
+          "oklch(85% 0.044 33.6)",
+          "oklch(95% 0.044 33.6)"
+        ]
+      },
+      "separator": {
+        "role": "neutral",
+        "displayName": "Rose Hairline",
+        "canonical": "#f9e0d6",
+        "dark": "#38383a",
+        "oklch": "oklch(92.4% 0.031 43.1)",
+        "tonalRamp": [
+          "oklch(15% 0.031 43.1)",
+          "oklch(26% 0.031 43.1)",
+          "oklch(38% 0.031 43.1)",
+          "oklch(50% 0.031 43.1)",
+          "oklch(62% 0.031 43.1)",
+          "oklch(74% 0.031 43.1)",
+          "oklch(85% 0.031 43.1)",
+          "oklch(95% 0.031 43.1)"
+        ]
+      },
+      "outline": {
+        "role": "neutral",
+        "displayName": "Clay Outline",
+        "canonical": "#98695b",
+        "dark": "#7c7c82",
+        "oklch": "oklch(56.6% 0.065 37.3)",
+        "tonalRamp": [
+          "oklch(15% 0.065 37.3)",
+          "oklch(26% 0.065 37.3)",
+          "oklch(38% 0.065 37.3)",
+          "oklch(50% 0.065 37.3)",
+          "oklch(62% 0.065 37.3)",
+          "oklch(74% 0.065 37.3)",
+          "oklch(85% 0.065 37.3)",
+          "oklch(95% 0.065 37.3)"
+        ]
+      },
+      "tint": {
+        "role": "primary",
+        "displayName": "Footlight Coral",
+        "canonical": "#ff7a5c",
+        "dark": "#ff6b4a",
+        "oklch": "oklch(72.9% 0.169 34.1)",
+        "tonalRamp": [
+          "oklch(15% 0.160 34.1)",
+          "oklch(26% 0.160 34.1)",
+          "oklch(38% 0.160 34.1)",
+          "oklch(50% 0.160 34.1)",
+          "oklch(62% 0.160 34.1)",
+          "oklch(74% 0.160 34.1)",
+          "oklch(85% 0.160 34.1)",
+          "oklch(95% 0.160 34.1)"
+        ]
+      },
+      "tint-pressed": {
+        "role": "primary",
+        "displayName": "Footlight Coral, pressed",
+        "canonical": "#f2603f",
+        "dark": "#ff8a70",
+        "oklch": "oklch(67.2% 0.187 34.2)",
+        "tonalRamp": [
+          "oklch(15% 0.160 34.2)",
+          "oklch(26% 0.160 34.2)",
+          "oklch(38% 0.160 34.2)",
+          "oklch(50% 0.160 34.2)",
+          "oklch(62% 0.160 34.2)",
+          "oklch(74% 0.160 34.2)",
+          "oklch(85% 0.160 34.2)",
+          "oklch(95% 0.160 34.2)"
+        ]
+      },
+      "tint-text": {
+        "role": "primary",
+        "displayName": "Deep Coral Ink",
+        "canonical": "#b33a19",
+        "dark": "#ff6b4a",
+        "oklch": "oklch(52.1% 0.163 35.4)",
+        "tonalRamp": [
+          "oklch(15% 0.160 35.4)",
+          "oklch(26% 0.160 35.4)",
+          "oklch(38% 0.160 35.4)",
+          "oklch(50% 0.160 35.4)",
+          "oklch(62% 0.160 35.4)",
+          "oklch(74% 0.160 35.4)",
+          "oklch(85% 0.160 35.4)",
+          "oklch(95% 0.160 35.4)"
+        ]
+      },
+      "tint-fill": {
+        "role": "primary",
+        "displayName": "Coral Wash",
+        "canonical": "#ffe0d5",
+        "dark": "#3d1a11",
+        "oklch": "oklch(92.9% 0.038 40.5)",
+        "tonalRamp": [
+          "oklch(15% 0.038 40.5)",
+          "oklch(26% 0.038 40.5)",
+          "oklch(38% 0.038 40.5)",
+          "oklch(50% 0.038 40.5)",
+          "oklch(62% 0.038 40.5)",
+          "oklch(74% 0.038 40.5)",
+          "oklch(85% 0.038 40.5)",
+          "oklch(95% 0.038 40.5)"
+        ]
+      },
+      "on-tint": {
+        "role": "primary",
+        "displayName": "Ink on Coral",
+        "canonical": "#1f1210",
+        "dark": "#000000",
+        "oklch": "oklch(19.9% 0.022 28.9)",
+        "tonalRamp": [
+          "oklch(15% 0.022 28.9)",
+          "oklch(26% 0.022 28.9)",
+          "oklch(38% 0.022 28.9)",
+          "oklch(50% 0.022 28.9)",
+          "oklch(62% 0.022 28.9)",
+          "oklch(74% 0.022 28.9)",
+          "oklch(85% 0.022 28.9)",
+          "oklch(95% 0.022 28.9)"
+        ]
+      },
+      "star": {
+        "role": "secondary",
+        "displayName": "Applause Gold",
+        "canonical": "#b96f00",
+        "dark": "#ffd60a",
+        "oklch": "oklch(60.9% 0.136 65.5)",
+        "tonalRamp": [
+          "oklch(15% 0.136 65.5)",
+          "oklch(26% 0.136 65.5)",
+          "oklch(38% 0.136 65.5)",
+          "oklch(50% 0.136 65.5)",
+          "oklch(62% 0.136 65.5)",
+          "oklch(74% 0.136 65.5)",
+          "oklch(85% 0.136 65.5)",
+          "oklch(95% 0.136 65.5)"
+        ]
+      },
+      "destructive": {
+        "role": "neutral",
+        "displayName": "Curtain Red",
+        "canonical": "#9e1b2c",
+        "dark": "#ff9f0a",
+        "oklch": "oklch(45.6% 0.165 20.8)",
+        "tonalRamp": [
+          "oklch(15% 0.160 20.8)",
+          "oklch(26% 0.160 20.8)",
+          "oklch(38% 0.160 20.8)",
+          "oklch(50% 0.160 20.8)",
+          "oklch(62% 0.160 20.8)",
+          "oklch(74% 0.160 20.8)",
+          "oklch(85% 0.160 20.8)",
+          "oklch(95% 0.160 20.8)"
+        ]
+      },
+      "focus": {
+        "role": "neutral",
+        "displayName": "Focus Ink",
+        "canonical": "#1f1210",
+        "dark": "#ffffff",
+        "oklch": "oklch(19.9% 0.022 28.9)",
+        "tonalRamp": [
+          "oklch(15% 0.022 28.9)",
+          "oklch(26% 0.022 28.9)",
+          "oklch(38% 0.022 28.9)",
+          "oklch(50% 0.022 28.9)",
+          "oklch(62% 0.022 28.9)",
+          "oklch(74% 0.022 28.9)",
+          "oklch(85% 0.022 28.9)",
+          "oklch(95% 0.022 28.9)"
+        ]
+      },
+      "glow": {
+        "role": "neutral",
+        "displayName": "Footlight Glow",
+        "canonical": "#ffd9cc",
+        "dark": "#2a140e",
+        "oklch": "oklch(91.4% 0.046 39.8)",
+        "tonalRamp": [
+          "oklch(15% 0.046 39.8)",
+          "oklch(26% 0.046 39.8)",
+          "oklch(38% 0.046 39.8)",
+          "oklch(50% 0.046 39.8)",
+          "oklch(62% 0.046 39.8)",
+          "oklch(74% 0.046 39.8)",
+          "oklch(85% 0.046 39.8)",
+          "oklch(95% 0.046 39.8)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "large-title": {
+        "displayName": "Large Title",
+        "purpose": "iOS top-level screens only."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Web app page headings (h1)."
+      },
+      "title-2": {
+        "displayName": "Title 2",
+        "purpose": "Section headings."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Row titles and button labels."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Default running text and inputs."
+      },
+      "callout": {
+        "displayName": "Callout",
+        "purpose": "Supporting lines."
+      },
+      "subheadline": {
+        "displayName": "Subheadline",
+        "purpose": "Venue and date under a title."
+      },
+      "footnote": {
+        "displayName": "Footnote",
+        "purpose": "Metadata and chips; the floor for body text."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "Smallest metadata."
+      },
+      "wordmark": {
+        "displayName": "Wordmark",
+        "purpose": "Lowercase stubbed: 20pt in app headers, 26–32px web header, 16 minimum."
+      }
+    },
+    "shadows": [
+      {
+        "name": "shadow-sm",
+        "value": "0 1px 2px rgba(120,50,30,0.08), 0 10px 22px -12px rgba(120,50,30,0.28)",
+        "purpose": "Cards, grouped lists, inputs, neutral button (web, light only)."
+      },
+      {
+        "name": "shadow-lg",
+        "value": "0 2px 4px rgba(120,50,30,0.12), 0 36px 60px -22px rgba(120,50,30,0.5)",
+        "purpose": "Device mockups and sheets."
+      },
+      {
+        "name": "shadow-btn",
+        "value": "0 1px 0 rgba(255,255,255,0.5) inset, 0 6px 12px -6px rgba(120,50,30,0.55)",
+        "purpose": "The primary button only."
+      }
+    ],
+    "motion": [
+      {
+        "name": "transition-colors",
+        "value": "150ms cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Button hover and press (Tailwind transition-colors default)."
+      },
+      {
+        "name": "card-press-ios",
+        "value": "spring, scale 0.98",
+        "purpose": "iOS CardPressStyle on feed posts."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one main action on a screen.",
+      "html": "<button class=\"ds-btn-primary\">Log a show</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 0 24px; border-radius: 999px; font-family: -apple-system, \"SF Pro Text\", BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, sans-serif; font-size: 17px; line-height: 22px; letter-spacing: -0.024em; font-weight: 600; cursor: pointer; transition: background-color 150ms cubic-bezier(0.4,0,0.2,1); border: none; background: var(--tint, #ff7a5c); color: var(--on-tint, #1f1210); box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset, 0 6px 12px -6px rgba(120,50,30,0.55); } .ds-btn-primary:hover { background: var(--tint-pressed, #f2603f); } .ds-btn-primary:focus-visible { outline: 2px solid var(--focus, #1f1210); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "An alternative action beside the primary.",
+      "html": "<button class=\"ds-btn-secondary\">Add to trip</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 0 24px; border-radius: 999px; font-family: -apple-system, \"SF Pro Text\", BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, sans-serif; font-size: 17px; line-height: 22px; letter-spacing: -0.024em; font-weight: 600; cursor: pointer; transition: background-color 150ms cubic-bezier(0.4,0,0.2,1); border: none; background: var(--tint-fill, #ffe0d5); color: var(--tint-text, #b33a19); } .ds-btn-secondary:hover { background: var(--fill, #ffebe3); } .ds-btn-secondary:focus-visible { outline: 2px solid var(--focus, #1f1210); outline-offset: 2px; } .ds-btn-secondary:disabled { opacity: 0.4; cursor: not-allowed; }"
+    },
+    {
+      "name": "Ghost Button",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Low-emphasis action.",
+      "html": "<button class=\"ds-btn-ghost\">Skip</button>",
+      "css": ".ds-btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 0 24px; border-radius: 999px; font-family: -apple-system, \"SF Pro Text\", BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, sans-serif; font-size: 17px; line-height: 22px; letter-spacing: -0.024em; font-weight: 600; cursor: pointer; transition: background-color 150ms cubic-bezier(0.4,0,0.2,1); border: none; background: transparent; color: var(--tint-text, #b33a19); } .ds-btn-ghost:hover { background: var(--tint-fill, #ffe0d5); } .ds-btn-ghost:focus-visible { outline: 2px solid var(--focus, #1f1210); outline-offset: 2px; } .ds-btn-ghost:disabled { opacity: 0.4; cursor: not-allowed; }"
+    },
+    {
+      "name": "Neutral Button",
+      "kind": "button",
+      "refersTo": "button-neutral",
+      "description": "Third-party sign-in (Google, Apple).",
+      "html": "<button class=\"ds-btn-neutral\">Continue with Google</button>",
+      "css": ".ds-btn-neutral { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 50px; padding: 0 24px; border-radius: 999px; font-family: -apple-system, \"SF Pro Text\", BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, sans-serif; font-size: 17px; line-height: 22px; letter-spacing: -0.024em; font-weight: 600; cursor: pointer; transition: background-color 150ms cubic-bezier(0.4,0,0.2,1); border: none; background: var(--surface, #ffffff); color: var(--label, #1f1210); border: 1px solid var(--separator, #f9e0d6); box-shadow: 0 1px 2px rgba(120,50,30,0.08), 0 10px 22px -12px rgba(120,50,30,0.28); } .ds-btn-neutral:hover { background: var(--fill, #ffebe3); } .ds-btn-neutral:focus-visible { outline: 2px solid var(--focus, #1f1210); outline-offset: 2px; } .ds-btn-neutral:disabled { opacity: 0.4; cursor: not-allowed; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Single-line input, 50px tall.",
+      "html": "<input class=\"ds-input\" placeholder=\"Search shows\" />",
+      "css": ".ds-input { display: block; width: 100%; min-height: 50px; padding: 0 16px; border-radius: 12px; border: 1px solid var(--separator, #f9e0d6); background: var(--surface, #ffffff); color: var(--label, #1f1210); font-family: -apple-system, \"SF Pro Text\", BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, sans-serif; font-size: 17px; line-height: 22px; letter-spacing: -0.024em; box-shadow: 0 1px 2px rgba(120,50,30,0.08), 0 10px 22px -12px rgba(120,50,30,0.28); } .ds-input::placeholder { color: var(--label-secondary, #5e4039); } .ds-input:focus-visible { outline: 2px solid var(--focus, #1f1210); outline-offset: 2px; }"
+    },
+    {
+      "name": "Chips",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Tags and filters; selected inverts, never coral.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip\" aria-pressed=\"true\">Musical</button><button class=\"ds-chip\" aria-pressed=\"false\">Play</button><button class=\"ds-chip\" aria-pressed=\"false\">Opera</button></div>",
+      "css": ".ds-chips { display: flex; gap: 8px; } .ds-chip { display: inline-flex; align-items: center; min-height: 28px; padding: 0 12px; border-radius: 999px; border: none; background: var(--fill, #ffebe3); color: var(--label, #1f1210); font-family: -apple-system, \"SF Pro Text\", BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, sans-serif; font-size: 13px; line-height: 18px; font-weight: 500; cursor: pointer; } .ds-chip[aria-pressed=\"true\"] { background: var(--label, #1f1210); color: var(--background, #fff9f6); } .ds-chip:focus-visible { outline: 2px solid var(--focus, #1f1210); outline-offset: 2px; }"
+    },
+    {
+      "name": "Show Row",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "A logged show in a grouped list: poster, title, venue and date, stars.",
+      "html": "<div class=\"ds-list\"><div class=\"ds-row\"><div class=\"ds-poster\">HA</div><div class=\"ds-row-text\"><p class=\"ds-row-title\">Hadestown</p><p class=\"ds-row-sub\">Lyric Theatre · 12 Oct 2026</p><div class=\"ds-stars\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\"><path d=\"M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z\"/></svg><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\"><path d=\"M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z\"/></svg><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\"><path d=\"M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z\"/></svg><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\"><path d=\"M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z\"/></svg><span class=\"ds-star-empty\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\"><path d=\"M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.3 1.3-6.6L2.5 9.4l6.6-.8z\"/></svg></span></div></div></div></div>",
+      "css": ".ds-list { background: var(--surface, #ffffff); border: 1px solid var(--separator, #f9e0d6); border-radius: 12px; padding: 0 16px; box-shadow: 0 1px 2px rgba(120,50,30,0.08), 0 10px 22px -12px rgba(120,50,30,0.28); } .ds-row { display: flex; align-items: center; gap: 16px; padding: 8px 0; } .ds-poster { width: 56px; aspect-ratio: 2/3; border-radius: 8px; background: var(--fill, #ffebe3); color: var(--outline, #98695b); display: grid; place-items: center; font-family: -apple-system, \"SF Pro Display\", BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, sans-serif; font-weight: 700; font-size: 17px; flex: none; } .ds-row-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; } .ds-row-title { margin: 0; font-family: -apple-system, \"SF Pro Text\", BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, sans-serif; font-size: 17px; line-height: 22px; font-weight: 600; color: var(--label, #1f1210); } .ds-row-sub { margin: 0; font-family: -apple-system, \"SF Pro Text\", BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, sans-serif; font-size: 15px; line-height: 20px; color: var(--label-secondary, #5e4039); } .ds-stars { display: flex; gap: 2px; fill: var(--star, #b96f00); } .ds-star-empty svg { fill: none; stroke: var(--outline, #98695b); stroke-width: 1.5; }"
+    },
+    {
+      "name": "Tab Bar",
+      "kind": "nav",
+      "refersTo": "tab-bar",
+      "description": "Phone-width web navigation; a sidebar on desktop.",
+      "html": "<nav class=\"ds-tabs\"><button class=\"ds-tab\" aria-current=\"page\"><svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 10.5L12 3l9 7.5V21h-6v-6H9v6H3z\"/></svg>Home</button><button class=\"ds-tab\"><svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 8v8M8 12h8\"/></svg>Log</button><button class=\"ds-tab\"><svg viewBox=\"0 0 24 24\" width=\"24\" height=\"24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"8\" r=\"4\"/><path d=\"M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6\"/></svg>Profile</button></nav>",
+      "css": ".ds-tabs { display: flex; border-top: 1px solid var(--separator, #f9e0d6); background: var(--surface, #ffffff); padding: 0 8px; } .ds-tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: 49px; padding: 6px 0 4px; border: none; background: none; font-family: -apple-system, \"SF Pro Text\", BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, sans-serif; font-size: 10px; line-height: 13px; font-weight: 500; color: var(--label-secondary, #5e4039); cursor: pointer; } .ds-tab[aria-current=\"page\"] { color: var(--tint-text, #b33a19); } .ds-tab:focus-visible { outline: 2px solid var(--focus, #1f1210); outline-offset: 2px; }"
+    },
+    {
+      "name": "Wordmark",
+      "kind": "custom",
+      "refersTo": "wordmark",
+      "description": "Lowercase stubbed in label, never coral.",
+      "html": "<span class=\"ds-wordmark\" aria-label=\"Stubbed\">stubbed</span>",
+      "css": ".ds-wordmark { font-family: -apple-system, \"SF Pro Display\", BlinkMacSystemFont, system-ui, \"Segoe UI\", Roboto, sans-serif; font-weight: 800; font-size: 28px; line-height: 1; letter-spacing: -0.045em; color: var(--label, #1f1210); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "Front of House",
+    "overview": "Stubbed should feel like a good theatre lobby: warm, welcoming and orderly, so you know where to go without being told twice. The structure is calm native iOS (grouped surfaces, system type, standard navigation), and one coral cue lights the next thing to do. Nothing performs for attention; the shows, posters and photos are the show.\n\nDensity is comfortable, never cramped: 17px body text, 44px minimum targets, rows that breathe at 16px padding. Warmth comes from the paper-tinted background, the coral-tinged neutrals and, on the web, shadows cast in a warm brown rather than grey. The system is native first. The iOS app uses Apple's controls and semantic colours with the coral tint; the web app mirrors the same tokens in Tailwind and keeps the same calm.\n\nLight by default: every page and screen is light, whatever the device setting (owner's call). On the web each page sets `data-theme=\"light\"` on its root, which switches the whole document to the light tokens (`globals.css`); a new page must do the same. iOS sets `.preferredColorScheme(.light)`. The dark tokens stay defined and working for when dark mode comes back.",
+    "keyCharacteristics": [
+      "One coral accent on warm paper, used for the next action and nothing else.",
+      "System type only (SF Pro on Apple devices), at the iOS text-style sizes.",
+      "Grouped surfaces with hairline separators; capsule buttons and chips.",
+      "Native first: iOS uses system controls; the web mirrors the tokens, not iOS chrome.",
+      "Terse copy: sentence case, no emoji, no exclamation marks; button labels are verbs; numbers are digits and tabular."
+    ],
+    "rules": [
+      {
+        "name": "The One Tint Rule",
+        "body": "`tint` is the only accent, and it fills the one primary action per screen. Where the brand colour is read as text, use `tint-text`. Nothing else is coral.",
+        "section": "colors"
+      },
+      {
+        "name": "The Gold Is for Stars Rule",
+        "body": "`star` appears only on ratings and award marks, never as a second accent.",
+        "section": "colors"
+      },
+      {
+        "name": "The System Type Rule",
+        "body": "No web fonts and no hand-picked point sizes: every size is one of the text styles above, or a documented marketing size.",
+        "section": "typography"
+      },
+      {
+        "name": "The Warm Shadow Rule",
+        "body": "Shadows are ambient, never structural, and never grey: every web shadow is cast in the coral-brown `rgb(120, 50, 30)`, always with a hairline border beside it.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Native Depth Rule",
+        "body": "No drop shadows on iOS. Grouping and system backgrounds carry the depth.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** set `data-theme=\"light\"` on the root of every new web page; iOS keeps `.preferredColorScheme(.light)`.",
+      "**Do** keep exactly one `primary` button per screen, and use `tint-text` wherever the brand colour is read as text.",
+      "**Do** pair every web shadow with a `separator` border, and cast shadows in the warm `rgb(120, 50, 30)`.",
+      "**Do** use the text styles and spacing steps above; make every tap target at least 44px.",
+      "**Do** show ratings as five stars, and use `@sillyelphaba` as the sample handle, never a real person's name.",
+      "**Do** use system controls on iOS (`.borderedProminent`, `List`, `Form`, SF Symbols), per `apps/ios/CLAUDE.md`."
+    ],
+    "donts": [
+      "**Don't** use `tint` as text, as a background for anything but the primary action, or for a selected chip.",
+      "**Don't** colour the wordmark coral, uppercase it, or set it below 16px.",
+      "**Don't** add web fonts, an icon package or grey shadows.",
+      "**Don't** put drop shadows on iOS, or port web layout patterns (floating action buttons, custom card styles) to the iOS app.",
+      "**Don't** set body text below Footnote (13px), or use `glow` behind text.",
+      "**Don't** write copy with emoji, exclamation marks or title case."
+    ]
+  }
+}
