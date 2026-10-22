@@ -15,6 +15,8 @@ The app no longer mirrors the web app's UI. Data, features and rules stay the sa
 7. **Lists are `List`s.** Screens that are lists (Profile, people, followers, comments, a profile or trip page) are `List(.insetGrouped)`: rows get system chevrons from `NavigationLink`, `.swipeActions` and `.contextMenu` for per-row actions, and bulk select is `List(selection:)` with edit mode and bottom-bar actions. Feed post cards (`PostCard`) are the only custom container; inside a `List` they push with buttons through the router. First loads show `PlaceholderRows`, never a centred spinner. Buttons are `.borderedProminent` (one per screen) or `.bordered`, never a custom style. See `docs/IOS_NATIVE_GUIDE.md` and its checklist.
 8. **System components first.** `ContentUnavailableView` for empty and error states, `ProgressView` for loading, `List`/`Form` where a screen is a list or settings, `.searchable`, `.refreshable`, `.confirmationDialog`, `ShareLink`/the share sheet, `PhotosPicker`.
 
+**The design system page** (`/design-system`, and `/design-system.md` for AI tools) has an iOS section: how each colour token maps to SwiftUI, the SwiftUI components and screenshots of the app. Its data is `apps/web/src/lib/design-system.ts` (`IOS_RULES`, `IOS_TOKENS`, `IOS_COMPONENTS`, `IOS_SCREENSHOTS`); keep it in step when a component or rule changes. The screenshots are JPEGs in `apps/web/public/design-system/ios/`, taken from `scripts/dev ui` runs (`build/ui/*.png`), cropped and converted with `sips -Z 1000 -s format jpeg -s formatOptions 78`.
+
 ## The dev loop (no Xcode UI needed)
 
 Run from `apps/ios`. Every command is headless, so it works from a remote session on the Mac.
