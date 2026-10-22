@@ -5,6 +5,8 @@ import SwiftUI
 /// shows then appear in your feed.
 struct PeopleResults: View {
   let query: String
+  /// Set when the results are in a sheet: opening a profile closes it.
+  var onOpen: ((Person) -> Void)?
 
   @Environment(AppSession.self) private var session
   @State private var results: [Person] = []
@@ -25,7 +27,7 @@ struct PeopleResults: View {
       } else {
         Section {
           ForEach(results) { person in
-            PersonRow(person: person) {
+            PersonRow(person: person, onOpen: onOpen) {
               if person.id != session.userId {
                 FollowButton(person: person, viewer: viewers[person.id] ?? Viewer(isOwner: false, status: .none))
               }
@@ -63,10 +65,20 @@ struct PeopleResults: View {
 /// Approve…) that takes its own taps.
 struct PersonRow<Trailing: View>: View {
   let person: Person
+  /// Opens the profile some other way (from a sheet) instead of pushing.
+  var onOpen: ((Person) -> Void)?
   @ViewBuilder var trailing: Trailing
 
   var body: some View {
-    NavigationLink(value: AppRouter.Route.profile(handle: person.handle)) {
+    if let onOpen {
+      Button { onOpen(person) } label: { label }
+        .foregroundStyle(.primary)
+    } else {
+      NavigationLink(value: AppRouter.Route.profile(handle: person.handle)) { label }
+    }
+  }
+
+  private var label: some View {
       HStack(spacing: Space.m) {
         Avatar(name: person.name, url: person.avatarURL, size: 40)
         VStack(alignment: .leading, spacing: 0) {
@@ -80,6 +92,5 @@ struct PersonRow<Trailing: View>: View {
         Spacer(minLength: 0)
         trailing
       }
-    }
   }
 }
