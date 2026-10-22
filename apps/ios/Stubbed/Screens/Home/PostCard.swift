@@ -25,6 +25,7 @@ struct PostCard: View {
   @State private var shown: Reactions?
   @State private var writing = false
   @State private var likeError: String?
+  @State private var showingComments = false
 
   private var route: AppRouter.Route { mine ? .entry(entry.id) : .publicEntry(entry.id) }
   private var date: String { Day.formatPost(entry.date) }
@@ -41,6 +42,9 @@ struct PostCard: View {
       }
     }
     .onChange(of: reactions) { _, _ in shown = nil }
+    .sheet(isPresented: $showingComments) {
+      CommentsSheet(entryId: entry.id, ownerId: owner.id, ownerHandle: owner.handle)
+    }
   }
 
   /// Photo first, as on Instagram and Hevy: the header, the photo across
@@ -181,7 +185,8 @@ struct PostCard: View {
       .accessibilityValue("\(state.likes) \(state.likes == 1 ? "like" : "likes")")
       .accessibilityAddTraits(state.liked ? .isSelected : [])
 
-      Button { router.open(.publicEntry(entry.id, comments: true)) } label: {
+      // The comments open as a drawer over the card, as on Instagram.
+      Button { showingComments = true } label: {
         metric(state.comments, systemImage: "bubble.left", tint: nil)
       }
       .buttonStyle(.plain)

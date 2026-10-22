@@ -145,8 +145,8 @@ export const IOS_RULES = [
   "**One custom container:** the feed post (`PostCard`), photo first like Instagram or Hevy: header, the photo at the card's full width (4:5), the show, stars and note, then counts and a trip tag on one row. The whole card is one tap target that scales to 98% when pressed.",
   "**Surfaces.** `Color(.secondarySystemGroupedBackground)` with 16pt continuous corners and a 1pt stroke at 6% of the label colour (`.groupedCard()`). No drop shadows anywhere.",
   "**Type and colour.** Dynamic Type text styles only; system semantic colours for text and backgrounds; coral only on interactive elements. Text on coral is `onTint` (dark), never white.",
-  "**Controls.** System button styles: one `.borderedProminent` per screen, otherwise `.bordered` or plain tinted text. Toggles, pickers, date pickers, `.searchable` (people search sits under Home's title, like Spotlight), `ShareLink`, `PhotosPicker`.",
-  "**Presentations.** Sheets for self-contained tasks, each with its own `NavigationStack` and Cancel / Save (or Done) in the bar: log a show, edit a trip, Share. Destructive steps confirm with a `.confirmationDialog`.",
+  "**Controls.** System button styles: one `.borderedProminent` per screen, otherwise `.bordered` or plain tinted text. Toggles, pickers, date pickers, `.searchable` (people search opens from Home's search button as a sheet, the field focused), `ShareLink`, `PhotosPicker`.",
+  "**Presentations.** Sheets for self-contained tasks, each with its own `NavigationStack` and Cancel / Save (or Done) in the bar: log a show, edit a trip, Share. Comments on a feed post open as a pull-up drawer (`.presentationDetents([.medium, .large])`), as on Instagram. Destructive steps confirm with a `.confirmationDialog`.",
   "**Loading.** Grey placeholder rows in the shape of the content (`.redacted`), never a spinner over the screen. Likes update at once and sync in the background.",
   "**Light only for now:** `.preferredColorScheme(.light)` at the root. Semantic colours keep dark mode a one-line change.",
 ];
@@ -178,7 +178,7 @@ export const IOS_COMPONENTS = [
   { name: "RatingStars / RatingInput", file: "Design/Components.swift, Screens/Log/RatingInput.swift", notes: "Five SF Symbol stars in half steps, scaled with Dynamic Type. The input drags or taps, with a haptic, and is an adjustable control for VoiceOver." },
   { name: "PersonRow / FollowButton", file: "Screens/People/", notes: "A person as a List row (avatar, @handle, name) with Follow (`.borderedProminent`), or Following / Requested (`.bordered`)." },
   { name: "ShareScreen / ShareCarousel / ShareRow", file: "Screens/Share/ShareCarousel.swift", notes: "The Share sheet: the card at full width with 16pt margins, swipe between designs, then Stories, More, Download, Copy text and Link. A row with a thumbnail opens it from a detail screen." },
-  { name: "CommentComposer", file: "Screens/People/PublicEntryView.swift", notes: "A growing field with an inline send arrow, pinned above the tab bar with `.safeAreaInset(edge: .bottom)`." },
+  { name: "CommentsSheet / CommentComposer", file: "Screens/People/PublicEntryView.swift", notes: "Comments as a pull-up drawer from a feed post: half height, drag to full, swipe down to close. The composer is a growing field with an inline send arrow, pinned to the bottom with `.safeAreaInset(edge: .bottom)`." },
   { name: "PlaceholderRows / EmptyState", file: "Design/Components.swift", notes: "Redacted grey rows for a first load; `ContentUnavailableView` with an SF Symbol for empty and error states." },
   { name: "RemoteImage", file: "Design/Components.swift", notes: "Photos from a URL on a grey placeholder of the final size. Caches and retries, where `AsyncImage` gives up in a scrolling feed." },
   { name: "Wordmark", file: "Design/Components.swift", notes: "Lowercase `stubbed`, heavy, tight tracking, in `label`; VoiceOver reads \"Stubbed\"." },
@@ -186,9 +186,10 @@ export const IOS_COMPONENTS = [
 
 /** Screenshots of the iOS app (iPhone 17 Pro simulator, test data), in public/design-system/ios. */
 export const IOS_SCREENSHOTS = [
-  { file: "home.jpg", title: "Home", caption: "Large title, people search under it, feed posts on the grouped background.", width: 460, height: 1000 },
+  { file: "home.jpg", title: "Home", caption: "Large title, the search button in the bar, feed posts on the grouped background.", width: 460, height: 1000 },
   { file: "post-photo.jpg", title: "Feed post with a photo", caption: "Photo first at the card's full width; counts and a trip tag on one row.", width: 735, height: 1000 },
-  { file: "people-search.jpg", title: "People search", caption: "While searching, matching people with Follow replace the feed.", width: 964, height: 1000 },
+  { file: "people-search.jpg", title: "People search", caption: "A sheet from Home's search button: the field focused, people with Follow as you type.", width: 964, height: 1000 },
+  { file: "comments-drawer.jpg", title: "Comments drawer", caption: "A post's comments as a pull-up drawer over the feed, the composer pinned to the bottom.", width: 460, height: 1000 },
   { file: "profile.jpg", title: "Profile", caption: "An inset grouped List: header, counts as rows, follow requests, Diary and Trips.", width: 460, height: 1000 },
   { file: "diary.jpg", title: "Diary rows", caption: "EntryRow in Upcoming and Seen sections; swipe or long press to edit or delete.", width: 460, height: 1000 },
   { file: "entry.jpg", title: "A show", caption: "A Form: the show first, then Share, then likes, trips and privacy, then Delete.", width: 460, height: 1000 },

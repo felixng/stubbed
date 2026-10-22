@@ -14,7 +14,7 @@ final class HomeUITests: XCTestCase {
 
     let friend = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "@ios_friend")).firstMatch
     XCTAssertTrue(friend.waitForExistence(timeout: 15))
-    XCTAssertTrue(app.searchFields["Search people"].exists, "People search sits at the top of Home")
+    XCTAssertTrue(app.buttons["Search people"].exists, "People search is a button in Home's bar")
     snapshot("home")
 
     // Like the newest public show, then unlike it.
@@ -26,6 +26,20 @@ final class HomeUITests: XCTestCase {
     snapshot("home-liked")
     like.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
     XCTAssertFalse(like.isSelected)
+
+    // Comments open as a drawer over the feed.
+    app.buttons["Comment"].firstMatch.tap()
+    XCTAssertTrue(app.navigationBars["Comments"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.staticTexts["No comments yet"].waitForExistence(timeout: 10))
+    snapshot("comments-drawer")
+    let field = app.descendants(matching: .any).matching(NSPredicate(format: "placeholderValue BEGINSWITH %@", "Add a comment for")).firstMatch
+    tap(field)
+    field.typeText("Front row was worth it.")
+    app.buttons["Post"].tap()
+    XCTAssertTrue(app.staticTexts["Front row was worth it."].waitForExistence(timeout: 10))
+    snapshot("comments-drawer-posted")
+    app.swipeDown(velocity: .fast)
+    XCTAssertTrue(app.navigationBars["Home"].waitForExistence(timeout: 5))
 
     // The 27th show is only on the second page.
     var swipes = 0
