@@ -1,10 +1,10 @@
 # Design system ("Footlight Coral")
 
-The source of truth is the design system artifact: https://claude.ai/artifact/2r1EvQn2286Y29ZJNgPfP6. It is native first: built for the SwiftUI iOS app, with the web app and site mirroring it. Its `ios.md` has the Swift files (`FLColor`, `FLMetrics`, components); `web.md` has the web rules. If you change a token or rule, change it in the artifact first, then mirror it here, in `apps/web/src/app/globals.css` and in the Swift files.
+The source of truth is the design system artifact: https://claude.ai/artifact/2r1EvQn2286Y29ZJNgPfP6. It is native first: built for the SwiftUI iOS app, with the web app and site mirroring it. Its `ios.md` has the Swift files (`FLColor`, `FLMetrics`, components); `web.md` has the web rules. If you change a token or rule, change it in the artifact first, then mirror it here, in `apps/web/src/app/globals.css`, in `apps/web/src/lib/design-system.ts` (the public `/design-system` page and `/design-system.md`) and in the Swift files.
 
 ## Principles
 
-- **Follows the system appearance.** Light and dark are equals; the web follows `prefers-color-scheme` and never picks for the visitor. **Exception:** the landing page, `/login`, the owner app (`/app`) and public profiles (`/@handle`) are always light for now (owner's call). Each sets `data-theme="light"` on its root, which switches the whole document to the light tokens (`globals.css`).
+- **Light by default.** Every page and screen is light, whatever the device setting (owner's call). On the web each page sets `data-theme="light"` on its root, which switches the whole document to the light tokens (`globals.css`); a new page must do the same. iOS sets `.preferredColorScheme(.light)`. The dark tokens stay defined and working for when dark mode comes back.
 - **One tint.** `tint` is coral in both appearances and fills the one primary action. Where the brand colour is read as text (links, ghost and secondary button labels, the selected tab) use `tint-text`: the same coral on dark, a deeper shade on light. Nothing else.
 - **Copy:** terse and confident, sentence case, no emoji, no exclamation marks. Button labels are verbs. Numbers are digits and tabular. Sample handle: `@sillyelphaba`; never a real person's name.
 - **Ratings** always show as the five `RatingStars`, never a bare number.
