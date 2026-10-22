@@ -39,6 +39,19 @@ async function Entry({ params, searchParams }: PageProps<"/app/entries/[id]">) {
 
   return (
     <article className="flex flex-col gap-5">
+      {/* Edit sits top right, as in a navigation bar, so the share controls
+          under the card are only about sharing. Planned entries keep their
+          Edit button in the card below instead. */}
+      {!planned && (
+        <div className="-my-2 flex justify-end">
+          <Link
+            href={`/app/entries/${entry.id}/edit`}
+            className="-mr-3 inline-flex min-h-11 items-center rounded-pill px-3 text-headline text-tint-text hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          >
+            Edit
+          </Link>
+        </div>
+      )}
       {query.new === "1" && (
         <p role="status" className="rounded-md bg-tint-fill px-4 py-3 text-subheadline font-medium text-label">
           {planned ? "Added to Upcoming in your diary." : "Saved to your diary. Share it?"}
@@ -67,7 +80,6 @@ async function Entry({ params, searchParams }: PageProps<"/app/entries/[id]">) {
         <ShareSheet
           subject={{ kind: "entry", data, photoUrl }}
           slug={slug}
-          editHref={`/app/entries/${entry.id}/edit`}
           publicHref={found.isPublic ? `/e/${entry.id}` : null}
         />
       )}
