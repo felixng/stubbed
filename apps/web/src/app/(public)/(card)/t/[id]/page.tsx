@@ -4,15 +4,17 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { Avatar } from "@/components/profile/Avatar";
+import { CardHero, DiaryLink } from "@/components/profile/CardHero";
 import { PublicEntryCard } from "@/components/profile/PublicEntryCard";
 import { formatTripDates } from "@/lib/entries";
 import { viewerContext } from "@/lib/follows";
 import { getPublicTrip, type TripStats } from "@/lib/public-pages";
 import { getReactions, NO_REACTIONS } from "@/lib/reactions";
 
-// Public trip page, the recap behind a shared trip card (#16): the trip's
-// name and dates, who went, its numbers, then each public show in date
-// order. A trip is public when it holds a public show and the profile isn't
+// Public trip page, the recap behind a shared trip card (#16): the card
+// itself (its preview image), the trip's name, dates and numbers, who went,
+// each public show in date order, then a link to the rest of the diary; the
+// layout adds the waitlist card after it for signed-out visitors. A trip is public when it holds a public show and the profile isn't
 // private (RLS, via the publishable key); private shows in it are left out,
 // and so are their counts. Each show has Like and Comment, read with the
 // visitor's session. Its preview image is /api/og/trip/[id].
@@ -46,26 +48,29 @@ async function Trip({ params }: PageProps<"/t/[id]">) {
   const { id } = await params;
   const found = await getPublicTrip(id);
   if (!found) notFound();
-  const { trip, owner, entries, photos, stats } = found;
+  const { trip, owner, entries, photos, stats, version } = found;
   const { supabase, userId } = await viewerContext();
   const reactions = await getReactions(supabase, entries.map((e) => e.id));
   const name = owner.display_name || `@${owner.handle}`;
   const where = place(stats);
-  const numbers: [string, string][] = [
-    [String(stats.shows), stats.shows === 1 ? "Show" : "Shows"],
-    [String(stats.venues), stats.venues === 1 ? "Theatre" : "Theatres"],
-    ...(stats.nights > 0 ? [[String(stats.nights), stats.nights === 1 ? "Night" : "Nights"] as [string, string]] : []),
-    ...(stats.average != null ? [[stats.average.toFixed(1), "Avg rating"] as [string, string]] : []),
-  ];
+  // The card shows these large; here they're one quiet line under the name.
+  const numbers = [
+    plural(stats.shows, "show"),
+    plural(stats.venues, "theatre"),
+    stats.nights > 0 ? plural(stats.nights, "night") : null,
+    stats.average != null ? `${stats.average.toFixed(1)} average rating` : null,
+  ].filter(Boolean);
 
   return (
     <>
-      <section aria-labelledby="trip-name" className="flex flex-col gap-4 rounded-md border border-separator bg-surface p-4 shadow-sm sm:p-6">
+      <CardHero src={`/api/og/trip/${trip.id}?v=${version}`} alt={`@${owner.handle}’s trip card: ${trip.name}, ${numbers.join(", ")}`} />
+      <section aria-labelledby="trip-name" className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <h1 id="trip-name" className="text-title font-display text-label">
             {trip.name}
           </h1>
           <p className="text-subheadline text-label-secondary">{[formatTripDates(trip), where].filter(Boolean).join(" · ")}</p>
+          <p className="text-subheadline text-label-secondary tabular-nums">{numbers.join(" · ")}</p>
         </div>
         <Link
           href={`/@${owner.handle}`}
@@ -77,14 +82,6 @@ async function Trip({ params }: PageProps<"/t/[id]">) {
             {owner.display_name && <span className="text-footnote text-label-secondary">{owner.display_name}</span>}
           </span>
         </Link>
-        <dl className="flex flex-wrap gap-x-8 gap-y-3">
-          {numbers.map(([value, label]) => (
-            <div key={label} className="flex flex-col-reverse">
-              <dt className="text-footnote text-label-secondary">{label}</dt>
-              <dd className="text-title-2 font-display text-label tabular-nums">{value}</dd>
-            </div>
-          ))}
-        </dl>
       </section>
 
       <section aria-labelledby="shows-heading" className="flex flex-col gap-4">
@@ -105,6 +102,7 @@ async function Trip({ params }: PageProps<"/t/[id]">) {
           />
         ))}
       </section>
+      <DiaryLink handle={owner.handle} />
     </>
   );
 }
