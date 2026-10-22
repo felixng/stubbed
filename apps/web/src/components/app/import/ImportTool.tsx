@@ -835,8 +835,8 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
       )}
 
       {drafts.length > 0 && (
-        // Sits on the tab bar (49px), like the log form's Save.
-        <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+49px)] z-10 -mx-4 flex flex-col gap-1 bg-background/90 px-4 pt-3 pb-7 backdrop-blur">
+        // Sits on the tab bar (49px), or the bottom edge from md where the sidebar replaces it, like the log form's Save.
+        <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+49px)] z-10 md:bottom-0 -mx-4 flex flex-col gap-1 bg-background/90 px-4 pt-3 pb-7 md:pb-5 backdrop-blur">
           <Button className="w-full" disabled={saving || !toSave.length} onClick={() => void saveAll()}>
             {saving ? "Saving…" : toSave.length ? `Save ${toSave.length} show${toSave.length === 1 ? "" : "s"}` : "Tick shows to save"}
           </Button>

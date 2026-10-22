@@ -109,9 +109,9 @@ function Selectable({ entries, photos, trips, onDone }: Props & { onDone: () => 
       </div>
       <EntryList entries={entries} photos={photoMap} selection={selecting ? { picked, onToggle: toggle } : undefined} />
 
-      {/* Sits on the tab bar (49px), like the log form's Save. */}
+      {/* Sits on the tab bar (49px), or the bottom edge from md where the sidebar replaces it, like the log form's Save. */}
       {selecting && (
-        <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+49px)] z-10 -mx-4 flex flex-col gap-3 bg-background/90 px-4 pt-3 pb-4 backdrop-blur">
+        <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+49px)] z-10 md:bottom-0 -mx-4 flex flex-col gap-3 bg-background/90 px-4 pt-3 pb-4 backdrop-blur">
           {picking && picked.length > 0 && (
             <div className="flex flex-col gap-2 rounded-md border border-separator bg-surface p-3 shadow-sm">
               <p className="text-subheadline font-medium text-label">Add to</p>
