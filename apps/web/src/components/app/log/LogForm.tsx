@@ -827,8 +827,8 @@ function EntryForm({ initial, onSaved }: { initial?: EntryDraft; onSaved: () => 
             </p>
           )}
 
-          {/* Sits on the tab bar (49px); the bottom padding clears its raised Log button. */}
-          <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+49px)] z-10 -mx-4 bg-background/90 px-4 pt-3 pb-7 backdrop-blur">
+          {/* Sits on the tab bar (49px), or the bottom edge from md where the sidebar replaces it; the bottom padding clears its raised Log button. */}
+          <div className="sticky bottom-[calc(env(safe-area-inset-bottom)+49px)] z-10 md:bottom-0 -mx-4 bg-background/90 px-4 pt-3 pb-7 md:pb-5 backdrop-blur">
             <Button type="submit" className="w-full" disabled={saving}>
               {saving ? "Saving…" : editing ? "Save changes" : planned ? "Add to Upcoming" : "Save"}
             </Button>

@@ -243,7 +243,7 @@ On the web these are Tailwind font sizes that carry line height, weight and trac
 
 A 4px base with seven steps: `space-1…space-7` = 4, 8, 12, 16, 20, 24, 32px (Tailwind `1, 2, 3, 4, 5, 6, 8`). The screen gutter and row padding are 16px; sections sit 20px apart; web page gutters widen to 32px from the `sm` breakpoint. Anything tappable is at least 44px (`min-h-11`).
 
-The web app is mobile first: at phone width it shows a bottom tab bar like the iOS app; on desktop the tab bar becomes a sidebar. Content is a single column of grouped lists and cards; shelves of 160px portrait `ShowCard`s scroll horizontally on wider screens.
+The web app is mobile first. Below `md` (768px) it has a sticky header (wordmark, people search, menu) and a bottom tab bar like the iOS app. From `md` both give way to a 256px sidebar on the left, with a hairline on its right edge, and the page sits beside it. The page column is 640px wide at every size, centred in the space it has, because feed cards, the log form and share cards are designed for that measure; it gains 32px of top padding from `md`. Content is a single column of grouped lists and cards; shelves of 160px portrait `ShowCard`s scroll horizontally on wider screens. Sticky bottom bars (Save, select actions) sit on the tab bar below `md` and on the bottom edge from `md`.
 
 iOS follows its own layout rules in `apps/ios/CLAUDE.md` ("Design direction"): each tab is a `NavigationStack`, screens sit on `systemGroupedBackground`, and lists are `List(.insetGrouped)`.
 
@@ -278,7 +278,7 @@ React components live in `apps/web/src/components/ui/`. The iOS app no longer mi
 | `RatingStars` | `RatingStars` / `RatingInput` | `value` 0–5 (halves), `size` px | |
 | `ShowRow` | `EntryRow` | `title`, `venue`, `date`, `rating`, `poster` | Inside a `surface` list with `separator` hairlines |
 | `ShowCard` | none (use `EntryRow`) | same as `ShowRow` | 160px portrait card for web shelves |
-| `TabBar` | native `TabView` | `items`, `active`, `onSelect` | Phone-width web app only; sidebar on desktop |
+| `TabBar` | native `TabView` | `items`, `active`, `onSelect` | Below `md` only; from `md` the app shows `AppSidebar` (`components/app/AppSidebar.tsx`) instead |
 | `Wordmark` | `Wordmark` | `size` px (min 16) | Lowercase text, `sr-only` "Stubbed" |
 | `Poster` | `Poster` | `title`, `poster` | 2:3, initials in `outline` on `fill` when no image |
 
@@ -303,7 +303,8 @@ React components live in `apps/web/src/components/ui/`. The iOS app no longer mi
 - **Focus:** the shared 2px `focus` outline at a 2px offset.
 
 ### Navigation
-- **Web, phone width:** a bottom tab bar on Programme White with a top hairline; 49px items with a 24px line icon over a 10px medium label. Unselected tabs in Faded Velvet, the selected tab in Deep Coral Ink (`aria-current="page"`). Desktop moves the same items into a sidebar.
+- **Web, below `md`:** a bottom tab bar on Programme White with a top hairline: Home, a raised coral Log button, Profile. 49px items with a 24px line icon over a 10px medium label. Unselected tabs in Faded Velvet, the selected tab in Deep Coral Ink (`aria-current="page"`).
+- **Web, from `md`:** a sidebar on Lobby Paper (`AppSidebar`): the wordmark (28px), the people search box (its results open 384px wide over the page), then Home, Log and Profile, a hairline, Import shows, and Sign out pinned to the bottom in Curtain Red. Items are 44px capsule rows with a 24px line icon and a body-size label in Velvet Ink, hovering to Blush Well; the selected item is Deep Coral Ink on Coral Wash, semibold, with `aria-current="page"`. Log is a plain item here, not a coral button, so the page's own primary action stays the only coral fill. Trip and settings pages select Profile, as in the tab bar.
 - **iOS:** a native `TabView` (Home, Log, Profile); Log opens the log sheet rather than a screen.
 
 ### Poster and ratings (signature)

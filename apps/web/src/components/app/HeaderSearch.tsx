@@ -25,7 +25,10 @@ type Person = {
 //
 // The header is part of the app shell, which doesn't read the session, so the
 // signed-in user's id comes from the browser session on the first search.
-export function HeaderSearch() {
+//
+// In the desktop sidebar (`wide`), the box fills the sidebar and the list opens
+// wider than it, over the page, so names and Follow buttons still fit.
+export function HeaderSearch({ wide = false }: { wide?: boolean }) {
   const id = useId();
   const root = useRef<HTMLDivElement>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -95,7 +98,7 @@ export function HeaderSearch() {
   return (
     <div
       ref={root}
-      className="min-w-0 flex-1 sm:relative"
+      className={wide ? "relative w-full" : "min-w-0 flex-1 sm:relative"}
       onKeyDown={(e) => {
         if (e.key === "Escape") {
           setOpen(false);
@@ -144,7 +147,9 @@ export function HeaderSearch() {
         aria-live="polite"
         className={
           listOpen
-            ? "absolute inset-x-4 top-full z-30 mt-1 max-h-[70dvh] overflow-y-auto rounded-md border border-separator bg-surface shadow-lg sm:inset-x-0"
+            ? `absolute top-full z-30 mt-1 max-h-[70dvh] overflow-y-auto rounded-md border border-separator bg-surface shadow-lg ${
+                wide ? "left-0 w-96" : "inset-x-4 sm:inset-x-0"
+              }`
             : "sr-only"
         }
       >

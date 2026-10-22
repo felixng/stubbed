@@ -8,7 +8,7 @@ import { TAB_ICONS } from "@/components/ui/TabBar";
 // Bottom tab bar for the owner app (#13): Home (the feed), a big centre Log
 // button, and Profile (your diary and trips). Same look as the
 // `TabBar` UI component, but with links.
-function Icon({ id, size = 24 }: { id: string; size?: number }) {
+export function Icon({ id, size = 24 }: { id: string; size?: number }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -32,6 +32,17 @@ function Icon({ id, size = 24 }: { id: string; size?: number }) {
 const tab =
   "flex min-h-[49px] flex-1 flex-col items-center gap-0.5 pt-1.5 pb-1 text-[10px] leading-[13px] font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
 
+// Which section a path belongs to, shared with the desktop sidebar so both
+// mark the same place. Trip pages and settings sit under Profile.
+export function section(pathname: string) {
+  return {
+    home: pathname === "/app",
+    log: pathname.startsWith("/app/log"),
+    profile: ["/app/profile", "/app/trips", "/app/settings"].some((p) => pathname.startsWith(p)),
+    import: pathname.startsWith("/app/import"),
+  };
+}
+
 export function AppTabBar() {
   return <AppTabBarLinks pathname={usePathname()} />;
 }
@@ -39,10 +50,7 @@ export function AppTabBar() {
 // Rendered with no active tab while the page prerenders (the path is only
 // known per request), then with the real path.
 export function AppTabBarLinks({ pathname }: { pathname: string }) {
-  const home = pathname === "/app";
-  // Trip pages and settings sit under Profile.
-  const profile = ["/app/profile", "/app/trips", "/app/settings"].some((p) => pathname.startsWith(p));
-  const log = pathname.startsWith("/app/log");
+  const { home, profile, log } = section(pathname);
 
   return (
     <nav
