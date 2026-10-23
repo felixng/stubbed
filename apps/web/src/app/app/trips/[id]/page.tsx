@@ -4,6 +4,7 @@ import { Suspense } from "react";
 
 import { DeleteTripButton } from "@/components/app/DeleteTripButton";
 import { ShareSheet } from "@/components/app/share/ShareSheet";
+import { BackLink } from "@/components/ui/BackLink";
 import { TripEntries } from "@/components/app/TripEntries";
 import { TripForm } from "@/components/app/TripForm";
 import { formatDate, formatTripDates, TRIP_SELECT, tripCovers, tripNights, type Collection } from "@/lib/entries";
@@ -70,6 +71,7 @@ async function Trip({ params, searchParams }: PageProps<"/app/trips/[id]">) {
   return (
     <section className="flex flex-col gap-5">
       <header className="flex flex-col gap-1">
+        <BackLink href="/app/profile?view=trips">Trips</BackLink>
         <h1 className="text-title font-display text-label">{trip.name}</h1>
         <p className="text-subheadline text-label-secondary">{formatTripDates(trip)}</p>
       </header>

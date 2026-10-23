@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { Suspense } from "react";
 
 import { DeleteAccountButton } from "@/components/app/DeleteAccountButton";
 import { ProfileForm } from "@/components/app/ProfileForm";
+import { BackLink } from "@/components/ui/BackLink";
 import { getOwnProfile, ownerContext } from "@/lib/supabase/data";
 
 export const metadata: Metadata = { title: "Edit profile" };
@@ -33,9 +33,7 @@ export default function SettingsPage() {
   return (
     <section className="flex flex-col gap-5">
       <div className="flex flex-col gap-1">
-        <Link href="/app/profile" className="w-fit text-subheadline font-semibold text-tint-text underline-offset-2 hover:underline">
-          ‹ Profile
-        </Link>
+        <BackLink href="/app/profile">Profile</BackLink>
         <h1 className="text-title font-display text-label">Edit profile</h1>
       </div>
       <Suspense fallback={loading}>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { TripForm } from "@/components/app/TripForm";
+import { BackLink } from "@/components/ui/BackLink";
 
 export const metadata: Metadata = { title: "New trip" };
 
@@ -36,7 +37,10 @@ async function Form({ searchParams }: { searchParams: PageProps<"/app/trips/new"
 export default function NewTripPage({ searchParams }: PageProps<"/app/trips/new">) {
   return (
     <section className="flex flex-col gap-5">
-      <h1 className="text-title font-display text-label">New trip</h1>
+      <div className="flex flex-col gap-1">
+        <BackLink href="/app/profile?view=trips">Trips</BackLink>
+        <h1 className="text-title font-display text-label">New trip</h1>
+      </div>
       <Suspense fallback={<p className="text-subheadline text-label-secondary">Loading…</p>}>
         <Form searchParams={searchParams} />
       </Suspense>
