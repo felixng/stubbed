@@ -25,7 +25,7 @@ export function DeleteEntryButton({ id, photoPath }: { id: string; photoPath: st
           const supabase = createClient();
           const { error: del } = await supabase.from("entries").delete().eq("id", id);
           if (del) {
-            setError("Couldn’t delete. Try again.");
+            setError("Couldn’t delete this show. Try again.");
             setBusy(false);
             return;
           }

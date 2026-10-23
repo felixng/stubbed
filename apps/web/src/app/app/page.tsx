@@ -20,7 +20,7 @@ async function Feed() {
       {items.length === 0 ? (
         <EmptyState title="Nothing here yet">
           <Link href="/app/log" className="font-semibold text-tint-text underline-offset-2 hover:underline">
-            Track a show
+            Log a show
           </Link>{" "}
           and it appears here, along with shows from people you follow.
           {following === 0 && " Search for people you go to the theatre with in the box above."}

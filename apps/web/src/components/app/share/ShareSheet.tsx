@@ -109,8 +109,8 @@ export function ShareSheet({
     typeof navigator !== "undefined" && card ? Boolean(navigator.canShare?.({ files: [card.file] })) : false;
   const text =
     subject.kind === "entry"
-      ? `${subject.data.venue ? `${subject.data.title} at ${subject.data.venue}` : subject.data.title}. Tracked on Stubbed ${INSTAGRAM}`
-      : `${subject.data.name}: ${plural(subject.data.shows.length, "show")}${subject.data.place ? ` in ${subject.data.place}` : ""}. Tracked on Stubbed ${INSTAGRAM}`;
+      ? `${subject.data.venue ? `${subject.data.title} at ${subject.data.venue}` : subject.data.title}. Logged on Stubbed ${INSTAGRAM}`
+      : `${subject.data.name}: ${plural(subject.data.shows.length, "show")}${subject.data.place ? ` in ${subject.data.place}` : ""}. Logged on Stubbed ${INSTAGRAM}`;
   const title = subject.kind === "entry" ? subject.data.title : subject.data.name;
 
   function closeMore() {

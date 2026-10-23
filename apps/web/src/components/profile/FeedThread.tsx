@@ -96,7 +96,7 @@ export function FeedThread({
               disabled={loading}
               className="-mx-1 w-fit cursor-pointer rounded-md px-1 text-left text-subheadline text-label-secondary hover:text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-wait"
             >
-              {loading ? "Loading comments…" : `View all ${count} comments`}
+              {loading ? "Loading comments…" : count === 1 ? "View 1 comment" : `View all ${count} comments`}
             </button>
           )}
           <ul className="flex flex-col gap-3" aria-label="Comments">

@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: PageProps<"/e/[id]">): Promis
     .filter(Boolean)
     .join(" ")
     .concat(".");
-  const image = { url: `/api/og/entry/${entry.id}?v=${version}`, width: 1200, height: 630, alt: `${at}, tracked on Stubbed` };
+  const image = { url: `/api/og/entry/${entry.id}?v=${version}`, width: 1200, height: 630, alt: `${at}, logged on Stubbed` };
   return {
     title,
     description,

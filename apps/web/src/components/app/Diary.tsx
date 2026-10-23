@@ -18,9 +18,9 @@ export async function Diary() {
     return (
       <EmptyState title="No shows yet">
         <Link href="/app/log" className="font-semibold text-tint-text underline-offset-2 hover:underline">
-          Add your first theatre visit
+          Log your first show
         </Link>
-        . Start with a photo from the show and we’ll fill in what we can. Going to one soon? Track it with its date.
+        . Start with a photo from the show and we’ll fill in what we can. Going to one soon? Log it with its date.
       </EmptyState>
     );
   }

@@ -36,7 +36,8 @@ export const CORAL = "#FF6B4A";
 const STAR = "#FFD60A";
 export const SECONDARY = "#AEAEB2";
 // Shown small under the wordmark on every card, so a shared image leads back.
-export const CARD_DOMAIN = "@getstubbed.app";
+// The plain domain, no "@": with one it reads as a handle next to the user's.
+export const CARD_DOMAIN = "getstubbed.app";
 const SOFT_WHITE = "rgba(255, 255, 255, 0.85)";
 // Same star as the designs (24px viewBox).
 const STAR_PATH = "M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z";

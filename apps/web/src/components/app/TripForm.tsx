@@ -56,7 +56,7 @@ function Fields({ initial, prefill, onCreated }: Props & { onCreated: () => void
       return setError(
         write?.code === "23514"
           ? "Some shows in this trip fall outside these dates. Remove them from the trip first."
-          : "Couldn’t save. Try again.",
+          : "Couldn’t save the trip. Try again.",
       );
     }
     if (!initial) onCreated();
