@@ -106,13 +106,21 @@ function Selectable({ entries, photos, trips, onDone }: Props & { onDone: () => 
   // header and action bar change around them.
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex min-h-9 items-center justify-between gap-3">
+      {/* "Seen" matches the Upcoming heading above it. The live line stays
+          mounted (empty outside select mode) so screen readers announce it. */}
+      <div>
+        <div className="flex min-h-11 items-center justify-between gap-3">
+          <h2 className="inline-flex items-baseline gap-1.5 text-title-2 font-display text-label">
+            Seen
+            <span className="text-subheadline font-sans font-normal tabular-nums text-label-secondary">{entries.length}</span>
+          </h2>
+          <Button variant="ghost" size="sm" onClick={selecting ? reset : () => setSelecting(true)}>
+            {selecting ? "Cancel" : "Select"}
+          </Button>
+        </div>
         <p className="text-subheadline text-label-secondary" aria-live="polite">
           {selecting && (picked.length ? `${picked.length} selected` : "Pick shows to group into a trip")}
         </p>
-        <Button variant="ghost" size="sm" onClick={selecting ? reset : () => setSelecting(true)}>
-          {selecting ? "Cancel" : "Select"}
-        </Button>
       </div>
       <EntryList entries={entries} photos={photoMap} selection={selecting ? { picked, onToggle: toggle } : undefined} />
 

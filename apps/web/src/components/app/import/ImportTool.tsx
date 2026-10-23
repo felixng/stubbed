@@ -616,9 +616,16 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
             dragging ? "border-tint bg-tint-fill" : "border-outline bg-surface"
           }`}
         >
-          <p className="text-headline text-label">Drop files here</p>
+          {/* Drag and drop needs a mouse or trackpad; phones get tap wording. */}
+          <p className="text-headline text-label">
+            <span className="hidden [@media(pointer:fine)]:inline">Drop your ticket emails or photos here</span>
+            <span className="[@media(pointer:fine)]:hidden">Add your ticket emails or photos</span>
+          </p>
           <p className="max-w-[420px] text-subheadline text-label-secondary">
-            Confirmation emails saved as .eml, an .mbox export, or a saved .html page. Or photos from the theatre: we read their date and location. Each photo becomes its own show to review.
+            We read the show, theatre and date from ticket confirmation emails, and the date and place from photos taken at the theatre. Each photo becomes its own show to check.
+          </p>
+          <p className="max-w-[420px] text-footnote text-label-secondary">
+            Emails saved from your mail app (.eml or .mbox) or as a web page (.html) all work.
           </p>
           <div className="mt-1 flex flex-wrap justify-center gap-2">
             <label className="inline-flex min-h-11 cursor-pointer items-center rounded-pill bg-tint-fill px-4 text-[15px] leading-5 font-semibold text-tint-text hover:bg-fill focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus">

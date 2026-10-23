@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useId, useState } from "react";
 
 // Planned shows at the top of the diary, soonest first. Collapsible, with a
-// shortcut to plan a trip in its header. A <details> can't hold the link in
+// shortcut to start a trip in its header ("New trip", as on the Trips view). A <details> can't hold the link in
 // its summary, so the toggle is a button.
 export function UpcomingSection({ count, children }: { count: number; children: React.ReactNode }) {
   const id = useId();
@@ -43,7 +43,7 @@ export function UpcomingSection({ count, children }: { count: number; children: 
           href="/app/trips/new"
           className="text-subheadline font-semibold text-tint-text underline-offset-2 hover:underline"
         >
-          + Plan a trip
+          + New trip
         </Link>
       </div>
       <div id={`${id}-list`} hidden={!open}>
