@@ -82,6 +82,7 @@ export function TripEntries({
           photos={photoMap}
           selection={mode === "remove" ? selection : undefined}
           from={`trip-${tripId}`}
+          inTrip={tripId}
         />
       ) : (
         <EmptyState title="No shows in this trip yet">
