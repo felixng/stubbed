@@ -160,3 +160,11 @@ body {
   background: var(--background);
   color: var(--label);
 }
+
+/* A drawn share card fading in over its placeholder (ShareSheet). Used
+   with motion-safe:, so reduced motion swaps it in at once. */
+@keyframes card-in {
+  from {
+    opacity: 0;
+  }
+}
