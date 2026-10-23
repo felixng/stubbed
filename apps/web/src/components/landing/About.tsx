@@ -5,7 +5,7 @@ export function About() {
   return (
     <div className="flex flex-col gap-4">
       <p className="text-body text-label-secondary">
-        Stubbed is a theatre diary app. You track the plays, musicals, operas,
+        Stubbed is a theatre diary app. You log the plays, musicals, operas,
         dance and comedy you see, rate each one in half stars and add a line or
         two on what you thought. Over time it becomes a record of every night
         out at the theatre: what you saw, where, when and how much you loved

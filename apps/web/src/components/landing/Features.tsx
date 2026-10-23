@@ -13,10 +13,10 @@ const IMAGE_HEIGHT = 1500;
 
 const FEATURES = [
   {
-    title: "Track your visits",
+    title: "Log every show",
     body: "Every show you see, in one place: the venue, the date, your half-star rating and your thoughts about the show.",
     image: "/landing/features/track.svg",
-    alt: "Tracking a visit to Hadestown at the Lyric Theatre, rated four and a half stars",
+    alt: "Logging Hadestown at the Lyric Theatre, rated four and a half stars",
   },
   {
     title: "Share with your friends",
@@ -34,7 +34,7 @@ const FEATURES = [
     title: "Plan ahead",
     body: "Group a trip or a festival’s shows together and keep track of what you want to see next.",
     image: "/landing/features/plan.svg",
-    alt: "Trips for a week in New York and a festival",
+    alt: "Two trips: a week away and a festival",
   },
 ];
 

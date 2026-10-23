@@ -69,7 +69,7 @@ async function Entry({ params, searchParams }: PageProps<"/app/entries/[id]">) {
         <div className="flex flex-col items-start gap-3 rounded-md border border-separator bg-surface p-4 shadow-sm">
           <p className="text-subheadline text-label">
             You’re going on {formatDate(entry.date, { weekday: "long", day: "numeric", month: "long" })}. Once
-            you’ve been, track it with your rating and share it.
+            you’ve been, log it with your rating and share it.
           </p>
           <Link
             href={`/app/entries/${entry.id}/edit`}

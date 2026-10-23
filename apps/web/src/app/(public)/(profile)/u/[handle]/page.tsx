@@ -143,7 +143,7 @@ async function Profile({ params }: PageProps<"/u/[handle]">) {
         <div className="flex flex-col items-center gap-2 rounded-md border border-separator bg-surface px-6 py-12 text-center shadow-sm">
           <h2 className="text-headline text-label">No public shows yet</h2>
           <p className="max-w-[320px] text-subheadline text-label-secondary">
-            When @{profile.handle} tracks a public show, it’ll appear here.
+            When @{profile.handle} logs a public show, it’ll appear here.
           </p>
         </div>
       ) : (

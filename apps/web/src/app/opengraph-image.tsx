@@ -49,7 +49,7 @@ export default function OpengraphImage() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 32, color: "#5e4039" }}>
             <div style={{ width: 16, height: 16, borderRadius: 9999, background: "#ff7a5c" }} />
-            Track, rate and share every show you see.
+            Log, rate and share every show you see.
           </div>
         </div>
       </div>
