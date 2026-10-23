@@ -22,7 +22,7 @@ export function DeleteCommentButton({ commentId, mine, onDeleted }: { commentId:
         const { error } = await createClient().from("entry_comments").delete().eq("id", commentId);
         if (error) {
           setSaving(false);
-          window.alert("Couldn’t delete. Try again.");
+          window.alert("Couldn’t delete the comment. Try again.");
           return;
         }
         if (onDeleted) {

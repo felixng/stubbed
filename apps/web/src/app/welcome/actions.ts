@@ -54,7 +54,7 @@ export async function completeProfile(_prev: WelcomeState, formData: FormData): 
     if (error.code === "23505") return { values, errors: { handle: "That handle is taken." } };
     if (isReservedHandleError(error)) return { values, errors: { handle: "That handle is reserved. Try another." } };
     console.error("completeProfile failed", error.code, error.message);
-    return { values, errors: { form: "Couldn’t save. Try again." } };
+    return { values, errors: { form: "Couldn’t save your profile. Try again." } };
   }
 
   // The proxy would set this on the next request anyway; setting it here

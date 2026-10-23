@@ -24,7 +24,7 @@ export function FollowRequests({ ownerId, people }: { ownerId: string; people: F
       : await rows.delete().eq("follower_id", followerId).eq("followee_id", ownerId);
     if (error) {
       setBusyId(null);
-      window.alert("Couldn’t update. Try again.");
+      window.alert(approve ? "Couldn’t approve the request. Try again." : "Couldn’t decline the request. Try again.");
       return;
     }
     startRefresh(() => {

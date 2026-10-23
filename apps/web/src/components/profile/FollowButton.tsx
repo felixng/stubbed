@@ -65,7 +65,13 @@ export function FollowButton({
     // is what was asked for.
     if (error && error.code !== "23505") {
       setSaving(false);
-      window.alert("Couldn’t update. Try again.");
+      window.alert(
+        status === "accepted"
+          ? `Couldn’t unfollow @${handle}. Try again.`
+          : status
+            ? "Couldn’t cancel your request. Try again."
+            : `Couldn’t follow @${handle}. Try again.`,
+      );
       return;
     }
     onChanged?.();

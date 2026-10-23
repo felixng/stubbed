@@ -38,7 +38,7 @@ export async function joinWaitlist(
       console.error("waitlist subscribe failed", error);
       return {
         status: "error",
-        message: "Something went wrong. Please try again in a moment.",
+        message: "Couldn’t add you to the waitlist. Try again in a moment.",
       };
     }
     return { status: "success", confirm: true };
@@ -51,7 +51,7 @@ export async function joinWaitlist(
     console.error("waitlist insert failed", error);
     return {
       status: "error",
-      message: "Something went wrong. Please try again in a moment.",
+      message: "Couldn’t add you to the waitlist. Try again in a moment.",
     };
   }
   return { status: "success", confirm: false };

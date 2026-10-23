@@ -33,7 +33,7 @@ export function RemoveFollowerButton({
           .eq("followee_id", ownerId);
         if (error) {
           setSaving(false);
-          window.alert("Couldn’t remove. Try again.");
+          window.alert("Couldn’t remove this follower. Try again.");
           return;
         }
         startRefresh(() => {

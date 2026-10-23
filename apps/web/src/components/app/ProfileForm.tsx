@@ -69,7 +69,7 @@ export function ProfileForm({ userId, initial }: { userId: string; initial: OwnP
             ? `@${h} is taken. Try another.`
             : isReservedHandleError(error)
               ? `@${h} is reserved. Try another.`
-              : "Couldn’t save. Try again.",
+              : "Couldn’t save your profile. Try again.",
       });
     }
     setHandle(h);

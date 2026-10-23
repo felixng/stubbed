@@ -58,7 +58,7 @@ export function EntryReactions({
     // A like that already exists (23505) is what was asked for.
     if (error && error.code !== "23505") {
       setMine(null);
-      window.alert("Couldn’t update. Try again.");
+      window.alert(liked ? "Couldn’t like this show. Try again." : "Couldn’t remove your like. Try again.");
       return;
     }
     router.refresh();
