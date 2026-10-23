@@ -1,11 +1,26 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+
 import { ImageResponse } from "next/og";
 
 // Link-preview images (Open Graph) for the public entry and trip pages,
 // drawn on the server with next/og. They follow the phone-drawn share cards
 // (lib/share-card.ts): dark ground, coral glow, yellow stars, the `stubbed`
 // wordmark and the @handle. next/og can't use the system font the cards use,
-// so text is in the Geist it bundles. Every element with more than one child
-// needs display: flex (Satori's rule).
+// so text is in Geist. Every element with more than one child needs
+// display: flex (Satori's rule).
+
+// next/og bundles only Geist Regular, and passing any font replaces it, so
+// both weights are read here, once: Regular for the text, ExtraBold (800)
+// for the wordmark (docs/DESIGN.md). The files (OFL) are in assets/fonts.
+const [geistRegular, geistExtraBold] = await Promise.all([
+  readFile(join(process.cwd(), "assets/fonts/Geist-Regular.ttf")),
+  readFile(join(process.cwd(), "assets/fonts/Geist-ExtraBold.ttf")),
+]);
+const FONTS = [
+  { name: "Geist", data: geistRegular, weight: 400, style: "normal" },
+  { name: "Geist", data: geistExtraBold, weight: 800, style: "normal" },
+] as const;
 
 export const OG_SIZE = { width: 1200, height: 630 };
 
@@ -20,7 +35,7 @@ export const SECONDARY = "#AEAEB2";
 const CACHE = "public, max-age=300, s-maxage=3600, stale-while-revalidate=86400";
 
 export function ogImage(element: React.ReactElement) {
-  return new ImageResponse(element, { ...OG_SIZE, headers: { "Cache-Control": CACHE } });
+  return new ImageResponse(element, { ...OG_SIZE, fonts: [...FONTS], headers: { "Cache-Control": CACHE } });
 }
 
 // Nothing to show: a plain 404 that isn't cached for long, so a page made
@@ -79,7 +94,7 @@ export function Stars({ value, size = 40, gap = 6, empty = "#48484A" }: { value:
 export function Footer({ handle }: { handle: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%" }}>
-      <div style={{ fontSize: 40, letterSpacing: "-0.045em", color: "#FFFFFF" }}>stubbed</div>
+      <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: "-0.045em", lineHeight: 1, color: "#FFFFFF" }}>stubbed</div>
       <div style={{ fontSize: 30, color: SECONDARY }}>{`@${handle}`}</div>
     </div>
   );
