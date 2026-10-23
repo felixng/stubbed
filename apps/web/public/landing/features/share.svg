@@ -1,8 +1,0 @@
-<svg xmlns='http://www.w3.org/2000/svg' width='1200' height='1500' viewBox='0 0 1200 1500'>
-<rect width='1200' height='1500' fill='#ffd9cc'/>
-<circle cx='600' cy='750' r='520' fill='#ffebe3'/>
-<rect x='280' y='180' width='640' height='1320' rx='80' fill='#fff9f6' stroke='#1f1210' stroke-opacity='.12' stroke-width='6'/>
-<text x='330' y='380' font-family='Inter, system-ui, sans-serif' font-size='64' font-weight='800' fill='#1f1210'>Share</text>
-<rect x='380' y='440' width='440' height='700' rx='36' fill='#ff7a5c'/><text x='600' y='640' text-anchor='middle' font-family='Inter, system-ui, sans-serif' font-size='52' font-weight='800' fill='#fff'>Hadestown</text><text x='600' y='710' text-anchor='middle' font-family='Inter, system-ui, sans-serif' font-size='30' fill='#fff'>Lyric Theatre</text><text x='600' y='800' text-anchor='middle' font-family='Inter, system-ui, sans-serif' font-size='44' fill='#fff'>★★★★½</text><text x='600' y='1080' text-anchor='middle' font-family='Inter, system-ui, sans-serif' font-size='28' font-weight='700' fill='#fff'>@sillyelphaba · stubbed</text>
-<text x='600' y='120' text-anchor='middle' font-family='Inter, system-ui, sans-serif' font-size='26' font-weight='600' fill='#b33a19' letter-spacing='4'>MOCKUP · 1200 × 1500</text>
-</svg>

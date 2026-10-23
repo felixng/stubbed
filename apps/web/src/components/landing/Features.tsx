@@ -1,40 +1,37 @@
 "use client";
 
-import Image from "next/image";
 import { useId, useRef, useState } from "react";
 
 import { Container } from "@/components/landing/Container";
+import { HistoryScreen, PlanScreen, ShareScreen, TrackScreen } from "@/components/landing/Screens";
 
-// "How it works": four banners, and the image beside them follows the one
-// that is open. All images share one size (IMAGE_WIDTH × IMAGE_HEIGHT); the
-// files in public/landing/features are mockups until the real ones arrive.
-const IMAGE_WIDTH = 1200;
-const IMAGE_HEIGHT = 1500;
-
+// "How it works": four banners, and the screen beside them follows the one
+// that is open. The screens are drawn with the app's own components and
+// sample data (Screens.tsx), not screenshots.
 const FEATURES = [
   {
     title: "Log every show",
     body: "Every show you see, in one place: the venue, the date, your half-star rating and your thoughts about the show.",
-    image: "/landing/features/track.svg",
-    alt: "Logging Hadestown at the Lyric Theatre, rated four and a half stars",
+    Screen: TrackScreen,
+    alt: "Logging Hadestown at the Lyric Theatre: the date, four and a half stars and a note",
   },
   {
     title: "Share with your friends",
     body: "Turn any night into a card for your Stories, with the show, your rating and your handle.",
-    image: "/landing/features/share.svg",
-    alt: "A share card for Hadestown, ready for Instagram Stories",
+    Screen: ShareScreen,
+    alt: "A share card for Hadestown with four and a half stars, the 14th show of 2026 and the handle @sillyelphaba",
   },
   {
     title: "See your history",
     body: "Every show you’ve seen in one diary. Bring old nights in from ticket emails and photos.",
-    image: "/landing/features/history.svg",
-    alt: "A diary of recent shows, newest first",
+    Screen: HistoryScreen,
+    alt: "A diary of five recent shows, newest first, each with its theatre, date and star rating",
   },
   {
     title: "Plan ahead",
     body: "Group a trip or a festival’s shows together and keep track of what you want to see next.",
-    image: "/landing/features/plan.svg",
-    alt: "Two trips: a week away and a festival",
+    Screen: PlanScreen,
+    alt: "Two upcoming shows marked Going, and two trips: a festival week and a birthday weekend",
   },
 ];
 
@@ -76,19 +73,20 @@ export function Features() {
             className="relative mx-auto aspect-[4/5] w-full max-w-[420px] overflow-hidden rounded-lg border border-separator bg-glow shadow-sm lg:mx-0 lg:flex-[1_1_420px]"
           >
             {/* All four stay mounted, so switching is an instant cross-fade. */}
-            {FEATURES.map((feature, index) => (
-              <Image
-                key={feature.image}
-                src={feature.image}
-                alt={index === active ? feature.alt : ""}
+            {FEATURES.map(({ Screen, alt, title }, index) => (
+              <div
+                key={title}
+                role="img"
+                aria-label={alt}
                 aria-hidden={index !== active}
-                width={IMAGE_WIDTH}
-                height={IMAGE_HEIGHT}
-                sizes="(min-width: 1024px) 420px, min(100vw, 420px)"
-                className={`absolute inset-0 size-full object-cover transition-opacity duration-300 motion-reduce:transition-none ${
+                className={`absolute inset-0 overflow-hidden p-5 transition-opacity duration-300 motion-reduce:transition-none sm:p-6 ${
                   index === active ? "opacity-100" : "opacity-0"
                 }`}
-              />
+              >
+                <div aria-hidden="true">
+                  <Screen />
+                </div>
+              </div>
             ))}
           </div>
 

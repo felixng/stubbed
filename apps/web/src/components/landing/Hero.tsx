@@ -1,26 +1,14 @@
-import Image from "next/image";
 import Link from "next/link";
 
 import { Container } from "@/components/landing/Container";
+import { HeroPhone } from "@/components/landing/Screens";
 import { WaitlistForm } from "@/components/landing/WaitlistForm";
-import { Chip } from "@/components/ui/Chip";
-import heroDiary from "@/images/hero-diary.webp";
-
-// Static chips under the subhead: short, sentence case, no numbers.
-const HIGHLIGHTS = [
-  "Log every show",
-  "Instagram share cards",
-  "Trips and stats",
-];
 
 export function Hero() {
   return (
     <section className="overflow-hidden pt-8 pb-16 sm:pb-20">
       <Container className="flex flex-col gap-12 lg:flex-row lg:items-start lg:gap-16">
         <div className="flex min-w-0 flex-col gap-6 lg:flex-[1_1_520px]">
-          <p className="inline-flex min-h-8 items-center self-start rounded-pill border border-separator bg-surface px-3.5 text-footnote font-medium tracking-[0.08em] text-label-secondary uppercase shadow-sm">
-            For the theatre regulars
-          </p>
           <h1 className="font-display text-[clamp(44px,7vw,76px)] leading-[1.02] font-extrabold tracking-[-0.03em] text-balance text-label">
             Your theatre life, shared.
           </h1>
@@ -28,13 +16,6 @@ export function Hero() {
             Log the shows you see. Rate them. Your diary, shared with
             the people who get it.
           </p>
-          <ul aria-label="Features" className="flex flex-wrap gap-2">
-            {HIGHLIGHTS.map((highlight) => (
-              <li key={highlight}>
-                <Chip>{highlight}</Chip>
-              </li>
-            ))}
-          </ul>
           <div id="waitlist" className="mt-2 flex scroll-mt-24 flex-col gap-1">
             <WaitlistForm />
             <p className="text-footnote text-label-secondary">
@@ -56,17 +37,8 @@ export function Hero() {
               aria-hidden="true"
               className="absolute top-1/2 left-1/2 aspect-square w-[min(100%,520px)] -translate-1/2 rounded-full bg-glow shadow-[0_0_0_28px_color-mix(in_srgb,var(--tint)_16%,transparent)]"
             />
-            {/* Mockup of the Diary screen, transparent around the phone. The box
-                keeps the top 86% of the image (down to the tab bar) and fades
-                out, so the browser URL bar never shows or takes up space. */}
-            <div className="relative aspect-[777/1285] w-[350px] max-w-full overflow-hidden mask-[linear-gradient(to_bottom,white_94%,transparent)]">
-              <Image
-                src={heroDiary}
-                alt="The Stubbed diary on a phone: Hamilton, Miss Saigon and other recent shows with star ratings"
-                priority
-                sizes="350px"
-                className="h-auto w-full"
-              />
+            <div className="relative">
+              <HeroPhone label="The Stubbed diary on a phone: Hadestown, Operation Mincemeat, Les Misérables and Sunset Boulevard, each with its theatre, date and star rating" />
             </div>
           </div>
         </div>
