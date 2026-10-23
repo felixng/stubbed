@@ -122,7 +122,7 @@ export function AvatarPicker({
         <Avatar name={name || "?"} url={url} size={size} />
         <span
           aria-hidden="true"
-          className="absolute right-0 bottom-0 flex size-8 items-center justify-center rounded-pill bg-tint text-on-tint ring-2 ring-background"
+          className="absolute right-0 bottom-0 flex size-8 items-center justify-center rounded-pill bg-label text-background ring-2 ring-background"
         >
           <svg viewBox="0 0 24 24" width={16} height={16} fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
             <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />

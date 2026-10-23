@@ -251,7 +251,7 @@ export function ShareSheet({
             aria-current={i === active}
             className="flex size-6 items-center justify-center rounded-pill focus-visible:outline-2 focus-visible:outline-focus"
           >
-            <span className={`block size-2 rounded-pill ${i === active ? "bg-tint" : "bg-outline/40"}`} />
+            <span className={`block size-2 rounded-pill ${i === active ? "bg-label" : "bg-outline/40"}`} />
           </button>
         ))}
       </div>

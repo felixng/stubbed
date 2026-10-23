@@ -38,8 +38,10 @@ function useLocalToday() {
   return { key: iso.slice(0, 7), day: Number(iso.slice(8)) };
 }
 
-// A month at a time, Monday first, like Hevy's calendar. Days with a show are
-// filled with the tint and jump to that day's entry in the list below.
+// A month at a time, Monday first, like Hevy's calendar. Days with a show sit
+// on a coral wash with a dot under the number (so it isn't colour alone; the
+// tint itself is kept for the page's one primary action), and jump to that
+// day's entry in the list below.
 // Opens on the month of the latest show, since most months have none.
 export function ProfileCalendar({ entries }: { entries: CalendarEntry[] }) {
   // Entries arrive newest first.
@@ -128,9 +130,10 @@ export function ProfileCalendar({ entries }: { entries: CalendarEntry[] }) {
               href={`#entry-${seen[0].id}`}
               aria-label={`${day} ${title}: ${titles}`}
               title={titles}
-              className={`${base} bg-tint font-semibold text-on-tint hover:bg-tint-pressed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus`}
+              className={`${base} relative bg-tint-fill font-semibold text-tint-text hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus`}
             >
               {day}
+              <span aria-hidden="true" className="absolute bottom-1 size-1 rounded-pill bg-current" />
             </a>
           );
         })}

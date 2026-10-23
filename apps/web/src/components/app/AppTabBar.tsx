@@ -5,9 +5,11 @@ import { usePathname } from "next/navigation";
 
 import { TAB_ICONS } from "@/components/ui/TabBar";
 
-// Bottom tab bar for the owner app (#13): Home (the feed), a big centre Log
-// button, and Profile (your diary and trips). Same look as the
-// `TabBar` UI component, but with links.
+// Bottom tab bar for the owner app (#13): Home (the feed), Log and Profile
+// (your diary and trips), three equal tabs as on iOS. Log is a plain tab, not
+// a raised coral button, so the page's own primary action (Save, Choose
+// photo) is the only coral fill on screen. Same look as the `TabBar` UI
+// component, but with links.
 export function Icon({ id, size = 24 }: { id: string; size?: number }) {
   return (
     <svg
@@ -55,7 +57,7 @@ export function AppTabBarLinks({ pathname }: { pathname: string }) {
   return (
     <nav
       aria-label="Main"
-      className="flex items-end border-t border-separator bg-surface px-2 pb-[env(safe-area-inset-bottom)]"
+      className="flex border-t border-separator bg-surface px-2 pb-[env(safe-area-inset-bottom)]"
     >
       <Link
         href="/app"
@@ -65,28 +67,14 @@ export function AppTabBarLinks({ pathname }: { pathname: string }) {
         <Icon id="home" />
         <span>Home</span>
       </Link>
-      <div className="flex flex-1 justify-center">
-        <Link
-          href="/app/log"
-          aria-current={log ? "page" : undefined}
-          className="-mt-5 mb-1.5 inline-flex min-h-14 items-center gap-1.5 rounded-pill bg-tint px-5 text-headline text-on-tint shadow-btn hover:bg-tint-pressed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-        >
-          <svg
-            viewBox="0 0 24 24"
-            width={22}
-            height={22}
-            aria-hidden="true"
-            focusable="false"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-          >
-            <path d="M12 5v14M5 12h14" />
-          </svg>
-          Log
-        </Link>
-      </div>
+      <Link
+        href="/app/log"
+        aria-current={log ? "page" : undefined}
+        className={`${tab} ${log ? "text-tint-text" : "text-label-secondary"}`}
+      >
+        <Icon id="log" />
+        <span>Log</span>
+      </Link>
       <Link
         href="/app/profile"
         aria-current={profile ? "page" : undefined}

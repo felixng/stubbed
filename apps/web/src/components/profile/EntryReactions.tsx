@@ -14,7 +14,7 @@ const ACTION =
 // writes in the background; the refreshed page then brings the real counts.
 // Signed-out visitors go to sign in and come back. Comments live on the
 // entry's page (`commentsHref`), or, with `onComment` (the feed, which shows
-// them inline), Comment calls it to start a comment there. With `shareHref`
+// them inline), Comment calls it to open the comment box there. With `shareHref`
 // (your own shows), Share follows Comment and opens the share screen.
 export function EntryReactions({
   entryId,
@@ -24,6 +24,7 @@ export function EntryReactions({
   loginHref,
   shareHref,
   onComment,
+  commentOpen,
 }: {
   entryId: string;
   reactions: Reactions;
@@ -32,6 +33,8 @@ export function EntryReactions({
   loginHref: string;
   shareHref?: string;
   onComment?: () => void;
+  // Whether the comment box `onComment` reveals is open (the feed folds it).
+  commentOpen?: boolean;
 }) {
   const router = useRouter();
   // The viewer's own like, shown until the refreshed counts arrive. A new
@@ -110,7 +113,7 @@ export function EntryReactions({
         </Link>
       )}
       {onComment ? (
-        <button type="button" onClick={onComment} className={`${ACTION} cursor-pointer`}>
+        <button type="button" onClick={onComment} aria-expanded={commentOpen} className={`${ACTION} cursor-pointer`}>
           {commentInner}
         </button>
       ) : (
