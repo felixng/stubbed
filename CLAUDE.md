@@ -55,5 +55,5 @@ Details and reasoning: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs
 - `follows` (status `pending` | `accepted`), `entry_likes`, `entry_comments` (≤ 500 characters).
 - `events` (write-only analytics: `entry_logged`, `card_shared`), `waitlist` (fallback when Kit isn't configured).
 - Storage: private `entry-photos` bucket (others can read a photo only while its entry is public), public `avatars` bucket.
-- Key functions: `search_shows`, `search_venues`, `public_profile_stats`, `entry_card_stats`, `feed_entries`, `entry_comment_previews`, `search_profiles`, `follow_counts`, `profile_is_visible`, `delete_my_account`.
+- Key functions: `search_shows`, `search_venues`, `public_profile_stats`, `own_profile_stats`, `entry_card_stats`, `feed_entries`, `entry_comment_previews`, `search_profiles`, `follow_counts`, `profile_is_visible`, `delete_my_account`.
 - Not yet: an `entry_photos` table for several photos per entry, and a per-user record of import runs. Both are open product decisions in the brief.

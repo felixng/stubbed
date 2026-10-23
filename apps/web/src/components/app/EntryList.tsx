@@ -24,7 +24,8 @@ export function EntryList({
   return (
     <ul className="overflow-hidden rounded-md border border-separator bg-surface shadow-sm">
       {entries.map((e) => (
-        <li key={e.id} className="border-b border-separator last:border-b-0">
+        // The id lets the diary's calendar jump to the row; scroll-mt clears the sticky phone header.
+        <li key={e.id} id={`entry-${e.id}`} className="scroll-mt-20 border-b border-separator last:border-b-0 target:bg-fill">
           {selection ? (
             <label
               className={`${ROW} relative cursor-pointer transition-colors has-focus-visible:outline-2 has-focus-visible:-outline-offset-2 has-focus-visible:outline-focus ${
