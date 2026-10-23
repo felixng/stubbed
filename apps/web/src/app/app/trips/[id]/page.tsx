@@ -55,7 +55,7 @@ async function Trip({ params, searchParams }: PageProps<"/app/trips/[id]">) {
     shows: seen.map((e) => ({
       title: e.show.title,
       venue: e.venue?.name ?? null,
-      day: formatDate(e.date, { weekday: "short", day: "numeric", month: "short" }).replace(",", ""),
+      day: formatDate(e.date, { weekday: "short", day: "numeric", month: "short" }),
       rating: e.rating,
     })),
     venues,

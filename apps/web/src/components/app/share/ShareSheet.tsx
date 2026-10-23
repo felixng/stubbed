@@ -241,7 +241,9 @@ export function ShareSheet({
         })}
       </div>
 
-      <div className="flex justify-center gap-1">
+      {/* 44px targets around 8px dots, like a page control; the row overlaps
+          the gap above it so the dots don't sit far from the card. */}
+      <div className="-my-2.5 flex justify-center">
         {designs.map((design, i) => (
           <button
             key={design.id}
@@ -249,7 +251,7 @@ export function ShareSheet({
             onClick={() => goTo(i)}
             aria-label={`Show card ${i + 1}, ${design.name}`}
             aria-current={i === active}
-            className="flex size-6 items-center justify-center rounded-pill focus-visible:outline-2 focus-visible:outline-focus"
+            className="flex size-11 cursor-pointer items-center justify-center rounded-pill focus-visible:outline-2 focus-visible:outline-offset-[-6px] focus-visible:outline-focus"
           >
             <span className={`block size-2 rounded-pill ${i === active ? "bg-label" : "bg-outline/40"}`} />
           </button>

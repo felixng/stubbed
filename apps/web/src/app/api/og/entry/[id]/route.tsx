@@ -1,4 +1,4 @@
-import { formatDate } from "@/lib/entries";
+import { formatDate, WITH_WEEKDAY } from "@/lib/entries";
 import { Footer, Ground, ogImage, ogNotFound, photoData, SECONDARY, Stars, titleSize } from "@/lib/og";
 import { getPublicEntry } from "@/lib/public-pages";
 
@@ -24,7 +24,7 @@ export async function GET(_request: Request, { params }: RouteContext<"/api/og/e
       <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", flex: 1, padding: pad }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
           <div style={{ fontSize: 28, color: SECONDARY }}>
-            {formatDate(entry.date, { weekday: "short", day: "numeric", month: "short", year: "numeric" })}
+            {formatDate(entry.date, WITH_WEEKDAY)}
           </div>
           <div
             style={{

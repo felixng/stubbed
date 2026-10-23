@@ -6,6 +6,7 @@ import { Diary } from "@/components/app/Diary";
 import { FollowRequests } from "@/components/app/FollowRequests";
 import { TripsList } from "@/components/app/TripsList";
 import { Avatar } from "@/components/profile/Avatar";
+import { PlaceholderRows } from "@/components/ui/PlaceholderRows";
 import { getFollowCounts, listFollowRequests } from "@/lib/follows";
 import { getOwnProfile, ownerContext } from "@/lib/supabase/data";
 
@@ -130,13 +131,13 @@ async function Body({ searchParams }: { searchParams: PageProps<"/app/profile">[
           >
             + New trip
           </Link>
-          <Suspense fallback={loading}>
+          <Suspense fallback={<PlaceholderRows />}>
             <TripsList />
           </Suspense>
         </section>
       ) : (
         <section aria-label="Diary" className="flex flex-col gap-5">
-          <Suspense fallback={loading}>
+          <Suspense fallback={<PlaceholderRows />}>
             <Diary />
           </Suspense>
         </section>

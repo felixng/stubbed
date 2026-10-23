@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useId, type ReactNode } from "react";
 
 import { Chip } from "@/components/ui/Chip";
-import { formatDate, type NearbyVenue, type NewShow, type Show, type VenueChoice } from "@/lib/entries";
+import { formatDate, WITH_WEEKDAY, type NearbyVenue, type NewShow, type Show, type VenueChoice } from "@/lib/entries";
 import { describeMissing, missingFields, type MissingField, type Place, type Reading } from "@/lib/import/drafts";
 import { DateField } from "../DateField";
 import { RatingInput } from "../log/RatingInput";
@@ -68,7 +68,7 @@ function Hint({ field, missing }: { field: MissingField; missing: MissingField[]
 
 function readLine(d: Draft) {
   const e = d.reading.extracted;
-  const when = e.date ? `${formatDate(e.date, { weekday: "short", day: "numeric", month: "short", year: "numeric" })}${e.time ? `, ${e.time}` : ""}` : null;
+  const when = e.date ? `${formatDate(e.date, WITH_WEEKDAY)}${e.time ? `, ${e.time}` : ""}` : null;
   return [e.show_title, e.venue_name ?? (e.venue_osm_id ? "a nearby theatre" : null), [e.city, e.country].filter(Boolean).join(", ") || null, when]
     .filter(Boolean)
     .join(" · ");

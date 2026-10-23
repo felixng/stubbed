@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { EmptyState } from "@/components/app/EmptyState";
 import { FeedCard } from "@/components/app/FeedCard";
 import { FeedMore } from "@/components/app/FeedMore";
+import { PlaceholderRows } from "@/components/ui/PlaceholderRows";
 import { getFeed } from "@/lib/supabase/data";
 
 export const metadata: Metadata = { title: "Home" };
@@ -46,7 +47,7 @@ export default function HomePage() {
   return (
     <section className="flex flex-col gap-5">
       <h1 className="text-title font-display text-label">Home</h1>
-      <Suspense fallback={<p className="text-subheadline text-label-secondary">Loading…</p>}>
+      <Suspense fallback={<PlaceholderRows />}>
         <Feed />
       </Suspense>
     </section>

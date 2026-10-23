@@ -6,7 +6,7 @@ import { Suspense } from "react";
 import { DeleteEntryButton } from "@/components/app/DeleteEntryButton";
 import { ShareSheet } from "@/components/app/share/ShareSheet";
 import { BackLink } from "@/components/ui/BackLink";
-import { formatDate, SHOW_TYPE_LABELS } from "@/lib/entries";
+import { formatDate, SHOW_TYPE_LABELS, WITH_WEEKDAY } from "@/lib/entries";
 import type { CardData } from "@/lib/share-card";
 import { getShareCard } from "@/lib/supabase/data";
 
@@ -92,7 +92,7 @@ async function Entry({ params, searchParams }: PageProps<"/app/entries/[id]">) {
             {[SHOW_TYPE_LABELS[entry.show.type], where].filter(Boolean).join(" · ")}
           </p>
           <p className="text-subheadline text-label-secondary">
-            {formatDate(entry.date, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+            {formatDate(entry.date, WITH_WEEKDAY)}
           </p>
         </header>
         {entry.note && <p className="text-body whitespace-pre-line text-label">{entry.note}</p>}
