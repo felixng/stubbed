@@ -16,6 +16,14 @@ export function withFrom(href: string, from: From): string {
   return `${href}${href.includes("?") ? "&" : "?"}from=${encodeURIComponent(from)}`;
 }
 
+// A `from` that's safe to pass on (to the edit page and back), or null.
+export function readFrom(from: string | string[] | undefined): From | null {
+  if (typeof from !== "string") return null;
+  if (from === "home" || from === "import" || from === "admin-import") return from;
+  if (from.startsWith("trip-") && UUID.test(from.slice(5))) return from as From;
+  return null;
+}
+
 // A trip is only trusted when the entry is in it, which also gives its name.
 export function entryBack(
   from: string | string[] | undefined,

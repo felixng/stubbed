@@ -103,26 +103,28 @@ export function FeedThread({
               type="button"
               onClick={viewAll}
               disabled={loading}
-              className="-mx-1 w-fit cursor-pointer rounded-md px-1 text-left text-subheadline text-label-secondary hover:text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-wait"
+              className="-mx-1 -my-1.5 inline-flex min-h-11 w-fit cursor-pointer items-center rounded-md px-1 text-left text-subheadline text-label-secondary hover:text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-wait"
             >
               {loading ? "Loading comments…" : count === 1 ? "View 1 comment" : `View all ${count} comments`}
             </button>
           )}
-          <ul className="flex flex-col gap-3" aria-label="Comments">
-            {comments.map((c) => (
-              <CommentItem
-                key={c.id}
-                comment={c}
-                canDelete={viewerId === c.author.id || viewerId === ownerId}
-                mine={viewerId === c.author.id}
-                onDeleted={() => {
-                  const rest = comments.filter((x) => x.id !== c.id);
-                  const left = Math.max(0, count - 1);
-                  setLocal({ comments: rest, count: left, all: all || left <= rest.length });
-                }}
-              />
-            ))}
-          </ul>
+          {comments.length > 0 && (
+            <ul className="flex flex-col gap-3" aria-label="Comments">
+              {comments.map((c) => (
+                <CommentItem
+                  key={c.id}
+                  comment={c}
+                  canDelete={viewerId === c.author.id || viewerId === ownerId}
+                  mine={viewerId === c.author.id}
+                  onDeleted={() => {
+                    const rest = comments.filter((x) => x.id !== c.id);
+                    const left = Math.max(0, count - 1);
+                    setLocal({ comments: rest, count: left, all: all || left <= rest.length });
+                  }}
+                />
+              ))}
+            </ul>
+          )}
         </div>
       )}
       {viewerId ? (
@@ -138,7 +140,7 @@ export function FeedThread({
           />
         )
       ) : (
-        <Link href={loginHref} className="w-fit text-subheadline font-semibold text-tint-text underline-offset-2 hover:underline">
+        <Link href={loginHref} className="-my-1.5 inline-flex min-h-11 w-fit items-center rounded-sm text-subheadline font-semibold text-tint-text underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
           Sign in to comment
         </Link>
       )}

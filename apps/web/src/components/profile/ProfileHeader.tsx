@@ -92,7 +92,7 @@ export function ProfileHeader({
                 href={profile.link}
                 rel="nofollow ugc noopener noreferrer"
                 target="_blank"
-                className="w-fit max-w-full truncate text-subheadline font-semibold text-tint-text underline-offset-2 hover:underline"
+                className="w-fit max-w-full truncate rounded-sm text-subheadline font-semibold text-tint-text underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
               >
                 {displayLink(profile.link)}
               </a>

@@ -12,6 +12,13 @@ import { createClient } from "@/lib/supabase/client";
 // Stubbed's Instagram account, tagged in the caption and the copied text.
 const INSTAGRAM = "@stubbedapp";
 
+// The transparency checkerboard, deliberately outside the palette: neutral
+// greys, as in Photos and image editors, so it reads as "nothing here" and
+// doesn't tint what a clear card shows. Dark behind the clear card (its text
+// is white), light in the Transparent toggle's swatch.
+const CHECKER_DARK = "bg-[repeating-conic-gradient(#5b5b5f_0%_25%,#47474a_0%_50%)] bg-[length:28px_28px]";
+const CHECKER_LIGHT = "bg-[repeating-conic-gradient(#ffffff_0%_25%,#c7c7cc_0%_50%)] bg-[length:8px_8px]";
+
 type Rendered = { file: File; url: string };
 // `clear`: the same card without its background (entry cards only).
 // `stories`: `photo` with square corners, for the Stories button, since
@@ -226,7 +233,7 @@ export function ShareSheet({
               role="group"
               aria-roledescription="slide"
               aria-label={`${i + 1} of ${designs.length}: ${design.name}`}
-              className={`@container relative aspect-square w-full shrink-0 snap-center overflow-hidden rounded-[6%] ${clear ? "bg-[repeating-conic-gradient(#5b5b5f_0%_25%,#47474a_0%_50%)] bg-[length:28px_28px]" : ""}`}
+              className={`@container relative aspect-square w-full shrink-0 snap-center overflow-hidden rounded-[6%] ${clear ? CHECKER_DARK : ""}`}
             >
               {/* Until the card is drawn, a stand-in from the data on hand on
                   the card's own ground, so the sheet is never blank. It stays
@@ -299,7 +306,7 @@ export function ShareSheet({
           >
             <span
               aria-hidden="true"
-              className="size-4 rounded-pill border border-outline bg-[repeating-conic-gradient(#ffffff_0%_25%,#c7c7cc_0%_50%)] bg-[length:8px_8px]"
+              className={`size-4 rounded-pill border border-outline ${CHECKER_LIGHT}`}
             />
             Transparent
           </button>

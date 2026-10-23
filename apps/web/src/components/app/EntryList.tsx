@@ -15,17 +15,20 @@ const ROW = "flex items-center gap-4 px-4 py-3";
 // entry, so the list doesn't change under you.
 //
 // `from` sets where the entry page's back link goes (a trip). The diary
-// leaves it out: Profile is the entry page's default.
+// leaves it out: Profile is the entry page's default. `inTrip` leaves that
+// trip's chip off the rows on its own page.
 export function EntryList({
   entries,
   photos,
   selection,
   from,
+  inTrip,
 }: {
   entries: EntryRow[];
   photos: Map<string, string>;
   selection?: { picked: string[]; onToggle: (id: string) => void };
   from?: From;
+  inTrip?: string;
 }) {
   return (
     <ul className="overflow-hidden rounded-md border border-separator bg-surface shadow-sm">
@@ -38,7 +41,7 @@ export function EntryList({
                 selection.picked.includes(e.id) ? "bg-tint-fill" : "hover:bg-fill"
               }`}
             >
-              <Row entry={e} photos={photos} />
+              <Row entry={e} photos={photos} inTrip={inTrip} />
               <input
                 type="checkbox"
                 checked={selection.picked.includes(e.id)}
@@ -59,7 +62,7 @@ export function EntryList({
               href={from ? withFrom(`/app/entries/${e.id}`, from) : `/app/entries/${e.id}`}
               className={`${ROW} hover:bg-fill focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus`}
             >
-              <Row entry={e} photos={photos} />
+              <Row entry={e} photos={photos} inTrip={inTrip} />
             </Link>
           )}
         </li>
@@ -68,7 +71,7 @@ export function EntryList({
   );
 }
 
-function Row({ entry: e, photos }: { entry: EntryRow; photos: Map<string, string> }) {
+function Row({ entry: e, photos, inTrip }: { entry: EntryRow; photos: Map<string, string>; inTrip?: string }) {
   return (
     <>
       <Poster
@@ -89,7 +92,7 @@ function Row({ entry: e, photos }: { entry: EntryRow; photos: Map<string, string
           ) : (
             e.rating != null && <RatingStars value={e.rating} size={14} />
           )}
-          {e.collections.map((c) => (
+          {e.collections.filter((c) => c.id !== inTrip).map((c) => (
             <span key={c.id} className="rounded-pill bg-fill px-2 text-caption leading-5 text-label">
               {c.name}
             </span>

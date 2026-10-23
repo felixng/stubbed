@@ -41,7 +41,7 @@ export function UpcomingSection({ count, children }: { count: number; children: 
         </h2>
         <Link
           href="/app/trips/new"
-          className="text-subheadline font-semibold text-tint-text underline-offset-2 hover:underline"
+          className="-mr-3 inline-flex min-h-11 items-center rounded-pill px-3 text-subheadline font-semibold text-tint-text hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           + New trip
         </Link>

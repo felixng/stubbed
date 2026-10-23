@@ -66,7 +66,7 @@ export function WaitlistForm() {
           disabled={pending}
           className="flex-[1_0_auto] sm:flex-none"
         >
-          {pending ? "Sending…" : "Request an invite"}
+          {pending ? "Sending…" : "Join the waitlist"}
         </Button>
       </div>
       <p

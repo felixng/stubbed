@@ -10,7 +10,7 @@ export default function LogPage() {
     <section className="flex flex-col gap-5">
       <div className="flex items-baseline justify-between gap-3">
         <h1 className="text-title font-display text-label">Log a show</h1>
-        <Link href="/app/import" className="text-subheadline font-semibold text-tint-text underline-offset-2 hover:underline">
+        <Link href="/app/import" className="-my-2 -mr-3 inline-flex min-h-11 items-center rounded-pill px-3 text-subheadline font-semibold text-tint-text hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
           Import shows
         </Link>
       </div>
