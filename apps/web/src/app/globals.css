@@ -150,6 +150,10 @@
   --text-footnote--letter-spacing: -0.006em;
   --text-caption: 12px;
   --text-caption--line-height: 16px;
+  /* Tab bar labels only (iOS Caption 2): the one size below Footnote. */
+  --text-caption-2: 11px;
+  --text-caption-2--line-height: 13px;
+  --text-caption-2--letter-spacing: 0.006em;
 }
 
 body {

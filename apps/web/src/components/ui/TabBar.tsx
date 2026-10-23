@@ -47,7 +47,7 @@ export function TabBar({
             type="button"
             aria-current={on ? "page" : undefined}
             onClick={onSelect ? () => onSelect(item.id) : undefined}
-            className={`flex min-h-[49px] flex-1 flex-col items-center gap-0.5 pt-1.5 pb-1 text-[10px] leading-[13px] font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
+            className={`flex min-h-[49px] flex-1 flex-col items-center gap-0.5 pt-1.5 pb-1 text-caption-2 font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus ${
               on ? "text-tint-text" : "text-label-secondary"
             }`}
           >

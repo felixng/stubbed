@@ -628,7 +628,7 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
             Emails saved from your mail app (.eml or .mbox) or as a web page (.html) all work.
           </p>
           <div className="mt-1 flex flex-wrap justify-center gap-2">
-            <label className="inline-flex min-h-11 cursor-pointer items-center rounded-pill bg-tint-fill px-4 text-[15px] leading-5 font-semibold text-tint-text hover:bg-fill focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus">
+            <label className="inline-flex min-h-11 cursor-pointer items-center rounded-pill bg-tint-fill px-4 text-subheadline font-semibold text-tint-text hover:bg-fill focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus">
               Choose emails
               <input
                 type="file"
@@ -641,7 +641,7 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
                 }}
               />
             </label>
-            <label className="inline-flex min-h-11 cursor-pointer items-center rounded-pill bg-tint-fill px-4 text-[15px] leading-5 font-semibold text-tint-text hover:bg-fill focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus">
+            <label className="inline-flex min-h-11 cursor-pointer items-center rounded-pill bg-tint-fill px-4 text-subheadline font-semibold text-tint-text hover:bg-fill focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus">
               Choose photos
               <input
                 type="file"

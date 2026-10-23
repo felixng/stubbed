@@ -34,7 +34,7 @@ export default function ConfirmedPage() {
         </div>
         <Link
           href="/"
-          className="inline-flex min-h-11 items-center rounded-pill px-4 text-[15px] leading-5 font-semibold text-tint-text hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          className="inline-flex min-h-11 items-center rounded-pill px-4 text-subheadline font-semibold text-tint-text hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           Back to Stubbed
         </Link>

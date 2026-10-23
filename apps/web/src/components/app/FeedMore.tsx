@@ -74,7 +74,7 @@ export function FeedMore({ start }: { start: FeedCursor }) {
               type="button"
               onClick={() => void more()}
               disabled={loading}
-              className="inline-flex min-h-11 items-center rounded-pill bg-tint-fill px-5 text-[15px] leading-5 font-semibold text-tint-text hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-wait disabled:opacity-60"
+              className="inline-flex min-h-11 items-center rounded-pill bg-tint-fill px-5 text-subheadline font-semibold text-tint-text hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-wait disabled:opacity-60"
             >
               {loading ? "Loading…" : failed ? "Try again" : "Load more"}
             </button>

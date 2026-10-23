@@ -138,7 +138,7 @@ export function Features() {
                         selected ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
                       }`}
                     >
-                      <span className="overflow-hidden text-body text-label-secondary">
+                      <span className="overflow-hidden text-body leading-6 text-pretty text-label-secondary">
                         <span className="block pt-1">{feature.body}</span>
                       </span>
                     </span>

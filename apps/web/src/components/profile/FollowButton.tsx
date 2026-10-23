@@ -9,7 +9,7 @@ import type { Viewer } from "@/lib/follows";
 import { createClient } from "@/lib/supabase/client";
 
 const LINK_BUTTON =
-  "inline-flex min-h-11 items-center justify-center rounded-pill px-4 font-sans text-[15px] leading-5 font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
+  "inline-flex min-h-11 items-center justify-center rounded-pill px-4 font-sans text-subheadline font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
 
 // Follow / Requested / Following on /@handle. Postgres decides whether a
 // follow is accepted at once or waits for approval (private profiles); this

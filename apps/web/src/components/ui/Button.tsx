@@ -6,7 +6,7 @@ const base =
 
 const sizes = {
   md: "min-h-[50px] px-6 text-headline",
-  sm: "min-h-11 px-4 text-[15px] leading-5",
+  sm: "min-h-11 px-4 text-subheadline",
 };
 
 const variants = {

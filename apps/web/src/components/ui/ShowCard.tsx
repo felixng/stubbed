@@ -26,7 +26,7 @@ export function ShowCard({
         title={title}
         poster={poster}
         className="w-full"
-        initialsClassName="text-[40px]"
+        initialsClassName="text-large-title"
       />
       <div className="flex flex-col items-start gap-1">
         <h3 className="text-headline text-label">{title}</h3>

@@ -30,7 +30,7 @@ export function Icon({ id, size = 24 }: { id: string; size?: number }) {
 }
 
 const tab =
-  "flex min-h-[49px] flex-1 flex-col items-center gap-0.5 pt-1.5 pb-1 text-[10px] leading-[13px] font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
+  "flex min-h-[49px] flex-1 flex-col items-center gap-0.5 pt-1.5 pb-1 text-caption-2 font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
 
 // Which section a path belongs to, shared with the desktop sidebar so both
 // mark the same place. Trip pages and settings sit under Profile.
