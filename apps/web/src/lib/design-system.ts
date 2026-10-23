@@ -79,12 +79,13 @@ export const TEXT_STYLES: TextStyle[] = [
   { name: "Subheadline", tailwind: "text-subheadline", size: 15, lineHeight: 20, weight: 400, tracking: "-0.016em", use: "Row metadata: venue · date" },
   { name: "Footnote", tailwind: "text-footnote", size: 13, lineHeight: 18, weight: 400, tracking: "-0.006em", use: "Chips, fine print; the smallest body text" },
   { name: "Caption", tailwind: "text-caption", size: 12, lineHeight: 16, weight: 400, tracking: "0", use: "Labels under numbers, timestamps" },
+  { name: "Caption 2", tailwind: "text-caption-2", size: 11, lineHeight: 13, weight: 500, tracking: "0.006em", use: "Tab bar labels only; the one size below Footnote" },
 ];
 
 export const TYPE_RULES = [
   "The system font only: SF Pro on Apple devices, the system sans elsewhere. No web fonts.",
   "Titles (Large Title, Title, Title 2) use SF Pro Display, bold.",
-  "Never set body text below Footnote (13px).",
+  "Never set body text below Footnote (13px). Tab bar labels (Caption 2, 11px) are the only exception.",
   "Web app page headings use Title, not Large Title, so they don't outweigh the header wordmark. iOS keeps native Large Titles.",
   "Marketing only: the landing hero headline is clamp(44px, 7vw, 76px), extra bold; feature card titles are 20px.",
 ];
