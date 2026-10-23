@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
-import { Avatar } from "@/components/profile/Avatar";
 import { FollowButton } from "@/components/profile/FollowButton";
 import { ProfileCalendar } from "@/components/profile/ProfileCalendar";
+import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { PublicEntryCard } from "@/components/profile/PublicEntryCard";
 import { getPublicProfile } from "@/lib/profile";
+import { count } from "@/lib/plural";
 import { NO_REACTIONS } from "@/lib/reactions";
 
 // Public profile, served at /@handle (rewritten here in next.config.ts).
@@ -36,15 +36,6 @@ export async function generateMetadata({ params }: PageProps<"/u/[handle]">): Pr
   };
 }
 
-// "https://www.instagram.com/you/" → "instagram.com/you"
-function displayLink(link: string) {
-  return link.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");
-}
-
-function count(n: number, noun: string) {
-  return `${n} ${n === 1 ? noun : `${noun}s`}`;
-}
-
 async function Profile({ params }: PageProps<"/u/[handle]">) {
   const { handle } = await params;
   const data = await getPublicProfile(handle);
@@ -58,75 +49,13 @@ async function Profile({ params }: PageProps<"/u/[handle]">) {
 
   return (
     <>
-      <section aria-labelledby="profile-name" className="overflow-hidden rounded-md border border-separator bg-surface shadow-sm">
-        {cover.length > 0 ? (
-          <div className="flex h-28 gap-0.5 bg-fill sm:h-44">
-            {cover.map((src, i) => (
-              // eslint-disable-next-line @next/next/no-img-element -- signed Storage URL, EXIF stripped on upload
-              <img key={src} src={src} alt="" className={`min-w-0 flex-1 object-cover ${i >= 3 ? "hidden sm:block" : ""}`} />
-            ))}
-          </div>
-        ) : (
-          <div aria-hidden="true" className="h-20 bg-tint-fill sm:h-28" />
-        )}
-        <div className="flex flex-col gap-4 px-4 pb-5 sm:px-6">
-          <div className="flex items-end justify-between gap-3">
-            <Avatar name={name} url={profile.avatar_url} size={88} className="-mt-11 ring-4 ring-surface" />
-            <FollowButton profileId={profile.id} handle={profile.handle} isPrivate={profile.is_private} viewer={viewer} />
-          </div>
-          <div className="flex flex-col gap-0.5">
-            <h1 id="profile-name" className="text-title font-display text-label">
-              @{profile.handle}
-            </h1>
-            {profile.display_name && <p className="text-subheadline text-label-secondary">{profile.display_name}</p>}
-          </div>
-          {(profile.bio || profile.link) && (
-            <div className="flex flex-col gap-1">
-              {profile.bio && <p className="whitespace-pre-line text-body text-label">{profile.bio}</p>}
-              {profile.link && (
-                <a
-                  href={profile.link}
-                  rel="nofollow ugc noopener noreferrer"
-                  target="_blank"
-                  className="w-fit max-w-full truncate text-subheadline font-semibold text-tint-text underline-offset-2 hover:underline"
-                >
-                  {displayLink(profile.link)}
-                </a>
-              )}
-            </div>
-          )}
-          <p className="flex gap-4 text-subheadline text-label-secondary">
-            {(
-              [
-                ["followers", follows.followers, follows.followers === 1 ? "follower" : "followers"],
-                ["following", follows.following, "following"],
-              ] as const
-            ).map(([list, value, label]) => (
-              <Link
-                key={list}
-                href={`/@${profile.handle}/${list}`}
-                className="rounded-sm underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-              >
-                <span className="font-semibold text-label tabular-nums">{value}</span> {label}
-              </Link>
-            ))}
-          </p>
-          {stats && (
-            <dl className="flex gap-8">
-              {[
-                ["Shows", stats.shows],
-                ["Theatres", stats.venues],
-                ["Cities", stats.cities],
-              ].map(([label, value]) => (
-                <div key={label} className="flex flex-col-reverse">
-                  <dt className="text-footnote text-label-secondary">{label}</dt>
-                  <dd className="text-title-2 font-display text-label tabular-nums">{value}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
-        </div>
-      </section>
+      <ProfileHeader
+        profile={profile}
+        cover={cover}
+        stats={stats}
+        follows={follows}
+        action={<FollowButton profileId={profile.id} handle={profile.handle} isPrivate={profile.is_private} viewer={viewer} />}
+      />
 
       {!stats ? (
         <div className="flex flex-col items-center gap-2 rounded-md border border-separator bg-surface px-6 py-12 text-center shadow-sm">

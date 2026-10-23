@@ -319,6 +319,7 @@ React components live in `apps/web/src/components/ui/`. The iOS app no longer mi
 - **Ratings** always show as the five `RatingStars` in Applause Gold, in half steps, never a bare number. Empty stars use Clay Outline.
 
 ### Calendar and feed
+- **Profile header:** one `ProfileHeader` for `/@handle` and the Profile tab: cover (up to five recent photos, or a Coral Wash band), an 80px avatar overlapping it with the page's action on the right, handle, name, follow counts, bio, link, then Shows, Theatres and Cities with labels that agree with their numbers (`lib/plural`). Visitors get Follow; the owner gets a secondary Edit profile and a "…" menu (View public profile, Import shows), a footnote for private shows the public profile leaves out, and a full-width "N follow requests ›" row at the card's foot. On the Profile tab the calendar sits in the diary, between Upcoming and Seen, so the diary starts above the fold at 390px.
 - **Profile calendar:** a day with a show sits on Coral Wash with its number in Deep Coral Ink and a small dot beneath, so it isn't colour alone; today is Deep Coral Ink text with no fill. Each show day is a link labelled with the date and the shows.
 - **Feed cards:** like and comment counts, then the note and the latest comments. The comment box stays folded until Comment is tapped, and folds again after posting; its Post button is secondary, since a feed has no single primary action.
 

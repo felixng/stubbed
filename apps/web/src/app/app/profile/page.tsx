@@ -3,99 +3,103 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { Diary } from "@/components/app/Diary";
-import { FollowRequests } from "@/components/app/FollowRequests";
+import { OwnerProfileMenu } from "@/components/app/OwnerProfileMenu";
 import { TripsList } from "@/components/app/TripsList";
-import { Avatar } from "@/components/profile/Avatar";
+import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { PlaceholderRows } from "@/components/ui/PlaceholderRows";
+import { signPhotos } from "@/lib/entries";
 import { getFollowCounts, listFollowRequests } from "@/lib/follows";
+import { count } from "@/lib/plural";
+import type { ProfileStats } from "@/lib/profile";
 import { getOwnProfile, ownerContext } from "@/lib/supabase/data";
 
 export const metadata: Metadata = { title: "Profile" };
 
 const loading = <p className="text-subheadline text-label-secondary">Loading…</p>;
 
-const PILL =
-  "inline-flex min-h-11 flex-1 items-center justify-center rounded-pill bg-fill px-4 text-subheadline font-semibold text-label hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
+type OwnStats = ProfileStats & { public_shows: number };
 
-// Who you are, Hevy style: avatar, handle, name and bio, then shows,
-// followers and following (linking to the lists, where followers can be
-// removed), any follow requests to approve, and buttons to edit the profile
-// (/app/settings) and see it as others do (/@handle).
+// The public profile's header (ProfileHeader, as on /@handle), with the
+// owner's controls: Edit profile and a menu with the public view, a row for
+// follow requests, and a note on how many private shows the public profile
+// leaves out. The stats count every logged show (own_profile_stats), private
+// ones included, since only the owner sees this page.
 async function Header() {
   const { supabase, userId } = await ownerContext();
   if (!userId) return null;
-  const logged = () =>
-    supabase.from("entries").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("status", "logged");
-  const [profile, counts, requests, { count: shows }, { count: publicShows }] = await Promise.all([
+  const [profile, follows, requests, { data: stats }, { data: covers }] = await Promise.all([
     getOwnProfile(),
     getFollowCounts(supabase, userId),
     listFollowRequests(supabase, userId),
-    logged(),
-    logged().eq("visibility", "public"),
+    supabase.rpc("own_profile_stats").single<OwnStats>(),
+    supabase
+      .from("entries")
+      .select("photo_path")
+      .eq("user_id", userId)
+      .eq("status", "logged")
+      .not("photo_path", "is", null)
+      .order("date", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(5),
   ]);
-  // This count includes private shows; /@handle counts public ones only, so
-  // say how many visitors don't see rather than let the two numbers disagree.
-  const hidden = (shows ?? 0) - (publicShows ?? 0);
   if (!profile?.handle) return null;
-  const name = profile.display_name || `@${profile.handle}`;
-  const stats: [string, number, string | null][] = [
-    [shows === 1 ? "Show" : "Shows", shows ?? 0, null],
-    [counts.followers === 1 ? "Follower" : "Followers", counts.followers, `/@${profile.handle}/followers`],
-    ["Following", counts.following, `/@${profile.handle}/following`],
-  ];
+  const paths = (covers ?? []).map((c) => c.photo_path as string);
+  const signed = await signPhotos(supabase, paths);
+  const cover = paths.flatMap((p) => (signed.get(p) ? [signed.get(p)!] : []));
+  const own = stats ?? { shows: 0, venues: 0, cities: 0, public_shows: 0 };
+  // These numbers include private shows; /@handle counts public ones only, so
+  // say how many visitors don't see rather than let the two disagree. A
+  // private profile hides everything from visitors anyway.
+  const hidden = own.shows - own.public_shows;
 
   return (
-    <section aria-labelledby="profile-handle" className="flex flex-col gap-4">
-      <div className="flex items-center gap-4">
-        <Avatar name={name} url={profile.avatar_url} size={80} />
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <h1 id="profile-handle" className="truncate text-title font-display text-label">
-            @{profile.handle}
-          </h1>
-          {profile.display_name && <p className="truncate text-subheadline text-label-secondary">{profile.display_name}</p>}
-          {profile.is_private && <p className="text-footnote text-label-secondary">Private profile</p>}
-        </div>
-      </div>
-      {profile.bio && <p className="whitespace-pre-line text-body text-label">{profile.bio}</p>}
-      <dl className="flex gap-8">
-        {stats.map(([label, value, href]) => (
-          <div key={label} className="flex flex-col-reverse">
-            <dt className="text-footnote text-label-secondary">{label}</dt>
-            <dd className="text-title-2 font-display text-label tabular-nums">
-              {href ? (
-                <Link href={href} aria-label={`${value} ${label.toLowerCase()}`} className="underline-offset-2 hover:underline">
-                  {value}
-                </Link>
-              ) : (
-                value
-              )}
-            </dd>
-          </div>
-        ))}
-      </dl>
+    <ProfileHeader
+      profile={{ ...profile, handle: profile.handle }}
+      cover={cover}
+      stats={own}
+      follows={follows}
+      action={
+        <>
+          <Link
+            href="/app/settings"
+            className="inline-flex min-h-11 items-center justify-center rounded-pill bg-tint-fill px-4 text-subheadline font-semibold text-tint-text hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          >
+            Edit profile
+          </Link>
+          <OwnerProfileMenu handle={profile.handle} />
+        </>
+      }
+    >
       {hidden > 0 && !profile.is_private && (
-        <p className="-mt-2 text-footnote text-label-secondary">
-          {hidden === 1 ? "1 private show isn’t" : `${hidden} private shows aren’t`} on your public profile.
+        <p className="-mt-1 text-footnote text-label-secondary">
+          {count(hidden, "private show")} {hidden === 1 ? "isn’t" : "aren’t"} on your public profile.
         </p>
       )}
       {/* Only private profiles get requests; going public approves them all. */}
       {requests.length > 0 && (
-        <section aria-labelledby="requests-heading" className="flex flex-col gap-3">
-          <h2 id="requests-heading" className="text-headline text-label">
-            {requests.length === 1 ? "1 follow request" : `${requests.length} follow requests`}
-          </h2>
-          <FollowRequests ownerId={userId} people={requests} />
-        </section>
+        <Link
+          href="/app/profile/requests"
+          className="-mx-4 -mb-4 flex min-h-11 rounded-b-md items-center justify-between gap-3 border-t border-separator px-4 text-subheadline font-semibold text-tint-text hover:bg-fill focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus sm:-mx-6 sm:-mb-5 sm:px-6"
+        >
+          {count(requests.length, "follow request")}
+          <svg
+            viewBox="0 0 24 24"
+            width={20}
+            height={20}
+            aria-hidden="true"
+            focusable="false"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="flex-none"
+          >
+            <path d="M9.5 5.5 16 12l-6.5 6.5" />
+          </svg>
+        </Link>
       )}
-      <div className="flex gap-3">
-        <Link href="/app/settings" className={PILL}>
-          Edit profile
-        </Link>
-        <Link href={`/@${profile.handle}`} className={PILL}>
-          View public profile
-        </Link>
-      </div>
-    </section>
+    </ProfileHeader>
   );
 }
 
@@ -146,11 +150,12 @@ async function Body({ searchParams }: { searchParams: PageProps<"/app/profile">[
   );
 }
 
-// The Profile tab: you, then your diary or your trips. Editing the profile
-// and deleting the account live on /app/settings.
+// The Profile tab: your profile as others see it, with your controls, then
+// your diary (with the calendar) or your trips. Editing the profile and
+// deleting the account live on /app/settings.
 export default function ProfilePage({ searchParams }: PageProps<"/app/profile">) {
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <Suspense fallback={loading}>
         <Header />
       </Suspense>
