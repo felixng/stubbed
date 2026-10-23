@@ -15,6 +15,10 @@ const nextConfig: NextConfig = {
   ],
   // Trips moved under Profile (Home · Log · Profile); old links still work.
   redirects: async () => [{ source: "/app/trips", destination: "/app/profile?view=trips", permanent: false }],
+  // The link-preview images read their fonts from disk (lib/og.tsx).
+  outputFileTracingIncludes: {
+    "/api/og/**": ["./assets/fonts/*.ttf"],
+  },
   turbopack: {
     rules: {
       "*.css": {
