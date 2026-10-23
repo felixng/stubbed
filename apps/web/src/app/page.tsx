@@ -72,13 +72,9 @@ export default function Home() {
         <Container className="flex items-center justify-between gap-4 py-6 sm:py-8">
           <Wordmark size={28} href="/" />
           <div className="flex items-center gap-2">
-            <p className="inline-flex min-h-7 items-center gap-2 rounded-pill bg-fill px-3 text-footnote font-medium text-label">
-              <span
-                aria-hidden="true"
-                className="size-2 rounded-full bg-star motion-safe:animate-pulse"
-              />
-              <span className="sm:hidden">Private Beta</span>
-              <span className="hidden sm:inline">Currently in Private Beta</span>
+            <p className="inline-flex min-h-7 items-center rounded-pill bg-fill px-3 text-footnote font-medium text-label">
+              <span className="sm:hidden">Private beta</span>
+              <span className="hidden sm:inline">Currently in private beta</span>
             </p>
             <SiteMenu />
           </div>
