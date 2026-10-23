@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { formatTripDates, PHOTO_BUCKET, tripCovers, type Collection, type EntryRow } from "@/lib/entries";
 import { createClient } from "@/lib/supabase/client";
 import { useFreshOnReturn } from "@/lib/use-fresh-on-return";
@@ -35,6 +36,7 @@ function Selectable({ entries, photos, trips, onDone }: Props & { onDone: () => 
   const [picked, setPicked] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirm, dialog] = useConfirm();
 
   const chosen = entries.filter((e) => picked.includes(e.id));
   const dates = chosen.map((e) => e.date).sort();
@@ -67,7 +69,12 @@ function Selectable({ entries, photos, trips, onDone }: Props & { onDone: () => 
   // the entry page's Delete. Their trip links go with them (cascade).
   async function deletePicked() {
     const n = picked.length;
-    if (!window.confirm(`Delete ${n === 1 ? "this show" : `these ${n} shows`}? This can’t be undone.`)) return;
+    const ok = await confirm({
+      title: `Delete ${n === 1 ? "this show" : `these ${n} shows`}?`,
+      message: "This can’t be undone.",
+      action: n === 1 ? "Delete show" : `Delete ${n} shows`,
+    });
+    if (!ok) return;
     setBusy(true);
     setError(null);
     setPicking(false);
@@ -167,6 +174,7 @@ function Selectable({ entries, photos, trips, onDone }: Props & { onDone: () => 
           </div>
         </div>
       )}
+      {dialog}
     </div>
   );
 }

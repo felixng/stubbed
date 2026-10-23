@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { PHOTO_BUCKET } from "@/lib/entries";
 import { createClient } from "@/lib/supabase/client";
 
@@ -11,6 +12,7 @@ export function DeleteEntryButton({ id, photoPath }: { id: string; photoPath: st
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirm, dialog] = useConfirm();
 
   return (
     <div className="flex flex-col items-center gap-1">
@@ -18,7 +20,7 @@ export function DeleteEntryButton({ id, photoPath }: { id: string; photoPath: st
         type="button"
         disabled={busy}
         onClick={async () => {
-          if (!window.confirm("Delete this entry? This can’t be undone.")) return;
+          if (!(await confirm({ title: "Delete this entry?", message: "This can’t be undone.", action: "Delete entry" }))) return;
           setBusy(true);
           const supabase = createClient();
           const { error: del } = await supabase.from("entries").delete().eq("id", id);
@@ -40,6 +42,7 @@ export function DeleteEntryButton({ id, photoPath }: { id: string; photoPath: st
           {error}
         </p>
       )}
+      {dialog}
     </div>
   );
 }

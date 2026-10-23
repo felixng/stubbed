@@ -23,12 +23,18 @@ const PILL =
 async function Header() {
   const { supabase, userId } = await ownerContext();
   if (!userId) return null;
-  const [profile, counts, requests, { count: shows }] = await Promise.all([
+  const logged = () =>
+    supabase.from("entries").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("status", "logged");
+  const [profile, counts, requests, { count: shows }, { count: publicShows }] = await Promise.all([
     getOwnProfile(),
     getFollowCounts(supabase, userId),
     listFollowRequests(supabase, userId),
-    supabase.from("entries").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("status", "logged"),
+    logged(),
+    logged().eq("visibility", "public"),
   ]);
+  // This count includes private shows; /@handle counts public ones only, so
+  // say how many visitors don't see rather than let the two numbers disagree.
+  const hidden = (shows ?? 0) - (publicShows ?? 0);
   if (!profile?.handle) return null;
   const name = profile.display_name || `@${profile.handle}`;
   const stats: [string, number, string | null][] = [
@@ -66,6 +72,11 @@ async function Header() {
           </div>
         ))}
       </dl>
+      {hidden > 0 && !profile.is_private && (
+        <p className="-mt-2 text-footnote text-label-secondary">
+          {hidden === 1 ? "1 private show isn’t" : `${hidden} private shows aren’t`} on your public profile.
+        </p>
+      )}
       {/* Only private profiles get requests; going public approves them all. */}
       {requests.length > 0 && (
         <section aria-labelledby="requests-heading" className="flex flex-col gap-3">
