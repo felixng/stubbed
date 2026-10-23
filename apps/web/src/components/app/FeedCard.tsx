@@ -1,4 +1,5 @@
 import { PublicEntryCard } from "@/components/profile/PublicEntryCard";
+import { withFrom } from "@/lib/back-link";
 import type { FeedItem } from "@/lib/supabase/data";
 
 // One show in the home feed. Your own shows open in the app (and say when
@@ -16,11 +17,11 @@ export function FeedCard({ item }: { item: FeedItem }) {
       name={owner.display_name || `@${owner.handle}`}
       avatarUrl={owner.avatar_url}
       level={2}
-      href={mine ? `/app/entries/${entry.id}` : `/e/${entry.id}`}
+      href={mine ? withFrom(`/app/entries/${entry.id}`, "home") : `/e/${entry.id}`}
       tripHref={(id) => (mine ? `/app/trips/${id}` : owner.is_private ? null : `/t/${id}`)}
       badge={mine && entry.visibility === "private" ? "Private" : undefined}
       editHref={mine ? `/app/entries/${entry.id}/edit` : undefined}
-      shareHref={mine ? `/app/entries/${entry.id}` : undefined}
+      shareHref={mine ? withFrom(`/app/entries/${entry.id}`, "home") : undefined}
       social={social ?? undefined}
     />
   );

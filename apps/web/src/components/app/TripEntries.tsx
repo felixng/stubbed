@@ -77,7 +77,12 @@ export function TripEntries({
       )}
 
       {inTrip.length ? (
-        <EntryList entries={inTrip} photos={photoMap} selection={mode === "remove" ? selection : undefined} />
+        <EntryList
+          entries={inTrip}
+          photos={photoMap}
+          selection={mode === "remove" ? selection : undefined}
+          from={`trip-${tripId}`}
+        />
       ) : (
         <EmptyState title="No shows in this trip yet">
           Add shows dated within the trip, or plan one: it’s offered this trip when its date falls inside.

@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Poster } from "@/components/ui/Poster";
 import { RatingStars } from "@/components/ui/RatingStars";
+import { withFrom, type From } from "@/lib/back-link";
 import { formatDate, type EntryRow } from "@/lib/entries";
 
 const ROW = "flex items-center gap-4 px-4 py-3";
@@ -12,14 +13,19 @@ const ROW = "flex items-center gap-4 px-4 py-3";
 // With `selection`, the same rows become checkboxes in place: a check circle
 // appears at the end of each row and a tap ticks it instead of opening the
 // entry, so the list doesn't change under you.
+//
+// `from` sets where the entry page's back link goes (a trip). The diary
+// leaves it out: Profile is the entry page's default.
 export function EntryList({
   entries,
   photos,
   selection,
+  from,
 }: {
   entries: EntryRow[];
   photos: Map<string, string>;
   selection?: { picked: string[]; onToggle: (id: string) => void };
+  from?: From;
 }) {
   return (
     <ul className="overflow-hidden rounded-md border border-separator bg-surface shadow-sm">
@@ -50,7 +56,7 @@ export function EntryList({
             </label>
           ) : (
             <Link
-              href={`/app/entries/${e.id}`}
+              href={from ? withFrom(`/app/entries/${e.id}`, from) : `/app/entries/${e.id}`}
               className={`${ROW} hover:bg-fill focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus`}
             >
               <Row entry={e} photos={photos} />

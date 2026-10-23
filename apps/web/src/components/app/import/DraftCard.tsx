@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useId, type ReactNode } from "react";
 
 import { Chip } from "@/components/ui/Chip";
+import { withFrom } from "@/lib/back-link";
 import { formatDate, WITH_WEEKDAY, type NearbyVenue, type NewShow, type Show, type VenueChoice } from "@/lib/entries";
 import { describeMissing, missingFields, type MissingField, type Place, type Reading } from "@/lib/import/drafts";
 import { DateField } from "../DateField";
@@ -89,6 +91,8 @@ export function DraftCard({
   onChange: (patch: Partial<Draft>) => void;
 }) {
   const id = useId();
+  // Entry links bring a back link to this import, admin's or everyone's.
+  const from = usePathname().startsWith("/app/admin") ? "admin-import" : "import";
   const e = draft.reading.extracted;
   const conf = CONFIDENCE[e.confidence];
   const emails = draft.reading.sources.filter((s) => s.kind === "email");
@@ -110,7 +114,7 @@ export function DraftCard({
           <span className="text-label-secondary"> · {draft.date && formatDate(draft.date)}</span>
         </p>
         {draft.entryId && (
-          <Link href={`/app/entries/${draft.entryId}`} className="text-subheadline font-semibold text-tint-text hover:underline">
+          <Link href={withFrom(`/app/entries/${draft.entryId}`, from)} className="text-subheadline font-semibold text-tint-text hover:underline">
             View
           </Link>
         )}
@@ -213,7 +217,7 @@ export function DraftCard({
       {duplicateOf && (
         <p className="text-footnote text-label">
           Already in your diary on this date.{" "}
-          <Link href={`/app/entries/${duplicateOf}`} className="font-semibold text-tint-text hover:underline">
+          <Link href={withFrom(`/app/entries/${duplicateOf}`, from)} className="font-semibold text-tint-text hover:underline">
             See entry
           </Link>
         </p>
