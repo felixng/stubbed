@@ -385,3 +385,9 @@ From the design critique: on phones the raised coral Log button sat about 25px u
 - **Demoted fills:** Approve in follow requests is a secondary button; the avatar picker's camera badge and the share sheet's active page dot use `label`, not `tint`. Follow stays primary, as on iOS (`.borderedProminent` per row).
 - **Calendar:** show days are Coral Wash with `tint-text` numbers and a dot underneath, so a show day isn't marked by colour alone. Each still links to the day's entry with an accessible label.
 - **Feed comments:** each card's comment box is folded until Comment is tapped (which sets `aria-expanded` and focuses the box) and folds again after posting. An open box with a half-written comment survives leaving the page, as before. The inline Post is secondary.
+
+### 2026-10-23: Final polish: two date styles, page-control targets, placeholder rows
+The last pass after the critique fixes.
+- **Dates:** the app showed four styles ("Mon, 5 Oct 2026", "Monday, 5 October 2026", "5 Oct 2026", "12 Sept 2026"). `formatDate` now has two: plain ("5 Oct 2026") for rows and metadata, and `WITH_WEEKDAY` ("Mon 5 Oct 2026") where one show's date stands alone (entry pages, feed cards, import drafts, link previews). It drops en-GB's comma after the weekday and writes "Sep", not "Sept". Long months stay for sentences and alt text.
+- **Share sheet page dots:** 44×44 targets around the 8px dots (they were 24px), with negative margin so the row doesn't push the card and button apart.
+- **First loads:** Home's feed and the Profile diary and trips show `PlaceholderRows` (static grey show rows, `role="status"`), like the iOS app, instead of a "Loading…" line. No pulse, by design.
