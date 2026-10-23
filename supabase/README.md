@@ -79,6 +79,8 @@ Locally, use email + password: add a user in Studio (http://127.0.0.1:54323). Go
 
 `public_profile_stats(profile_id)` returns `shows`, `venues` and `cities` for a profile's **public** entries, whoever calls it (the owner too), so `/@handle` and iOS show the same numbers. Tests: `tests/profile_stats_test.sql`.
 
+`own_profile_stats()` returns the same three numbers for the **signed-in user's own** logged entries, private ones included, plus `public_shows`. It only ever reads `auth.uid()`'s entries and isn't granted to `anon`. The Profile tab uses it (and says how many private shows `/@handle` leaves out). Tests: `tests/own_profile_stats_test.sql`.
+
 ## Follows
 
 `follows (follower_id, followee_id, status)`, Hevy style. Insert the row to follow: a trigger sets `status` to `accepted` for a public profile and `pending` for a private one (clients can't set it). The person followed approves by updating `status` to `accepted` (the only change allowed); declining, cancelling, unfollowing and removing a follower all delete the row. Making a profile public approves its pending requests; making it private keeps existing followers.
