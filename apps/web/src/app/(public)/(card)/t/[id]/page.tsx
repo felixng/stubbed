@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
-import { Avatar } from "@/components/profile/Avatar";
-import { CardHero, DiaryLink } from "@/components/profile/CardHero";
+import { CardHero, LoggedBy } from "@/components/profile/CardHero";
 import { PublicEntryCard } from "@/components/profile/PublicEntryCard";
 import { formatTripDates } from "@/lib/entries";
 import { viewerContext } from "@/lib/follows";
@@ -12,12 +10,14 @@ import { getPublicTrip, type TripStats } from "@/lib/public-pages";
 import { getReactions, NO_REACTIONS } from "@/lib/reactions";
 
 // Public trip page, the recap behind a shared trip card (#16): the card
-// itself (its preview image), the trip's name, dates and numbers, who went,
-// each public show in date order, then a link to the rest of the diary; the
-// layout adds the waitlist card after it for signed-out visitors. A trip is public when it holds a public show and the profile isn't
-// private (RLS, via the publishable key); private shows in it are left out,
-// and so are their counts. Each show has Like and Comment, read with the
-// visitor's session. Its preview image is /api/og/trip/[id].
+// itself (its preview image), which already carries the trip's name, dates
+// and numbers, so under it come only what it lacks: each public show in date
+// order, then who went with a link to the rest of the diary. The layout adds
+// the waitlist card after it for signed-out visitors. A trip is public when
+// it holds a public show and the profile isn't private (RLS, via the
+// publishable key); private shows in it are left out, and so are their
+// counts. Each show has Like and Comment, read with the visitor's session.
+// Its preview image is /api/og/trip/[id].
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
@@ -25,23 +25,42 @@ function place(stats: TripStats) {
   return stats.cities.length === 1 ? stats.cities[0] : stats.cities.length > 1 ? `${stats.cities.length} cities` : null;
 }
 
+function headline(stats: TripStats) {
+  const where = place(stats);
+  return `${plural(stats.shows, "show")}${stats.nights > 0 ? ` in ${plural(stats.nights, "night")}` : ""}${where ? ` in ${where}` : ""}`;
+}
+
 export async function generateMetadata({ params }: PageProps<"/t/[id]">): Promise<Metadata> {
   const { id } = await params;
   const found = await getPublicTrip(id);
   if (!found) return { title: "Not found — Stubbed", robots: { index: false } };
   const { trip, owner, stats, version } = found;
-  const where = place(stats);
-  const headline = `${plural(stats.shows, "show")}${stats.nights > 0 ? ` in ${plural(stats.nights, "night")}` : ""}${where ? ` in ${where}` : ""}`;
+  const line = headline(stats);
   const title = `${trip.name} — @${owner.handle} on Stubbed`;
-  const description = `${headline}, ${formatTripDates(trip)}. @${owner.handle}’s trip on Stubbed.`;
-  const image = { url: `/api/og/trip/${trip.id}?v=${version}`, width: 1200, height: 630, alt: `${trip.name}: ${headline}` };
+  const description = `${line}, ${formatTripDates(trip)}. @${owner.handle}’s trip on Stubbed.`;
+  const image = { url: `/api/og/trip/${trip.id}?v=${version}`, width: 1200, height: 630, alt: `${trip.name}: ${line}` };
   return {
     title,
     description,
     alternates: { canonical: `/t/${trip.id}` },
-    openGraph: { type: "article", title: `${trip.name}: ${headline}`, description, url: `/t/${trip.id}`, images: [image] },
-    twitter: { card: "summary_large_image", title: `${trip.name}: ${headline}`, description, images: [image] },
+    openGraph: { type: "article", title: `${trip.name}: ${line}`, description, url: `/t/${trip.id}`, images: [image] },
+    twitter: { card: "summary_large_image", title: `${trip.name}: ${line}`, description, images: [image] },
   };
+}
+
+// The card's words for screen readers, as drawn on it: the name, dates and
+// place, the numbers and the average rating. The page doesn't repeat them as
+// visible text.
+function cardAlt(trip: { name: string; start_date: string; end_date: string }, stats: TripStats, handle: string) {
+  return [
+    `@${handle}’s trip card: ${trip.name}`,
+    formatTripDates(trip),
+    headline(stats),
+    plural(stats.venues, "theatre"),
+    stats.average != null ? `average rating ${stats.average.toFixed(1)} out of 5` : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
 }
 
 async function Trip({ params }: PageProps<"/t/[id]">) {
@@ -52,38 +71,10 @@ async function Trip({ params }: PageProps<"/t/[id]">) {
   const { supabase, userId } = await viewerContext();
   const reactions = await getReactions(supabase, entries.map((e) => e.id));
   const name = owner.display_name || `@${owner.handle}`;
-  const where = place(stats);
-  // The card shows these large; here they're one quiet line under the name.
-  const numbers = [
-    plural(stats.shows, "show"),
-    plural(stats.venues, "theatre"),
-    stats.nights > 0 ? plural(stats.nights, "night") : null,
-    stats.average != null ? `${stats.average.toFixed(1)} average rating` : null,
-  ].filter(Boolean);
 
   return (
     <>
-      <CardHero src={`/api/og/trip/${trip.id}?v=${version}`} alt={`@${owner.handle}’s trip card: ${trip.name}, ${numbers.join(", ")}`} />
-      <section aria-labelledby="trip-name" className="flex flex-col gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 id="trip-name" className="text-title font-display text-label">
-            {trip.name}
-          </h1>
-          <p className="text-subheadline text-label-secondary">{[formatTripDates(trip), where].filter(Boolean).join(" · ")}</p>
-          <p className="text-subheadline text-label-secondary tabular-nums">{numbers.join(" · ")}</p>
-        </div>
-        <Link
-          href={`/@${owner.handle}`}
-          className="flex w-fit items-center gap-3 rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-        >
-          <Avatar name={name} url={owner.avatar_url} size={40} />
-          <span className="flex flex-col">
-            <span className="text-subheadline font-semibold text-label">@{owner.handle}</span>
-            {owner.display_name && <span className="text-footnote text-label-secondary">{owner.display_name}</span>}
-          </span>
-        </Link>
-      </section>
-
+      <CardHero src={`/api/og/trip/${trip.id}?v=${version}`} alt={cardAlt(trip, stats, owner.handle)} />
       <section aria-labelledby="shows-heading" className="flex flex-col gap-4">
         <h2 id="shows-heading" className="text-title-2 font-display text-label">
           The shows
@@ -102,7 +93,7 @@ async function Trip({ params }: PageProps<"/t/[id]">) {
           />
         ))}
       </section>
-      <DiaryLink handle={owner.handle} />
+      <LoggedBy handle={owner.handle} displayName={owner.display_name} avatarUrl={owner.avatar_url} />
     </>
   );
 }
