@@ -24,7 +24,7 @@ export function DeleteTripButton({ id }: { id: string }) {
           const { error: del } = await createClient().from("collections").delete().eq("id", id);
           if (del) {
             setBusy(false);
-            setError("Couldn’t delete. Try again.");
+            setError("Couldn’t delete the trip. Try again.");
             return;
           }
           router.push("/app/profile?view=trips");
