@@ -12,6 +12,7 @@ import {
   DISPLAY,
   drawStars,
   fit,
+  halfStep,
   SECONDARY,
   setFont,
   TEXT,
@@ -81,6 +82,10 @@ const LIGHT = {
 };
 type Palette = typeof DARK;
 
+// The collage and photo designs are drawn on the light ground, the others
+// on the dark one. The share sheet's placeholder uses the same ground.
+export const isLightTripCard = (design: TripCardDesign["id"]) => design === "trip-collage" || design === "trip-square";
+
 // `photos[i]` belongs to `data.shows[i]`; null where a show has none.
 // `square`: square corners, for Instagram Stories, which turns transparent
 // corners black.
@@ -96,7 +101,7 @@ export async function renderTripCard(
   if (!ctx) throw new Error("Canvas isn’t available");
   ctx.scale(SCALE, SCALE);
   const shows = data.shows.map((s, i) => ({ ...s, photo: photos[i] ?? null }));
-  const p = design === "trip-collage" || design === "trip-square" ? LIGHT : DARK;
+  const p = isLightTripCard(design) ? LIGHT : DARK;
 
   const radius = square ? 0 : RADIUS;
   roundRect(ctx, 0, 0, W, W, radius);
@@ -237,7 +242,7 @@ function drawGrid(ctx: Ctx, p: Palette, d: TripCardData, shows: Show[]) {
   const stats: { value: string | number; label: string }[] = [];
   if (d.place) stats.push({ value: d.place, label: d.cities > 1 ? "visited" : "city" });
   if (d.venues) stats.push({ value: plural(d.venues, "theatre"), label: "visited" });
-  if (d.average != null) stats.push({ value: d.average, label: "average rating" });
+  if (d.average != null) stats.push({ value: halfStep(d.average), label: "average rating" });
   let sy = PAD;
   let statsW = 0;
   ctx.textAlign = "right";

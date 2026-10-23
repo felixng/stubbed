@@ -1,5 +1,6 @@
 import { formatTripDates } from "@/lib/entries";
-import { CORAL, Footer, Ground, ogImage, ogNotFound, photoData, SECONDARY, titleSize } from "@/lib/og";
+import { CORAL, Footer, Ground, ogImage, ogNotFound, photoData, SECONDARY, Stars, titleSize } from "@/lib/og";
+import { halfStep } from "@/lib/share-card";
 import { getPublicTrip } from "@/lib/public-pages";
 
 // GET → the link preview for /t/[id] (1200×630 PNG): the trip's name, dates
@@ -25,10 +26,7 @@ export async function GET(_request: Request, { params }: RouteContext<"/api/og/t
 
   const headline = `${stats.shows} ${stats.shows === 1 ? "show" : "shows"}${stats.nights > 0 ? ` in ${stats.nights} ${stats.nights === 1 ? "night" : "nights"}` : ""}`;
   const place = stats.cities.length === 1 ? stats.cities[0] : stats.cities.length > 1 ? `${stats.cities.length} cities` : null;
-  const details = [
-    `${stats.venues} ${stats.venues === 1 ? "theatre" : "theatres"}`,
-    stats.average != null ? `${stats.average.toFixed(1)} average rating` : null,
-  ].filter(Boolean);
+  const theatres = `${stats.venues} ${stats.venues === 1 ? "theatre" : "theatres"}`;
 
   return ogImage(
     <Ground>
@@ -39,7 +37,12 @@ export async function GET(_request: Request, { params }: RouteContext<"/api/og/t
             {trip.name}
           </div>
           <div style={{ fontSize: 40, color: CORAL, letterSpacing: "-0.02em" }}>{headline}</div>
-          <div style={{ fontSize: 28, color: "rgba(255, 255, 255, 0.85)" }}>{details.join(" · ")}</div>
+          {/* The average as five stars in half steps, like every rating. */}
+          <div style={{ display: "flex", alignItems: "center", gap: 14, fontSize: 28, color: "rgba(255, 255, 255, 0.85)" }}>
+            <div>{stats.average != null ? `${theatres} ·` : theatres}</div>
+            {stats.average != null && <Stars value={halfStep(stats.average)} size={28} gap={4} />}
+            {stats.average != null && <div style={{ color: SECONDARY }}>average</div>}
+          </div>
         </div>
         <Footer handle={owner.handle} />
       </div>

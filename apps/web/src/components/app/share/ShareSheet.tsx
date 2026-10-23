@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 
 import { Button } from "@/components/ui/Button";
 
 import { track } from "@/lib/analytics";
-import { CARD_DESIGNS, renderCard, type CardData } from "@/lib/share-card";
-import { renderTripCard, TRIP_CARD_DESIGNS, type TripCardData } from "@/lib/share-card-trip";
+import { CARD_DESIGNS, CORAL, halfStep, renderCard, SECONDARY, STAR, type CardData } from "@/lib/share-card";
+import { isLightTripCard, renderTripCard, TRIP_CARD_DESIGNS, type TripCardData } from "@/lib/share-card-trip";
 import { createClient } from "@/lib/supabase/client";
 
 // Stubbed's Instagram account, tagged in the caption and the copied text.
@@ -107,6 +107,10 @@ export function ShareSheet({
   const storyCard = clear || variants?.stories;
   const canShareFiles =
     typeof navigator !== "undefined" && card ? Boolean(navigator.canShare?.({ files: [card.file] })) : false;
+  // Known before the cards are drawn, so the button's label doesn't change
+  // under the finger: on desktop, and wherever files can't be shared, the
+  // Stories button downloads the image instead, and says so up front.
+  const storiesShares = useSyncExternalStore(noSubscribe, browserSharesFiles, () => true);
   const text =
     subject.kind === "entry"
       ? `${subject.data.venue ? `${subject.data.title} at ${subject.data.venue}` : subject.data.title}. Logged on Stubbed ${INSTAGRAM}`
@@ -222,19 +226,20 @@ export function ShareSheet({
               role="group"
               aria-roledescription="slide"
               aria-label={`${i + 1} of ${designs.length}: ${design.name}`}
-              className={`aspect-square w-full shrink-0 snap-center overflow-hidden rounded-[6%] ${clear ? "bg-[repeating-conic-gradient(#5b5b5f_0%_25%,#47474a_0%_50%)] bg-[length:28px_28px]" : ""}`}
+              className={`@container relative aspect-square w-full shrink-0 snap-center overflow-hidden rounded-[6%] ${clear ? "bg-[repeating-conic-gradient(#5b5b5f_0%_25%,#47474a_0%_50%)] bg-[length:28px_28px]" : ""}`}
             >
-              {shown ? (
+              {/* Until the card is drawn, a stand-in from the data on hand on
+                  the card's own ground, so the sheet is never blank. It stays
+                  under the drawn card, which fades in over it; not under a
+                  card without a background, whose clear parts would show it. */}
+              {!clear && <CardPlaceholder subject={subject} design={design.id} failed={failed} drawn={Boolean(shown)} />}
+              {shown && (
                 // eslint-disable-next-line @next/next/no-img-element -- local PNG drawn on the device
                 <img
                   src={shown.url}
                   alt={`Share card, ${design.name.toLowerCase()}${clear ? ", no background" : ""}: ${title}`}
-                  className="size-full"
+                  className="absolute inset-0 size-full motion-safe:animate-[card-in_240ms_ease-out]"
                 />
-              ) : (
-                <div className="flex size-full items-center justify-center bg-fill text-subheadline text-label-secondary">
-                  {failed ? "Couldn’t draw this card." : "Drawing…"}
-                </div>
               )}
             </div>
           );
@@ -259,12 +264,28 @@ export function ShareSheet({
       </div>
 
       <Button onClick={() => share(false)} disabled={!storyCard} className="w-full">
-        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8">
-          <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
-          <circle cx="12" cy="12" r="4" />
-          <circle cx="17.3" cy="6.7" r="0.9" fill="currentColor" stroke="none" />
-        </svg>
-        Share to Stories
+        {storiesShares ? (
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8">
+            <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
+            <circle cx="12" cy="12" r="4" />
+            <circle cx="17.3" cy="6.7" r="0.9" fill="currentColor" stroke="none" />
+          </svg>
+        ) : (
+          <svg
+            viewBox="0 0 24 24"
+            width="22"
+            height="22"
+            aria-hidden="true"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M12 3.5V15M7.5 10.5 12 15l4.5-4.5M5 19.5h14" />
+          </svg>
+        )}
+        {storiesShares ? "Share to Stories" : "Download for Stories"}
       </Button>
 
       <div className="flex justify-center gap-3">
@@ -350,6 +371,102 @@ export function ShareSheet({
 }
 
 const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? "" : "s"}`;
+
+// Whether this browser can hand a PNG to the share sheet (phones, mostly).
+// An empty probe file is enough: canShare checks the type, not the contents.
+// It doesn't change while the page is open.
+let sharesFiles: boolean | undefined;
+function browserSharesFiles() {
+  sharesFiles ??= Boolean(navigator.canShare?.({ files: [new File([], "card.png", { type: "image/png" })] }));
+  return sharesFiles;
+}
+const noSubscribe = () => () => {};
+
+// The stand-in shown while a card is drawn: the design's ground (the entry
+// cards' no-photo ground with its coral glow, or the trip design's dark or
+// light ground), the title, the place and date, and the stars. Sized in card
+// units (1cqw = 5.4 of the designs' 540 units), so it scales with the card.
+function CardPlaceholder({
+  subject,
+  design,
+  failed,
+  drawn,
+}: {
+  subject: ShareSubject;
+  design: string;
+  failed: boolean;
+  drawn: boolean;
+}) {
+  const light = subject.kind === "trip" && isLightTripCard(design);
+  const title = subject.kind === "entry" ? subject.data.title : subject.data.name;
+  const meta =
+    subject.kind === "entry"
+      ? [subject.data.where, subject.data.date].filter(Boolean).join(" · ")
+      : [subject.data.place, subject.data.dates].filter(Boolean).join(" · ");
+  const rating = subject.kind === "entry" ? subject.data.rating : subject.data.average;
+  return (
+    <div
+      aria-hidden={drawn}
+      className="absolute inset-0 flex flex-col justify-end gap-[2cqw] p-[5.2cqw]"
+      style={{
+        background: light
+          ? "#FFF9F6"
+          : "radial-gradient(circle at 70% 25%, rgba(255, 107, 74, 0.35), rgba(255, 107, 74, 0) 80%), #1C1C1E",
+        color: light ? "#1F1210" : "#FFFFFF",
+        // The light cards' separator edge, so the card reads on the light page.
+        boxShadow: light ? "inset 0 0 0 1px #F9E0D6" : undefined,
+        borderRadius: "inherit",
+      }}
+    >
+      <p className="line-clamp-2 font-display text-[6.7cqw] leading-[1.1] font-bold">{title}</p>
+      {meta && (
+        <p className="truncate text-[2.6cqw]" style={{ color: light ? "#5E4039" : SECONDARY }}>
+          {meta}
+        </p>
+      )}
+      {rating != null && <PlaceholderStars value={halfStep(rating)} light={light} />}
+      <p role="status" className="mt-[2cqw] min-h-[1lh] text-[2.6cqw] font-medium" style={{ color: light ? "#B33A19" : CORAL }}>
+        {drawn ? "" : failed ? "Couldn’t draw this card." : "Drawing the card…"}
+      </p>
+    </div>
+  );
+}
+
+// The card's stars in half steps: Applause Gold (its dark value on the dark
+// ground, as the drawn cards use), empty stars in the card's outline grey.
+function PlaceholderStars({ value, light }: { value: number; light: boolean }) {
+  const id = useId();
+  const fill = light ? "#B96F00" : STAR;
+  const empty = light ? "#98695B" : "#7C7C82";
+  return (
+    <span className="flex gap-[0.55cqw]">
+      {[0, 1, 2, 3, 4].map((i) => {
+        const part = Math.max(0, Math.min(1, value - i));
+        return (
+          <svg key={i} viewBox="0 0 24 24" className="size-[4.1cqw]">
+            <defs>
+              <clipPath id={`${id}-${i}`}>
+                <rect x="-2" y="-2" width={24 * part + 2} height="28" />
+              </clipPath>
+            </defs>
+            <path d={STAR_PATH} fill="none" stroke={empty} strokeWidth="1.5" strokeLinejoin="round" />
+            {part > 0 && (
+              <path
+                d={STAR_PATH}
+                fill={fill}
+                stroke={fill}
+                strokeWidth="1.5"
+                strokeLinejoin="round"
+                clipPath={`url(#${id}-${i})`}
+              />
+            )}
+          </svg>
+        );
+      })}
+    </span>
+  );
+}
+const STAR_PATH = "M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z";
 
 // Transparent and More: quiet capsules under the one coral button.
 const PILL =
