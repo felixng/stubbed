@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { COMMENT_SELECT, type Comment, type Reactions } from "@/lib/reactions";
 import { createClient } from "@/lib/supabase/client";
@@ -11,7 +11,9 @@ import { EntryReactions } from "./EntryReactions";
 
 // Like and Comment under a show in the home feed, with its comments inline,
 // as on Hevy (#87): the latest few, "View all N comments" to open the rest
-// right there, and a box to add one. Comment focuses the box. The note and
+// right there. The box to add one stays folded away until Comment is tapped,
+// so a scrolling thumb doesn't land in a text field on every card; posting
+// folds it again. The note and
 // trip chips (`children`) sit between the buttons and the comments, like a
 // caption.
 //
@@ -19,8 +21,9 @@ import { EntryReactions } from "./EntryReactions";
 // load in the browser, where a refresh doesn't reach. Posting adds your
 // comment at the end, deleting takes one out, and the comment count follows.
 // A new server render (new `latest` or `reactions`) starts over from it.
-// Leaving the feed and coming back keeps all of it, an unfinished comment
-// included: nothing here is a finished task to clear.
+// Leaving the feed and coming back keeps all of it, an open box with an
+// unfinished comment included: posting is the finished task, and it folds the
+// box straight away.
 export function FeedThread({
   entryId,
   ownerId,
@@ -49,6 +52,11 @@ export function FeedThread({
     setLocal(null);
   }
   const [loading, setLoading] = useState(false);
+  const [writing, setWriting] = useState(false);
+  // Focus the box once Comment has opened it.
+  useEffect(() => {
+    if (writing) box.current?.focus();
+  }, [writing]);
 
   const comments = local?.comments ?? latest;
   const count = local?.count ?? reactions.comments;
@@ -84,7 +92,8 @@ export function FeedThread({
         commentsHref={`/e/${entryId}#comments`}
         loginHref={loginHref}
         shareHref={shareHref}
-        onComment={viewerId ? () => box.current?.focus() : undefined}
+        onComment={viewerId ? () => (writing ? box.current?.focus() : setWriting(true)) : undefined}
+        commentOpen={writing}
       />
       {children}
       {(comments.length > 0 || !all) && (
@@ -117,12 +126,17 @@ export function FeedThread({
         </div>
       )}
       {viewerId ? (
-        <CommentForm
-          ref={box}
-          entryId={entryId}
-          viewerId={viewerId}
-          onPosted={(c) => setLocal({ comments: [...comments, c], count: count + 1, all })}
-        />
+        writing && (
+          <CommentForm
+            ref={box}
+            entryId={entryId}
+            viewerId={viewerId}
+            onPosted={(c) => {
+              setLocal({ comments: [...comments, c], count: count + 1, all });
+              setWriting(false);
+            }}
+          />
+        )
       ) : (
         <Link href={loginHref} className="w-fit text-subheadline font-semibold text-tint-text underline-offset-2 hover:underline">
           Sign in to comment

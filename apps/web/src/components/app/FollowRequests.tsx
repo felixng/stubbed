@@ -65,7 +65,7 @@ export function FollowRequests({ ownerId, people }: { ownerId: string; people: F
                 disabled={busy}
                 onClick={() => answer(p.id, true)}
                 aria-label={`Approve @${p.handle}`}
-                className="min-h-11 rounded-pill bg-tint px-4 text-subheadline font-semibold text-on-tint shadow-btn hover:bg-tint-pressed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:opacity-40"
+                className="min-h-11 rounded-pill bg-tint-fill px-4 text-subheadline font-semibold text-tint-text hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:opacity-40"
               >
                 Approve
               </button>

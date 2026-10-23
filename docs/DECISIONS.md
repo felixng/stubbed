@@ -378,3 +378,10 @@ From a design critique (`/impeccable polish`). The "How it works" panels were pl
 - **Why not screenshots:** local data has no photos (every poster would be initials) and the entry, share card and trip screens show the venue's city, which public copy must not name. Drawn screens stay sharp at any density, follow the tokens and can't leak a real diary. Sample data is theatre only, venues without cities, handle `@sillyelphaba`.
 - **Removed:** the hero's eyebrow ("For the theatre regulars", a cliché the detector flags), the three feature chips (they repeated the "How it works" titles, and "Trips and stats" promised a stats page that isn't built), and the pulsing gold dot in the beta pill (gold is for stars only). The pill now reads "Currently in private beta", in sentence case.
 - `public/landing/features/*.svg` and `src/images/hero-diary.webp` are deleted.
+
+### 2026-10-23: One coral fill per screen; Log is a plain tab
+From the design critique: on phones the raised coral Log button sat about 25px under the log form's sticky Save, and other screens showed two or more coral fills.
+- **Tab bar:** Log is a plain tab like Home and Profile (selected in `tint-text`), as on iOS and in the desktop sidebar. The sticky Save and Save-all bars lose the extra bottom padding that cleared the raised button. A raised button off the log page was considered and dropped: it would still compete with Save on every other screen's primary.
+- **Demoted fills:** Approve in follow requests is a secondary button; the avatar picker's camera badge and the share sheet's active page dot use `label`, not `tint`. Follow stays primary, as on iOS (`.borderedProminent` per row).
+- **Calendar:** show days are Coral Wash with `tint-text` numbers and a dot underneath, so a show day isn't marked by colour alone. Each still links to the day's entry with an accessible label.
+- **Feed comments:** each card's comment box is folded until Comment is tapped (which sets `aria-expanded` and focuses the box) and folds again after posting. An open box with a half-written comment survives leaving the page, as before. The inline Post is secondary.

@@ -310,13 +310,17 @@ React components live in `apps/web/src/components/ui/`. The iOS app no longer mi
 - **Focus:** the shared 2px `focus` outline at a 2px offset.
 
 ### Navigation
-- **Web, below `md`:** a bottom tab bar on Programme White with a top hairline: Home, a raised coral Log button, Profile. 49px items with a 24px line icon over an 11px medium label (`text-caption-2`). Unselected tabs in Faded Velvet, the selected tab in Deep Coral Ink (`aria-current="page"`).
+- **Web, below `md`:** a bottom tab bar on Programme White with a top hairline: Home, Log and Profile as three equal tabs, as on iOS (Log is a plain tab, never a raised coral button, so the page's own primary stays the only coral fill). 49px items with a 24px line icon over an 11px medium label (`text-caption-2`). Unselected tabs in Faded Velvet, the selected tab in Deep Coral Ink (`aria-current="page"`).
 - **Web, from `md`:** a sidebar on Lobby Paper (`AppSidebar`): the wordmark (28px), the people search box (its results open 384px wide over the page), then Home, Log and Profile, a hairline, Import shows, and Sign out pinned to the bottom in Curtain Red. Items are 44px capsule rows with a 24px line icon and a body-size label in Velvet Ink, hovering to Blush Well; the selected item is Deep Coral Ink on Coral Wash, semibold, with `aria-current="page"`. Log is a plain item here, not a coral button, so the page's own primary action stays the only coral fill. Trip and settings pages select Profile, as in the tab bar.
 - **iOS:** a native `TabView` (Home, Log, Profile); Log opens the log sheet rather than a screen.
 
 ### Poster and ratings (signature)
 - **Poster:** the show's photo at 2:3, 8px corners; without a photo, its initials in Clay Outline on Blush Well.
 - **Ratings** always show as the five `RatingStars` in Applause Gold, in half steps, never a bare number. Empty stars use Clay Outline.
+
+### Calendar and feed
+- **Profile calendar:** a day with a show sits on Coral Wash with its number in Deep Coral Ink and a small dot beneath, so it isn't colour alone; today is Deep Coral Ink text with no fill. Each show day is a link labelled with the date and the shows.
+- **Feed cards:** like and comment counts, then the note and the latest comments. The comment box stays folded until Comment is tapped, and folds again after posting; its Post button is secondary, since a feed has no single primary action.
 
 ### Icons
 SF Symbols on iOS (`book`, `plus.circle`, `chart.bar`, `person` for the tabs). On the web, inline line icons drawn to match at 24px with a 1.5px stroke, as in `TabBar`. No icon package.

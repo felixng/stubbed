@@ -6,9 +6,9 @@ import { usePathname } from "next/navigation";
 import { Icon, section } from "@/components/app/AppTabBar";
 
 // The sidebar's links on desktop (md and up), where it replaces the bottom tab
-// bar: the same Home, Log and Profile, then Import. Log is a plain item here,
-// not the raised coral button, so the page's own primary action stays the
-// only coral fill on screen.
+// bar: the same Home, Log and Profile, then Import. Log is a plain item, as
+// in the tab bar, so the page's own primary action stays the only coral fill
+// on screen.
 const item =
   "flex min-h-11 items-center gap-3 rounded-pill px-3 text-body focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
 

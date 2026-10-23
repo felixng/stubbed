@@ -96,7 +96,8 @@ export function CommentForm({
           <span className="text-footnote text-label-secondary empty:hidden self-center" aria-live="polite">
             {count}
           </span>
-          <Button type="submit" size="sm" disabled={!text || busy}>
+          {/* Secondary in the feed: each card's Post isn't the screen's one primary action. */}
+          <Button type="submit" size="sm" variant="secondary" disabled={!text || busy}>
             {busy ? "Posting…" : "Post"}
           </Button>
         </>
