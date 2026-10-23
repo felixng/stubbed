@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { formatTripDates, statusFor, tripCovers, tripsCovering, type Collection } from "@/lib/entries";
+import { formatDate, formatTripDates, statusFor, tripCovers, tripsCovering, WITH_WEEKDAY, type Collection } from "@/lib/entries";
 
 const trip = (over: Partial<Collection>): Collection => ({
   id: "t1",
@@ -38,4 +38,10 @@ test("trip dates read as a range, shortened within a year", () => {
   assert.equal(formatTripDates(trip({})), "10 Oct – 14 Oct 2026");
   assert.equal(formatTripDates(trip({ end_date: "2026-10-10" })), "10 Oct 2026");
   assert.equal(formatTripDates(trip({ start_date: "2026-12-30", end_date: "2027-01-02" })), "30 Dec 2026 – 2 Jan 2027");
+});
+
+test("dates use two styles: plain, or with a short weekday; no comma, three-letter months", () => {
+  assert.equal(formatDate("2026-09-12"), "12 Sep 2026");
+  assert.equal(formatDate("2026-10-05", WITH_WEEKDAY), "Mon 5 Oct 2026");
+  assert.equal(formatDate("2026-10-05", { weekday: "long", day: "numeric", month: "long" }), "Monday 5 October");
 });

@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { RatingStars } from "@/components/ui/RatingStars";
-import { formatDate, SHOW_TYPE_LABELS, type EntryRow } from "@/lib/entries";
+import { formatDate, WITH_WEEKDAY, SHOW_TYPE_LABELS, type EntryRow } from "@/lib/entries";
 import type { Comment, Reactions } from "@/lib/reactions";
 import { Avatar } from "./Avatar";
 import { EntryReactions, ShareAction } from "./EntryReactions";
@@ -136,7 +136,7 @@ export function PublicEntryCard({
       <div className="flex flex-col gap-3 px-4 pt-4">
         {inTrip ? (
           <p className="text-footnote text-label-secondary">
-            <time dateTime={entry.date}>{formatDate(entry.date, { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</time>
+            <time dateTime={entry.date}>{formatDate(entry.date, WITH_WEEKDAY)}</time>
           </p>
         ) : (
           <header className="flex items-center gap-3">
@@ -151,7 +151,7 @@ export function PublicEntryCard({
                 </Link>
               </p>
               <p className="text-footnote text-label-secondary">
-                <time dateTime={entry.date}>{formatDate(entry.date, { weekday: "short", day: "numeric", month: "short", year: "numeric" })}</time>
+                <time dateTime={entry.date}>{formatDate(entry.date, WITH_WEEKDAY)}</time>
               </p>
             </div>
             {(badge || editHref) && (

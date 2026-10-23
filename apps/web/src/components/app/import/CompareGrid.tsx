@@ -1,6 +1,6 @@
 "use client";
 
-import { formatDate } from "@/lib/entries";
+import { formatDate, WITH_WEEKDAY } from "@/lib/entries";
 import { compareAttempts, type Attempt } from "@/lib/import/compare";
 
 const CONFIDENCE = {
@@ -94,7 +94,7 @@ export function CompareGrid({
                       </p>
                       <p className="text-footnote text-label">{s.venue_name ?? (s.venue_osm_id ? "A nearby theatre" : "No venue")}</p>
                       <p className="text-footnote text-label">
-                        {s.date ? formatDate(s.date, { weekday: "short", day: "numeric", month: "short", year: "numeric" }) : "No date"}
+                        {s.date ? formatDate(s.date, WITH_WEEKDAY) : "No date"}
                         {s.time ? `, ${s.time}` : ""}
                       </p>
                       {(s.seats || s.price) && (

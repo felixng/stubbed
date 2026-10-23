@@ -88,9 +88,11 @@ export function timeAgo(iso: string, now = Date.now()) {
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
   if (seconds < 7 * 86400) return `${Math.floor(seconds / 86400)}d`;
   const date = new Date(iso);
-  return date.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    ...(date.getFullYear() !== new Date(now).getFullYear() ? { year: "numeric" } : {}),
-  });
+  return date
+    .toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      ...(date.getFullYear() !== new Date(now).getFullYear() ? { year: "numeric" } : {}),
+    })
+    .replace(/\bSept\b/, "Sep");
 }

@@ -182,9 +182,20 @@ export function formatTripDates(trip: Pick<Collection, "start_date" | "end_date"
   return `${formatDate(from, sameYear ? { day: "numeric", month: "short" } : undefined)} – ${formatDate(to)}`;
 }
 
+// The two date styles: `formatDate(d)` is "5 Oct 2026" for rows and metadata;
+// `formatDate(d, WITH_WEEKDAY)` is "Mon 5 Oct 2026" where one show's date
+// stands on its own (entry pages, feed cards, the log form). Long months are
+// for sentences and alt text only.
+export const WITH_WEEKDAY: Intl.DateTimeFormatOptions = { weekday: "short", day: "numeric", month: "short", year: "numeric" };
+
 export function formatDate(date: string, opts: Intl.DateTimeFormatOptions = { day: "numeric", month: "short", year: "numeric" }) {
   // Dates are calendar days; format at noon UTC so no zone shifts the day.
-  return new Date(`${date}T12:00:00Z`).toLocaleDateString("en-GB", { ...opts, timeZone: "UTC" });
+  // en-GB writes "Mon, 5 Oct" and "Sept"; drop the comma and use "Sep" so
+  // every short month is three letters.
+  return new Date(`${date}T12:00:00Z`)
+    .toLocaleDateString("en-GB", { ...opts, timeZone: "UTC" })
+    .replace(/^(\w+),/, "$1")
+    .replace(/\bSept\b/, "Sep");
 }
 
 export function localToday(offsetDays = 0) {
