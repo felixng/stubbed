@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { CardHero, DiaryLink } from "@/components/profile/CardHero";
 import { CommentThread } from "@/components/profile/CommentThread";
 import { PublicEntryCard } from "@/components/profile/PublicEntryCard";
 import { formatDate } from "@/lib/entries";
-import { getEntryForViewer } from "@/lib/public-pages";
+import { getEntryForViewer, type ViewedEntry } from "@/lib/public-pages";
 import { getReactions, listComments, listLikers, NO_REACTIONS } from "@/lib/reactions";
 
-// Public entry page, the link behind a shared card: the show as a post, its
-// likes and comments, and a link to the rest of @handle's diary. Public,
+// Public entry page, the link behind a shared card: the card itself (its
+// preview image, so the page opens on what was shared), the show as a post,
+// its likes and comments, and a link to the rest of @handle's diary; the
+// layout adds the waitlist card after it for signed-out visitors. Public,
 // logged entries on public profiles (RLS, via the publishable key), plus, for
 // a signed-in viewer, what their session may see: a private profile's public
 // entries, to its approved followers and owner. Those aren't indexed and have
@@ -46,7 +48,7 @@ async function Entry({ params }: PageProps<"/e/[id]">) {
   const { id } = await params;
   const found = await getEntryForViewer(id);
   if (!found) notFound();
-  const { entry, owner, photoUrl, supabase, viewerId } = found;
+  const { entry, owner, photoUrl, supabase, viewerId, version, listed } = found;
   const [reactions, comments, likers] = await Promise.all([
     getReactions(supabase, [entry.id]),
     listComments(supabase, entry.id),
@@ -57,6 +59,7 @@ async function Entry({ params }: PageProps<"/e/[id]">) {
   const loginHref = `/login?next=${encodeURIComponent(`/e/${entry.id}`)}`;
   return (
     <>
+      {listed && <CardHero src={`/api/og/entry/${entry.id}?v=${version}`} alt={cardAlt(entry, owner.handle)} />}
       <PublicEntryCard
         entry={entry}
         photoUrl={photoUrl ?? undefined}
@@ -75,14 +78,22 @@ async function Entry({ params }: PageProps<"/e/[id]">) {
         likes={social.likes}
         loginHref={loginHref}
       />
-      <Link
-        href={`/@${owner.handle}`}
-        className="inline-flex min-h-11 w-fit items-center rounded-pill bg-tint-fill px-4 text-[15px] leading-5 font-semibold text-tint-text hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-      >
-        More from @{owner.handle}
-      </Link>
+      <DiaryLink handle={owner.handle} />
     </>
   );
+}
+
+// The card's words for screen readers: the show, where, when and the stars.
+function cardAlt(entry: ViewedEntry["entry"], handle: string) {
+  const where = [entry.venue?.name, entry.venue?.city].filter(Boolean).join(", ");
+  return [
+    `@${handle}’s card: ${entry.show.title}`,
+    where,
+    formatDate(entry.date, { day: "numeric", month: "long", year: "numeric" }),
+    entry.rating != null ? `rated ${entry.rating} out of 5` : null,
+  ]
+    .filter(Boolean)
+    .join(", ");
 }
 
 export default function EntryPage(props: PageProps<"/e/[id]">) {
