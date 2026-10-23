@@ -131,7 +131,7 @@ async function Body({ searchParams }: { searchParams: PageProps<"/app/profile">[
         <section aria-label="Trips" className="flex flex-col gap-3">
           <Link
             href="/app/trips/new"
-            className="self-end text-subheadline font-semibold text-tint-text underline-offset-2 hover:underline"
+            className="-my-2 -mr-3 self-end inline-flex min-h-11 items-center rounded-pill px-3 text-subheadline font-semibold text-tint-text hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
           >
             + New trip
           </Link>

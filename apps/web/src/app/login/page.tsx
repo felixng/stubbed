@@ -27,7 +27,7 @@ export default function LoginPage() {
         <div className="flex flex-col items-center gap-3 text-center">
           {/* The way back to the landing page. */}
           <Wordmark size={44} href="/" />
-          <h1 className="text-title-2 font-display text-label">Sign in</h1>
+          <h1 className="text-title font-display text-label">Sign in</h1>
         </div>
         {/* Reads ?next, ?error and ?deleted, so it renders at request time. */}
         <Suspense>

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { Avatar } from "@/components/profile/Avatar";
 import { RemoveFollowerButton } from "@/components/profile/RemoveFollowerButton";
+import { BackLink } from "@/components/ui/BackLink";
 import { listFollows, viewerContext } from "@/lib/follows";
 import { HANDLE_PATTERN } from "@/lib/profile-handle";
 
@@ -28,12 +29,7 @@ export async function FollowList({ rawHandle, list }: { rawHandle: string; list:
   return (
     <section aria-labelledby="list-heading" className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <Link
-          href={`/@${profile.handle}`}
-          className="w-fit text-subheadline font-semibold text-tint-text underline-offset-2 hover:underline"
-        >
-          ← @{profile.handle}
-        </Link>
+        <BackLink href={`/@${profile.handle}`}>@{profile.handle}</BackLink>
         <h1 id="list-heading" className="text-title font-display text-label">
           {title}
         </h1>
