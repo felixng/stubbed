@@ -33,7 +33,8 @@ const SCALE = CARD_SIZE / U;
 export const DISPLAY = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, sans-serif";
 export const TEXT = "-apple-system, 'SF Pro Text', BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, sans-serif";
 export const CORAL = "#FF6B4A";
-const STAR = "#FFD60A";
+// Applause Gold on the dark cards (the dark `star` token); #b96f00 on light.
+export const STAR = "#FFD60A";
 export const SECONDARY = "#AEAEB2";
 // Shown small under the wordmark on every card, so a shared image leads back.
 // The plain domain, no "@": with one it reads as a handle next to the user's.
@@ -257,6 +258,10 @@ function verticalGradient(ctx: Ctx, top: number, bottom: number, stops: [number,
   ctx.fillStyle = g;
   ctx.fillRect(0, top, U, bottom - top);
 }
+
+// An average (4.83) as the nearest half star (5), since ratings are given
+// and shown in half steps.
+export const halfStep = (n: number) => Math.round(n * 2) / 2;
 
 // Half-star rating: outline stars, then filled ones clipped to the value.
 export function drawStars(ctx: Ctx, value: number, x: number, y: number, size: number, gap: number, outline: string) {
