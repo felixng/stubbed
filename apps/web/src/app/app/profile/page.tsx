@@ -14,7 +14,7 @@ export const metadata: Metadata = { title: "Profile" };
 const loading = <p className="text-subheadline text-label-secondary">Loading…</p>;
 
 const PILL =
-  "inline-flex min-h-11 flex-1 items-center justify-center rounded-pill bg-fill px-4 text-[15px] leading-5 font-semibold text-label hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
+  "inline-flex min-h-11 flex-1 items-center justify-center rounded-pill bg-fill px-4 text-subheadline font-semibold text-label hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
 
 // Who you are, Hevy style: avatar, handle, name and bio, then shows,
 // followers and following (linking to the lists, where followers can be

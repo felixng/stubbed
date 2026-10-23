@@ -41,6 +41,7 @@ export function PublicEntryCard({
   name,
   avatarUrl,
   page = false,
+  level = 3,
   inTrip,
   href = `/e/${entry.id}`,
   tripHref = (id) => `/t/${id}`,
@@ -56,6 +57,9 @@ export function PublicEntryCard({
   name: string;
   avatarUrl: string | null;
   page?: boolean;
+  // Heading level when not a page: 2 where cards sit right under the h1
+  // (Home), 3 under a section heading.
+  level?: 2 | 3;
   inTrip?: string;
   href?: string | null;
   tripHref?: (id: string) => string | null;
@@ -65,7 +69,7 @@ export function PublicEntryCard({
   social?: CardSocial;
   loginNext?: string;
 }) {
-  const Title = page ? "h1" : "h3";
+  const Title = page ? "h1" : level === 2 ? "h2" : "h3";
   const trips = entry.collections.filter((c) => c.id !== inTrip);
   const where = [entry.venue?.name, entry.venue?.city].filter(Boolean).join(", ");
   const onPhoto = Boolean(photoUrl);

@@ -60,7 +60,7 @@ export function CommentThread({
       ) : (
         <Link
           href={loginHref}
-          className="inline-flex min-h-11 w-fit items-center rounded-pill bg-tint-fill px-4 text-[15px] leading-5 font-semibold text-tint-text hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          className="inline-flex min-h-11 w-fit items-center rounded-pill bg-tint-fill px-4 text-subheadline font-semibold text-tint-text hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
           Sign in to comment
         </Link>

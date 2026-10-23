@@ -72,6 +72,12 @@ typography:
     fontSize: "12px"
     fontWeight: 400
     lineHeight: "16px"
+  caption-2:
+    fontFamily: "-apple-system, SF Pro Text, BlinkMacSystemFont, system-ui, Segoe UI, Roboto, sans-serif"
+    fontSize: "11px"
+    fontWeight: 500
+    lineHeight: "13px"
+    letterSpacing: "0.006em"
   wordmark:
     fontFamily: "-apple-system, SF Pro Display, BlinkMacSystemFont, system-ui, Segoe UI, Roboto, sans-serif"
     fontSize: "20px"
@@ -229,9 +235,10 @@ A warm, paper-and-coral palette: one saturated accent, and neutrals that all lea
 - **Body** (400, 17/22px): the default for all running text and inputs.
 - **Callout** (16/21px), **Subheadline** (15/20px): supporting lines, such as `venue · date` under a show title.
 - **Footnote** (13/18px), **Caption** (12/16px): metadata and chips. Body text never goes below Footnote.
+- **Caption 2** (500, 11/13px): tab bar labels only, the one stated exception to the Footnote floor. It matches the iOS tab bar and sits at the 11px platform minimum.
 - **Marketing sizes** sit outside the iOS styles: the landing hero headline (`clamp(44px, 7vw, 76px)`, extra bold) and feature card titles (20px).
 
-On the web these are Tailwind font sizes that carry line height, weight and tracking: `text-large-title`, `text-title`, `text-title-2`, `text-headline`, `text-body` (default), `text-callout`, `text-subheadline`, `text-footnote`, `text-caption`. On iOS, use Dynamic Type text styles only; no fixed point sizes in screens.
+On the web these are Tailwind font sizes that carry line height, weight and tracking: `text-large-title`, `text-title`, `text-title-2`, `text-headline`, `text-body` (default), `text-callout`, `text-subheadline`, `text-footnote`, `text-caption`, `text-caption-2` (tab labels only). On iOS, use Dynamic Type text styles only; no fixed point sizes in screens.
 
 ### The wordmark
 `stubbed`, always lowercase: SF Pro Display, weight 800, letter-spacing -0.045em (Swift `.tracking(-size * 0.045)`), line height 1, no text transform, in `label`, never `tint` or `tint-text`. 20pt in app navigation and headers, 26–32px in the web header (28 on the landing page), 16 minimum. Accessible label "Stubbed". "Stubbed" with a capital S in running text.
@@ -303,7 +310,7 @@ React components live in `apps/web/src/components/ui/`. The iOS app no longer mi
 - **Focus:** the shared 2px `focus` outline at a 2px offset.
 
 ### Navigation
-- **Web, below `md`:** a bottom tab bar on Programme White with a top hairline: Home, a raised coral Log button, Profile. 49px items with a 24px line icon over a 10px medium label. Unselected tabs in Faded Velvet, the selected tab in Deep Coral Ink (`aria-current="page"`).
+- **Web, below `md`:** a bottom tab bar on Programme White with a top hairline: Home, a raised coral Log button, Profile. 49px items with a 24px line icon over an 11px medium label (`text-caption-2`). Unselected tabs in Faded Velvet, the selected tab in Deep Coral Ink (`aria-current="page"`).
 - **Web, from `md`:** a sidebar on Lobby Paper (`AppSidebar`): the wordmark (28px), the people search box (its results open 384px wide over the page), then Home, Log and Profile, a hairline, Import shows, and Sign out pinned to the bottom in Curtain Red. Items are 44px capsule rows with a 24px line icon and a body-size label in Velvet Ink, hovering to Blush Well; the selected item is Deep Coral Ink on Coral Wash, semibold, with `aria-current="page"`. Log is a plain item here, not a coral button, so the page's own primary action stays the only coral fill. Trip and settings pages select Profile, as in the tab bar.
 - **iOS:** a native `TabView` (Home, Log, Profile); Log opens the log sheet rather than a screen.
 
@@ -329,5 +336,5 @@ SF Symbols on iOS (`book`, `plus.circle`, `chart.bar`, `person` for the tabs). O
 - **Don't** colour the wordmark coral, uppercase it, or set it below 16px.
 - **Don't** add web fonts, an icon package or grey shadows.
 - **Don't** put drop shadows on iOS, or port web layout patterns (floating action buttons, custom card styles) to the iOS app.
-- **Don't** set body text below Footnote (13px), or use `glow` behind text.
+- **Don't** set body text below Footnote (13px), or use `glow` behind text. Tab bar labels (Caption 2, 11px) are the only exception.
 - **Don't** write copy with emoji, exclamation marks or title case.

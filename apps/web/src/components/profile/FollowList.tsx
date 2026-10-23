@@ -34,7 +34,7 @@ export async function FollowList({ rawHandle, list }: { rawHandle: string; list:
         >
           ← @{profile.handle}
         </Link>
-        <h1 id="list-heading" className="text-large-title font-display text-label">
+        <h1 id="list-heading" className="text-title font-display text-label">
           {title}
         </h1>
       </div>

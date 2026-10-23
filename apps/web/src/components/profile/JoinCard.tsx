@@ -41,7 +41,7 @@ const isSignedIn = cache(async () => (await viewerContext()).userId !== null);
 
 function HeaderJoinButton() {
   return (
-    <Link href={JOIN_HREF} className={`${JOIN_BUTTON} px-4 text-[15px] leading-5`}>
+    <Link href={JOIN_HREF} className={`${JOIN_BUTTON} px-4 text-subheadline`}>
       Join the waitlist
     </Link>
   );

@@ -15,6 +15,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
       handle={owner.handle!}
       name={owner.display_name || `@${owner.handle}`}
       avatarUrl={owner.avatar_url}
+      level={2}
       href={mine ? `/app/entries/${entry.id}` : `/e/${entry.id}`}
       tripHref={(id) => (mine ? `/app/trips/${id}` : owner.is_private ? null : `/t/${id}`)}
       badge={mine && entry.visibility === "private" ? "Private" : undefined}
