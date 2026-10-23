@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { entryBack, PROFILE_BACK, withFrom } from "@/lib/back-link";
+import { entryBack, PROFILE_BACK, readFrom, withFrom } from "@/lib/back-link";
 
 const trip = { id: "c0000000-0000-0000-0000-0000000000a1", name: "Summer in London" };
 
@@ -23,4 +23,11 @@ test("entryBack: falls back to Profile", () => {
 test("withFrom: adds the param", () => {
   assert.equal(withFrom("/app/entries/1", "home"), "/app/entries/1?from=home");
   assert.equal(withFrom("/app/entries/1?new=1", "import"), "/app/entries/1?new=1&from=import");
+});
+
+test("readFrom: passes on only known sources", () => {
+  for (const ok of ["home", "import", "admin-import", `trip-${trip.id}`]) assert.equal(readFrom(ok), ok);
+  for (const bad of [undefined, "", ["home"], "//evil.com", "profile", "trip-", "trip-../x"]) {
+    assert.equal(readFrom(bad), null, String(bad));
+  }
 });

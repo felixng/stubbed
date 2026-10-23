@@ -6,7 +6,8 @@ import { Suspense } from "react";
 import { DeleteEntryButton } from "@/components/app/DeleteEntryButton";
 import { ShareSheet } from "@/components/app/share/ShareSheet";
 import { BackLink } from "@/components/ui/BackLink";
-import { entryBack } from "@/lib/back-link";
+import { RatingStars } from "@/components/ui/RatingStars";
+import { entryBack, readFrom, withFrom } from "@/lib/back-link";
 import { formatDate, SHOW_TYPE_LABELS, WITH_WEEKDAY } from "@/lib/entries";
 import type { CardData } from "@/lib/share-card";
 import { getShareCard } from "@/lib/supabase/data";
@@ -17,7 +18,8 @@ const plural = (n: number, noun: string) => `${n} ${n === 1 ? noun : `${noun}s`}
 
 // The entry page is the share screen: sharing is the first thing on it, as
 // in Hevy. The share cards carry the title, venue, date and rating; the
-// details below add what the cards don't (type, note, trips, visibility).
+// details below restate them as text (the card is an image, and a clear card
+// can hide them) and add what the cards don't (type, note, trips, visibility).
 async function Entry({ params, searchParams }: PageProps<"/app/entries/[id]">) {
   const [{ id }, query] = await Promise.all([params, searchParams]);
   const found = await getShareCard(id);
@@ -39,6 +41,9 @@ async function Entry({ params, searchParams }: PageProps<"/app/entries/[id]">) {
   };
   // Back to where the user came from (feed, trip, import), else the diary.
   const back = entryBack(query.from, entry.collections);
+  // Edit keeps `from`, so saving lands back on this page with the same back link.
+  const from = readFrom(query.from);
+  const editHref = from ? withFrom(`/app/entries/${entry.id}/edit`, from) : `/app/entries/${entry.id}/edit`;
   const slug = entry.show.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "show";
 
   return (
@@ -50,7 +55,7 @@ async function Entry({ params, searchParams }: PageProps<"/app/entries/[id]">) {
         <BackLink href={back.href}>{back.label}</BackLink>
         {!planned && (
           <Link
-            href={`/app/entries/${entry.id}/edit`}
+            href={editHref}
             className="-mr-3 inline-flex min-h-11 items-center rounded-pill px-3 text-headline text-tint-text hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
           >
             Edit
@@ -75,7 +80,7 @@ async function Entry({ params, searchParams }: PageProps<"/app/entries/[id]">) {
             you’ve been, log it with your rating and share it.
           </p>
           <Link
-            href={`/app/entries/${entry.id}/edit`}
+            href={editHref}
             className="inline-flex min-h-11 items-center rounded-pill bg-tint-fill px-4 text-subheadline font-semibold text-tint-text hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
           >
             Edit
@@ -97,12 +102,13 @@ async function Entry({ params, searchParams }: PageProps<"/app/entries/[id]">) {
           <p className="text-subheadline text-label-secondary">
             {formatDate(entry.date, WITH_WEEKDAY)}
           </p>
+          {entry.rating != null && <RatingStars value={entry.rating} size={20} className="mt-1" />}
         </header>
         {entry.note && <p className="text-body whitespace-pre-line text-label">{entry.note}</p>}
         {found.hasPage && (
           <Link
             href={`/e/${entry.id}#comments`}
-            className="w-fit text-subheadline font-semibold text-tint-text underline-offset-2 hover:underline"
+            className="-my-1.5 inline-flex min-h-11 w-fit items-center rounded-sm text-subheadline font-semibold text-tint-text underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
           >
             {found.reactions.likes || found.reactions.comments
               ? `${plural(found.reactions.likes, "like")} · ${plural(found.reactions.comments, "comment")}`
@@ -114,7 +120,7 @@ async function Entry({ params, searchParams }: PageProps<"/app/entries/[id]">) {
             <Link
               key={c.id}
               href={`/app/trips/${c.id}`}
-              className="inline-flex min-h-7 items-center rounded-pill bg-fill px-3 text-footnote font-medium text-label hover:bg-tint-fill"
+              className="inline-flex min-h-7 items-center rounded-pill bg-fill px-3 text-footnote font-medium text-label hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             >
               {c.name}
             </Link>

@@ -20,7 +20,7 @@ export function FeedCard({ item }: { item: FeedItem }) {
       href={mine ? withFrom(`/app/entries/${entry.id}`, "home") : `/e/${entry.id}`}
       tripHref={(id) => (mine ? `/app/trips/${id}` : owner.is_private ? null : `/t/${id}`)}
       badge={mine && entry.visibility === "private" ? "Private" : undefined}
-      editHref={mine ? `/app/entries/${entry.id}/edit` : undefined}
+      editHref={mine ? withFrom(`/app/entries/${entry.id}/edit`, "home") : undefined}
       shareHref={mine ? withFrom(`/app/entries/${entry.id}`, "home") : undefined}
       social={social ?? undefined}
     />

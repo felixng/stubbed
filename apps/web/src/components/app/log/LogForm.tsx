@@ -6,6 +6,7 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react"
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { track } from "@/lib/analytics";
+import type { From } from "@/lib/back-link";
 import {
   ensureShow,
   ensureVenue,
@@ -75,13 +76,13 @@ function useToday() {
 // After a save the form starts over the next time it's shown (see
 // useFreshOnReturn). An unsaved draft is kept, so a stray tap on another tab
 // doesn't lose it.
-export function LogForm({ initial }: { initial?: EntryDraft }) {
+export function LogForm({ initial, from }: { initial?: EntryDraft; from?: From }) {
   const [round, setRound] = useState(0);
   const saved = useFreshOnReturn(() => setRound((r) => r + 1));
-  return <EntryForm key={round} initial={initial} onSaved={saved} />;
+  return <EntryForm key={round} initial={initial} from={from} onSaved={saved} />;
 }
 
-function EntryForm({ initial, onSaved }: { initial?: EntryDraft; onSaved: () => void }) {
+function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: From; onSaved: () => void }) {
   const id = useId();
   const router = useRouter();
   const editing = Boolean(initial);
@@ -447,6 +448,7 @@ function EntryForm({ initial, onSaved }: { initial?: EntryDraft; onSaved: () => 
       const params = new URLSearchParams();
       if (!editing) params.set("new", "1");
       if (photoFailed) params.set("photo", "failed");
+      if (from) params.set("from", from);
       onSaved();
       router.push(`/app/entries/${entryId}${params.size ? `?${params}` : ""}`);
       router.refresh();
