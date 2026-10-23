@@ -35,12 +35,15 @@ const tab =
   "flex min-h-[49px] flex-1 flex-col items-center gap-0.5 pt-1.5 pb-1 text-caption-2 font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
 
 // Which section a path belongs to, shared with the desktop sidebar so both
-// mark the same place. Trip pages and settings sit under Profile.
+// mark the same place. Entry, trip and settings pages sit under Profile,
+// where the diary lists them, even when the entry was opened from the feed.
+// Import has its own sidebar item; the tab bar has none, so there it lights
+// Log, the tab that links to it.
 export function section(pathname: string) {
   return {
     home: pathname === "/app",
     log: pathname.startsWith("/app/log"),
-    profile: ["/app/profile", "/app/trips", "/app/settings"].some((p) => pathname.startsWith(p)),
+    profile: ["/app/profile", "/app/entries", "/app/trips", "/app/settings"].some((p) => pathname.startsWith(p)),
     import: pathname.startsWith("/app/import"),
   };
 }
@@ -52,7 +55,9 @@ export function AppTabBar() {
 // Rendered with no active tab while the page prerenders (the path is only
 // known per request), then with the real path.
 export function AppTabBarLinks({ pathname }: { pathname: string }) {
-  const { home, profile, log } = section(pathname);
+  const on = section(pathname);
+  const { home, profile } = on;
+  const log = on.log || on.import;
 
   return (
     <nav

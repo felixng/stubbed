@@ -4,11 +4,19 @@ import Link from "next/link";
 // navigation bar: a chevron and the parent's name, in tint-text, above the
 // page heading. The negative margin lines the chevron up with the heading
 // while keeping a 44px target.
-export function BackLink({ href, children }: { href: string; children: React.ReactNode }) {
+export function BackLink({
+  href,
+  children,
+  className = "",
+}: {
+  href: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
   return (
     <Link
       href={href}
-      className="-ml-2 inline-flex min-h-11 w-fit max-w-full items-center gap-0.5 rounded-pill pr-3 pl-1 text-subheadline font-semibold text-tint-text hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+      className={`${className} -ml-2 inline-flex min-h-11 w-fit max-w-full items-center gap-0.5 rounded-pill pr-3 pl-1 text-subheadline font-semibold text-tint-text hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus`}
     >
       <svg
         viewBox="0 0 24 24"

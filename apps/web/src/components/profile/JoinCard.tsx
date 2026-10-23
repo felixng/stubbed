@@ -37,6 +37,28 @@ async function SignedOut({ children }: { children: React.ReactNode }) {
   return (await isSignedIn()) ? null : children;
 }
 
+// The other half of the header slot: someone signed in (often the owner,
+// looking at their own public page) gets a way back into the app instead of
+// the waitlist. No fallback, so signed-out visitors see no change.
+export function SignedInAppLink() {
+  return (
+    <Suspense>
+      <SignedIn>
+        <Link
+          href="/app"
+          className="inline-flex min-h-11 items-center justify-center rounded-pill bg-tint-fill px-4 font-sans text-subheadline font-semibold text-tint-text transition-colors hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+        >
+          Open app
+        </Link>
+      </SignedIn>
+    </Suspense>
+  );
+}
+
+async function SignedIn({ children }: { children: React.ReactNode }) {
+  return (await isSignedIn()) ? children : null;
+}
+
 const isSignedIn = cache(async () => (await viewerContext()).userId !== null);
 
 function HeaderJoinButton() {

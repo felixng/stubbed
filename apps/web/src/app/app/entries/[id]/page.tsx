@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { DeleteEntryButton } from "@/components/app/DeleteEntryButton";
 import { ShareSheet } from "@/components/app/share/ShareSheet";
 import { BackLink } from "@/components/ui/BackLink";
+import { entryBack } from "@/lib/back-link";
 import { formatDate, SHOW_TYPE_LABELS, WITH_WEEKDAY } from "@/lib/entries";
 import type { CardData } from "@/lib/share-card";
 import { getShareCard } from "@/lib/supabase/data";
@@ -36,15 +37,17 @@ async function Entry({ params, searchParams }: PageProps<"/app/entries/[id]">) {
     timesSeen: found.timesSeen,
     handle: found.handle,
   };
+  // Back to where the user came from (feed, trip, import), else the diary.
+  const back = entryBack(query.from, entry.collections);
   const slug = entry.show.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "show";
 
   return (
     <article className="flex flex-col gap-5">
-      {/* A navigation bar: back to the diary on the left, Edit on the right,
+      {/* A navigation bar: back where you came from on the left, Edit on the right,
           so the share controls under the card are only about sharing.
           Planned entries keep their Edit button in the card below instead. */}
       <div className="-my-2 flex items-center justify-between gap-3">
-        <BackLink href="/app/profile">Profile</BackLink>
+        <BackLink href={back.href}>{back.label}</BackLink>
         {!planned && (
           <Link
             href={`/app/entries/${entry.id}/edit`}
