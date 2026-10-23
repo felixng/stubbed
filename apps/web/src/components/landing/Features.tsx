@@ -13,7 +13,7 @@ const FEATURES = [
     title: "Log every show",
     body: "Every show you see, in one place: the venue, the date, your half-star rating and your thoughts about the show.",
     Screen: TrackScreen,
-    alt: "Logging Hadestown at the Lyric Theatre: the date, four and a half stars and a note",
+    alt: "Logging Hadestown at the Theatre Royal: the date, four and a half stars and a note",
   },
   {
     title: "Share with your friends",
@@ -121,7 +121,7 @@ export function Features() {
                   <span
                     aria-hidden="true"
                     className={`flex size-9 shrink-0 items-center justify-center rounded-pill text-headline tabular-nums ${
-                      selected ? "bg-tint text-on-tint" : "bg-fill text-label-secondary"
+                      selected ? "bg-label text-background" : "bg-fill text-label-secondary"
                     }`}
                   >
                     {index + 1}

@@ -12,22 +12,23 @@ import { renderCard, type CardData } from "@/lib/share-card";
 // The landing page's pictures of the app, drawn with the app's own components
 // and sample theatre data instead of screenshots, so they stay sharp, follow
 // the tokens and never show a real person's diary. Venues carry no city
-// (public copy never names one) and the sample handle is @sillyelphaba.
+// (public copy never names one) and come from different places, so the sample
+// diary isn't one city's. The sample handle is @sillyelphaba.
 
 export const SAMPLE_HANDLE = "sillyelphaba";
 
 const DIARY = [
-  { title: "Hadestown", venue: "Lyric Theatre", date: "18 Oct 2026", rating: 4.5 },
+  { title: "Hadestown", venue: "Theatre Royal", date: "18 Oct 2026", rating: 4.5 },
   { title: "Operation Mincemeat", venue: "Fortune Theatre", date: "2 Oct 2026", rating: 5 },
-  { title: "Les Misérables", venue: "Sondheim Theatre", date: "9 Aug 2026", rating: 4 },
-  { title: "Sunset Boulevard", venue: "Savoy Theatre", date: "20 Jul 2026", rating: 3.5 },
+  { title: "Les Misérables", venue: "Imperial Theatre", date: "9 Aug 2026", rating: 4 },
+  { title: "Sunset Boulevard", venue: "St. James Theatre", date: "20 Jul 2026", rating: 3.5 },
   { title: "Stereophonic", venue: "Duke of York’s Theatre", date: "14 Jun 2026", rating: 5 },
 ];
 
 const CARD: CardData = {
   title: "Hadestown",
-  venue: "Lyric Theatre",
-  where: "Lyric Theatre",
+  venue: "Theatre Royal",
+  where: "Theatre Royal",
   date: "18 Oct 2026",
   year: 2026,
   rating: 4.5,
@@ -79,6 +80,9 @@ export function HeroPhone({ label }: { label: string }) {
   );
 }
 
+// The mock buttons are white with coral ink, not the coral fill:
+// they're pictures, and the hero's call to action is the page's one coral fill.
+
 // "Log a show": the form after a photo, filled in.
 export function TrackScreen() {
   return (
@@ -86,7 +90,7 @@ export function TrackScreen() {
       <p className="font-display text-title-2 text-label">Log a show</p>
       <List>
         <Field label="Show" value="Hadestown" />
-        <Field label="Theatre" value="Lyric Theatre" />
+        <Field label="Theatre" value="Theatre Royal" />
         <Field label="Date" value="Sat, 18 Oct 2026" />
         <div className="flex items-center justify-between py-3">
           <span className="text-body text-label">Rating</span>
@@ -96,7 +100,7 @@ export function TrackScreen() {
       <div className="rounded-md border border-separator bg-surface p-4 text-body text-label shadow-sm">
         The staging of “Wait for Me” stayed with me all the way home.
       </div>
-      <span className="mt-1 inline-flex min-h-[50px] items-center justify-center rounded-pill bg-tint px-6 text-headline font-semibold text-on-tint shadow-btn">
+      <span className="mt-1 inline-flex min-h-[50px] items-center justify-center rounded-pill bg-surface px-6 text-headline font-semibold text-tint-text shadow-sm">
         Save
       </span>
     </div>
@@ -139,7 +143,7 @@ export function ShareScreen() {
           <img src={src} alt="" className="size-full" />
         )}
       </div>
-      <span className="inline-flex min-h-[50px] items-center justify-center rounded-pill bg-tint px-6 text-headline font-semibold text-on-tint shadow-btn">
+      <span className="inline-flex min-h-[50px] items-center justify-center rounded-pill bg-surface px-6 text-headline font-semibold text-tint-text shadow-sm">
         Share to Stories
       </span>
     </div>
@@ -164,8 +168,8 @@ export function PlanScreen() {
     <div className="flex flex-col gap-3">
       <p className="font-display text-title-2 text-label">Upcoming</p>
       <List>
-        <PlannedRow title="Wicked" meta="Apollo Victoria Theatre · 7 Nov 2026" />
-        <PlannedRow title="Hamilton" meta="Victoria Palace Theatre · 21 Nov 2026" />
+        <PlannedRow title="Wicked" meta="Gershwin Theatre · 7 Nov 2026" />
+        <PlannedRow title="Hamilton" meta="Her Majesty’s Theatre · 21 Nov 2026" />
       </List>
       <p className="mt-2 font-display text-title-2 text-label">Trips</p>
       <List>
