@@ -8,6 +8,7 @@ import { formatTripDates } from "@/lib/entries";
 import { viewerContext } from "@/lib/follows";
 import { getPublicTrip, type TripStats } from "@/lib/public-pages";
 import { getReactions, NO_REACTIONS } from "@/lib/reactions";
+import { halfStep } from "@/lib/share-card";
 
 // Public trip page, the recap behind a shared trip card (#16): the card
 // itself (its preview image), which already carries the trip's name, dates
@@ -49,15 +50,15 @@ export async function generateMetadata({ params }: PageProps<"/t/[id]">): Promis
 }
 
 // The card's words for screen readers, as drawn on it: the name, dates and
-// place, the numbers and the average rating. The page doesn't repeat them as
-// visible text.
+// place, the numbers and the average in stars, to the half star the card
+// draws. The page doesn't repeat them as visible text.
 function cardAlt(trip: { name: string; start_date: string; end_date: string }, stats: TripStats, handle: string) {
   return [
     `@${handle}’s trip card: ${trip.name}`,
     formatTripDates(trip),
     headline(stats),
     plural(stats.venues, "theatre"),
-    stats.average != null ? `average rating ${stats.average.toFixed(1)} out of 5` : null,
+    stats.average != null ? `average rating ${halfStep(stats.average)} out of 5 stars` : null,
   ]
     .filter(Boolean)
     .join(", ");
