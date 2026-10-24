@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { Container } from "@/components/landing/Container";
-import { HeroPhone } from "@/components/landing/Screens";
+import { Phone } from "@/components/landing/Screens";
 import { WaitlistForm } from "@/components/landing/WaitlistForm";
 
 export function Hero() {
@@ -38,7 +38,13 @@ export function Hero() {
               className="absolute top-1/2 left-1/2 aspect-square w-[min(100%,520px)] -translate-1/2 rounded-full bg-glow shadow-[0_0_0_28px_color-mix(in_srgb,var(--tint)_16%,transparent)]"
             />
             <div className="relative">
-              <HeroPhone label="The Stubbed diary on a phone: Hadestown, Operation Mincemeat, Les Misérables and Sunset Boulevard, each with its theatre, date and star rating" />
+              <Phone
+                shot="hero"
+                label="Stubbed on an iPhone: the Home feed, with @sillyelphaba’s photo from The Lost Boys at the Palace Theatre"
+                sizes="(min-width: 640px) 320px, 72vw"
+                preload
+                className="w-[min(72vw,320px)]"
+              />
             </div>
           </div>
         </div>

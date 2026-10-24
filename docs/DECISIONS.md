@@ -442,3 +442,9 @@ From the design critique. Supersedes the "why the preview image" part of "Shared
 - **The preview image stays** for link previews (`og:image`, `twitter:image`) only.
 - **Private profiles' shows** (approved followers only) keep the post layout; its title is the page's `h1` (`PublicEntryCard page`).
 - **Motion:** the card's words settle in once (700ms, from 40% opacity), under `motion-safe`.
+
+### 2026-10-24: Landing pictures are real iPhone screenshots
+The owner found the drawn landing screens (2026-10-23) flat: every poster was initials on grey. The hero and the four "How it works" panels are now screenshots of the iOS app, in a near-black phone frame (`components/landing/Screens.tsx`, `Phone`); in the panels the phone sits at the top and runs off the bottom edge. Images are `public/landing/{hero,log,share,history,plan}.jpg` (1206×2622), served through `next/image`.
+- **The objections to screenshots are answered in the data, not the app.** `apps/ios/scripts/dev marketing` seeds a local-only `@sillyelphaba` diary (`apps/ios/scripts/marketing-seed.sql`) with the owner's own theatre photos, runs `MarketingUITests` (left out of `scripts/dev ui`) on a 9:41 status bar, and saves the shots to `apps/ios/build/marketing/`. The seeded venues have no city or country, so the card, entry and edit screens show only the theatre's name. `apps/web/scripts/landing-shots.sh` copies them into `public/landing/`.
+- **Photos stay out of git.** They're read from `apps/ios/build/marketing-photos/01.jpg`–`08.jpg` (git-ignored), one per logged entry, newest first. Only the finished screenshots are committed.
+- **Which screens:** Home (hero, the feed's photo card), the edit form for Log (the photo flow needs AI detection, which local Supabase doesn't have), the Share screen, the diary, and a trip.
