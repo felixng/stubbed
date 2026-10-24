@@ -75,7 +75,7 @@ async function Entry({ params }: PageProps<"/e/[id]">) {
               </p>
             )}
             <TripChips trips={entry.collections} />
-            <EntryReactions entryId={entry.id} reactions={social} viewerId={viewerId} commentsHref="#comments" loginHref={loginHref} />
+            <EntryReactions entryId={entry.id} reactions={social} viewerId={viewerId} commentsHref="#comments" />
           </section>
         </>
       ) : (

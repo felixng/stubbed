@@ -214,7 +214,6 @@ export function PublicEntryCard({
                   reactions={social.reactions}
                   viewerId={social.viewerId}
                   commentsHref={page ? "#comments" : `/e/${entry.id}#comments`}
-                  loginHref={loginHref}
                   shareHref={shareHref}
                 />
               ) : (
