@@ -10,7 +10,8 @@ import { viewerContext } from "@/lib/follows";
 // Always light, like the landing page (data-theme switches the whole
 // document). Visitors here are mostly logged out and arrive from a shared
 // card or an Instagram bio, so the header button and the join card both lead
-// to the waitlist (signed-out visitors only); sign-ups are still off. A
+// to the waitlist (signed-out visitors only); sign-ups are still off. The
+// header button is secondary so the join card's stays the one coral fill. A
 // signed-in viewer gets "Open app" there instead. The
 // join card comes from the group layouts: first on profiles ((profile)),
 // after the shared card on entry and trip pages ((card)).
