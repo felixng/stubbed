@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { COMMENT_SELECT, type Comment, type Reactions } from "@/lib/reactions";
@@ -8,6 +7,7 @@ import { createClient } from "@/lib/supabase/client";
 import { CommentForm } from "./CommentForm";
 import { CommentItem } from "./CommentThread";
 import { EntryReactions } from "./EntryReactions";
+import { JoinPrompt } from "./JoinPrompt";
 
 // Like and Comment under a show in the home feed, with its comments inline,
 // as on Hevy (#87): the latest few, "View all N comments" to open the rest
@@ -90,7 +90,6 @@ export function FeedThread({
         reactions={shown}
         viewerId={viewerId}
         commentsHref={`/e/${entryId}#comments`}
-        loginHref={loginHref}
         shareHref={shareHref}
         onComment={viewerId ? () => (writing ? box.current?.focus() : setWriting(true)) : undefined}
         commentOpen={writing}
@@ -140,9 +139,7 @@ export function FeedThread({
           />
         )
       ) : (
-        <Link href={loginHref} className="-my-1.5 inline-flex min-h-11 w-fit items-center rounded-sm text-subheadline font-semibold text-tint-text underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
-          Sign in to comment
-        </Link>
+        <JoinPrompt loginHref={loginHref} variant="link" />
       )}
     </>
   );

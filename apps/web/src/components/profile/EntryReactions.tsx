@@ -6,13 +6,15 @@ import { useRef, useState } from "react";
 
 import type { Reactions } from "@/lib/reactions";
 import { createClient } from "@/lib/supabase/client";
+import { JOIN_ANCHOR } from "./JoinPrompt";
 
 const ACTION =
   "inline-flex min-h-11 items-center gap-1.5 rounded-pill px-3 text-subheadline font-semibold tabular-nums transition-colors hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
 
 // Like and comment, under a public entry, as on Hevy. Liking shows at once and
 // writes in the background; the refreshed page then brings the real counts.
-// Signed-out visitors go to sign in and come back. Comments live on the
+// For signed-out visitors, Like goes to the waitlist card on the same page
+// (sign-ups are off); the comment prompt under it has the sign-in link. Comments live on the
 // entry's page (`commentsHref`), or, with `onComment` (the feed, which shows
 // them inline), Comment calls it to open the comment box there. With `shareHref`
 // (your own shows), Share follows Comment and opens the share screen.
@@ -21,7 +23,6 @@ export function EntryReactions({
   reactions,
   viewerId,
   commentsHref,
-  loginHref,
   shareHref,
   onComment,
   commentOpen,
@@ -30,7 +31,6 @@ export function EntryReactions({
   reactions: Reactions;
   viewerId: string | null;
   commentsHref: string;
-  loginHref: string;
   shareHref?: string;
   onComment?: () => void;
   // Whether the comment box `onComment` reveals is open (the feed folds it).
@@ -106,10 +106,10 @@ export function EntryReactions({
           <span className="sr-only">Like ({likeLabel})</span>
         </button>
       ) : (
-        <Link href={loginHref} className={ACTION}>
+        <Link href={JOIN_ANCHOR} className={ACTION}>
           {heart}
           <span aria-hidden="true">{state.likes > 0 ? state.likes : ""}</span>
-          <span className="sr-only">Sign in to like ({likeLabel})</span>
+          <span className="sr-only">Join the waitlist to like ({likeLabel})</span>
         </Link>
       )}
       {onComment ? (

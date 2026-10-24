@@ -5,10 +5,11 @@ import { timeAgo, type Comment } from "@/lib/reactions";
 import { Avatar } from "./Avatar";
 import { CommentForm } from "./CommentForm";
 import { DeleteCommentButton } from "./DeleteCommentButton";
+import { JoinPrompt } from "./JoinPrompt";
 
 // The comments under a public entry on its page, oldest first, with who liked
-// it above them and a box to add one. Signed-out visitors are asked to sign
-// in. The entry's owner can delete any comment; others delete their own.
+// it above them and a box to add one. Signed-out visitors get the waitlist
+// (sign-ups are off) and a quiet sign-in link. The entry's owner can delete any comment; others delete their own.
 export function CommentThread({
   entryId,
   ownerId,
@@ -58,12 +59,7 @@ export function CommentThread({
       {viewerId ? (
         <CommentForm entryId={entryId} viewerId={viewerId} />
       ) : (
-        <Link
-          href={loginHref}
-          className="inline-flex min-h-11 w-fit items-center rounded-pill bg-tint-fill px-4 text-subheadline font-semibold text-tint-text hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-        >
-          Sign in to comment
-        </Link>
+        <JoinPrompt loginHref={loginHref} variant="pill" />
       )}
     </section>
   );

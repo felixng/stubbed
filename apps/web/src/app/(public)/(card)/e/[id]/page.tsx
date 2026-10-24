@@ -3,23 +3,23 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
-import { CardHero, LoggedBy } from "@/components/profile/CardHero";
+import { EntryHero, LoggedBy } from "@/components/profile/CardHero";
 import { CommentThread } from "@/components/profile/CommentThread";
 import { EntryReactions } from "@/components/profile/EntryReactions";
 import { PublicEntryCard } from "@/components/profile/PublicEntryCard";
-import { formatDate, WITH_WEEKDAY } from "@/lib/entries";
+import { formatDate } from "@/lib/entries";
 import { getEntryForViewer, type ViewedEntry } from "@/lib/public-pages";
 import { getReactions, listComments, listLikers, NO_REACTIONS } from "@/lib/reactions";
 
-// Public entry page, the link behind a shared card: the card itself (its
-// preview image, so the page opens on what was shared), then only what the
+// Public entry page, the link behind a shared card: the card itself (drawn
+// live from public data, so the page opens on what was shared), then only what the
 // card lacks: the note, likes and comments, and who logged it with a link to
 // the rest of their diary. The layout adds the waitlist card after it for
 // signed-out visitors. Public, logged entries on public profiles (RLS, via
 // the publishable key), plus, for a signed-in viewer, what their session may
 // see: a private profile's public entries, to its approved followers and
 // owner. Those aren't indexed and have no preview image, so the show is a
-// post instead of a card. Anything else is a 404. Its preview image is
+// post instead of a card, its title still the h1. Anything else is a 404. Its preview image is
 // /api/og/entry/[id].
 
 export async function generateMetadata({ params }: PageProps<"/e/[id]">): Promise<Metadata> {
@@ -51,7 +51,7 @@ async function Entry({ params }: PageProps<"/e/[id]">) {
   const { id } = await params;
   const found = await getEntryForViewer(id);
   if (!found) notFound();
-  const { entry, owner, photoUrl, supabase, viewerId, version, listed } = found;
+  const { entry, owner, photoUrl, supabase, viewerId, listed } = found;
   const [reactions, comments, likers] = await Promise.all([
     getReactions(supabase, [entry.id]),
     listComments(supabase, entry.id),
@@ -66,7 +66,14 @@ async function Entry({ params }: PageProps<"/e/[id]">) {
         // The card already shows the show, where, when, the stars and the
         // photo, so none of them are repeated under it.
         <>
-          <CardHero src={`/api/og/entry/${entry.id}?v=${version}`} alt={cardAlt(entry, owner.handle)} />
+          <EntryHero
+            title={entry.show.title}
+            venue={[entry.venue?.name, entry.venue?.city].filter(Boolean).join(", ")}
+            date={entry.date}
+            rating={entry.rating}
+            photoUrl={photoUrl}
+            handle={owner.handle}
+          />
           <section aria-label="Note and likes" className="flex flex-col gap-3 px-1">
             {entry.note && (
               <p className="text-body whitespace-pre-line text-label">
@@ -75,7 +82,7 @@ async function Entry({ params }: PageProps<"/e/[id]">) {
               </p>
             )}
             <TripChips trips={entry.collections} />
-            <EntryReactions entryId={entry.id} reactions={social} viewerId={viewerId} commentsHref="#comments" loginHref={loginHref} />
+            <EntryReactions entryId={entry.id} reactions={social} viewerId={viewerId} commentsHref="#comments" />
           </section>
         </>
       ) : (
@@ -121,20 +128,6 @@ function TripChips({ trips }: { trips: ViewedEntry["entry"]["collections"] }) {
       ))}
     </ul>
   );
-}
-
-// The card's words for screen readers, as drawn on it: the show, where, when
-// and the stars. The page doesn't repeat them as visible text.
-function cardAlt(entry: ViewedEntry["entry"], handle: string) {
-  const where = [entry.venue?.name, entry.venue?.city].filter(Boolean).join(", ");
-  return [
-    `@${handle}’s card: ${entry.show.title}`,
-    where,
-    formatDate(entry.date, WITH_WEEKDAY),
-    entry.rating != null ? `rated ${entry.rating} out of 5 stars` : null,
-  ]
-    .filter(Boolean)
-    .join(", ");
 }
 
 export default function EntryPage(props: PageProps<"/e/[id]">) {
