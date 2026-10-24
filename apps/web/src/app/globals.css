@@ -168,3 +168,34 @@ body {
     opacity: 0;
   }
 }
+
+/* The dark stage of the share cards, for the live card at the top of a
+   public entry or trip page (CardHero): the dark tokens inside it, whatever
+   the page's appearance, so `text-label`, `RatingStars` and the wordmark
+   draw as on a posted card. The coral glow sits top right, as on the
+   no-photo card. */
+.stage {
+  --surface: #1c1c1e;
+  --fill: #2c2c2e;
+  --label: #ffffff;
+  --label-secondary: #aeaeb2;
+  --separator: #38383a;
+  --outline: #7c7c82;
+  --tint-text: #ff6b4a;
+  --star: #ffd60a;
+  --focus: #ffffff;
+  color-scheme: dark;
+  color: var(--label);
+  background:
+    radial-gradient(circle at 72% 18%, rgb(255 107 74 / 0.35), rgb(255 107 74 / 0) 62%),
+    var(--surface);
+}
+
+/* The stage's words settle in once, from already visible. Used with
+   motion-safe:, so reduced motion shows them at once. */
+@keyframes stage-in {
+  from {
+    opacity: 0.4;
+    transform: translateY(6px);
+  }
+}
