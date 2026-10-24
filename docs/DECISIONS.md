@@ -428,3 +428,10 @@ A consistency pass over the four PRs, plus the critique's minor observations.
 - **Landing:** one coral fill, the hero's call to action. The drawn Save and Share mock buttons are white with coral ink, and the selected "How it works" number uses chip-selected (Velvet Ink). The sample diary mixes theatres from different places, still without naming a city. The hero button says "Join the waitlist", as everywhere else.
 - **Login:** the "Sign in" heading uses Title, like other page headings.
 - **Checkerboard:** the transparency pattern keeps its neutral greys on purpose (as in Photos, so it doesn't tint a clear card); they're named constants with a comment in `ShareSheet.tsx`.
+
+### 2026-10-24: Visitor calls to action on public pages
+From the design critique: signed-out visitors saw two coral "Join the waitlist" fills, and "Sign in to like / comment" prompts most of them can't complete, since sign-ups are closed.
+- **One coral fill:** the header's "Join the waitlist" is now secondary (tint-fill, tint-text), like "Open app" for members. The join card renders on every public page a signed-out visitor sees (first on profiles, last on entries and trips), so its button stays the page's one coral fill. Coral only where no card renders would have meant never.
+- **Likes and comments:** counts stay visible. A visitor's Like goes to the join card (`#join`, `JoinPrompt.tsx`); under comments, "Join the waitlist to like and comment" (secondary pill on the entry page, text link in feed cards) does the same, with a quiet "Already have an account? Sign in" for members who are signed out.
+- **Landing:** ends with "Stubbed is in private beta." and a secondary "Join the waitlist" back to the hero form, so the form's button stays the only coral fill.
+- **Not changed:** the profile header's coral Follow button for visitors still goes to sign in; it's out of this change's scope.

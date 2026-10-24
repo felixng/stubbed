@@ -5,6 +5,7 @@ import { Features } from "@/components/landing/Features";
 import { Footer } from "@/components/landing/Footer";
 import { Hero } from "@/components/landing/Hero";
 import { SiteMenu } from "@/components/landing/SiteMenu";
+import { WaitlistReminder } from "@/components/landing/WaitlistReminder";
 import { Wordmark } from "@/components/ui/Wordmark";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
 
@@ -83,6 +84,7 @@ export default function Home() {
       <main className="flex-auto">
         <Hero />
         <Features />
+        <WaitlistReminder />
       </main>
       <Footer />
     </div>
