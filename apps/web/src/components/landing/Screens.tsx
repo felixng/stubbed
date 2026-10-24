@@ -1,200 +1,43 @@
-"use client";
+import Image from "next/image";
 
-import { useEffect, useState } from "react";
+// The landing page's pictures of the app: real iPhone screenshots of a sample
+// diary (@sillyelphaba, the owner's own theatre photos, venues without a
+// city), taken by `apps/ios/scripts/dev marketing` and copied here with
+// `apps/web/scripts/landing-shots.sh`. Each is 1206×2622, an iPhone 17 Pro.
 
-import { Chip } from "@/components/ui/Chip";
-import { Poster } from "@/components/ui/Poster";
-import { RatingStars } from "@/components/ui/RatingStars";
-import { ShowRow } from "@/components/ui/ShowRow";
-import { Wordmark } from "@/components/ui/Wordmark";
-import { renderCard, type CardData } from "@/lib/share-card";
+export type Shot = "hero" | "log" | "share" | "history" | "plan";
 
-// The landing page's pictures of the app, drawn with the app's own components
-// and sample theatre data instead of screenshots, so they stay sharp, follow
-// the tokens and never show a real person's diary. Venues carry no city
-// (public copy never names one) and come from different places, so the sample
-// diary isn't one city's. The sample handle is @sillyelphaba.
+const WIDTH = 1206;
+const HEIGHT = 2622;
 
-export const SAMPLE_HANDLE = "sillyelphaba";
-
-const DIARY = [
-  { title: "Hadestown", venue: "Theatre Royal", date: "18 Oct 2026", rating: 4.5 },
-  { title: "Operation Mincemeat", venue: "Fortune Theatre", date: "2 Oct 2026", rating: 5 },
-  { title: "Les Misérables", venue: "Imperial Theatre", date: "9 Aug 2026", rating: 4 },
-  { title: "Sunset Boulevard", venue: "St. James Theatre", date: "20 Jul 2026", rating: 3.5 },
-  { title: "Stereophonic", venue: "Duke of York’s Theatre", date: "14 Jun 2026", rating: 5 },
-];
-
-const CARD: CardData = {
-  title: "Hadestown",
-  venue: "Theatre Royal",
-  where: "Theatre Royal",
-  date: "18 Oct 2026",
-  year: 2026,
-  rating: 4.5,
-  showOfYear: 14,
-  venueVisit: 2,
-  timesSeen: 2,
-  handle: SAMPLE_HANDLE,
-};
-
-// A labelled picture: screen readers get one description, not the parts.
-function Picture({ label, className = "", children }: { label: string; className?: string; children: React.ReactNode }) {
+// A phone: a near-black bezel around the screenshot, with the screen's own
+// rounded corners. `className` sets its width; the height follows.
+export function Phone({
+  shot,
+  label,
+  sizes,
+  preload = false,
+  className = "",
+}: {
+  shot: Shot;
+  label: string;
+  sizes: string;
+  preload?: boolean;
+  className?: string;
+}) {
   return (
-    <div role="img" aria-label={label} className={className}>
-      <div aria-hidden="true" className="contents">
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function List({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="divide-y divide-separator rounded-md border border-separator bg-surface px-4 shadow-sm">
-      {children}
-    </div>
-  );
-}
-
-// The hero: the diary inside a phone, as the app looks at phone width.
-export function HeroPhone({ label }: { label: string }) {
-  return (
-    <Picture
-      label={label}
-      className="relative w-[372px] max-w-full overflow-hidden rounded-[48px] border-[10px] border-surface bg-background shadow-lg ring-1 ring-separator"
+    <div
+      className={`rounded-[18%/8.3%] bg-[#1c1c1e] p-[2.6%] shadow-lg ring-1 ring-black/10 ${className}`}
     >
-      <div className="flex items-center justify-between border-b border-separator px-5 pt-8 pb-3">
-        <Wordmark size={20} />
-        <span className="text-caption text-label-secondary">@{SAMPLE_HANDLE}</span>
-      </div>
-      <div className="flex flex-col gap-3 px-4 pt-4 pb-8">
-        <p className="font-display text-title-2 text-label">Diary</p>
-        <List>
-          {DIARY.slice(0, 4).map((entry) => (
-            <ShowRow key={entry.title} {...entry} />
-          ))}
-        </List>
-      </div>
-    </Picture>
-  );
-}
-
-// The mock buttons are white with coral ink, not the coral fill:
-// they're pictures, and the hero's call to action is the page's one coral fill.
-
-// "Log a show": the form after a photo, filled in.
-export function TrackScreen() {
-  return (
-    <div className="flex flex-col gap-3">
-      <p className="font-display text-title-2 text-label">Log a show</p>
-      <List>
-        <Field label="Show" value="Hadestown" />
-        <Field label="Theatre" value="Theatre Royal" />
-        <Field label="Date" value="Sat, 18 Oct 2026" />
-        <div className="flex items-center justify-between py-3">
-          <span className="text-body text-label">Rating</span>
-          <RatingStars value={4.5} size={20} />
-        </div>
-      </List>
-      <div className="rounded-md border border-separator bg-surface p-4 text-body text-label shadow-sm">
-        The staging of “Wait for Me” stayed with me all the way home.
-      </div>
-      <span className="mt-1 inline-flex min-h-[50px] items-center justify-center rounded-pill bg-surface px-6 text-headline font-semibold text-tint-text shadow-sm">
-        Save
-      </span>
-    </div>
-  );
-}
-
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-4 py-3">
-      <span className="text-body text-label-secondary">{label}</span>
-      <span className="truncate text-body text-label">{value}</span>
-    </div>
-  );
-}
-
-// The real share card, drawn by the same code as in the app (no photo).
-export function ShareScreen() {
-  const [src, setSrc] = useState<string | null>(null);
-
-  // Drawn once. The URL is never revoked: state outlives a hidden page (see
-  // CLAUDE.md), and one small image for the page's life costs nothing.
-  useEffect(() => {
-    if (src) return;
-    let cancelled = false;
-    renderCard("square", CARD, null)
-      .then((blob) => {
-        if (!cancelled) setSrc(URL.createObjectURL(blob));
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [src]);
-
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="aspect-square w-full overflow-hidden rounded-lg bg-label">
-        {src && (
-          // eslint-disable-next-line @next/next/no-img-element -- a blob drawn on the device
-          <img src={src} alt="" className="size-full" />
-        )}
-      </div>
-      <span className="inline-flex min-h-[50px] items-center justify-center rounded-pill bg-surface px-6 text-headline font-semibold text-tint-text shadow-sm">
-        Share to Stories
-      </span>
-    </div>
-  );
-}
-
-export function HistoryScreen() {
-  return (
-    <div className="flex flex-col gap-3">
-      <p className="font-display text-title-2 text-label">Seen</p>
-      <List>
-        {DIARY.map((entry) => (
-          <ShowRow key={entry.title} {...entry} />
-        ))}
-      </List>
-    </div>
-  );
-}
-
-export function PlanScreen() {
-  return (
-    <div className="flex flex-col gap-3">
-      <p className="font-display text-title-2 text-label">Upcoming</p>
-      <List>
-        <PlannedRow title="Wicked" meta="Gershwin Theatre · 7 Nov 2026" />
-        <PlannedRow title="Hamilton" meta="Her Majesty’s Theatre · 21 Nov 2026" />
-      </List>
-      <p className="mt-2 font-display text-title-2 text-label">Trips</p>
-      <List>
-        <div className="flex flex-col gap-1 py-3">
-          <span className="text-headline text-label">Festival week</span>
-          <span className="text-subheadline text-label-secondary">4–10 Aug 2026 · 6 shows</span>
-        </div>
-        <div className="flex flex-col gap-1 py-3">
-          <span className="text-headline text-label">Birthday weekend</span>
-          <span className="text-subheadline text-label-secondary">12–14 Jun 2026 · 3 shows</span>
-        </div>
-      </List>
-    </div>
-  );
-}
-
-function PlannedRow({ title, meta }: { title: string; meta: string }) {
-  return (
-    <div className="flex items-center gap-4 py-2">
-      <Poster title={title} className="w-14 flex-none" />
-      <div className="flex min-w-0 flex-col items-start gap-1">
-        <p className="text-headline text-label">{title}</p>
-        <p className="w-full truncate text-subheadline text-label-secondary">{meta}</p>
-        <Chip>Going</Chip>
-      </div>
+      <Image
+        src={`/landing/${shot}.jpg`}
+        alt={label}
+        width={WIDTH}
+        height={HEIGHT}
+        sizes={sizes}
+        preload={preload}
+        className="h-auto w-full rounded-[15.5%/7.1%] bg-background"
+      />
     </div>
   );
 }

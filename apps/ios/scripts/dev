@@ -11,6 +11,8 @@
 #                              signed in to Xcode)
 #   scripts/dev test-users     Create or reset the local test users
 #                              (ios-test@ and ios-new@stubbed.local)
+#   scripts/dev marketing      Screenshots for the landing page, from a local
+#                              @sillyelphaba diary, into build/marketing/
 #   scripts/dev run [png]      Build, install, launch, then save a screenshot
 #   scripts/dev screenshot [png]   Screenshot the running Simulator
 #   scripts/dev logs [secs]    Print the app's recent log lines (default 30s)
@@ -119,11 +121,16 @@ user_id() {
     | /usr/bin/python3 -c 'import json,sys; print(next((u["id"] for u in json.load(sys.stdin)["users"] if u["email"]==sys.argv[1]), ""))' "$1"
 }
 
-test_users() {
-  local env id
+sb_env() {
+  local env
   env="$(cd "$REPO_DIR" && supabase status -o env 2>/dev/null)" || { echo "Local Supabase isn't running: supabase start" >&2; exit 1; }
   SB_API="$(sed -n 's/^API_URL="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' <<<"$env")"
   SB_KEY="$(sed -n 's/^SERVICE_ROLE_KEY="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' <<<"$env")"
+}
+
+test_users() {
+  local id
+  sb_env
   local user="{\"password\":\"$TEST_PASSWORD\",\"email_confirm\":true"
 
   admin POST /auth/v1/admin/users "$user,\"email\":\"$TEST_EMAIL\"}" >/dev/null
@@ -138,6 +145,29 @@ test_users() {
   docker exec -i supabase_db_stubbed psql -q -U postgres -d postgres -v ON_ERROR_STOP=1 <"$IOS_DIR/scripts/test-seed.sql" >/dev/null \
     || { echo "Seeding the test diary failed" >&2; exit 1; }
   echo "Test users: $TEST_EMAIL (@$TEST_HANDLE) and $NEW_EMAIL (no handle), password $TEST_PASSWORD"
+}
+
+# The landing page's screenshots come from a local-only @sillyelphaba diary
+# (scripts/marketing-seed.sql). Its photos are the owner's own, kept out of
+# git: MARKETING_PHOTOS holds 01.jpg to 08.jpg, one per logged entry, newest
+# first.
+MARKETING_EMAIL="marketing@stubbed.local"
+MARKETING_PHOTOS="${MARKETING_PHOTOS:-$BUILD_DIR/marketing-photos}"
+
+marketing_user() {
+  local id n
+  sb_env
+  admin POST /auth/v1/admin/users "{\"password\":\"$TEST_PASSWORD\",\"email_confirm\":true,\"email\":\"$MARKETING_EMAIL\"}" >/dev/null
+  id="$(user_id "$MARKETING_EMAIL")"
+  admin PATCH "/rest/v1/profiles?id=eq.$id&handle=is.null" '{"handle":"sillyelphaba"}' >/dev/null
+  docker exec -i supabase_db_stubbed psql -q -U postgres -d postgres -v ON_ERROR_STOP=1 <"$IOS_DIR/scripts/marketing-seed.sql" >/dev/null \
+    || { echo "Seeding the marketing diary failed" >&2; exit 1; }
+  for n in 01 02 03 04 05 06 07 08; do
+    [ -f "$MARKETING_PHOTOS/$n.jpg" ] || { echo "Missing $MARKETING_PHOTOS/$n.jpg" >&2; exit 1; }
+    curl -sf -X POST "$SB_API/storage/v1/object/entry-photos/$id/00000000-0000-4000-d100-0000000000$n.jpg" \
+      -H "Authorization: Bearer $SB_KEY" -H "Content-Type: image/jpeg" -H "x-upsert: true" \
+      --data-binary "@$MARKETING_PHOTOS/$n.jpg" >/dev/null || { echo "Uploading $n.jpg failed" >&2; exit 1; }
+  done
 }
 
 cmd="${1:-build}"
@@ -170,7 +200,7 @@ case "$cmd" in
     if [ -n "${1:-}" ]; then
       classes="$1"
     else
-      classes="$(grep -ho 'final class [A-Za-z]*UITests' "$IOS_DIR"/StubbedUITests/*.swift | awk '{print $3}' | sort)"
+      classes="$(grep -ho 'final class [A-Za-z]*UITests' "$IOS_DIR"/StubbedUITests/*.swift | awk '{print $3}' | grep -v '^MarketingUITests$' | sort)"
     fi
     failed=0
     : >"$BUILD_DIR/logs/ui-all.log"
@@ -187,6 +217,25 @@ case "$cmd" in
     ;;
   test-users)
     test_users
+    ;;
+  marketing)
+    udid="$(sim_udid)"
+    boot "$udid"
+    rm -rf "$BUILD_DIR/marketing" && mkdir -p "$BUILD_DIR/marketing"
+    xcrun simctl terminate "$udid" "$BUNDLE_ID" >/dev/null 2>&1 || true
+    # A clean status bar: 9:41, full battery and signal.
+    xcrun simctl status_bar "$udid" override --time 9:41 --batteryState discharging --batteryLevel 100 \
+      --wifiBars 3 --cellularMode active --cellularBars 4 --dataNetwork wifi
+    xcrun simctl ui "$udid" appearance light
+    marketing_user
+    xcb build-for-testing "$udid" >/dev/null || { tail -20 "$BUILD_DIR/logs/build-for-testing.log"; exit 1; }
+    status=0
+    TEST_RUNNER_STUBBED_EMAIL="$MARKETING_EMAIL" TEST_RUNNER_STUBBED_PASSWORD="$TEST_PASSWORD" \
+      TEST_RUNNER_STUBBED_SCREENSHOTS="$BUILD_DIR/marketing" \
+      xcb test-without-building "$udid" "-only-testing:StubbedUITests/MarketingUITests" || status=1
+    xcrun simctl status_bar "$udid" clear
+    ls "$BUILD_DIR/marketing"/*.png 2>/dev/null | sed 's/^/Screenshot: /' || true
+    exit $status
     ;;
   archive)
     # Release talks to the hosted Supabase project (Config/Release.xcconfig).
@@ -224,7 +273,7 @@ case "$cmd" in
     echo "Wrote $out ($(wc -l <"$out" | tr -d ' ') lines)"
     ;;
   *)
-    sed -n '2,13p' "$0"
+    sed -n '2,15p' "$0"
     exit 1
     ;;
 esac

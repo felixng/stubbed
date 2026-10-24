@@ -3,35 +3,34 @@
 import { useId, useRef, useState } from "react";
 
 import { Container } from "@/components/landing/Container";
-import { HistoryScreen, PlanScreen, ShareScreen, TrackScreen } from "@/components/landing/Screens";
+import { Phone, type Shot } from "@/components/landing/Screens";
 
-// "How it works": four banners, and the screen beside them follows the one
-// that is open. The screens are drawn with the app's own components and
-// sample data (Screens.tsx), not screenshots.
-const FEATURES = [
+// "How it works": four banners, and the phone beside them follows the one
+// that is open. The screenshots come from the iOS app (Screens.tsx).
+const FEATURES: { title: string; body: string; shot: Shot; alt: string }[] = [
   {
     title: "Log every show",
     body: "Every show you see, in one place: the venue, the date, your half-star rating and your thoughts about the show.",
-    Screen: TrackScreen,
-    alt: "Logging Hadestown at the Theatre Royal: the date, four and a half stars and a note",
+    shot: "log",
+    alt: "Logging The Lost Boys: a photo from the night, the show, the Palace Theatre, the date and four and a half stars",
   },
   {
     title: "Share with your friends",
     body: "Turn any night into a card for your Stories, with the show, your rating and your handle.",
-    Screen: ShareScreen,
-    alt: "A share card for Hadestown with four and a half stars, the 14th show of 2026 and the handle @sillyelphaba",
+    shot: "share",
+    alt: "A share card for The Lost Boys: the photo, four and a half stars, the 8th show of 2026 and the handle @sillyelphaba",
   },
   {
     title: "See your history",
     body: "Every show you’ve seen in one diary. Bring old nights in from ticket emails and photos.",
-    Screen: HistoryScreen,
-    alt: "A diary of five recent shows, newest first, each with its theatre, date and star rating",
+    shot: "history",
+    alt: "A diary of shows seen, newest first, each with a photo, its theatre, date and star rating",
   },
   {
     title: "Plan ahead",
     body: "Group a trip or a festival’s shows together and keep track of what you want to see next.",
-    Screen: PlanScreen,
-    alt: "Two upcoming shows marked Going, and two trips: a festival week and a birthday weekend",
+    shot: "plan",
+    alt: "A trip called Birthday weekend: 2 shows at 2 venues over 2 nights, Cabaret and Groundhog Day",
   },
 ];
 
@@ -72,20 +71,22 @@ export function Features() {
             aria-labelledby={`${id}-tab-${active}`}
             className="relative mx-auto aspect-[4/5] w-full max-w-[420px] overflow-hidden rounded-lg border border-separator bg-glow shadow-sm lg:mx-0 lg:flex-[1_1_420px]"
           >
-            {/* All four stay mounted, so switching is an instant cross-fade. */}
-            {FEATURES.map(({ Screen, alt, title }, index) => (
+            {/* All four stay mounted, so switching is an instant cross-fade.
+                The phone sits at the top and runs off the bottom edge. */}
+            {FEATURES.map(({ shot, alt, title }, index) => (
               <div
                 key={title}
-                role="img"
-                aria-label={alt}
                 aria-hidden={index !== active}
-                className={`absolute inset-0 overflow-hidden p-5 transition-opacity duration-300 motion-reduce:transition-none sm:p-6 ${
+                className={`absolute inset-0 flex justify-center pt-8 transition-opacity duration-300 motion-reduce:transition-none sm:pt-10 ${
                   index === active ? "opacity-100" : "opacity-0"
                 }`}
               >
-                <div aria-hidden="true">
-                  <Screen />
-                </div>
+                <Phone
+                  shot={shot}
+                  label={alt}
+                  sizes="(min-width: 640px) 290px, 68vw"
+                  className="h-fit w-[69%]"
+                />
               </div>
             ))}
           </div>

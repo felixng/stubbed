@@ -27,6 +27,7 @@ Run from `apps/ios`. Every command is headless, so it works from a remote sessio
 | `scripts/dev test` | Run the unit tests (Swift Testing, `StubbedTests/`). |
 | `scripts/dev ui [Class[/test]]` | Run the UI tests (`StubbedUITests/`, XCUITest) against local Supabase. Builds once, then resets the test data (`scripts/test-seed.sql`) before each test class, so classes can't affect each other. Screenshots saved with `snapshot("name")` land in `build/ui/`. Run it in the background: a full run takes about 15 minutes. |
 | `scripts/dev test-users` | Create or reset the local test users: `ios-test@stubbed.local` (handle `ios_test`) and `ios-new@stubbed.local` (no handle, recreated each run), password `stubbed-ios`. |
+| `scripts/dev marketing` | The landing page's screenshots: seeds a local `@sillyelphaba` diary (`scripts/marketing-seed.sql`, photos from the git-ignored `build/marketing-photos/01.jpg`–`08.jpg`), runs `MarketingUITests` and saves `build/marketing/*.png`. Then `apps/web/scripts/landing-shots.sh` copies them to the web app. |
 | `scripts/dev run` | Build, install and launch on the Simulator, wait 3s (`WAIT=…`), save `build/screenshot.png`. **Read the PNG to check UI work.** |
 | `scripts/dev screenshot [path]` | Screenshot whatever is on the Simulator now. |
 | `scripts/dev logs [secs]` | The app's recent log lines. Log with `os.Logger(subsystem: "app.getstubbed", …)` so they show up. |
