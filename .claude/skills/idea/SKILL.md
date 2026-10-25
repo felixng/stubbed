@@ -66,6 +66,12 @@ Labels:
 
 Create with `gh issue create --title ... --body-file ... --label ...`. Labels are the source of truth for status and priority. The "Stubbed roadmap" project adds new issues by itself, so don't touch it (sessions usually lack project access).
 
+**Every issue belongs to exactly one epic**, as a GitHub sub-issue. Epics are what the owner prioritises, so each one is a single outcome small enough to rank against the others, usually one to four issues. List them with `gh issue list --label epic --state open`.
+- Attach the issue to the epic that fits: `gh api -X POST repos/felixng/stubbed/issues/<epic>/sub_issues -F sub_issue_id=<id>`, where `<id>` comes from `gh api repos/felixng/stubbed/issues/<number> --jq .id` (not the issue number).
+- If no epic fits, create one named after the outcome (`Epic: Lists`, label `epic`, a one-paragraph goal), even if it holds only this issue, and give it the issue's priority label.
+- If an epic grows past about five issues or two outcomes, suggest splitting it to the owner.
+- Mention the epic in your reply: "Filed #131 under Epic: Stats (#165)".
+
 ## 5. Direction changes
 
 The owner has said you can decide which docs to update. Keep each fact in one place:
