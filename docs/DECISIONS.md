@@ -460,3 +460,11 @@ The owner picked direction 1 of three typographic fallbacks explored for `Poster
 - **`type` prop** threaded through `EntryList` (diary, app trip pages), `ShowRow` and `ShowCard`. Feed cards, public profiles, public trip pages and import drafts don't render a `Poster`.
 - **Feed stays compact.** Feed cards (`PublicEntryCard`) show no cover without a photo, and the title, type and stars already sit under the header. A full-width 16:9 House Lights band would only repeat the title in bigger type and push the note and comments down, so it isn't added.
 - **iOS not changed yet.** To match natively: a `ZStack` on `FLColor.fill`/`tintFill`/`glow`, the title in `.font(.title2.bold())` with `.minimumScaleFactor`, and `ViewThatFits` (or a width check) for the monogram, using the same hash.
+
+### 2026-10-25: Ideas go through Claude; GitHub issues are the one list of work
+The owner's ideas were spread across GitHub issues, notes and a reminders app, at very different levels of detail ("import" in one place, a full spec in another). Now:
+- **Capture through Claude.** The owner sends ideas and direction changes to Claude, often one line from a phone. The `idea` skill (`.claude/skills/idea`) reads the code and docs, asks at most three quick questions, and files a detailed issue, or comments on an existing one. Direction changes update the brief, `PRODUCT.md`, the `CLAUDE.md` files and this log, through a pull request.
+- **GitHub as the backup.** When Claude isn't available, the "Quick idea" issue form takes a title only and labels it `inbox`; the `triage` skill expands it later.
+- **Labels are the source of truth** for status (`inbox`, `needs-decision`, `ready`, `in-progress`), priority (`P0`–`P2`) and area (`web`, `ios`, `database`). A "Stubbed roadmap" project board auto-adds the repo's issues and only displays them, so agent sessions never need project access.
+- **One issue per run.** The `next` skill builds the top `ready` issue into one pull request that closes it.
+- **The brief keeps direction, not the list.** "Roadmap and ideas" moved out of the brief's remit in `CLAUDE.md` and `PRODUCT.md`.

@@ -6,7 +6,7 @@ Stubbed's context is split in two, on purpose:
 
 | | **Google Drive: [Stubbed folder](https://drive.google.com/drive/folders/1uYsjPogzITCDc_DNE5_gQtJrdEocfxRI)** | **This repo** |
 |---|---|---|
-| Holds | Product and project context: what we're building, for whom and why, status, roadmap, ideas, brand and voice, monetisation | Code and tech context: architecture, data model, stack, conventions, implementation decisions |
+| Holds | Product and project context: what we're building, for whom and why, direction, brand and voice, monetisation | Code and tech context: architecture, data model, stack, conventions, implementation decisions. The list of work (ideas, improvements, bugs) is GitHub issues |
 | Read by | Any tool or person: design, marketing, copywriting, SEO, planning | Claude Code and anyone working on the code |
 | Main docs | [Stubbed: Project Brief](https://docs.google.com/document/d/1NdEgeTRMkKQ5TL87Urwpe7WG9fcrejPsZKsmrO2Enak/edit), [Stubbed: Monetisation Ideas](https://docs.google.com/document/d/1LJanHT3SpBYSQB7SiRVaeX-1PFZTPQ-cBLXlSC50KAM/edit) | This file, [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/DECISIONS.md`](docs/DECISIONS.md), [`docs/DESIGN.md`](docs/DESIGN.md), [`docs/ANALYTICS.md`](docs/ANALYTICS.md), `supabase/` |
 
@@ -31,7 +31,8 @@ The one exception is [`PRODUCT.md`](PRODUCT.md): a lean distillation of the brie
 - When a requirement is ambiguous, ask rather than guess.
 - Don't add dependencies, paid services or monetisation features without checking with the owner.
 - Log implementation choices and why in `docs/DECISIONS.md`.
-- Work is tracked as GitHub issues: one epic per area (labelled `epic`, plus `phase-N`, `nyc-week` or `ios`).
+- **Ideas and direction come to Claude.** When the owner shares an idea, a bug, an improvement or a change of direction, however short, use the `idea` skill: it files a detailed GitHub issue (asking at most three quick questions) or updates the docs. `triage` expands issues the owner filed by hand (label `inbox`, the backup when Claude isn't available). `next` builds the top ready issue into one pull request.
+- **GitHub issues are the one list of work.** Status labels: `inbox`, `needs-decision`, `ready`, `in-progress` (plus `needs-human` for the owner's hands). Priority: `P0`, `P1`, `P2`. Area: `web`, `ios`, `database`. Labels are the source of truth; the "Stubbed roadmap" project board only displays them. Epics (`epic`, `phase-N`, `nyc-week`) group related issues.
 
 ## Tech overview
 
