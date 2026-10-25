@@ -2,7 +2,7 @@
 
 <!-- impeccable:product-schema 1 -->
 
-> A lean distillation for design work, shared by `apps/web` and `apps/ios`. The source of truth for product context is the [Stubbed: Project Brief](https://docs.google.com/document/d/1NdEgeTRMkKQ5TL87Urwpe7WG9fcrejPsZKsmrO2Enak/edit) on Google Drive; where they disagree, the brief wins. Status, roadmap, ideas and monetisation live only there.
+> A lean distillation for design work, shared by `apps/web` and `apps/ios`. The source of truth for product context is the [Stubbed: Project Brief](https://docs.google.com/document/d/1NdEgeTRMkKQ5TL87Urwpe7WG9fcrejPsZKsmrO2Enak/edit) on Google Drive; where they disagree, the brief wins. Status, direction and monetisation live only there; the list of work (ideas, improvements, bugs) is GitHub issues.
 
 ## Platform
 

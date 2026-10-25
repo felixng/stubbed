@@ -1,0 +1,11 @@
+name: Quick idea
+description: Backup for when Claude isn't available. One line is enough; Claude fills in the rest later.
+labels: ["inbox"]
+body:
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Optional. Leave blank if the title says it all.
+    validations:
+      required: false
