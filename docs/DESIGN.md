@@ -213,7 +213,7 @@ A warm, paper-and-coral palette: one saturated accent, and neutrals that all lea
 - **Rose Hairline** (`separator`): hairlines between rows, inset to the text, and card and input borders.
 - **Clay Outline** (`outline`): control borders, empty stars, placeholder initials on posters.
 - **Curtain Red** (`destructive`): delete, sign out and error text.
-- **Footlight Glow** (`glow`): decorative halo behind a hero image or device mockup; never behind text.
+- **Footlight Glow** (`glow`): decorative halo behind a hero image or device mockup, and one of the three poster fallback wells; otherwise never behind text.
 
 ### Named Rules
 **The One Tint Rule.** `tint` is the only accent, and it fills the one primary action per screen. Where the brand colour is read as text, use `tint-text`. Nothing else is coral.
@@ -283,11 +283,11 @@ React components live in `apps/web/src/components/ui/`. The iOS app no longer mi
 | `Button` | `.borderedProminent` / `.bordered` | `variant` primary \| secondary \| ghost \| neutral, `size` md \| sm | Capsule, 50px tall; one `primary` per screen, with `shadow-btn`; `neutral` (surface, hairline border) for third-party sign-in such as Google |
 | `Chip` | tag capsule on `tertiarySystemFill` | `selected`, `onClick`, children | Capsule; selected inverts, never `tint` |
 | `RatingStars` | `RatingStars` / `RatingInput` | `value` 0–5 (halves), `size` px | |
-| `ShowRow` | `EntryRow` | `title`, `venue`, `date`, `rating`, `poster` | Inside a `surface` list with `separator` hairlines |
+| `ShowRow` | `EntryRow` | `title`, `type`, `venue`, `date`, `rating`, `poster` | Inside a `surface` list with `separator` hairlines |
 | `ShowCard` | none (use `EntryRow`) | same as `ShowRow` | 160px portrait card for web shelves |
 | `TabBar` | native `TabView` | `items`, `active`, `onSelect` | Below `md` only; from `md` the app shows `AppSidebar` (`components/app/AppSidebar.tsx`) instead |
 | `Wordmark` | `Wordmark` | `size` px (min 16) | Lowercase text, `sr-only` "Stubbed" |
-| `Poster` | `Poster` | `title`, `poster` | 2:3, initials in `outline` on `fill` when no image |
+| `Poster` | `Poster` | `title`, `type`, `poster` | 2:3, the photo when there is one; otherwise "House Lights" (below). Decorative (`aria-hidden`) |
 
 ### Buttons
 - **Shape:** capsule (`rounded-pill`), 50px tall (`md`) or 44px (`sm`, 15px text).
@@ -315,7 +315,10 @@ React components live in `apps/web/src/components/ui/`. The iOS app no longer mi
 - **iOS:** a native `TabView` (Home, Log, Profile); Log opens the log sheet rather than a screen.
 
 ### Poster and ratings (signature)
-- **Poster:** the show's photo at 2:3, 8px corners; without a photo, its initials in Clay Outline on Blush Well.
+- **Poster:** the show's photo at 2:3, 8px corners; without a photo, the House Lights fallback below.
+
+### Poster fallback ("House Lights")
+A show with no photo still gets a poster, set from its title and type. The title in bold Velvet Ink on one of three warm wells (Blush Well, Coral Wash, Footlight Glow), the type in small caps in Faded Velvet ("Show" for other), and one short Clay Outline rule above the title, with a 1px Clay hairline inside the edge. The well, and whether the title sits at the top or the foot, come from an FNV-1a hash of the trimmed, lowercased title (`lib/poster.ts`), so the same show always looks the same; the title size is fitted to its longest word and its length, in container units. Below 80px wide (diary and trip rows) a container query swaps the title for a monogram (two initials, skipping a leading article and minor words) in Clay Outline over the rule. Only existing tokens and the system type: never coral or gold. The poster is `aria-hidden`, since the title is always printed beside it. Feed cards show no cover without a photo, so the feed stays compact.
 - **Ratings** always show as the five `RatingStars` in Applause Gold, in half steps, never a bare number. Empty stars use Clay Outline.
 
 ### Calendar and feed
@@ -341,5 +344,5 @@ SF Symbols on iOS (`book`, `plus.circle`, `chart.bar`, `person` for the tabs). O
 - **Don't** colour the wordmark coral, uppercase it, or set it below 16px.
 - **Don't** add web fonts, an icon package or grey shadows.
 - **Don't** put drop shadows on iOS, or port web layout patterns (floating action buttons, custom card styles) to the iOS app.
-- **Don't** set body text below Footnote (13px), or use `glow` behind text. Tab bar labels (Caption 2, 11px) are the only exception.
+- **Don't** set body text below Footnote (13px), or use `glow` behind text outside the poster fallback. Tab bar labels (Caption 2, 11px) are the only exception.
 - **Don't** write copy with emoji, exclamation marks or title case.

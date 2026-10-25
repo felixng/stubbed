@@ -16,7 +16,7 @@ export type ColorToken = {
 export const COLORS: ColorToken[] = [
   { name: "background", tailwind: "bg-background", light: "#fff9f6", dark: "#000000", use: "Every screen; marketing pages stay on it" },
   { name: "surface", tailwind: "bg-surface", light: "#ffffff", dark: "#1c1c1e", use: "Grouped lists, cards, inputs, sheets" },
-  { name: "fill", tailwind: "bg-fill", light: "#ffebe3", dark: "#2c2c2e", use: "Poster placeholders, chips, wells" },
+  { name: "fill", tailwind: "bg-fill", light: "#ffebe3", dark: "#2c2c2e", use: "Poster fallback wells, chips, wells" },
   { name: "label", tailwind: "text-label", light: "#1f1210", dark: "#ffffff", use: "Primary text" },
   { name: "label-secondary", tailwind: "text-label-secondary", light: "#5e4039", dark: "#aeaeb2", use: "Secondary text: venue, date, captions" },
   { name: "separator", tailwind: "border-separator", light: "#f9e0d6", dark: "#38383a", use: "Hairlines between rows, inset to the text" },
@@ -29,7 +29,7 @@ export const COLORS: ColorToken[] = [
   { name: "star", tailwind: "fill-star", light: "#b96f00", dark: "#ffd60a", use: "Rating stars and award marks only" },
   { name: "destructive", tailwind: "text-destructive", light: "#9e1b2c", dark: "#ff9f0a", use: "Delete, sign out, error text" },
   { name: "focus", tailwind: "outline-focus", light: "#1f1210", dark: "#ffffff", use: "2px focus ring, 2px offset (web only)" },
-  { name: "glow", tailwind: "bg-glow", light: "#ffd9cc", dark: "#2a140e", use: "Decorative halo behind a hero image or device; never behind text" },
+  { name: "glow", tailwind: "bg-glow", light: "#ffd9cc", dark: "#2a140e", use: "Decorative halo behind a hero image or device, and a poster fallback well; otherwise never behind text" },
 ];
 
 // CSS custom properties for one appearance, so a preview can show light and
@@ -127,8 +127,8 @@ export const COMPONENTS = [
   { name: "Button", swift: "system `.borderedProminent` / `.bordered`", props: "variant primary | secondary | ghost | neutral; size md | sm", notes: "Capsule, 50px tall (sm 44px), headline weight. One `primary` per screen (`tint` fill, `on-tint` text, `shadow-btn`). `secondary` is `tint-fill` with `tint-text`; `ghost` is transparent with `tint-text`; `neutral` (surface, hairline border) is for third-party sign-in such as Google." },
   { name: "Chip", swift: "none: plain metadata text, a `Picker` or small `.bordered` buttons", props: "selected, onClick, children", notes: "Capsule, 28px tall, footnote medium, on `fill`. Selected inverts (`label` background, `background` text), never `tint`. With onClick it is a toggle button (aria-pressed)." },
   { name: "RatingStars", swift: "RatingStars", props: "value 0–5 in halves, size px", notes: "Five stars; filled in `star`, empty as a 1.5px `outline` stroke. Read-only; labelled \"Rated N out of 5\"." },
-  { name: "Poster", swift: "Poster", props: "title, poster", notes: "2:3 at `rounded-sm`. With no image, the show's initials in `outline` on `fill`." },
-  { name: "ShowRow", swift: "EntryRow, in a List", props: "title, venue, date, rating, poster", notes: "56px poster, headline title, subheadline `venue · date` in `label-secondary`, then stars (or a \"Want to see\" chip). Lives in a `surface` list with `separator` hairlines." },
+  { name: "Poster", swift: "Poster", props: "title, type, poster", notes: "2:3 at `rounded-sm`. The photo when there is one; otherwise \"House Lights\": the title in `label` on `fill`, `tint-fill` or `glow` (seeded from the title), the show type in small caps and a short `outline` rule. Below 80px wide, a monogram in `outline` over the rule. Decorative (aria-hidden)." },
+  { name: "ShowRow", swift: "EntryRow, in a List", props: "title, type, venue, date, rating, poster", notes: "56px poster, headline title, subheadline `venue · date` in `label-secondary`, then stars (or a \"Want to see\" chip). Lives in a `surface` list with `separator` hairlines." },
   { name: "ShowCard", swift: "none (the feed uses PostCard)", props: "same as ShowRow", notes: "160px portrait card for web shelves and carousels." },
   { name: "TabBar", swift: "native TabView", props: "items, active, onSelect", notes: "Web app below 768px only; from 768px a sidebar with the same items replaces it. At most four tabs; 24px line icons; selected tab in `tint-text`, others `label-secondary`." },
   { name: "Wordmark", swift: "Wordmark", props: "size px (min 16)", notes: "Lowercase text, screen readers hear \"Stubbed\"." },
