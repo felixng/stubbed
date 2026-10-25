@@ -10,7 +10,7 @@ Work on one issue per run.
 ## Pick
 
 - If the owner named an issue, use it.
-- Otherwise list issues labelled `ready` without `in-progress` or `needs-decision`: `gh issue list --label ready --state open --json number,title,labels,createdAt`. Take the highest priority (`P0`, then `P1`, then `P2`, then unlabelled), oldest first. Labels are the source of truth; the "Stubbed roadmap" project only displays them.
+- Otherwise list issues labelled `ready` without `in-progress` or `needs-decision`: `gh issue list --label ready --state open --json number,title,labels,createdAt`. Rank them by their epic's priority label first (the owner prioritises epics: `P0`, then `P1`, then `P2`, then unlabelled), then by the issue's own priority, then oldest first. Find an issue's epic with `gh api repos/felixng/stubbed/issues/<number>/parent --jq .number`. Labels are the source of truth; the "Stubbed roadmap" project only displays them.
 - Tell the owner which one you picked, in one line, and carry on.
 
 Skip an issue and say why if it has open questions, needs the owner's hands (`needs-human`) for the part you'd build, or is too big for one pull request. For a big one, propose how to split it.
