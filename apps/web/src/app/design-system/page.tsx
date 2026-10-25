@@ -165,13 +165,13 @@ function ComponentPreview({ appearance }: { appearance: "light" | "dark" }) {
         <RatingStars value={3} size={14} />
       </div>
       <div className="rounded-md border border-separator bg-surface px-4 shadow-sm">
-        <ShowRow title="Hamilton" venue="Victoria Palace" date="12 Oct" rating={5} />
+        <ShowRow title="Hamilton" type="musical" venue="Victoria Palace" date="12 Oct" rating={5} />
         <div className="ml-[72px] border-t border-separator" />
-        <ShowRow title="The Seagull" venue="Barbican" date="3 Nov" />
+        <ShowRow title="The Seagull" type="play" venue="Barbican" date="3 Nov" />
       </div>
       <div className="flex gap-4 overflow-x-auto">
-        <ShowCard title="Wicked" venue="Apollo" date="8 Sep" rating={4} />
-        <ShowCard title="Death of a Salesman" venue="Hudson" date="21 Aug" rating={3.5} />
+        <ShowCard title="Wicked" type="musical" venue="Apollo" date="8 Sep" rating={4} />
+        <ShowCard title="Death of a Salesman" type="play" venue="Hudson" date="21 Aug" rating={3.5} />
       </div>
       <TabBar className="-mx-5 -mb-5 rounded-b-lg" />
     </Appearance>

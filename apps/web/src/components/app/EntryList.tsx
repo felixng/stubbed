@@ -76,6 +76,7 @@ function Row({ entry: e, photos, inTrip }: { entry: EntryRow; photos: Map<string
     <>
       <Poster
         title={e.show.title}
+        type={e.show.type}
         poster={e.photo_path ? photos.get(e.photo_path) : undefined}
         className="w-14 flex-none"
       />
