@@ -488,3 +488,7 @@ Updates "Ideas go through Claude" (2026-10-25). The owner wants to prioritise by
 - **Issues within an epic** follow the epic's sub-issue order, which the owner can also drag.
 - **`P0` stays** for the rare urgent issue that jumps the queue. `P1` and `P2` are retired.
 - **Trade-off:** reading the board needs project access (`read:project`), which this Mac's GitHub login has but cloud sessions may not. Without it, `next` asks the owner which epic is next instead of guessing. Status labels (`ready`, `needs-decision`…) are still the source of truth for status.
+
+### 2026-10-26: The favicon is the mark, not the app icon
+Owner's call. The browser tab icon (`favicon.ico`, `icon.svg`) now uses the mark (A2) squared up on a transparent background, so the tab matches the logo in the header. Home-screen icons (`apple-icon.png`, the PWA icons) stay on the app icon tile, because iOS and Android fill a transparent icon with black or white. Updates "The logo: two tickets in three variants" (2026-10-25).
+

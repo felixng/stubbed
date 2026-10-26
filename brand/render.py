@@ -178,9 +178,10 @@ if __name__ == "__main__":
         render(name, os.path.join(WEB_PUBLIC, name + ".png"), 1024)  # downloads, transparent where the mark is
     render("stubbed-icon", os.path.join(WEB_PUBLIC, "icon-192.png"), 192)
     render("stubbed-icon", os.path.join(WEB_PUBLIC, "icon-512.png"), 512)
-    shutil.copy(os.path.join(SVG, "stubbed-icon.svg"), os.path.join(WEB_APP, "icon.svg"))
+    # The browser tab shows the mark, like the header; home-screen icons need the full tile.
+    shutil.copy(os.path.join(SVG, "favicon.svg"), os.path.join(WEB_APP, "icon.svg"))
+    ico("favicon", os.path.join(WEB_APP, "favicon.ico"))
     opaque("stubbed-icon", os.path.join(WEB_APP, "apple-icon.png"), 180)
-    ico("stubbed-icon", os.path.join(WEB_APP, "favicon.ico"))
     ios_icon_set()
     ios_brand_mark()
     print("done")

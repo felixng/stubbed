@@ -2,9 +2,9 @@
 variants, from one geometry. Standard library only.
 
   icon          (E1) the gradient tile with white outlined tickets: the app
-                icon, browser tab icon and PWA icons
+                icon, Apple touch icon and PWA icons
   mark          (A2) gradient tickets, transparent: beside the wordmark on
-                light backgrounds
+                light backgrounds, and (squared up) the browser tab icon
   mark-outline  (E2) gradient outlines, transparent: empty states and large
                 decorative uses on white; the base of the iOS dark and
                 tinted icons
@@ -109,6 +109,14 @@ def mark():
     return svg(bounds(8), defs, body)
 
 
+def favicon():
+    """The browser tab icon: the mark (A2), centred in a square, transparent."""
+    x, y, w, h = map(float, bounds(8).split())
+    side = max(w, h)
+    square = f"{x - (side - w) / 2:.0f} {y - (side - h) / 2:.0f} {side:.0f} {side:.0f}"
+    return mark().replace(f'viewBox="{bounds(8)}"', f'viewBox="{square}"')
+
+
 def mark_outline(line="url(#sweep)"):
     """E2: gradient outlines, transparent inside and around."""
     defs = gradient("sweep", SWEEP, user_space=True) + KNOCKOUT.format(w=STROKE + 2 * GAP)
@@ -128,6 +136,7 @@ if __name__ == "__main__":
         "stubbed-icon.svg": icon("url(#sweep)", "#fff"),
         "stubbed-mark.svg": mark(),
         "stubbed-mark-outline.svg": mark_outline(),
+        "favicon.svg": favicon(),
         # iOS 18+ appearances: dark keeps the gradient lines on black; tinted is
         # white on black, which iOS recolours with the person's tint.
         "ios-icon-dark.svg": icon("#000", "url(#sweep)"),
