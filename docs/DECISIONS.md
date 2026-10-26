@@ -475,3 +475,10 @@ Reverses the 2026-10-12 call against a seed catalogue (noted in #1): shows were 
 - **One row per show:** `shows.wikidata_id` is unique. The log form's show search uses our list first and then Wikidata, and picking a Wikidata result upserts on that ID; typing a new show goes through a "Did you mean…?" step (#146). Users can still add any show, so fringe and local productions keep working.
 - **The catalogue is optional.** It's an enhancement, never a dependency: the app works just as well with an empty catalogue, when Wikidata is slow or down, and for shows the catalogue doesn't have. User-added shows get every feature catalogue shows get, no feature requires `wikidata_id` or artwork, and tests run against an empty catalogue. Stubbed covers any theatre, anywhere, and most of that will never be in Wikidata.
 - **Artwork** comes from each show's official website share image, fetched by an admin script (#132). It appears only inside the app, for signed-in people, and never on share cards, public pages or link previews: those are published by our users, and posters belong to the productions. Removed on request, and never fetched again.
+
+### 2026-10-26: Priority is the board's order, not labels
+Updates "Ideas go through Claude" (2026-10-25). The owner wants to prioritise by dragging, not by labelling. Work is grouped into small epics (one outcome each; every issue is a sub-issue of exactly one epic), and:
+- **Epics** are ranked by their top-to-bottom order in the "Stubbed roadmap" board's "Epics to prioritise" view. GitHub stores that order, and the `next` skill reads it through the project API.
+- **Issues within an epic** follow the epic's sub-issue order, which the owner can also drag.
+- **`P0` stays** for the rare urgent issue that jumps the queue. `P1` and `P2` are retired.
+- **Trade-off:** reading the board needs project access (`read:project`), which this Mac's GitHub login has but cloud sessions may not. Without it, `next` asks the owner which epic is next instead of guessing. Status labels (`ready`, `needs-decision`…) are still the source of truth for status.
