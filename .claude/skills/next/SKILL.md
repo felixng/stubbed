@@ -10,7 +10,12 @@ Work on one issue per run.
 ## Pick
 
 - If the owner named an issue, use it.
-- Otherwise list issues labelled `ready` without `in-progress` or `needs-decision`: `gh issue list --label ready --state open --json number,title,labels,createdAt`. Rank them by their epic's priority label first (the owner prioritises epics: `P0`, then `P1`, then `P2`, then unlabelled), then by the issue's own priority, then oldest first. Find an issue's epic with `gh api repos/felixng/stubbed/issues/<number>/parent --jq .number`. Labels are the source of truth; the "Stubbed roadmap" project only displays them.
+- Otherwise follow the owner's order, which lives on the board, not in labels:
+  1. An open issue labelled `P0` (urgent) goes first, if it's `ready`.
+  2. Otherwise read the epics in the order the owner dragged them on the "Stubbed roadmap" board (top first):
+     `gh api graphql -f query='{ user(login:"felixng"){ projectV2(number:1){ items(first:100, orderBy:{field:POSITION, direction:ASC}){ nodes{ content{ ... on Issue { number title state labels(first:5){ nodes{ name } } } } } } } } }'`, keeping open issues labelled `epic`.
+  3. Take the first epic that has a sub-issue labelled `ready` (and not `in-progress`, `needs-decision` or `needs-human` for the part you'd build). Within the epic, follow its sub-issue order, top first: `gh api repos/felixng/stubbed/issues/<epic>/sub_issues --jq '.[] | select(.state=="open") | .number'`.
+- Reading the board needs project access (`read:project`). If the session doesn't have it, ask the owner which epic is next instead of guessing.
 - Tell the owner which one you picked, in one line, and carry on.
 
 Skip an issue and say why if it has open questions, needs the owner's hands (`needs-human`) for the part you'd build, or is too big for one pull request. For a big one, propose how to split it.

@@ -481,3 +481,10 @@ Owner's pick after comparing options. The logo is two admission tickets, drawn i
 - **The gradient (magenta #e8247f, coral #ff5a5a, amber #ffa040) is brand art, not a UI colour.** It's an exception to "one tint": interface elements keep `tint`. The owner found a flat on-palette version too plain; big consumer and SaaS icons carry gradients when they're bold and simple.
 - **Assets:** `brand/render.py` writes the web favicon (`favicon.ico`, `icon.svg`), `apple-icon.png`, PWA icons and a web manifest, downloadable SVG and PNG files in `public/brand`, and the iOS `AppIcon` with dark and tinted versions for iOS 18+ (no alpha channel, as the App Store requires) plus `BrandMark`. It renders with a headless Chromium; Quick Look flattens transparency onto white.
 - **Lockup:** the mark before the wordmark at 1.05× its size with a 0.28em gap (`<Wordmark mark />` on the web, `Wordmark(mark: true)` on iOS). The footer and share-card hero keep the wordmark alone. Replaces the placeholder iOS icon (`scripts/make-app-icon.swift`, removed).
+
+### 2026-10-26: Priority is the board's order, not labels
+Updates "Ideas go through Claude" (2026-10-25). The owner wants to prioritise by dragging, not by labelling. Work is grouped into small epics (one outcome each; every issue is a sub-issue of exactly one epic), and:
+- **Epics** are ranked by their top-to-bottom order in the "Stubbed roadmap" board's "Epics to prioritise" view. GitHub stores that order, and the `next` skill reads it through the project API.
+- **Issues within an epic** follow the epic's sub-issue order, which the owner can also drag.
+- **`P0` stays** for the rare urgent issue that jumps the queue. `P1` and `P2` are retired.
+- **Trade-off:** reading the board needs project access (`read:project`), which this Mac's GitHub login has but cloud sessions may not. Without it, `next` asks the owner which epic is next instead of guessing. Status labels (`ready`, `needs-decision`…) are still the source of truth for status.
