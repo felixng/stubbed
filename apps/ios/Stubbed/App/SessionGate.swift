@@ -11,7 +11,7 @@ struct SessionGate: View {
       case .starting:
         Color(.systemGroupedBackground)
           .ignoresSafeArea()
-          .overlay { Wordmark(size: 36) }
+          .overlay { Wordmark(size: 36, mark: true) }
       case .signedOut:
         SignInView()
       case .needsProfile:

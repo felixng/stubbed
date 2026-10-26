@@ -28,7 +28,7 @@ struct WelcomeView: View {
     ScrollView {
       VStack(spacing: Space.xxxl) {
         VStack(spacing: Space.m) {
-          Wordmark(size: 36)
+          Wordmark(size: 36, mark: true)
           Text("Set up your profile")
             .font(.title2.bold())
             .foregroundStyle(.primary)

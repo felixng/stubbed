@@ -19,6 +19,9 @@ import {
   IOS_RULES,
   IOS_SCREENSHOTS,
   IOS_TOKENS,
+  LOGO_GRADIENT,
+  LOGO_RULES,
+  LOGO_VARIANTS,
   PRINCIPLES,
   RADII,
   SHADOWS,
@@ -220,6 +223,59 @@ export default function DesignSystemPage() {
               <Wordmark size={16} />
             </div>
             <Rules items={WORDMARK} />
+          </Section>
+
+          <Section id="logo" title="Logo">
+            <p className="mt-2 max-w-[680px] text-callout text-label-secondary">
+              Two admission tickets, in three variants drawn from one source. Each has a job.
+            </p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-3">
+              {LOGO_VARIANTS.map((v) => (
+                <div key={v.id} className="flex flex-col overflow-hidden rounded-md border border-separator bg-surface">
+                  <div className="flex h-44 items-center justify-center bg-white p-6">
+                    <Image
+                      src={`/brand/${v.file}.svg`}
+                      alt={`The ${v.name.toLowerCase()}`}
+                      width={v.id === "icon" ? 128 : 160}
+                      height={v.id === "icon" ? 128 : 130}
+                      unoptimized
+                      className={v.id === "icon" ? "rounded-[28px]" : ""}
+                    />
+                  </div>
+                  <div className="flex flex-1 flex-col gap-1 border-t border-separator px-4 py-3">
+                    <p className="text-headline text-label">{v.name}</p>
+                    <p className="text-footnote text-label-secondary">
+                      On: <Inline text={v.background} />
+                    </p>
+                    <p className="text-subheadline text-label-secondary">{v.use}</p>
+                    <p className="mt-auto flex gap-4 pt-2 text-subheadline">
+                      <a className="text-tint-text underline-offset-2 hover:underline" href={`/brand/${v.file}.svg`} download>
+                        SVG
+                      </a>
+                      <a className="text-tint-text underline-offset-2 hover:underline" href={`/brand/${v.file}.png`} download>
+                        PNG, 1024px
+                      </a>
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 flex flex-wrap items-center gap-8 rounded-md border border-separator bg-background p-6">
+              <Wordmark size={48} mark />
+              <Wordmark size={28} mark />
+              <Wordmark size={16} mark />
+            </div>
+            <div className="mt-4 flex flex-wrap items-center gap-4">
+              <span
+                aria-hidden="true"
+                className="h-8 w-48 rounded-pill"
+                style={{ background: `linear-gradient(45deg, ${LOGO_GRADIENT.map((g) => `${g.color} ${g.stop}`).join(", ")})` }}
+              />
+              <span className="font-mono text-footnote text-label-secondary">
+                {LOGO_GRADIENT.map((g) => `${g.color} ${g.name}`).join(" → ")}
+              </span>
+            </div>
+            <Rules items={LOGO_RULES} />
           </Section>
 
           <Section id="colour" title="Colour">

@@ -32,13 +32,13 @@ export default function AppLayout({ children }: LayoutProps<"/app">) {
     <div data-theme="light" className="isolate flex min-h-dvh flex-col bg-background md:flex-row">
       <header className="sticky top-0 z-20 border-b border-separator bg-background/90 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden">
         <div className="relative mx-auto flex h-16 w-full max-w-[640px] items-center gap-2 px-4 sm:gap-3">
-          <Wordmark size={30} href="/app" />
+          <Wordmark size={30} href="/app" mark />
           <HeaderSearch />
           <AccountMenu />
         </div>
       </header>
       <aside className="sticky top-0 z-20 hidden h-dvh w-64 flex-none flex-col gap-5 border-r border-separator py-5 pr-4 pl-[max(1rem,env(safe-area-inset-left))] md:flex">
-        <Wordmark size={28} href="/app" className="px-2" />
+        <Wordmark size={28} href="/app" className="px-2" mark />
         <HeaderSearch wide />
         <Suspense fallback={<AppSidebarLinks pathname="" />}>
           <AppSidebarNav />

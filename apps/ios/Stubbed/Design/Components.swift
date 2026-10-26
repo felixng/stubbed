@@ -5,13 +5,27 @@ import UIKit
 /// VoiceOver reads "Stubbed". Matches the web's Wordmark.
 struct Wordmark: View {
   var size: CGFloat = 28
+  /// The ticket mark (BrandMark, the A2 logo) before the text, a little
+  /// taller than the letters: the logo lockup, as on the web's headers.
+  var mark = false
 
   var body: some View {
-    Text(verbatim: "stubbed")
-      .font(.system(size: max(16, size), weight: .heavy))
-      .tracking(-0.045 * max(16, size))
-      .foregroundStyle(.primary)
-      .accessibilityLabel("Stubbed")
+    let size = max(16, size)
+    HStack(spacing: size * 0.28) {
+      if mark {
+        Image("BrandMark")
+          .resizable()
+          .scaledToFit()
+          .frame(height: size * 1.05)
+          .accessibilityHidden(true)
+      }
+      Text(verbatim: "stubbed")
+        .font(.system(size: size, weight: .heavy))
+        .tracking(-0.045 * size)
+        .foregroundStyle(.primary)
+    }
+    .accessibilityElement(children: .ignore)
+    .accessibilityLabel("Stubbed")
   }
 }
 

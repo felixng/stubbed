@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { COLORS, IOS_SCREENSHOTS, IOS_TOKENS, designSystemMarkdown } from "@/lib/design-system";
+import { COLORS, IOS_SCREENSHOTS, IOS_TOKENS, LOGO_VARIANTS, designSystemMarkdown } from "@/lib/design-system";
 
 const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
 
@@ -40,4 +40,13 @@ test("iOS: every token is mapped and every screenshot exists", () => {
   const md = designSystemMarkdown("https://example.com/design-system");
   assert.ok(md.includes("### Tokens in SwiftUI"));
   assert.ok(md.includes("https://example.com/design-system/ios/home.jpg"));
+});
+
+test("logo: every variant has its SVG and PNG", () => {
+  for (const v of LOGO_VARIANTS) {
+    for (const ext of ["svg", "png"]) {
+      assert.ok(existsSync(new URL(`../public/brand/${v.file}.${ext}`, import.meta.url)), `${v.file}.${ext}`);
+    }
+  }
+  assert.ok(designSystemMarkdown("https://example.com/design-system").includes("## Logo"));
 });

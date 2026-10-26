@@ -16,7 +16,7 @@ export function ContentPage({
     <div data-theme="light" className="flex flex-1 flex-col bg-background">
       <header>
         <Container className="flex items-center justify-between gap-4 py-6 sm:py-8">
-          <Wordmark size={28} href="/" />
+          <Wordmark size={28} href="/" mark />
           <SiteMenu />
         </Container>
       </header>

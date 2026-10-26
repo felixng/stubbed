@@ -49,7 +49,7 @@ export default function WelcomePage({ searchParams }: PageProps<"/welcome">) {
     <main data-theme="light" className="flex flex-1 flex-col items-center bg-background px-4 py-12">
       <div className="flex w-full max-w-[420px] flex-col gap-8">
         <div className="flex flex-col items-center gap-3 text-center">
-          <Wordmark size={36} />
+          <Wordmark size={36} mark />
           <h1 className="text-title-2 font-display text-label">Set up your profile</h1>
           <p className="text-subheadline text-label-secondary">
             Your handle goes on your share cards and profile link.

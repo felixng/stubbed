@@ -42,7 +42,7 @@ async function HomeWordmark() {
 function WordmarkLink({ href }: { href: string }) {
   return (
     <Link href={href} className="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
-      <Wordmark size={26} />
+      <Wordmark size={26} mark />
     </Link>
   );
 }

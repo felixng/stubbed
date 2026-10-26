@@ -24,7 +24,7 @@ export function LegalPage({
             href="/"
             className="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
           >
-            <Wordmark size={28} />
+            <Wordmark size={28} mark />
           </Link>
         </Container>
       </header>
