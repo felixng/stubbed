@@ -41,6 +41,8 @@ A purpose-built home for a behaviour theatregoers already have, with structure I
 - Covers any theatre, anywhere. Public copy never mentions launch cities or regions, or asks users where they go to the theatre.
 - Entries default to public; users can change their default, make any entry private, or make their whole profile private. Every surface respects this.
 - Photos are re-encoded on the device; no EXIF or GPS in any stored or served image. One photo per entry for now.
+- The show catalogue is optional: everything works for shows that aren't in it, and with no catalogue at all.
+- Official show artwork (from the show catalogue) appears only inside the app, never on share cards, public pages or link previews.
 - Sign-ups are closed; the landing page collects a waitlist.
 - Monetisation is deferred: no payment, paywall or upsell UI.
 - Not built yet, so never shown as working: CSV export, a stats page, diary filters, notifications, moderation, show pages.
