@@ -62,14 +62,14 @@ export const LOGO_VARIANTS = [
     name: "App icon",
     file: "stubbed-icon",
     background: "Its own gradient tile",
-    use: "The iOS app icon, the browser tab icon, the Apple touch icon and PWA icons, and anywhere the mark sits on a photo, a colour or an unknown background. Never add a border or shadow; platforms round the corners themselves.",
+    use: "The iOS app icon, the Apple touch icon and PWA icons (home screens need a full tile), and anywhere the mark sits on a photo, a colour or an unknown background. Never add a border or shadow; platforms round the corners themselves.",
   },
   {
     id: "mark",
     name: "Mark",
     file: "stubbed-mark",
     background: "White or `background`",
-    use: "The logo: before the wordmark in the website and web app headers, on sign-in and welcome, and in link previews. Transparent; only on light backgrounds.",
+    use: "The logo: before the wordmark in the website and web app headers, on sign-in and welcome, and in link previews; squared up, the browser tab icon (favicon), so the tab matches the header. Transparent; only on light backgrounds.",
   },
   {
     id: "mark-outline",
@@ -92,7 +92,7 @@ export const LOGO_RULES = [
   "**Clear space:** at least a quarter of the mark's height on every side.",
   "**Minimum size:** the mark 16px tall; the app icon 16px. Below 24px use the mark or icon, never the outline mark.",
   "**Don't** recolour, rotate, stretch, outline, add shadows, put the transparent marks on photos or dark colours (use the app icon), or redraw the tickets by hand. Change brand/make_logo.py and regenerate.",
-  "**Files:** `public/brand/` has every variant as SVG and a 1024px PNG; `brand/make_logo.py` and `brand/render.py` regenerate them and the favicon, Apple touch icon, PWA icons and the iOS app icon with its dark and tinted versions.",
+  "**Files:** `public/brand/` has every variant as SVG and a 1024px PNG; `brand/make_logo.py` and `brand/render.py` regenerate them and the favicon (the mark), Apple touch icon and PWA icons (the app icon) and the iOS app icon with its dark and tinted versions.",
 ];
 
 export const FONT_STACK =

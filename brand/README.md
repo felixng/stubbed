@@ -5,8 +5,8 @@ platform comes from one source.
 
 | Variant | File | Use |
 |---|---|---|
-| App icon (E1) | `svg/stubbed-icon.svg` | iOS app icon, browser tab icon, Apple touch icon, PWA icons |
-| Mark (A2) | `svg/stubbed-mark.svg` | Beside the wordmark on light backgrounds |
+| App icon (E1) | `svg/stubbed-icon.svg` | iOS app icon, Apple touch icon, PWA icons |
+| Mark (A2) | `svg/stubbed-mark.svg` | Beside the wordmark on light backgrounds; squared up as `svg/favicon.svg`, the browser tab icon |
 | Outline mark (E2) | `svg/stubbed-mark-outline.svg` | Large or decorative uses on white; base of the iOS dark and tinted icons |
 
 Rules and downloads: the Logo section of `/design-system`.
