@@ -21,7 +21,7 @@ struct SignInView: View {
     ScrollView {
       VStack(spacing: Space.xxxl) {
         VStack(spacing: Space.m) {
-          Wordmark(size: 44)
+          Wordmark(size: 44, mark: true)
           Text("Sign in")
             .font(.title2.bold())
         }

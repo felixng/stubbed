@@ -23,7 +23,9 @@ scripts/dev archive
 
 It archives a Release build (hosted Supabase, `Config/Release.xcconfig`), signs it with automatic signing and uploads it. The build number is the current date and time, so each upload is new. It shows up in TestFlight after a few minutes of processing.
 
-Before the first external testers or App Review: replace the placeholder icon (`scripts/make-app-icon.swift` draws it), fill in App Privacy in App Store Connect to match `Stubbed/PrivacyInfo.xcprivacy`, and finish the sign-in setup on #64.
+Before the first external testers or App Review: fill in App Privacy in App Store Connect to match `Stubbed/PrivacyInfo.xcprivacy`, and finish the sign-in setup on #64.
+
+The app icon and the in-app mark come from `brand/` at the repo root: `python3 brand/make_logo.py && python3 brand/render.py` regenerates them (the icon in `Assets.xcassets/AppIcon.appiconset`, with dark and tinted versions for iOS 18+, and `BrandMark.imageset`).
 
 ## Scope of the first version
 

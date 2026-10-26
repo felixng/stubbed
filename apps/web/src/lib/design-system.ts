@@ -43,7 +43,7 @@ export function themeVars(appearance: "light" | "dark") {
 export const PRINCIPLES = [
   "**Native first.** Built for the SwiftUI iOS app. The web shares its features, data and rules, not its layouts. On iOS the background and text tokens are the system colours; the coral ones are `Palette` (see iOS).",
   "**Light by default.** Every page and screen is light, whatever the device setting: on the web, `data-theme=\"light\"` on the page root; on iOS, `.preferredColorScheme(.light)`. The dark values are defined and kept working, but nothing ships dark for now.",
-  "**One tint.** `tint` is coral in both appearances and fills the one primary action per screen. Where the brand colour is read as text, use `tint-text`. Nothing else is coral.",
+  "**One tint.** `tint` is coral in both appearances and fills the one primary action per screen. Where the brand colour is read as text, use `tint-text`. Nothing else is coral. The one exception is the logo, whose gradient is brand art (see Logo).",
   "**Copy:** terse and confident, sentence case, no emoji, no exclamation marks. Button labels are verbs. Numbers are digits and tabular. Sample handle: `@sillyelphaba`; never a real person's name.",
   "**Ratings** always show as five stars in half steps, never a bare number.",
 ];
@@ -53,6 +53,46 @@ export const WORDMARK = [
   "SF Pro Display (system font stack on web), weight 800, letter-spacing -0.045em, line height 1, no text transform.",
   "20pt in app navigation and headers; 26–32px in the web header (28 on the landing page); 16 minimum.",
   "Accessible label \"Stubbed\". In running text, \"Stubbed\" with a capital S.",
+];
+
+/** The logo: two admission tickets, in three variants drawn from one source (brand/make_logo.py). */
+export const LOGO_VARIANTS = [
+  {
+    id: "icon",
+    name: "App icon",
+    file: "stubbed-icon",
+    background: "Its own gradient tile",
+    use: "The iOS app icon, the browser tab icon, the Apple touch icon and PWA icons, and anywhere the mark sits on a photo, a colour or an unknown background. Never add a border or shadow; platforms round the corners themselves.",
+  },
+  {
+    id: "mark",
+    name: "Mark",
+    file: "stubbed-mark",
+    background: "White or `background`",
+    use: "The logo: before the wordmark in the website and web app headers, on sign-in and welcome, and in link previews. Transparent; only on light backgrounds.",
+  },
+  {
+    id: "mark-outline",
+    name: "Outline mark",
+    file: "stubbed-mark-outline",
+    background: "White or `background`",
+    use: "A lighter version for large or decorative uses on white: empty states, watermarks, print. Also the base of the iOS dark and tinted icons. Not for small sizes; use the mark.",
+  },
+];
+
+export const LOGO_GRADIENT = [
+  { stop: "0%", color: "#e8247f", name: "magenta" },
+  { stop: "50%", color: "#ff5a5a", name: "coral" },
+  { stop: "100%", color: "#ffa040", name: "amber" },
+];
+
+export const LOGO_RULES = [
+  "**The gradient is brand art, not a UI colour.** Magenta to coral to amber, bottom left to top right. It belongs to the logo and marketing artwork only; interface elements keep `tint`.",
+  "**Lockup:** the mark before the wordmark, 1.05× the wordmark's size tall, with a 0.28em gap (`<Wordmark mark />` on the web). The wordmark stays in `label`.",
+  "**Clear space:** at least a quarter of the mark's height on every side.",
+  "**Minimum size:** the mark 16px tall; the app icon 16px. Below 24px use the mark or icon, never the outline mark.",
+  "**Don't** recolour, rotate, stretch, outline, add shadows, put the transparent marks on photos or dark colours (use the app icon), or redraw the tickets by hand. Change brand/make_logo.py and regenerate.",
+  "**Files:** `public/brand/` has every variant as SVG and a 1024px PNG; `brand/make_logo.py` and `brand/render.py` regenerate them and the favicon, Apple touch icon, PWA icons and the iOS app icon with its dark and tinted versions.",
 ];
 
 export const FONT_STACK =
@@ -182,7 +222,7 @@ export const IOS_COMPONENTS = [
   { name: "CommentComposer", file: "Screens/People/PublicEntryView.swift", notes: "A growing field with an inline send arrow, pinned above the tab bar with `.safeAreaInset(edge: .bottom)`." },
   { name: "PlaceholderRows / EmptyState", file: "Design/Components.swift", notes: "Redacted grey rows for a first load; `ContentUnavailableView` with an SF Symbol for empty and error states." },
   { name: "RemoteImage", file: "Design/Components.swift", notes: "Photos from a URL on a grey placeholder of the final size. Caches and retries, where `AsyncImage` gives up in a scrolling feed." },
-  { name: "Wordmark", file: "Design/Components.swift", notes: "Lowercase `stubbed`, heavy, tight tracking, in `label`; VoiceOver reads \"Stubbed\"." },
+  { name: "Wordmark", file: "Design/Components.swift", notes: "Lowercase `stubbed`, heavy, tight tracking, in `label`; VoiceOver reads \"Stubbed\". `mark: true` adds the ticket mark (`BrandMark`) before it, as on launch, sign-in and welcome." },
 ];
 
 /** Screenshots of the iOS app (iPhone 17 Pro simulator, test data), in public/design-system/ios. */
@@ -223,6 +263,17 @@ export function designSystemMarkdown(pageUrl: string) {
     "## Wordmark",
     "",
     list(WORDMARK),
+    "",
+    "## Logo",
+    "",
+    table(
+      ["Variant", "File", "Background", "Use"],
+      LOGO_VARIANTS.map((v) => [v.name, `[${v.file}.svg](${new URL(`/brand/${v.file}.svg`, pageUrl).href})`, v.background, v.use]),
+    ),
+    "",
+    `Gradient: ${LOGO_GRADIENT.map((g) => `${g.color} (${g.name}) at ${g.stop}`).join(", ")}.`,
+    "",
+    list(LOGO_RULES),
     "",
     "## Colour",
     "",

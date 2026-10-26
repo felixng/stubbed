@@ -1,3 +1,6 @@
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
+
 import { ImageResponse } from "next/og";
 
 // The link preview for the landing page (iMessage, WhatsApp, X, LinkedIn…).
@@ -7,7 +10,10 @@ export const alt = "Stubbed — your theatre diary";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default function OpengraphImage() {
+export default async function OpengraphImage() {
+  // The ticket mark (A2) beside the wordmark, as on the site's header.
+  const mark = await readFile(join(process.cwd(), "public/brand/stubbed-mark.png"));
+  const markSrc = `data:image/png;base64,${mark.toString("base64")}`;
   return new ImageResponse(
     (
       <div
@@ -35,7 +41,10 @@ export default function OpengraphImage() {
             boxShadow: "0 0 0 40px rgba(255, 122, 92, 0.16)",
           }}
         />
-        <div style={{ fontSize: 56, letterSpacing: "-0.045em" }}>stubbed</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 18 }}>
+          <img src={markSrc} width={74} height={60} alt="" />
+          <div style={{ fontSize: 56, letterSpacing: "-0.045em" }}>stubbed</div>
+        </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
           <div
             style={{

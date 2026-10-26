@@ -18,7 +18,7 @@ export default function ConfirmedPage() {
   return (
     <main data-theme="light" className="flex flex-1 flex-col items-center justify-center bg-background px-4 py-12">
       <div className="flex w-full max-w-[420px] flex-col items-center gap-8 text-center">
-        <Wordmark size={44} href="/" />
+        <Wordmark size={44} href="/" mark />
         <div className="flex w-full flex-col items-center gap-3 rounded-md border border-separator bg-surface px-6 py-10 shadow-sm">
           <span
             aria-hidden="true"
