@@ -60,7 +60,7 @@ _Filed by Claude Code from the owner's idea._
 
 Labels:
 - Status: `ready` when an agent could build it now; `needs-decision` when there are open questions or it needs a product call; `needs-human` when part of it needs the owner's hands (accounts, devices, Apple or Meta setup).
-- Priority: `P0` (urgent), `P1` (next), `P2` (later). Use the owner's word if they gave one; otherwise `P2`, and say so.
+- Priority: no label. The owner orders epics by dragging them on the board, and issues by their order within each epic. Add `P0` only when the owner says something is urgent; it jumps the queue.
 - Area: `web`, `ios`, `database`, as many as apply.
 - `claude-task` when an agent can do all of it.
 
@@ -68,7 +68,7 @@ Create with `gh issue create --title ... --body-file ... --label ...`. Labels ar
 
 **Every issue belongs to exactly one epic**, as a GitHub sub-issue. Epics are what the owner prioritises, so each one is a single outcome small enough to rank against the others, usually one to four issues. List them with `gh issue list --label epic --state open`.
 - Attach the issue to the epic that fits: `gh api -X POST repos/felixng/stubbed/issues/<epic>/sub_issues -F sub_issue_id=<id>`, where `<id>` comes from `gh api repos/felixng/stubbed/issues/<number> --jq .id` (not the issue number).
-- If no epic fits, create one named after the outcome (`Epic: Lists`, label `epic`, a one-paragraph goal), even if it holds only this issue, and give it the issue's priority label.
+- If no epic fits, create one named after the outcome (`Epic: Lists`, label `epic`, a one-paragraph goal), even if it holds only this issue. A new epic lands at the bottom of the board, so tell the owner to drag it into place.
 - If an epic grows past about five issues or two outcomes, suggest splitting it to the owner.
 - Mention the epic in your reply: "Filed #131 under Epic: Stats (#165)".
 
@@ -86,7 +86,7 @@ Commit doc changes on a branch named `direction/<short-slug>` and open a pull re
 
 ## 6. Reply briefly
 
-One or two lines per item: the issue link and title, its status and priority, and anything the owner has to do. For example: "Filed #131 Import past shows from a Mezzanine diary · ready · P1." No summaries of the issue body; the owner can open it.
+One or two lines per item: the issue link and title, its status and epic, and anything the owner has to do. For example: "Filed #131 Stats page · ready · Epic: Stats (#165)." No summaries of the issue body; the owner can open it.
 
 ## If GitHub isn't reachable
 

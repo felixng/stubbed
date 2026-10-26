@@ -32,8 +32,8 @@ The one exception is [`PRODUCT.md`](PRODUCT.md): a lean distillation of the brie
 - Don't add dependencies, paid services or monetisation features without checking with the owner.
 - Log implementation choices and why in `docs/DECISIONS.md`.
 - **Ideas and direction come to Claude.** When the owner shares an idea, a bug, an improvement or a change of direction, however short, use the `idea` skill: it files a detailed GitHub issue (asking at most three quick questions) or updates the docs. `triage` expands issues the owner filed by hand (label `inbox`, the backup when Claude isn't available). `next` builds the top ready issue into one pull request.
-- **GitHub issues are the one list of work.** Status labels: `inbox`, `needs-decision`, `ready`, `in-progress` (plus `needs-human` for the owner's hands). Priority: `P0`, `P1`, `P2`. Area: `web`, `ios`, `database`. Labels are the source of truth; the "Stubbed roadmap" project board only displays them.
-- **Every issue belongs to exactly one epic** (a GitHub sub-issue), and a lone task gets an epic of its own. Epics (label `epic`) are small, one outcome each (usually one to four issues), so the owner can prioritise them against each other; their `P0`–`P2` label decides what `next` builds first.
+- **GitHub issues are the one list of work.** Status labels: `inbox`, `needs-decision`, `ready`, `in-progress` (plus `needs-human` for the owner's hands). Area: `web`, `ios`, `database`. `P0` marks the rare urgent issue that jumps the queue. Priority is not a label: it's the order of epics on the "Stubbed roadmap" board's "Epics to prioritise" view (the owner drags them), and the order of sub-issues within each epic.
+- **Every issue belongs to exactly one epic** (a GitHub sub-issue), and a lone task gets an epic of its own. Epics (label `epic`) are small, one outcome each (usually one to four issues), so the owner can prioritise them against each other; their order on the board decides what `next` builds first.
 
 ## Tech overview
 
