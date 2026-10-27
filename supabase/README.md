@@ -65,7 +65,7 @@ Hosted project, once:
    - Authorised redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`.
    - In Supabase: Authentication → Sign In / Providers → Google: enable it, paste the client ID and secret.
    - **Google's own button and sheet (#179, #180)**, so Google names Stubbed and getstubbed.app instead of `<project-ref>.supabase.co`:
-     - Web client → Authorised JavaScript origins: `https://getstubbed.app` (and `http://localhost:3000`). Set `NEXT_PUBLIC_GOOGLE_CLIENT_ID` in Vercel to the web client ID.
+     - Web client → Authorised JavaScript origins: `https://getstubbed.app` (and `http://localhost:3000`). Set `NEXT_PUBLIC_GOOGLE_CLIENT_ID` in Vercel to the web client ID, and `GOOGLE_CLIENT_SECRET` (server-only) to its secret, then redeploy.
      - Create an **iOS** OAuth client for bundle ID `app.getstubbed`. Put its client ID in `apps/ios/Config/Shared.xcconfig` (`GOOGLE_IOS_CLIENT_ID`) and the reversed ID (`com.googleusercontent.apps.…`) in `GOOGLE_IOS_URL_SCHEME`.
      - Supabase → Google → Client IDs: the web client ID, then the iOS one, comma-separated. Leave "Skip nonce check" off.
      - OAuth consent screen → Branding: app name "Stubbed", logo, home page and privacy links, authorised domain `getstubbed.app`; submit for brand verification so the name shows.

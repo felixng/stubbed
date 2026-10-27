@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { importGoogleAvatar } from "@/lib/avatar";
+import { exchangeGoogleCode } from "@/lib/google-oauth";
 import { oauthProvider } from "@/lib/oauth-provider";
 import { safeNext } from "@/lib/safe-next";
 import { createClient } from "@/lib/supabase/server";
@@ -134,12 +135,27 @@ export async function signInWithProvider(formData: FormData) {
   redirect(data.url);
 }
 
-// After Google's own button signs in (GoogleButton): a new account's Google
-// photo becomes its avatar, as /auth/callback does for redirect sign-ins.
-export async function finishGoogleSignIn() {
+// Google with our own button (GoogleButton): Google's popup gives the
+// browser a one-time code, which is traded here for Google's ID token
+// (lib/google-oauth) and handed to Supabase, which sets the session cookies.
+// A new account's Google photo becomes its avatar, as /auth/callback does.
+// "not-configured" (no client secret on this deployment) tells the button to
+// use the redirect flow instead.
+export async function signInWithGoogleCode(code: string): Promise<{ error?: "not-configured" | "failed" }> {
+  const result = await exchangeGoogleCode(code);
+  if (!result.ok) return { error: result.reason };
   const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
+  const { data, error } = await supabase.auth.signInWithIdToken({
+    provider: "google",
+    token: result.tokens.idToken,
+    access_token: result.tokens.accessToken ?? undefined,
+  });
+  if (error) {
+    console.error("signInWithIdToken (Google) failed", error.code, error.message);
+    return { error: "failed" };
+  }
   if (data.user) await importGoogleAvatar(supabase, data.user);
+  return {};
 }
 
 export async function signOut() {
