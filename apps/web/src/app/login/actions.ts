@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { importGoogleAvatar } from "@/lib/avatar";
 import { oauthProvider } from "@/lib/oauth-provider";
 import { safeNext } from "@/lib/safe-next";
 import { createClient } from "@/lib/supabase/server";
@@ -131,6 +132,14 @@ export async function signInWithProvider(formData: FormData) {
     redirect(`/login?error=${provider}`);
   }
   redirect(data.url);
+}
+
+// After Google's own button signs in (GoogleButton): a new account's Google
+// photo becomes its avatar, as /auth/callback does for redirect sign-ins.
+export async function finishGoogleSignIn() {
+  const supabase = await createClient();
+  const { data } = await supabase.auth.getUser();
+  if (data.user) await importGoogleAvatar(supabase, data.user);
 }
 
 export async function signOut() {

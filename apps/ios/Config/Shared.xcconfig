@@ -8,6 +8,14 @@ CODE_SIGN_STYLE = Automatic
 MARKETING_VERSION = 1.0.0
 CURRENT_PROJECT_VERSION = 1
 
+// Google sign-in with Google's own sheet (#180): the iOS OAuth client from
+// Google Cloud Console (not secret), and the same ID reversed for the URL
+// scheme Google returns to. Empty: the app falls back to the web flow
+// through Supabase, whose prompt names supabase.co. The scheme placeholder
+// keeps Info.plist free of an empty URL scheme until then.
+GOOGLE_IOS_CLIENT_ID =
+GOOGLE_IOS_URL_SCHEME = app.getstubbed.google-unset
+
 // iPhone only, portrait, iOS 17+ (docs/ARCHITECTURE.md §5).
 TARGETED_DEVICE_FAMILY = 1
 IPHONEOS_DEPLOYMENT_TARGET = 17.0

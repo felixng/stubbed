@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useActionState, useId } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { GOOGLE_CLIENT_ID, GoogleButton } from "./GoogleButton";
 import { signInWithPassword, signInWithProvider, type LoginState } from "./actions";
 
 export const field =
@@ -91,14 +92,19 @@ export function ProviderButtons({ next }: { next: string }) {
             Continue with Apple
           </Button>
         </form>
-        <form action={signInWithProvider}>
-          <input type="hidden" name="provider" value="google" />
-          <input type="hidden" name="next" value={next} />
-          <Button type="submit" variant="neutral" className="w-full">
-            <GoogleIcon />
-            Continue with Google
-          </Button>
-        </form>
+        {GOOGLE_CLIENT_ID ? (
+          <GoogleButton next={next} />
+        ) : (
+          // Without a client ID (local development), the redirect flow.
+          <form action={signInWithProvider}>
+            <input type="hidden" name="provider" value="google" />
+            <input type="hidden" name="next" value={next} />
+            <Button type="submit" variant="neutral" className="w-full">
+              <GoogleIcon />
+              Continue with Google
+            </Button>
+          </form>
+        )}
       </div>
 
       <div className="flex items-center gap-3 text-footnote text-label-secondary">

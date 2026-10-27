@@ -6,6 +6,8 @@ struct AppConfig: Sendable {
   let supabaseURL: URL
   let supabasePublishableKey: String
   let webURL: URL
+  /// Google's iOS OAuth client; nil until it's set in Config/*.xcconfig.
+  let googleClientID: String?
 
   static let current = AppConfig(info: Bundle.main.infoDictionary ?? [:])
 
@@ -25,5 +27,6 @@ struct AppConfig: Sendable {
     supabaseURL = url("SupabaseURL")
     supabasePublishableKey = value("SupabasePublishableKey")
     webURL = url("WebURL")
+    googleClientID = (info["GoogleIOSClientID"] as? String).flatMap { $0.isEmpty ? nil : $0 }
   }
 }

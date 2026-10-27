@@ -143,7 +143,7 @@ Free-tier limits change often. Check the vendor pricing pages before relying on 
   - stats live in SQL functions (`user_stats`, etc.);
   - search lives in a SQL function (e.g. `search_shows(q)` using `pg_trgm`).
   Each client only renders and calls these. That stops the Swift and TypeScript versions drifting apart.
-- Sign in with Apple is native (`AuthenticationServices`) → `supabase.auth.signInWithIdToken`. Google signs in through Supabase’s OAuth flow in an `ASWebAuthenticationSession` sheet, returning to `stubbed://auth-callback` *(changed 2026-10-14: no GoogleSignIn SDK)*.
+- Sign in with Apple is native (`AuthenticationServices`) → `supabase.auth.signInWithIdToken`. Google signs in with Google's own sheet (`GoogleSignIn-iOS`) → `signInWithIdToken`, so the prompt names google.com rather than supabase.co; without an iOS client ID configured it falls back to Supabase’s OAuth flow in an `ASWebAuthenticationSession` sheet, returning to `stubbed://auth-callback` *(changed 2026-10-27, #180)*.
 - Sharing *(changed 2026-10-14)*: the app draws its own share cards natively (SwiftUI `ImageRenderer`), from the same designs as the web's Canvas cards, and shares them with `ShareLink` / the share sheet (and directly to Instagram Stories). Two copies of the designs, kept in step by hand; the numbers on them come from `entry_card_stats(entry_id)` in Postgres, so they can't drift.
 - Server routes (`/api/photo/*`): the app sends its Supabase access token as `Authorization: Bearer`; the routes accept it as well as the web's cookie.
 - Minimum iOS 17: iPhone XS/XR (2018) and SE 2nd gen (2020) onwards.

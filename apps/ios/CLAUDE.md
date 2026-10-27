@@ -49,7 +49,7 @@ You can't tap the Simulator yourself. To check a screen deeper in the app, write
 
 - **Files are picked up automatically.** `Stubbed/` and `StubbedTests/` are synchronized folders: create, move or delete `.swift` files on disk and the next build sees them. Don't edit `project.pbxproj` for that. Do edit it (carefully, then `scripts/dev build`) only for new targets, packages or build phases.
 - Target build settings live in `Config/Shared.xcconfig`, not in the project file.
-- New Swift packages are dependencies: ask the owner first (root `CLAUDE.md`). `supabase-swift` is the only one so far.
+- New Swift packages are dependencies: ask the owner first (root `CLAUDE.md`). So far: `supabase-swift` and `GoogleSignIn-iOS` (#180).
 - Swift 6 language mode with strict concurrency. Two-space indentation.
 - Layout: `Stubbed/App` (entry point, tabs), `Design` (tokens in `Theme.swift`, shared views in `Components.swift`, `Screen`), `Data` (Supabase client, config, logging), `Screens` (one folder or file per area).
 - Spacing comes from `Space`; the accent is `Palette.tint` (with `tintText`, `tintFill`, `onTint` for text on the tint, and `star`). Backgrounds and text use system colours (see Design direction); the web's other tokens are gone. Settings-like screens are a `Form`; their actions (Save, Create) go in the navigation bar.

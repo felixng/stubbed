@@ -1,3 +1,4 @@
+import GoogleSignIn
 import SwiftUI
 
 /// Picks the screen for where the user is: signing in, setting up their
@@ -36,7 +37,9 @@ struct SessionGate: View {
     }
     .animation(.default, value: session.phase)
     .onOpenURL { url in
-      // Google sign-in's return is handled by the auth library.
+      // Google's sheet returns to its own URL scheme; the web-flow fallback
+      // is handled by the auth library.
+      if GIDSignIn.sharedInstance.handle(url) { return }
       if let route = DeepLink.route(for: url) { session.pendingLink = route }
     }
   }
