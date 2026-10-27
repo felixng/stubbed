@@ -12,6 +12,11 @@ begin
   delete from public.collections where user_id in (uid, friend);
   delete from public.follows
     where uid in (follower_id, followee_id) or friend in (follower_id, followee_id) or fan in (follower_id, followee_id);
+  -- A block or report left by an interrupted run would hide @ios_friend
+  -- from every later test.
+  delete from public.blocks
+    where uid in (blocker_id, blocked_id) or friend in (blocker_id, blocked_id) or fan in (blocker_id, blocked_id);
+  delete from public.reports where reporter_id in (uid, friend, fan);
   update public.profiles set handle = coalesce(handle, 'ios_fan'), display_name = 'A Fan' where id = fan;
   update public.profiles set is_private = false, default_visibility = 'public' where id = uid;
   update public.profiles

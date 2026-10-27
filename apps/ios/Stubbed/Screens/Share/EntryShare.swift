@@ -50,9 +50,9 @@ enum EntryShare {
 
   /// What the native share sheet sends for someone else's show: a line about
   /// it and its page, with no card (their card is theirs to post).
-  static func othersItems(_ entry: Entry, owner: Person) -> [Any] {
+  static func others(_ entry: Entry, owner: Person) -> (text: String, link: URL) {
     let caption = entry.venue.map { "\(entry.show.title) at \($0.name)" } ?? entry.show.title
-    return ["@\(owner.handle) saw \(caption) on Stubbed", link(entry.id)]
+    return ("@\(owner.handle) saw \(caption) on Stubbed", link(entry.id))
   }
 }
 
