@@ -9,10 +9,12 @@
 	<string>$(SUPABASE_PUBLISHABLE_KEY)</string>
 	<key>WebURL</key>
 	<string>$(WEB_URL)</string>
+	<key>GoogleIOSClientID</key>
+	<string>$(GOOGLE_IOS_CLIENT_ID)</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
-			<!-- stubbed://auth-callback: Google sign-in returns here. -->
+			<!-- stubbed://auth-callback: the web-flow fallback for Google sign-in returns here. -->
 			<key>CFBundleURLName</key>
 			<string>app.getstubbed</string>
 			<key>CFBundleURLSchemes</key>
@@ -20,7 +22,20 @@
 				<string>stubbed</string>
 			</array>
 		</dict>
+		<dict>
+			<!-- Google's sheet returns here: the reversed iOS client ID. -->
+			<key>CFBundleURLName</key>
+			<string>app.getstubbed.google</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>$(GOOGLE_IOS_URL_SCHEME)</string>
+			</array>
+		</dict>
 	</array>
+	<!-- Export compliance: only standard HTTPS (exempt), so App Store
+	     Connect doesn't ask on every upload. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<!-- Lets Debug builds reach local Supabase over http on 127.0.0.1. -->

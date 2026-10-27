@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { connection } from "next/server";
 
 import { currentUser } from "@/lib/supabase/require-user";
 
@@ -11,6 +12,8 @@ import { currentUser } from "@/lib/supabase/require-user";
 // "Admin only" pill, and a faint tiled watermark on the page background.
 // Both render only after the check passes.
 export async function AdminOnly({ children }: { children: React.ReactNode }) {
+  // Per request: reading the session uses the clock, which can't prerender.
+  await connection();
   const user = await currentUser();
   if (!user?.admin) notFound();
   return (

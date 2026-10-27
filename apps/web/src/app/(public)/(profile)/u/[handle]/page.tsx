@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { ProfileActions, UnblockButton } from "@/components/moderation/ProfileActions";
 import { FollowButton } from "@/components/profile/FollowButton";
 import { ProfileCalendar } from "@/components/profile/ProfileCalendar";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
@@ -54,10 +55,27 @@ async function Profile({ params }: PageProps<"/u/[handle]">) {
         cover={cover}
         stats={stats}
         follows={follows}
-        action={<FollowButton profileId={profile.id} handle={profile.handle} isPrivate={profile.is_private} viewer={viewer} />}
+        action={
+          <>
+            {!viewer?.blocked && (
+              <FollowButton profileId={profile.id} handle={profile.handle} isPrivate={profile.is_private} viewer={viewer} />
+            )}
+            {viewer && !viewer.isOwner && (
+              <ProfileActions profileId={profile.id} handle={profile.handle} blocked={Boolean(viewer.blocked)} />
+            )}
+          </>
+        }
       />
 
-      {!stats ? (
+      {viewer?.blocked ? (
+        <div className="flex flex-col items-center gap-3 rounded-md border border-separator bg-surface px-6 py-12 text-center shadow-sm">
+          <h2 className="text-headline text-label">You’ve blocked @{profile.handle}</h2>
+          <p className="max-w-[320px] text-subheadline text-label-secondary">
+            You won’t see each other’s shows, likes or comments.
+          </p>
+          <UnblockButton profileId={profile.id} handle={profile.handle} />
+        </div>
+      ) : !stats ? (
         <div className="flex flex-col items-center gap-2 rounded-md border border-separator bg-surface px-6 py-12 text-center shadow-sm">
           <h2 className="text-headline text-label">This profile is private</h2>
           <p className="max-w-[320px] text-subheadline text-label-secondary">

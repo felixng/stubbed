@@ -134,7 +134,7 @@ export function TripHero({
   );
 }
 
-// After the show or trip, before the waitlist card: who logged it, and the
+// After the show or trip, before the join card: who logged it, and the
 // rest of their diary.
 export function LoggedBy({ handle, displayName, avatarUrl }: { handle: string; displayName: string | null; avatarUrl: string | null }) {
   return (

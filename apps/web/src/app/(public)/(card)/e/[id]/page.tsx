@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { ReportButton } from "@/components/moderation/ReportDialog";
 import { EntryHero, LoggedBy } from "@/components/profile/CardHero";
 import { CommentThread } from "@/components/profile/CommentThread";
 import { EntryReactions } from "@/components/profile/EntryReactions";
@@ -14,7 +15,7 @@ import { getReactions, listComments, listLikers, NO_REACTIONS } from "@/lib/reac
 // Public entry page, the link behind a shared card: the card itself (drawn
 // live from public data, so the page opens on what was shared), then only what the
 // card lacks: the note, likes and comments, and who logged it with a link to
-// the rest of their diary. The layout adds the waitlist card after it for
+// the rest of their diary. The layout adds the join card after it for
 // signed-out visitors. Public, logged entries on public profiles (RLS, via
 // the publishable key), plus, for a signed-in viewer, what their session may
 // see: a private profile's public entries, to its approved followers and
@@ -106,6 +107,11 @@ async function Entry({ params }: PageProps<"/e/[id]">) {
         loginHref={loginHref}
       />
       <LoggedBy handle={owner.handle} displayName={owner.display_name} avatarUrl={owner.avatar_url} />
+      {viewerId && viewerId !== owner.id && (
+        <div className="-mt-2 flex justify-center">
+          <ReportButton target={{ type: "entry", id: entry.id }} owner={owner} label="Report this show" />
+        </div>
+      )}
     </>
   );
 }

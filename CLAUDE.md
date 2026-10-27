@@ -45,7 +45,7 @@ Details and reasoning: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs
 - **AI** goes through `apps/web/src/lib/ai`. Default chain: `claude-opus-5-5`, then `claude-haiku-5-5`. Groq, Gemini and Cerebras are optional providers.
 - **Share cards** are drawn on the device: Canvas 2D on web (`lib/share-card.ts`, `lib/share-card-trip.ts`), SwiftUI on iOS. Square 1080×1080. Card stats come from `entry_card_stats`.
 - **Design system:** Footlight Coral; tokens and mapping in `docs/DESIGN.md`. The app and sign-in are always light for now.
-- **Auth:** Apple, Google and email + password. Sign-ups are off (`enable_signup = false`). Admins have `app_metadata.role = "admin"`; admin pages live under `/app/admin`.
+- **Auth:** Apple, Google and email + password. Sign-ups are open (#149): email accounts confirm by a link or a 6-digit code (`supabase/templates/`, landing on `/auth/confirm`). Admins have `app_metadata.role = "admin"`; admin pages live under `/app/admin`.
 - **Running cost target:** $0/month on free tiers, plus the Apple Developer Program ($99/year) and small Claude API spend.
 
 ### Data model (as built)
@@ -55,7 +55,7 @@ Details and reasoning: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs
 - `entries`: user_id, show_id, venue_id (nullable), date, status (`planned` | `logged`), rating (nullable, half-star steps, none when planned), note, `photo_path` (one photo), visibility.
 - `collections` (kind `trip` | `label`) and `entry_collections`: trips have required dates and hold only entries within them; labels are unused for now.
 - `follows` (status `pending` | `accepted`), `entry_likes`, `entry_comments` (≤ 500 characters).
-- `events` (write-only analytics: `entry_logged`, `card_shared`), `waitlist` (fallback when Kit isn't configured).
+- `events` (write-only analytics: `entry_logged`, `card_shared`), `waitlist` (retired with the waitlist form; kept for the old list), `blocks` and `reports` (moderation; admins act at `/app/admin/reports`).
 - Storage: private `entry-photos` bucket (others can read a photo only while its entry is public), public `avatars` bucket.
 - Key functions: `search_shows`, `search_venues`, `public_profile_stats`, `own_profile_stats`, `entry_card_stats`, `feed_entries`, `entry_comment_previews`, `search_profiles`, `follow_counts`, `profile_is_visible`, `delete_my_account`.
 - Not yet: an `entry_photos` table for several photos per entry, and a per-user record of import runs. Both are open product decisions in the brief.

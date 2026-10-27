@@ -13,7 +13,7 @@ import { getReactions, NO_REACTIONS } from "@/lib/reactions";
 // itself (drawn live from its public shows), which already carries the trip's
 // name, dates and numbers, so under it come only what it lacks: each public show in date
 // order, then who went with a link to the rest of the diary. The layout adds
-// the waitlist card after it for signed-out visitors. A trip is public when
+// the join card after it for signed-out visitors. A trip is public when
 // it holds a public show and the profile isn't private (RLS, via the
 // publishable key); private shows in it are left out, and so are their
 // counts. Each show has Like and Comment, read with the visitor's session.

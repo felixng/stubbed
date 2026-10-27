@@ -1,11 +1,10 @@
 // Questions people ask before signing up. The same list feeds the FAQPage
-// structured data on /faq, so the two can't drift. Answers must
-// stay true to the private beta: no open sign-up, no prices, no dates.
+// structured data on /faq, so the two can't drift. No prices or dates.
 export const FAQS = [
   {
     question: "Can I sign up for Stubbed now?",
     answer:
-      "Not yet. Stubbed is in private beta and isn’t open for sign-ups. Join the waitlist with your email and we’ll send you one email when it opens. No newsletter, and you can unsubscribe any time.",
+      "Yes. Sign up free with Apple, Google or your email, pick a handle and log your first show. Stubbed is in public beta, so expect it to keep improving.",
   },
   {
     question: "Can I add shows I saw before joining?",

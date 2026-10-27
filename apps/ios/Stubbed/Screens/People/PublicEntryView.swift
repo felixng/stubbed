@@ -81,6 +81,9 @@ struct PublicEntryView: View {
 struct CommentThread: View {
   let entryId: UUID
   let ownerId: UUID
+  /// In the Comments drawer: no section header (the sheet's title says it)
+  /// and a centred empty state.
+  var inDrawer = false
 
   @Environment(AppSession.self) private var session
   @Environment(AppRouter.self) private var router
@@ -89,18 +92,25 @@ struct CommentThread: View {
   @State private var likes = 0
   @State private var error: String?
   @State private var deleting: Comment?
+  @State private var reporting: Comment?
 
   var body: some View {
     Section {
       if !likers.isEmpty { likedBy }
       if comments.isEmpty {
-        Text("No comments yet. Say something nice.")
-          .font(.subheadline)
-          .foregroundStyle(.secondary)
+        if inDrawer {
+          ContentUnavailableView("No comments yet", systemImage: "bubble.left", description: Text("Start the conversation."))
+            .listRowBackground(Color.clear)
+            .listRowSeparator(.hidden)
+        } else {
+          Text("No comments yet. Say something nice.")
+            .font(.subheadline)
+            .foregroundStyle(.secondary)
+        }
       }
       ForEach(comments) { comment in row(comment) }
     } header: {
-      Text(comments.isEmpty ? "Comments" : "Comments · \(comments.count)")
+      if !inDrawer { Text(comments.isEmpty ? "Comments" : "Comments · \(comments.count)") }
     } footer: {
       if let error { Text(error).foregroundStyle(.red) }
     }
@@ -151,9 +161,15 @@ struct CommentThread: View {
       Button("View @\(comment.author.handle)", systemImage: "person.crop.circle") {
         router.open(.profile(handle: comment.author.handle))
       }
+      if !mine {
+        Button("Report", systemImage: "flag") { reporting = comment }
+      }
       if canDelete {
         Button(deleteLabel, systemImage: "trash", role: .destructive) { deleting = comment }
       }
+    }
+    .sheet(isPresented: Binding(get: { reporting?.id == comment.id }, set: { if !$0 { reporting = nil } })) {
+      ReportSheet(target: .comment(comment.id), owner: comment.author)
     }
     // On the row itself: a dialog on the whole section doesn't present
     // reliably from a List.
@@ -190,6 +206,7 @@ struct CommentThread: View {
 /// arrow inline on its right.
 struct CommentComposer: View {
   let entryId: UUID
+  var prompt = "Add a comment…"
 
   @Environment(AppSession.self) private var session
   @Environment(AppRouter.self) private var router
@@ -208,7 +225,7 @@ struct CommentComposer: View {
         Text("\(draft.count)/\(ReactionsAPI.commentMax)").font(.footnote).foregroundStyle(.secondary)
       }
       HStack(alignment: .bottom, spacing: Space.s) {
-        TextField("Comment", text: $draft, prompt: Text("Add a comment…"), axis: .vertical)
+        TextField("Comment", text: $draft, prompt: Text(prompt), axis: .vertical)
           .lineLimit(1...5)
           .focused($typing)
           .onChange(of: draft) { _, value in
@@ -253,3 +270,30 @@ struct CommentComposer: View {
     }
   }
 }
+
+/// A show's comments as a pull-up drawer, as on Instagram: opened from a feed
+/// post's comment button over the feed, at half height and dragged to full,
+/// with the comment box pinned to the bottom. Swipe down to close.
+struct CommentsSheet: View {
+  let entryId: UUID
+  let ownerId: UUID
+  let ownerHandle: String
+
+  var body: some View {
+    NavigationStack {
+      List {
+        CommentThread(entryId: entryId, ownerId: ownerId, inDrawer: true)
+      }
+      .listStyle(.plain)
+      .navigationTitle("Comments")
+      .navigationBarTitleDisplayMode(.inline)
+      .safeAreaInset(edge: .bottom) {
+        CommentComposer(entryId: entryId, prompt: "Add a comment for @\(ownerHandle)")
+      }
+    }
+    .presentationDetents([.medium, .large])
+    .presentationDragIndicator(.visible)
+    .presentationContentInteraction(.scrolls)
+  }
+}
+

@@ -8,6 +8,11 @@ export const metadata: Metadata = { title: "Admin" };
 
 const PAGES = [
   {
+    href: "/app/admin/reports",
+    title: "Reports",
+    text: "Shows, comments and profiles people have reported. Hide them or dismiss the report.",
+  },
+  {
     href: "/app/admin/import",
     title: "Import: compare models",
     text: "The import tool with a model picker. Reads each email or photo with several AI models side by side.",

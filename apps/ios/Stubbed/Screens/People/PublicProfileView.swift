@@ -11,6 +11,9 @@ struct PublicProfileView: View {
   @Environment(AppSession.self) private var session
   @Environment(AppRouter.self) private var router
   @State private var state: Loadable<PublicPages.ProfilePage?> = .loading
+  @State private var reporting = false
+  @State private var confirmBlock = false
+  @State private var blockError = false
 
   var body: some View {
     ScrollViewReader { proxy in
@@ -37,7 +40,15 @@ struct PublicProfileView: View {
               LabeledContent("Cities", value: stats.cities.formatted())
             }
           }
-          if page.stats == nil {
+          if page.viewer.blocked {
+            EmptyState(title: "You’ve blocked @\(page.profile.handle)", systemImage: "hand.raised") {
+              Text("You don’t see each other’s shows, and they can’t follow you, like or comment.")
+              Button("Unblock") { Task { await setBlocked(false, page.profile.id) } }
+                .buttonStyle(.bordered)
+                .padding(.top, Space.s)
+            }
+            .listRowBackground(Color.clear)
+          } else if page.stats == nil {
             EmptyState(title: "This profile is private", systemImage: "lock") { Text(privateMessage(page)) }
               .listRowBackground(Color.clear)
           } else if page.entries.isEmpty {
@@ -72,8 +83,46 @@ struct PublicProfileView: View {
     }
     .navigationTitle("@\(handle)")
     .navigationBarTitleDisplayMode(.inline)
+    .toolbar {
+      if case .loaded(let page?) = state, !page.viewer.isOwner {
+        ToolbarItem(placement: .primaryAction) {
+          Menu {
+            Button("Report", systemImage: "flag") { reporting = true }
+            if page.viewer.blocked {
+              Button("Unblock", systemImage: "hand.raised.slash") { Task { await setBlocked(false, page.profile.id) } }
+            } else {
+              Button("Block", systemImage: "hand.raised", role: .destructive) { confirmBlock = true }
+            }
+          } label: {
+            Label("More", systemImage: "ellipsis.circle")
+          }
+        }
+      }
+    }
+    .sheet(isPresented: $reporting) {
+      if case .loaded(let page?) = state {
+        ReportSheet(target: .profile(page.profile.id), owner: page.viewer.blocked ? nil : page.profile.person)
+      }
+    }
+    .confirmationDialog("Block @\(handle)?", isPresented: $confirmBlock, titleVisibility: .visible) {
+      Button("Block", role: .destructive) {
+        if case .loaded(let page?) = state { Task { await setBlocked(true, page.profile.id) } }
+      }
+    } message: {
+      Text("They won’t see your shows or find you, and they can’t follow you, like or comment. Any follows between you end. They aren’t told.")
+    }
+    .alert("Couldn’t update. Try again.", isPresented: $blockError) { Button("OK", role: .cancel) {} }
     .refreshable { await load() }
     .task(id: router.dataVersion) { await load() }
+  }
+
+  private func setBlocked(_ blocked: Bool, _ id: UUID) async {
+    do {
+      if blocked { try await Blocks.block(id) } else { try await Blocks.unblock(id) }
+      router.dataChanged()
+    } catch {
+      blockError = true
+    }
   }
 
   private func header(_ page: PublicPages.ProfilePage) -> some View {
@@ -102,7 +151,9 @@ struct PublicProfileView: View {
             .overlay(Circle().strokeBorder(Color(.secondarySystemGroupedBackground), lineWidth: 4))
             .padding(.top, -40)
           Spacer()
-          FollowButton(profile: p, viewer: page.viewer)
+          if !page.viewer.blocked {
+            FollowButton(profile: p, viewer: page.viewer)
+          }
         }
         VStack(alignment: .leading, spacing: 2) {
           HStack(spacing: Space.s) {
