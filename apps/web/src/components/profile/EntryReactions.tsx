@@ -13,8 +13,8 @@ const ACTION =
 
 // Like and comment, under a public entry, as on Hevy. Liking shows at once and
 // writes in the background; the refreshed page then brings the real counts.
-// For signed-out visitors, Like goes to the waitlist card on the same page
-// (sign-ups are off); the comment prompt under it has the sign-in link. Comments live on the
+// For signed-out visitors, Like goes to the join card on the same page; the
+// comment prompt under it has the sign-in link. Comments live on the
 // entry's page (`commentsHref`), or, with `onComment` (the feed, which shows
 // them inline), Comment calls it to open the comment box there. With `shareHref`
 // (your own shows), Share follows Comment and opens the share screen.
@@ -109,7 +109,7 @@ export function EntryReactions({
         <Link href={JOIN_ANCHOR} className={ACTION}>
           {heart}
           <span aria-hidden="true">{state.likes > 0 ? state.likes : ""}</span>
-          <span className="sr-only">Join the waitlist to like ({likeLabel})</span>
+          <span className="sr-only">Sign up to like ({likeLabel})</span>
         </Link>
       )}
       {onComment ? (

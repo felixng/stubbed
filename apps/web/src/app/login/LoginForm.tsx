@@ -6,10 +6,10 @@ import { useActionState, useId } from "react";
 import { Button } from "@/components/ui/Button";
 import { signInWithPassword, signInWithProvider, type LoginState } from "./actions";
 
-const field =
+export const field =
   "block min-h-[50px] w-full rounded-md border border-separator bg-surface px-4 text-body text-label shadow-sm placeholder:text-label-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
 
-const label = "text-subheadline font-medium text-label";
+export const label = "text-subheadline font-medium text-label";
 
 // Google, Apple, or email + password. The page the visitor was sent here from
 // (?next=/app/...) rides along so they land back on it.
@@ -31,30 +31,7 @@ export function LoginForm() {
           Your account and everything in it have been deleted.
         </p>
       )}
-      <div className="flex flex-col gap-3">
-        <form action={signInWithProvider}>
-          <input type="hidden" name="provider" value="apple" />
-          <input type="hidden" name="next" value={next} />
-          <Button type="submit" variant="neutral" className="w-full">
-            <AppleIcon />
-            Continue with Apple
-          </Button>
-        </form>
-        <form action={signInWithProvider}>
-          <input type="hidden" name="provider" value="google" />
-          <input type="hidden" name="next" value={next} />
-          <Button type="submit" variant="neutral" className="w-full">
-            <GoogleIcon />
-            Continue with Google
-          </Button>
-        </form>
-      </div>
-
-      <div className="flex items-center gap-3 text-footnote text-label-secondary">
-        <span className="h-px flex-1 bg-separator" />
-        or
-        <span className="h-px flex-1 bg-separator" />
-      </div>
+      <ProviderButtons next={next} />
 
       <form action={dispatch} className="flex flex-col gap-4">
         <input type="hidden" name="next" value={next} />
@@ -100,12 +77,44 @@ export function LoginForm() {
   );
 }
 
+// Apple or Google, on /login and /signup: either signs in, creating the
+// account the first time. Then the "or" before the email form.
+export function ProviderButtons({ next }: { next: string }) {
+  return (
+    <>
+      <div className="flex flex-col gap-3">
+        <form action={signInWithProvider}>
+          <input type="hidden" name="provider" value="apple" />
+          <input type="hidden" name="next" value={next} />
+          <Button type="submit" variant="neutral" className="w-full">
+            <AppleIcon />
+            Continue with Apple
+          </Button>
+        </form>
+        <form action={signInWithProvider}>
+          <input type="hidden" name="provider" value="google" />
+          <input type="hidden" name="next" value={next} />
+          <Button type="submit" variant="neutral" className="w-full">
+            <GoogleIcon />
+            Continue with Google
+          </Button>
+        </form>
+      </div>
+
+      <div className="flex items-center gap-3 text-footnote text-label-secondary">
+        <span className="h-px flex-1 bg-separator" />
+        or
+        <span className="h-px flex-1 bg-separator" />
+      </div>
+    </>
+  );
+}
+
 const providerErrors: Record<string, string> = {
-  google:
-    "Couldn’t sign in with Google. Use the Google account that matches your Stubbed email.",
-  // "Hide My Email" gives Stubbed a relay address, which matches no account.
-  apple:
-    "Couldn’t sign in with Apple. Use the Apple Account that matches your Stubbed email, and choose “Share My Email”.",
+  google: "Couldn’t sign in with Google. Try again, or use your email.",
+  apple: "Couldn’t sign in with Apple. Try again, or use your email.",
+  "confirm-link": "That confirmation link has expired or was already used. Sign in, or sign up again for a new one.",
+  "reset-link": "That reset link has expired or was already used. Ask for a new one below.",
 };
 
 // Apple's logo in the label colour, as Apple's sign-in guidelines allow on a

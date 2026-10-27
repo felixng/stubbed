@@ -15,7 +15,7 @@ import { getReactions, listComments, listLikers, NO_REACTIONS } from "@/lib/reac
 // Public entry page, the link behind a shared card: the card itself (drawn
 // live from public data, so the page opens on what was shared), then only what the
 // card lacks: the note, likes and comments, and who logged it with a link to
-// the rest of their diary. The layout adds the waitlist card after it for
+// the rest of their diary. The layout adds the join card after it for
 // signed-out visitors. Public, logged entries on public profiles (RLS, via
 // the publishable key), plus, for a signed-in viewer, what their session may
 // see: a private profile's public entries, to its approved followers and

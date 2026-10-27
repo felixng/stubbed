@@ -12,7 +12,7 @@ export function GET() {
     "",
     "Stubbed is a theatre diary app for theatre regulars, like a film diary but for live theatre. People track the shows they see (musicals, plays, opera, dance, comedy), rate them in half stars, add a note, group shows into trips, and share cards of a show or trip to Instagram. It covers any theatre, anywhere; shows and venues that aren't listed are added by users.",
     "",
-    "Status: private beta. Sign-ups are not open yet; there is a waitlist on the home page.",
+    "Status: public beta. Anyone can sign up free on the website.",
     "",
     "## Questions",
     "",
@@ -20,7 +20,8 @@ export function GET() {
     "",
     "## Links",
     "",
-    `- [Home page and waitlist](${SITE_URL.href})`,
+    `- [Home page](${SITE_URL.href})`,
+    `- [Sign up](${new URL("/signup", SITE_URL).href})`,
     `- [Questions](${new URL("/faq", SITE_URL).href})`,
     "",
   ].join("\n");

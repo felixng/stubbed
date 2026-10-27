@@ -21,9 +21,8 @@ export function About() {
       </p>
       <p className="text-body text-label-secondary">
         Stubbed works for any theatre, anywhere. If a show or venue isn’t
-        listed yet, you add it as you go. It is in private beta while we get
-        the basics right, so sign-ups aren’t open yet. Join the waitlist to
-        hear when they are.
+        listed yet, you add it as you go. It is in public beta, free to join,
+        and getting better every week.
       </p>
     </div>
   );

@@ -9,8 +9,8 @@ import { DeleteCommentButton } from "./DeleteCommentButton";
 import { JoinPrompt } from "./JoinPrompt";
 
 // The comments under a public entry on its page, oldest first, with who liked
-// it above them and a box to add one. Signed-out visitors get the waitlist
-// (sign-ups are off) and a quiet sign-in link. The entry's owner can delete any comment; others delete their own.
+// it above them and a box to add one. Signed-out visitors get a sign-up
+// link and a quiet sign-in link. The entry's owner can delete any comment; others delete their own.
 // Signed-in visitors can report anyone else's.
 export function CommentThread({
   entryId,

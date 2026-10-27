@@ -7,8 +7,9 @@ import { safeNext } from "@/lib/safe-next";
 
 // Refreshes the Supabase session cookie once per navigation, before any
 // Server Component reads it, and guards the owner app (#13): /app/* without a
-// session goes to /login, and the landing page or /login with a session goes
-// to /app. Admin pages (/app/admin/*) are a 404 for everyone else, before
+// session goes to /login, and the landing page, /login or /signup with a
+// session goes to /app. /reset-password needs the session its email link
+// gives. Admin pages (/app/admin/*) are a 404 for everyone else, before
 // anything renders.
 // Signed-in users without a handle go to /welcome to set up their profile
 // first. This is a convenience, not the security boundary: RLS in Postgres
@@ -54,7 +55,10 @@ export async function updateSession(request: NextRequest) {
     // A path no page answers, so Next renders its 404 with a 404 status.
     return withCookies(NextResponse.rewrite(new URL("/app-admin-not-found", request.url)), response);
   }
-  if (userId && (pathname === "/" || pathname === "/login")) {
+  if (!userId && pathname === "/reset-password") {
+    return redirectWithCookies(new URL("/login?error=reset-link", request.url), response);
+  }
+  if (userId && (pathname === "/" || pathname === "/login" || pathname === "/signup")) {
     return redirectWithCookies(new URL("/app", request.url), response);
   }
 

@@ -498,3 +498,11 @@ App Review guideline 1.2 asks apps with user content to let people report conten
 - **Blocking hides people from each other both ways.** Postgres decides (`blocks`, `profile_is_visible`, the follows, likes and comments policies): a blocked person can't see the blocker's profile, shows, likes or comments, and can't follow them; the blocker sees a "You've blocked @x" page with Unblock. Blocking ends follows both ways and removes the blocked person's likes on the blocker's shows. They aren't told. The web's public pages read through the publishable key, so they also ask with the visitor's session and show a 404 to someone who's been blocked.
 - **Reports** cover a show, a comment or a profile, with a reason, an optional note and "Also block". Only admins read them, at `/app/admin/reports`, where Hide deletes the comment or makes the show or profile private, and Dismiss leaves it. A report keeps a snapshot of the text, so it still makes sense after an edit.
 - **Not yet:** an email to the owner for each new report (needs a Resend API key) and a way to tell reporters the outcome. Until then, check `/app/admin/reports` daily.
+
+### 2026-10-27: Sign-up is open to everyone
+Owner's call ("user should be able to sign up going forwards"), answering #149's open question: open to everyone at once, not waitlist batches; no captcha unless abuse shows up.
+- **Web:** `/signup` (Apple, Google, or email + password of at least 8 characters), `/forgot-password` and `/reset-password`. Email accounts confirm by email first.
+- **iOS:** "Create an account" and "Forgot your password?" sheets on Sign in. The confirmation email carries a 6-digit code as well as the link, so the app confirms without leaving it; the reset link opens the web.
+- **Email links** go to `/auth/confirm` with a token hash (`supabase/templates/`), not a PKCE code, so they work in any browser, including a phone's mail app after signing up in the iOS app.
+- **Waitlist retired:** the landing page, join cards and prompts now lead to sign-up, and the Kit form code is removed. The list stays in Kit (and the old `waitlist` table) for one "we're open" email; `/confirmed` now points old links at sign-up.
+- **Hosted setup (owner):** turn on sign-ups and email confirmation, paste the two templates into Authentication → Emails, and check Resend's free 100 emails a day is enough.

@@ -4,7 +4,8 @@ import Supabase
 import SwiftUI
 
 /// Sign in with Apple, Google, or email + password, like the web's /login.
-/// Sign-ups are off in Supabase Auth, so only existing accounts get in.
+/// Apple and Google create the account the first time; an email account is
+/// created in the Create account sheet (SignUpView).
 struct SignInView: View {
   private enum Field { case email, password }
 
@@ -15,6 +16,8 @@ struct SignInView: View {
   @State private var error: String?
   @State private var busy = false
   @State private var nonce = ""
+  @State private var creating = false
+  @State private var resetting = false
   @FocusState private var focus: Field?
 
   var body: some View {
@@ -97,7 +100,21 @@ struct SignInView: View {
           .buttonStyle(.borderedProminent)
           .controlSize(.large)
           .disabled(busy)
+
+          Button("Forgot your password?") { resetting = true }
+            .font(.subheadline)
+            .frame(maxWidth: .infinity)
         }
+
+        VStack(spacing: Space.s) {
+          Text("New to Stubbed?")
+            .foregroundStyle(.secondary)
+          Button("Create an account") { creating = true }
+            .buttonStyle(.bordered)
+            .controlSize(.large)
+        }
+        .font(.subheadline)
+        .padding(.bottom, Space.xxl)
       }
       .frame(maxWidth: 380)
       .padding(.horizontal, Space.l)
@@ -105,6 +122,8 @@ struct SignInView: View {
     }
     .scrollDismissesKeyboard(.interactively)
     .background(Color(.systemGroupedBackground))
+    .sheet(isPresented: $creating) { SignUpView() }
+    .sheet(isPresented: $resetting) { ForgotPasswordView(email: email) }
     .onChange(of: error) { _, message in
       if let message { AccessibilityNotification.Announcement(message).post() }
     }
@@ -184,9 +203,7 @@ struct SignInView: View {
     }
   }
 
-  // "Hide My Email" gives Stubbed a relay address, which matches no account.
-  private static let appleError =
-    "Couldn’t sign in with Apple. Use the Apple Account that matches your Stubbed email, and choose “Share My Email”."
+  private static let appleError = "Couldn’t sign in with Apple. Try again, or use your email."
 
   static func randomNonce(length: Int = 32) -> String {
     let characters = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
@@ -214,7 +231,7 @@ struct SignInView: View {
       // Closed the sheet: nothing to say.
     } catch {
       Log.app.error("Google sign-in failed: \(error.localizedDescription, privacy: .public)")
-      self.error = "Couldn’t sign in with Google. Use the Google account that matches your Stubbed email."
+      self.error = "Couldn’t sign in with Google. Try again, or use your email."
     }
   }
 }
