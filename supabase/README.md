@@ -68,9 +68,12 @@ Hosted project, once:
    - In the Apple Developer portal → Certificates, Identifiers & Profiles → Identifiers: create an **App ID** with "Sign in with Apple" ticked, then a **Services ID** (e.g. `app.getstubbed.web`). The Services ID is the web client ID.
    - Configure the Services ID's Sign in with Apple: primary App ID = the one above; domain = `<project-ref>.supabase.co`; return URL = `https://<project-ref>.supabase.co/auth/v1/callback`.
    - Keys → create a key with "Sign in with Apple", download the `.p8` (only downloadable once) and note its Key ID and your Team ID.
-   - Turn the `.p8` into a client secret (a signed JWT) with the generator in Supabase's "Login with Apple" guide.
-   - In Supabase: Authentication → Sign In / Providers → Apple: enable it, Client IDs = the Services ID (add the iOS bundle ID here too when the app ships), Secret Key = the generated JWT.
-   - **The secret expires after at most 6 months.** Apple sign-in on the web stops working until you generate a new one from the same `.p8`. Put a reminder in your calendar.
+   - In Supabase: Authentication → Sign In / Providers → Apple: enable it, Client IDs = the Services ID, then the iOS bundle ID `app.getstubbed` (comma-separated). Leave Secret Key to the workflow below.
+   - **The secret (a JWT signed with the `.p8`) expires after at most 6 months**, and hosted Supabase only takes the finished secret. The **Rotate Apple sign-in secret** workflow (`.github/workflows/rotate-apple-secret.yml`) makes a new one on the 1st of each month, checks it with Apple, saves it through the Management API and checks that Apple sign-in starts. Set it up once in GitHub → Settings → Secrets and variables → Actions:
+     - Variables: `APPLE_KEY_ID` (the key's ID), `APPLE_SERVICES_ID` (e.g. `app.getstubbed.web`).
+     - Secrets: `APPLE_PRIVATE_KEY` (the whole `.p8` file, including the BEGIN/END lines), `SUPABASE_ACCESS_TOKEN` (supabase.com → Account → Access Tokens; it can change any project on the account, so keep it only here).
+     - Then Actions → Rotate Apple sign-in secret → Run workflow, which sets the first secret. Run it again by hand after changing the key. If a run fails, GitHub emails you; the current secret still has about 5 months left.
+     - Team ID (`AAW3XNQ6D3`) and the project ref are in the workflow file.
 5. **Redirect URLs:** Authentication → URL Configuration: Site URL = the production URL; add `https://<production-domain>/auth/callback` (and `http://localhost:3000/auth/callback` for local dev against the hosted project) to Redirect URLs.
 
 Locally, use email + password: add a user in Studio (http://127.0.0.1:54323). Google and Apple aren't configured in the local stack.
