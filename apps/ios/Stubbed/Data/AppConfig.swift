@@ -8,6 +8,8 @@ struct AppConfig: Sendable {
   let webURL: URL
   /// Google's iOS OAuth client; nil until it's set in Config/*.xcconfig.
   let googleClientID: String?
+  /// Meta's app ID for sharing to Instagram Stories; nil until it's set.
+  let facebookAppID: String?
 
   static let current = AppConfig(info: Bundle.main.infoDictionary ?? [:])
 
@@ -28,5 +30,6 @@ struct AppConfig: Sendable {
     supabasePublishableKey = value("SupabasePublishableKey")
     webURL = url("WebURL")
     googleClientID = (info["GoogleIOSClientID"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+    facebookAppID = (info["FacebookAppID"] as? String).flatMap { $0.isEmpty ? nil : $0 }
   }
 }
