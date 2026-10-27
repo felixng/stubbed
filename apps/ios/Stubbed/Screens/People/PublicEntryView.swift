@@ -92,6 +92,7 @@ struct CommentThread: View {
   @State private var likes = 0
   @State private var error: String?
   @State private var deleting: Comment?
+  @State private var reporting: Comment?
 
   var body: some View {
     Section {
@@ -160,9 +161,15 @@ struct CommentThread: View {
       Button("View @\(comment.author.handle)", systemImage: "person.crop.circle") {
         router.open(.profile(handle: comment.author.handle))
       }
+      if !mine {
+        Button("Report", systemImage: "flag") { reporting = comment }
+      }
       if canDelete {
         Button(deleteLabel, systemImage: "trash", role: .destructive) { deleting = comment }
       }
+    }
+    .sheet(isPresented: Binding(get: { reporting?.id == comment.id }, set: { if !$0 { reporting = nil } })) {
+      ReportSheet(target: .comment(comment.id), owner: comment.author)
     }
     // On the row itself: a dialog on the whole section doesn't present
     // reliably from a List.

@@ -145,6 +145,17 @@ struct SettingsView: View {
 
   private var accountSection: some View {
     Section {
+      NavigationLink(value: AppRouter.Route.blockedAccounts) {
+        Label("Blocked accounts", systemImage: "hand.raised")
+      }
+      // A published way to reach us (App Review 1.2), also used for reports.
+      Link(destination: URL(string: "mailto:support@getstubbed.app")!) {
+        HStack {
+          Label("Contact us", systemImage: "envelope").foregroundStyle(.primary)
+          Spacer()
+          Text(verbatim: "support@getstubbed.app").font(.subheadline).foregroundStyle(.secondary)
+        }
+      }
       ForEach([("Privacy", "privacy"), ("Terms", "terms"), ("FAQ", "faq")], id: \.1) { title, path in
         Link(destination: AppConfig.current.webURL.appendingPathComponent(path)) {
           HStack {

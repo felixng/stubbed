@@ -24,6 +24,36 @@ internal enum PublicSchema {
     case `public` = "public"
     case `private` = "private"
   }
+  internal struct BlocksSelect: Codable, Hashable, Sendable {
+    internal let blockedId: UUID
+    internal let blockerId: UUID
+    internal let createdAt: String
+    internal enum CodingKeys: String, CodingKey {
+      case blockedId = "blocked_id"
+      case blockerId = "blocker_id"
+      case createdAt = "created_at"
+    }
+  }
+  internal struct BlocksInsert: Codable, Hashable, Sendable {
+    internal let blockedId: UUID
+    internal let blockerId: UUID?
+    internal let createdAt: String?
+    internal enum CodingKeys: String, CodingKey {
+      case blockedId = "blocked_id"
+      case blockerId = "blocker_id"
+      case createdAt = "created_at"
+    }
+  }
+  internal struct BlocksUpdate: Codable, Hashable, Sendable {
+    internal let blockedId: UUID?
+    internal let blockerId: UUID?
+    internal let createdAt: String?
+    internal enum CodingKeys: String, CodingKey {
+      case blockedId = "blocked_id"
+      case blockerId = "blocker_id"
+      case createdAt = "created_at"
+    }
+  }
   internal struct CollectionsSelect: Codable, Hashable, Sendable {
     internal let createdAt: String
     internal let endDate: String?
@@ -406,6 +436,84 @@ internal enum PublicSchema {
       case id = "id"
       case isPrivate = "is_private"
       case link = "link"
+    }
+  }
+  internal struct ReportsSelect: Codable, Hashable, Sendable {
+    internal let createdAt: String
+    internal let id: UUID
+    internal let note: String?
+    internal let reason: String
+    internal let reporterId: UUID
+    internal let resolution: String?
+    internal let resolvedAt: String?
+    internal let snapshot: String?
+    internal let targetId: UUID
+    internal let targetOwner: UUID?
+    internal let targetType: String
+    internal enum CodingKeys: String, CodingKey {
+      case createdAt = "created_at"
+      case id = "id"
+      case note = "note"
+      case reason = "reason"
+      case reporterId = "reporter_id"
+      case resolution = "resolution"
+      case resolvedAt = "resolved_at"
+      case snapshot = "snapshot"
+      case targetId = "target_id"
+      case targetOwner = "target_owner"
+      case targetType = "target_type"
+    }
+  }
+  internal struct ReportsInsert: Codable, Hashable, Sendable {
+    internal let createdAt: String?
+    internal let id: UUID?
+    internal let note: String?
+    internal let reason: String
+    internal let reporterId: UUID?
+    internal let resolution: String?
+    internal let resolvedAt: String?
+    internal let snapshot: String?
+    internal let targetId: UUID
+    internal let targetOwner: UUID?
+    internal let targetType: String
+    internal enum CodingKeys: String, CodingKey {
+      case createdAt = "created_at"
+      case id = "id"
+      case note = "note"
+      case reason = "reason"
+      case reporterId = "reporter_id"
+      case resolution = "resolution"
+      case resolvedAt = "resolved_at"
+      case snapshot = "snapshot"
+      case targetId = "target_id"
+      case targetOwner = "target_owner"
+      case targetType = "target_type"
+    }
+  }
+  internal struct ReportsUpdate: Codable, Hashable, Sendable {
+    internal let createdAt: String?
+    internal let id: UUID?
+    internal let note: String?
+    internal let reason: String?
+    internal let reporterId: UUID?
+    internal let resolution: String?
+    internal let resolvedAt: String?
+    internal let snapshot: String?
+    internal let targetId: UUID?
+    internal let targetOwner: UUID?
+    internal let targetType: String?
+    internal enum CodingKeys: String, CodingKey {
+      case createdAt = "created_at"
+      case id = "id"
+      case note = "note"
+      case reason = "reason"
+      case reporterId = "reporter_id"
+      case resolution = "resolution"
+      case resolvedAt = "resolved_at"
+      case snapshot = "snapshot"
+      case targetId = "target_id"
+      case targetOwner = "target_owner"
+      case targetType = "target_type"
     }
   }
   internal struct ShowsSelect: Codable, Hashable, Sendable {

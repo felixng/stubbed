@@ -26,6 +26,7 @@ struct PostCard: View {
   @State private var writing = false
   @State private var likeError: String?
   @State private var showingComments = false
+  @State private var reporting = false
 
   private var route: AppRouter.Route { mine ? .entry(entry.id) : .publicEntry(entry.id) }
   private var date: String { Day.formatPost(entry.date) }
@@ -42,6 +43,13 @@ struct PostCard: View {
       }
     }
     .onChange(of: reactions) { _, _ in shown = nil }
+    // Long press: report someone else's show (App Review 1.2).
+    .contextMenu {
+      if !mine {
+        Button("Report", systemImage: "flag") { reporting = true }
+      }
+    }
+    .sheet(isPresented: $reporting) { ReportSheet(target: .entry(entry.id), owner: owner) }
     .sheet(isPresented: $showingComments) {
       CommentsSheet(entryId: entry.id, ownerId: owner.id, ownerHandle: owner.handle)
     }

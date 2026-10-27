@@ -7,6 +7,8 @@ struct Viewer: Hashable, Sendable {
   enum Status: String, Sendable { case none, pending, accepted }
   var isOwner: Bool
   var status: Status
+  /// You've blocked them (#144).
+  var blocked = false
 }
 
 /// What other people see: public profiles, entries and trips, like the
@@ -47,7 +49,13 @@ enum PublicPages {
     guard let profile = rows.first else { return nil }
     async let viewer = viewer(of: profile.id, me: me)
     async let follows = Profiles.followCounts(profile.id)
-    let (v, f) = await (viewer, follows)
+    async let blocked = profile.id == me ? false : Blocks.isBlocked(profile.id)
+    var (v, f) = await (viewer, follows)
+    v.blocked = await blocked
+    // Someone you've blocked: the header and Unblock, nothing else.
+    if v.blocked {
+      return ProfilePage(profile: profile, viewer: v, follows: f, stats: nil, entries: [], photos: [:], reactions: [:])
+    }
 
     // A private profile shows its header only, unless the viewer is approved
     // (or it's their own).
