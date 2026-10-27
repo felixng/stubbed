@@ -152,7 +152,7 @@ struct ShareCarousel: View {
                 .foregroundStyle(.white)
             }
           } perform: {
-            share(withText: false)
+            Task { await shareToStories() }
           }
           .disabled(cards == nil)
           action("More", systemImage: "square.and.arrow.up") { share(withText: true) }
@@ -251,8 +251,20 @@ struct ShareCarousel: View {
     }
   }
 
-  /// Image only for Stories: Instagram's share sheet entry drops the image
-  /// when text comes with it.
+  /// Straight to Instagram's story composer when it's installed and set up;
+  /// otherwise the share sheet with only the image (Instagram's entry there
+  /// drops the image when text comes with it).
+  private func shareToStories() async {
+    guard let current else { return }
+    let clear = transparent ? current.clear?.image : nil
+    if await InstagramStories.share(clear ?? current.image, transparent: clear != nil) {
+      notice = nil
+      record("stories")
+    } else {
+      share(withText: false)
+    }
+  }
+
   private func share(withText: Bool) {
     guard let file = currentFile else { return }
     notice = nil
