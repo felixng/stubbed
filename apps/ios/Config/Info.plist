@@ -21,6 +21,10 @@
 			</array>
 		</dict>
 	</array>
+	<!-- Export compliance: only standard HTTPS (exempt), so App Store
+	     Connect doesn't ask on every upload. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<!-- Lets Debug builds reach local Supabase over http on 127.0.0.1. -->
