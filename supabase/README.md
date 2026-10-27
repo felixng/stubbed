@@ -54,16 +54,21 @@ A trip (`collections.kind = 'trip'`) needs a start and end date, and holds only 
 
 ## Auth (#13)
 
-Owner-only sign-in with **Apple**, **Google** or **email + password**. Sign-ups are off (`enable_signup = false` here and in the hosted project), so all three only sign in existing users. Apple and Google get in when the account's email matches an existing user (Supabase links the identity automatically). With Apple, that means choosing "Share My Email": "Hide My Email" sends a relay address that matches no one.
+Sign-in with **Apple**, **Google** or **email + password**. Sign-ups are open (#149): Apple and Google create an account the first time, and link to an existing account with the same email (Supabase does that automatically). Email accounts confirm by a link or code (`templates/`).
 
 Hosted project, once:
 
 1. **Owner user:** Authentication → Users → Add user → Create new user, with your email, a password and "Auto confirm user" ticked. If you already invited yourself, set a password from the same screen instead.
-2. **Sign-ups off:** Authentication → Sign In / Providers → "Allow new users to sign up" off.
+2. **Sign-ups on:** Authentication → Sign In / Providers → "Allow new users to sign up" on, and Email → "Confirm email" on. Paste `templates/confirmation.html` and `templates/recovery.html` into Authentication → Emails.
 3. **Google:**
    - In Google Cloud Console (free): APIs & Services → OAuth consent screen (External; add your email as a test user, or publish it, since basic scopes need no review), then Credentials → Create OAuth client ID → Web application.
    - Authorised redirect URI: `https://<project-ref>.supabase.co/auth/v1/callback`.
    - In Supabase: Authentication → Sign In / Providers → Google: enable it, paste the client ID and secret.
+   - **Google's own button and sheet (#179, #180)**, so Google names Stubbed and getstubbed.app instead of `<project-ref>.supabase.co`:
+     - Web client → Authorised JavaScript origins: `https://getstubbed.app` (and `http://localhost:3000`). Set `NEXT_PUBLIC_GOOGLE_CLIENT_ID` in Vercel to the web client ID.
+     - Create an **iOS** OAuth client for bundle ID `app.getstubbed`. Put its client ID in `apps/ios/Config/Shared.xcconfig` (`GOOGLE_IOS_CLIENT_ID`) and the reversed ID (`com.googleusercontent.apps.…`) in `GOOGLE_IOS_URL_SCHEME`.
+     - Supabase → Google → Client IDs: the web client ID, then the iOS one, comma-separated. Leave "Skip nonce check" off.
+     - OAuth consent screen → Branding: app name "Stubbed", logo, home page and privacy links, authorised domain `getstubbed.app`; submit for brand verification so the name shows.
 4. **Apple** (needs the Apple Developer Program, $99/yr):
    - In the Apple Developer portal → Certificates, Identifiers & Profiles → Identifiers: create an **App ID** with "Sign in with Apple" ticked, then a **Services ID** (e.g. `app.getstubbed.web`). The Services ID is the web client ID.
    - Configure the Services ID's Sign in with Apple: primary App ID = the one above; domain = `<project-ref>.supabase.co`; return URL = `https://<project-ref>.supabase.co/auth/v1/callback`.

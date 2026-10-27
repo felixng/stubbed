@@ -506,3 +506,9 @@ Owner's call ("user should be able to sign up going forwards"), answering #149's
 - **Email links** go to `/auth/confirm` with a token hash (`supabase/templates/`), not a PKCE code, so they work in any browser, including a phone's mail app after signing up in the iOS app.
 - **Waitlist retired:** the landing page, join cards and prompts now lead to sign-up, and the Kit form code is removed. The list stays in Kit (and the old `waitlist` table) for one "we're open" email; `/confirmed` now points old links at sign-up.
 - **Hosted setup (owner):** turn on sign-ups and email confirmation, paste the two templates into Authentication → Emails, and check Resend's free 100 emails a day is enough.
+
+### 2026-10-27: Google's own sign-in button and sheet, so Google names Stubbed
+Owner's call (#179, #180): Google's account chooser said "to continue to tvjkuzyrqsikpmryqymy.supabase.co", which looks unfamiliar or phishy, because Google names the domain its redirect returns to. A Supabase custom domain would fix it but is paid.
+- **Web:** Google Identity Services' button on `/login` and `/signup` (its script from `accounts.google.com`, no npm dependency). It returns an ID token in a popup, which the browser client passes to `signInWithIdToken` with a nonce (Google gets its SHA-256, Supabase the raw value). A server action then copies a new account's Google photo, as `/auth/callback` does. Without `NEXT_PUBLIC_GOOGLE_CLIENT_ID` the old redirect flow stays. Trade-off: Google's button is its own design (40px, its font), not ours.
+- **iOS:** reverses "iOS Google sign-in without the GoogleSignIn SDK" (2026-10-14). Adds the `GoogleSignIn-iOS` package (owner's go-ahead) for Google's native sheet, then `signInWithIdToken` with a nonce, like Apple. Without `GOOGLE_IOS_CLIENT_ID` it falls back to the browser-sheet flow, so `stubbed://auth-callback` stays.
+- Apple keeps its current flows on both.

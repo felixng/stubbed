@@ -1,5 +1,6 @@
 import AuthenticationServices
 import CryptoKit
+import GoogleSignIn
 import Supabase
 import SwiftUI
 
@@ -217,11 +218,16 @@ struct SignInView: View {
 
   // MARK: - Google
 
-  /// Google's consent page in a secure browser sheet, back to the app via
-  /// stubbed://auth-callback. No Google SDK needed.
+  /// Google's own sign-in sheet (#180), which names Stubbed and google.com.
+  /// Its ID token goes to Supabase with the nonce, as for Apple. Without a
+  /// client ID configured, Google's page through Supabase instead.
   private func signInWithGoogle() async {
     busy = true
     defer { busy = false }
+    if let clientID = AppConfig.current.googleClientID {
+      await signInWithGoogleSDK(clientID: clientID)
+      return
+    }
     do {
       try await supabase.auth.signInWithOAuth(provider: .google, redirectTo: authCallbackURL) { session in
         session.prefersEphemeralWebBrowserSession = false
@@ -233,6 +239,39 @@ struct SignInView: View {
       Log.app.error("Google sign-in failed: \(error.localizedDescription, privacy: .public)")
       self.error = "Couldn’t sign in with Google. Try again, or use your email."
     }
+  }
+
+  private func signInWithGoogleSDK(clientID: String) async {
+    guard let presenter = Self.topViewController() else { return }
+    let nonce = Self.randomNonce()
+    GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientID)
+    do {
+      let result = try await GIDSignIn.sharedInstance.signIn(
+        withPresenting: presenter, hint: nil, additionalScopes: nil, nonce: Self.sha256(nonce))
+      guard let idToken = result.user.idToken?.tokenString else {
+        error = "Couldn’t sign in with Google. Try again, or use your email."
+        return
+      }
+      try await supabase.auth.signInWithIdToken(
+        credentials: .init(
+          provider: .google, idToken: idToken, accessToken: result.user.accessToken.tokenString, nonce: nonce))
+      error = nil
+    } catch let failure as GIDSignInError where failure.code == .canceled {
+      // Closed the sheet: nothing to say.
+    } catch {
+      Log.app.error("Google sign-in failed: \(error.localizedDescription, privacy: .public)")
+      self.error = "Couldn’t sign in with Google. Try again, or use your email."
+    }
+  }
+
+  /// The view controller to present Google's sheet from.
+  @MainActor private static func topViewController() -> UIViewController? {
+    let scene = UIApplication.shared.connectedScenes
+      .compactMap { $0 as? UIWindowScene }
+      .first { $0.activationState == .foregroundActive }
+    var top = scene?.keyWindow?.rootViewController
+    while let presented = top?.presentedViewController { top = presented }
+    return top
   }
 }
 
