@@ -13,15 +13,9 @@ struct EntryView: View {
   @State private var photo: URL?
   @State private var cards: [RenderedCard]?
   @State private var cardsFailed = false
-  @State private var share: ShareInfo?
+  /// The caption and public page for the share screen.
+  @State private var share: EntryShare.Info?
   @State private var reactions: Reactions?
-
-  /// What the share screen needs beyond the entry: the caption and the
-  /// public page, when there is one.
-  struct ShareInfo {
-    let text: String
-    let link: URL?
-  }
   @State private var sharing = false
   /// After saving a new show the Share screen opens once, as Hevy's does.
   @State private var offeredShare = false
@@ -189,30 +183,12 @@ struct EntryView: View {
     }
   }
 
-  /// Draws the cards on the device, like the web: the photo never leaves
-  /// it, and the counts come from Postgres.
+  /// Draws the cards on the device (see `EntryShare.prepare`).
   private func drawCards(_ entry: Entry) async {
-    cardsFailed = false
-    do {
-      async let stats = ShareCards.stats(entry.id)
-      async let owner = Profiles.profile(entry.userId)
-      async let image = ShareCards.image(photo)
-      let (s, profile, picture) = try await (stats, owner, image)
-      let data = EntryCardData(
-        title: entry.show.title, venue: entry.venue?.name, whereText: entry.whereText ?? "",
-        date: Day.format(entry.date), year: Int(entry.date.prefix(4)) ?? 0, rating: entry.rating,
-        showOfYear: s.show_of_year, venueVisit: s.venue_visit, timesSeen: s.times_seen, handle: profile.handle)
-      let caption = entry.venue.map { "\(entry.show.title) at \($0.name)" } ?? entry.show.title
-      let isPublic = entry.visibility == .public && !profile.isPrivate
-      share = ShareInfo(
-        text: "\(caption). Tracked on Stubbed \(stubbedInstagram)",
-        link: isPublic ? AppConfig.current.webURL.appendingPathComponent("e/\(entry.id.uuidString.lowercased())") : nil)
-      cards = try ShareCards.entryCards(data, photo: picture)
-    } catch {
-      Log.app.error("Drawing the share cards failed: \(error.localizedDescription, privacy: .public)")
-      cardsFailed = true
-      if share == nil { share = ShareInfo(text: entry.show.title, link: nil) }
-    }
+    let prepared = await EntryShare.prepare(entry, photo: photo)
+    share = prepared.info
+    cards = prepared.cards
+    cardsFailed = prepared.cards == nil
   }
 
   private func delete(_ entry: Entry) async {
