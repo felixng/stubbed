@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { ReportButton } from "@/components/moderation/ReportDialog";
 import type { FollowPerson } from "@/lib/follows";
 import { timeAgo, type Comment } from "@/lib/reactions";
 import { Avatar } from "./Avatar";
@@ -10,6 +11,7 @@ import { JoinPrompt } from "./JoinPrompt";
 // The comments under a public entry on its page, oldest first, with who liked
 // it above them and a box to add one. Signed-out visitors get the waitlist
 // (sign-ups are off) and a quiet sign-in link. The entry's owner can delete any comment; others delete their own.
+// Signed-in visitors can report anyone else's.
 export function CommentThread({
   entryId,
   ownerId,
@@ -52,7 +54,13 @@ export function CommentThread({
       ) : (
         <ul className="flex flex-col gap-4">
           {comments.map((c) => (
-            <CommentItem key={c.id} comment={c} canDelete={viewerId === c.author.id || viewerId === ownerId} mine={viewerId === c.author.id} />
+            <CommentItem
+              key={c.id}
+              comment={c}
+              canDelete={viewerId === c.author.id || viewerId === ownerId}
+              mine={viewerId === c.author.id}
+              canReport={Boolean(viewerId) && viewerId !== c.author.id}
+            />
           ))}
         </ul>
       )}
@@ -71,11 +79,13 @@ export function CommentItem({
   comment,
   canDelete,
   mine,
+  canReport = false,
   onDeleted,
 }: {
   comment: Comment;
   canDelete: boolean;
   mine: boolean;
+  canReport?: boolean;
   onDeleted?: () => void;
 }) {
   const { author } = comment;
@@ -95,6 +105,7 @@ export function CommentItem({
         </p>
         <p className="text-body break-words whitespace-pre-line text-label">{comment.body}</p>
       </div>
+      {canReport && <ReportButton target={{ type: "comment", id: comment.id }} owner={author} />}
       {canDelete && <DeleteCommentButton commentId={comment.id} mine={mine} onDeleted={onDeleted} />}
     </li>
   );

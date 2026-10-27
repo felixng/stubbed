@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { DeleteAccountButton } from "@/components/app/DeleteAccountButton";
+import { BlockedAccounts, type BlockedPerson } from "@/components/moderation/BlockedAccounts";
 import { ProfileForm } from "@/components/app/ProfileForm";
 import { BackLink } from "@/components/ui/BackLink";
 import { getOwnProfile, ownerContext } from "@/lib/supabase/data";
@@ -27,8 +28,15 @@ async function DeleteAccount() {
   return profile?.handle ? <DeleteAccountButton handle={profile.handle} /> : null;
 }
 
+async function Blocked() {
+  const { supabase, userId } = await ownerContext();
+  if (!userId) return null;
+  const { data } = await supabase.rpc("my_blocks");
+  return <BlockedAccounts people={(data ?? []) as BlockedPerson[]} />;
+}
+
 // Everything on the public profile (/@handle) and whether it is private,
-// then account deletion. Reached from "Edit profile" on the Profile tab.
+// then blocked accounts, help, and account deletion. Reached from "Edit profile" on the Profile tab.
 export default function SettingsPage() {
   return (
     <section className="flex flex-col gap-5">
@@ -39,6 +47,28 @@ export default function SettingsPage() {
       <Suspense fallback={loading}>
         <Form />
       </Suspense>
+      <section aria-labelledby="blocked-heading" className="flex flex-col gap-2 border-t border-separator pt-5">
+        <h2 id="blocked-heading" className="text-title-2 font-display text-label">
+          Blocked accounts
+        </h2>
+        <p className="text-subheadline text-label-secondary">
+          You and the people you block can’t see each other’s shows, likes or comments.
+        </p>
+        <Suspense fallback={loading}>
+          <Blocked />
+        </Suspense>
+      </section>
+      <section aria-labelledby="help-heading" className="flex flex-col gap-2 border-t border-separator pt-5">
+        <h2 id="help-heading" className="text-title-2 font-display text-label">
+          Help
+        </h2>
+        <p className="text-subheadline text-label-secondary">
+          Questions, problems or something to report?{" "}
+          <a href="mailto:support@getstubbed.app" className="font-semibold text-tint-text underline-offset-2 hover:underline">
+            support@getstubbed.app
+          </a>
+        </p>
+      </section>
       <section aria-labelledby="delete-heading" className="flex flex-col gap-2 border-t border-separator pt-5">
         <h2 id="delete-heading" className="text-title-2 font-display text-label">
           Delete account

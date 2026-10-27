@@ -59,6 +59,14 @@ export const getEntryForViewer = cache(async (id: string): Promise<ViewedEntry |
   const [listed, { supabase, userId }] = await Promise.all([getPublicEntry(id), viewerContext()]);
   const found = listed ?? (userId && UUID.test(id) ? await readEntry(supabase, id) : null);
   if (!found) return null;
+  // Blocks hide people from each other both ways, on public pages too.
+  if (userId && userId !== found.owner.id) {
+    const [{ data: blockedMe }, { data: mine }] = await Promise.all([
+      supabase.rpc("has_blocked_me", { profile_id: found.owner.id }),
+      supabase.from("blocks").select("blocked_id").eq("blocker_id", userId).eq("blocked_id", found.owner.id).maybeSingle(),
+    ]);
+    if (blockedMe === true || mine) return null;
+  }
   return { ...found, listed: Boolean(listed), viewerId: userId, supabase };
 });
 

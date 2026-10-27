@@ -492,3 +492,9 @@ Updates "Ideas go through Claude" (2026-10-25). The owner wants to prioritise by
 ### 2026-10-26: The favicon is the mark, not the app icon
 Owner's call. The browser tab icon (`favicon.ico`, `icon.svg`) now uses the mark (A2) squared up on a transparent background, so the tab matches the logo in the header. Home-screen icons (`apple-icon.png`, the PWA icons) stay on the app icon tile, because iOS and Android fill a transparent icon with black or white. Updates "The logo: two tickets in three variants" (2026-10-25).
 
+
+### 2026-10-27: Report and block, before the App Store
+App Review guideline 1.2 asks apps with user content to let people report content and block users, and to act on reports. Moderation was Phase 3's "hooks"; it's now built, on web and iOS (#144, #176):
+- **Blocking hides people from each other both ways.** Postgres decides (`blocks`, `profile_is_visible`, the follows, likes and comments policies): a blocked person can't see the blocker's profile, shows, likes or comments, and can't follow them; the blocker sees a "You've blocked @x" page with Unblock. Blocking ends follows both ways and removes the blocked person's likes on the blocker's shows. They aren't told. The web's public pages read through the publishable key, so they also ask with the visitor's session and show a 404 to someone who's been blocked.
+- **Reports** cover a show, a comment or a profile, with a reason, an optional note and "Also block". Only admins read them, at `/app/admin/reports`, where Hide deletes the comment or makes the show or profile private, and Dismiss leaves it. A report keeps a snapshot of the text, so it still makes sense after an edit.
+- **Not yet:** an email to the owner for each new report (needs a Resend API key) and a way to tell reporters the outcome. Until then, check `/app/admin/reports` daily.

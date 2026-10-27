@@ -13,7 +13,7 @@ create table public.reports (
   reporter_id  uuid not null default auth.uid() references public.profiles (id) on delete cascade,
   target_type  text not null check (target_type in ('entry', 'comment', 'profile')),
   target_id    uuid not null,
-  target_owner uuid,
+  target_owner uuid references public.profiles (id) on delete set null,
   snapshot     text,
   reason       text not null check (reason in ('spam', 'harassment', 'inappropriate', 'other')),
   note         text check (note is null or (note = btrim(note) and char_length(note) between 1 and 500)),

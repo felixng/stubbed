@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { ReportButton } from "@/components/moderation/ReportDialog";
 import { EntryHero, LoggedBy } from "@/components/profile/CardHero";
 import { CommentThread } from "@/components/profile/CommentThread";
 import { EntryReactions } from "@/components/profile/EntryReactions";
@@ -106,6 +107,11 @@ async function Entry({ params }: PageProps<"/e/[id]">) {
         loginHref={loginHref}
       />
       <LoggedBy handle={owner.handle} displayName={owner.display_name} avatarUrl={owner.avatar_url} />
+      {viewerId && viewerId !== owner.id && (
+        <div className="-mt-2 flex justify-center">
+          <ReportButton target={{ type: "entry", id: entry.id }} owner={owner} label="Report this show" />
+        </div>
+      )}
     </>
   );
 }
