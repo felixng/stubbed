@@ -3,15 +3,13 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { Wordmark } from "@/components/ui/Wordmark";
-import { LEGAL } from "@/lib/legal";
 import { LoginForm } from "./LoginForm";
 
 const link =
   "font-semibold text-tint-text underline-offset-2 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
 
-// Owner sign-in (#13). Linked only from the landing page menu and kept out
-// of search engines. Security comes from Supabase Auth (sign-ups are off), not from the
-// page being hidden.
+// Sign in (#13), with links to sign up (#149) and to reset a password. Kept
+// out of search engines.
 export const metadata: Metadata = {
   title: "Sign in — Stubbed",
   robots: { index: false, follow: false },
@@ -33,19 +31,17 @@ export default function LoginPage() {
         <Suspense>
           <LoginForm />
         </Suspense>
-        {/* Password reset by email isn't built, so the honest route is support. */}
-        <div className="flex flex-col gap-2 text-center text-footnote text-label-secondary">
+        <div className="flex flex-col gap-2 text-center text-subheadline text-label-secondary">
           <p>
-            Sign-ups are closed for now.{" "}
-            <Link href="/#waitlist" className={link}>
-              Join the waitlist
+            <Link href="/forgot-password" className={link}>
+              Forgot your password?
             </Link>
           </p>
           <p>
-            Forgot your password? Email{" "}
-            <a href={`mailto:${LEGAL.email}`} className={link}>
-              {LEGAL.email}
-            </a>
+            New to Stubbed?{" "}
+            <Link href="/signup" className={link}>
+              Create an account
+            </Link>
           </p>
         </div>
       </div>

@@ -52,6 +52,7 @@ struct RootView: View {
           case .entry(let id, let notice): EntryView(id: id, notice: notice)
           case .trip(let id, let addFailed): TripView(id: id, addFailed: addFailed)
           case .settings: SettingsView()
+          case .blockedAccounts: BlockedAccountsView()
           case .profile(let handle): PublicProfileView(handle: handle)
           case .publicEntry(let id, let comments): PublicEntryView(id: id, showComments: comments)
           case .publicTrip(let id): PublicTripView(id: id)

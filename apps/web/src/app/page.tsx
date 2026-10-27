@@ -4,8 +4,8 @@ import { Container } from "@/components/landing/Container";
 import { Features } from "@/components/landing/Features";
 import { Footer } from "@/components/landing/Footer";
 import { Hero } from "@/components/landing/Hero";
+import { SignUpReminder } from "@/components/landing/SignUpReminder";
 import { SiteMenu } from "@/components/landing/SiteMenu";
-import { WaitlistReminder } from "@/components/landing/WaitlistReminder";
 import { Wordmark } from "@/components/ui/Wordmark";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
 
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 // Structured data: the site name for search results and what the product is
-// (the FAQPage lives on /faq). No offers or prices: sign-ups aren't open yet.
+// (the FAQPage lives on /faq). No offers or prices.
 const JSON_LD = {
   "@context": "https://schema.org",
   "@graph": [
@@ -57,8 +57,8 @@ const JSON_LD = {
 // The landing page is always light, whatever the visitor's appearance.
 export const viewport: Viewport = { themeColor: "#fff9f6" };
 
-// Public landing page: hero + waitlist and features (#9). The menu links to
-// /login (owner's call); sign-ups stay off, so that reveals nothing.
+// Public landing page: hero with sign-up, and features (#9, #149). The menu
+// links to /login.
 export default function Home() {
   return (
     <div data-theme="light" className="flex flex-1 flex-col">
@@ -74,8 +74,8 @@ export default function Home() {
           <Wordmark size={28} href="/" mark />
           <div className="flex items-center gap-2">
             <p className="inline-flex min-h-7 items-center rounded-pill bg-fill px-3 text-footnote font-medium text-label">
-              <span className="sm:hidden">Private beta</span>
-              <span className="hidden sm:inline">Currently in private beta</span>
+              <span className="sm:hidden">Beta</span>
+              <span className="hidden sm:inline">Now in public beta</span>
             </p>
             <SiteMenu />
           </div>
@@ -84,7 +84,7 @@ export default function Home() {
       <main className="flex-auto">
         <Hero />
         <Features />
-        <WaitlistReminder />
+        <SignUpReminder />
       </main>
       <Footer />
     </div>

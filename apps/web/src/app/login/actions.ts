@@ -8,10 +8,22 @@ import { safeNext } from "@/lib/safe-next";
 import { createClient } from "@/lib/supabase/server";
 
 export type LoginState = { email?: string; error?: string };
+export type SignUpState = { email?: string; error?: string; sent?: boolean };
+export type ResetState = { email?: string; error?: string; sent?: boolean };
 
-// Email + password. Sign-ups are off in Supabase Auth, so this only signs in
-// accounts created from the dashboard. One message for every failure, so the
-// form never reveals which emails have an account.
+// Supabase's own minimum is lower (supabase/config.toml); new passwords need 8.
+const MIN_PASSWORD = 8;
+
+// This site's origin, for links in emails and OAuth callbacks.
+async function origin() {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host");
+  const proto = h.get("x-forwarded-proto") ?? "https";
+  return `${proto}://${host}`;
+}
+
+// Email + password. One message for every failure, so the form never reveals
+// which emails have an account.
 export async function signInWithPassword(
   _prev: LoginState,
   formData: FormData,
@@ -33,17 +45,79 @@ export async function signInWithPassword(
   redirect(safeNext(formData.get("next")));
 }
 
+// A new account with email + password (#149). Supabase sends an email with a
+// link and a code (supabase/templates/confirmation.html); the link lands on
+// /auth/confirm, which signs them in and sends them to /welcome for a handle.
+// Signing up with an email that already has an account looks the same, so
+// the form never reveals who has one.
+export async function signUp(_prev: SignUpState, formData: FormData): Promise<SignUpState> {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const password = String(formData.get("password") ?? "");
+  if (!email || !password) return { email, error: "Enter your email and a password." };
+  if (password.length < MIN_PASSWORD) return { email, error: `Use at least ${MIN_PASSWORD} characters for your password.` };
+
+  const supabase = await createClient();
+  const next = safeNext(formData.get("next"));
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { emailRedirectTo: `${await origin()}/auth/confirm?next=${encodeURIComponent(next)}` },
+  });
+  if (error) {
+    console.error("signUp failed", error.code, error.message);
+    if (error.code === "weak_password") return { email, error: "Choose a stronger password: longer, and not a common one." };
+    if (error.code === "over_email_send_rate_limit" || error.code === "over_request_rate_limit") {
+      return { email, error: "Too many attempts. Wait a few minutes, then try again." };
+    }
+    if (error.code === "email_address_invalid") return { email, error: "That email address doesn’t look right." };
+    return { email, error: "Couldn’t create your account. Try again." };
+  }
+  // Without email confirmation (local development) they're signed in already.
+  if (data.session) redirect(next);
+  return { email, sent: true };
+}
+
+// "Forgot your password?": an email with a link to /reset-password. The same
+// answer whether or not the email has an account.
+export async function sendPasswordReset(_prev: ResetState, formData: FormData): Promise<ResetState> {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!email) return { email, error: "Enter your email." };
+  const supabase = await createClient();
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${await origin()}/auth/confirm?type=recovery`,
+  });
+  if (error?.code === "over_email_send_rate_limit" || error?.code === "over_request_rate_limit") {
+    return { email, error: "Too many attempts. Wait a few minutes, then try again." };
+  }
+  if (error) console.error("resetPasswordForEmail failed", error.code, error.message);
+  return { email, sent: true };
+}
+
+// /reset-password, signed in by the link in the reset email.
+export async function updatePassword(_prev: LoginState, formData: FormData): Promise<LoginState> {
+  const password = String(formData.get("password") ?? "");
+  if (password.length < MIN_PASSWORD) return { error: `Use at least ${MIN_PASSWORD} characters.` };
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    if (error.code === "same_password") return { error: "That’s your current password. Choose a new one." };
+    if (error.code === "weak_password") return { error: "Choose a stronger password: longer, and not a common one." };
+    if (error.code === "session_not_found" || error.status === 401) {
+      return { error: "This reset link has expired. Ask for a new one from the sign-in page." };
+    }
+    return { error: "Couldn’t change your password. Try again." };
+  }
+  redirect("/app");
+}
+
 // Google or Apple. Supabase returns the provider's consent URL; the provider
-// sends the browser back to /auth/callback, which finishes sign-in. With
-// sign-ups off, an account only gets in if its email matches an existing user.
+// sends the browser back to /auth/callback, which finishes sign-in. A new
+// Google or Apple account is created on the way, then goes to /welcome.
 export async function signInWithProvider(formData: FormData) {
   const provider = oauthProvider(formData.get("provider"));
   if (!provider) redirect("/login");
 
-  const h = await headers();
-  const host = h.get("x-forwarded-host") ?? h.get("host");
-  const proto = h.get("x-forwarded-proto") ?? "https";
-  const callback = new URL("/auth/callback", `${proto}://${host}`);
+  const callback = new URL("/auth/callback", await origin());
   callback.searchParams.set("next", safeNext(formData.get("next")));
   callback.searchParams.set("provider", provider);
 

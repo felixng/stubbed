@@ -2,7 +2,7 @@ import { connection } from "next/server";
 import { cache } from "react";
 
 import { ENTRY_SELECT, signPhotos, toEntryRow, type EntryRow } from "@/lib/entries";
-import { getFollowCounts, getViewer, viewerContext } from "@/lib/follows";
+import { getFollowCounts, getViewer, hasBlockedMe, viewerContext } from "@/lib/follows";
 import { HANDLE_PATTERN } from "@/lib/profile-handle";
 import { getReactions, type Reactions } from "@/lib/reactions";
 import { createPublicClient } from "@/lib/supabase/public";
@@ -44,15 +44,19 @@ export const getPublicProfile = cache(async (rawHandle: string) => {
   if (!profile) return null;
 
   const { supabase: session, userId } = await viewerContext();
-  const [viewer, follows] = await Promise.all([
+  const [viewer, follows, blockedMe] = await Promise.all([
     getViewer(session, userId, profile.id),
     getFollowCounts(publicClient, profile.id),
+    hasBlockedMe(session, userId, profile.id),
   ]);
+  // Someone who blocked the viewer doesn't exist for them.
+  if (blockedMe) return null;
   const approved = profile.is_private && viewer?.status === "accepted";
 
   // A private profile shows its header only, unless the viewer is approved.
-  // RLS would return no entries anyway; this skips asking.
-  if (profile.is_private && !approved) {
+  // RLS would return no entries anyway; this skips asking. A profile the
+  // viewer has blocked shows its header too, with Unblock.
+  if ((profile.is_private && !approved) || viewer?.blocked) {
     return {
       profile,
       viewer,

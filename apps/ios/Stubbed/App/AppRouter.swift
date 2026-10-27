@@ -17,6 +17,7 @@ final class AppRouter {
     case entry(UUID, notice: Notice? = nil)
     case trip(UUID, addFailed: Bool = false)
     case settings
+    case blockedAccounts
     case profile(handle: String)
     /// Someone's public show (yours too, as others see it); `comments`
     /// scrolls to the thread.

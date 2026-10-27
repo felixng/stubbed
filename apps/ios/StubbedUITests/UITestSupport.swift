@@ -46,9 +46,9 @@ extension XCTestCase {
   /// iOS offers to save the password after a sign-in, sometimes a few
   /// seconds later; say "Not Now".
   @MainActor
-  func dismissSavePassword(_ app: XCUIApplication) {
+  func dismissSavePassword(_ app: XCUIApplication, within seconds: TimeInterval = 8) {
     let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
-    let deadline = Date().addingTimeInterval(8)
+    let deadline = Date().addingTimeInterval(seconds)
     var tapped = false
     while Date() < deadline {
       let shown = [app, springboard].map { $0.buttons["Not Now"] }.first { $0.exists }
@@ -116,6 +116,9 @@ extension XCTestCase {
   func onHome(_ app: XCUIApplication, timeout: TimeInterval = 15) -> Bool {
     let shown = app.navigationBars["Home"].waitForExistence(timeout: timeout)
     if !shown { snapshot("not-home") }
+    // The Save Password prompt sometimes arrives after sign-in's own check,
+    // over the feed. Catch a late one before the test starts tapping.
+    if shown { dismissSavePassword(app, within: 3) }
     return shown
   }
 

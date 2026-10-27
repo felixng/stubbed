@@ -3,11 +3,11 @@ import Link from "next/link";
 
 import { Wordmark } from "@/components/ui/Wordmark";
 
-// Where Kit sends people after they tap the link in the waitlist confirmation
-// email (Kit form → Incentive → redirect URL). Nothing to look up: Kit has
-// already confirmed them by the time they land here.
+// Where Kit sent people after they tapped the link in the old waitlist
+// confirmation email (Kit form → Incentive → redirect URL). Sign-up is open
+// now (#149), so it points them there; kept for links in old emails.
 export const metadata: Metadata = {
-  title: "You’re on the list — Stubbed",
+  title: "You’re in — Stubbed",
   robots: { index: false, follow: false },
 };
 
@@ -26,17 +26,17 @@ export default function ConfirmedPage() {
           >
             ✓
           </span>
-          <h1 className="text-title-2 font-display text-label">You’re on the list</h1>
+          <h1 className="text-title-2 font-display text-label">You’re in</h1>
           <p className="text-subheadline text-label-secondary">
-            Thanks for confirming your email. Stubbed is in private beta, and
-            we’ll let you know as soon as a space opens up.
+            Thanks for confirming your email. Stubbed is open now: create your
+            account and start your theatre diary.
           </p>
         </div>
         <Link
-          href="/"
-          className="inline-flex min-h-11 items-center rounded-pill px-4 text-subheadline font-semibold text-tint-text hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+          href="/signup"
+          className="inline-flex min-h-[50px] items-center rounded-pill bg-tint px-6 text-headline font-semibold text-on-tint shadow-btn hover:bg-tint-pressed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
         >
-          Back to Stubbed
+          Sign up free
         </Link>
       </div>
     </main>

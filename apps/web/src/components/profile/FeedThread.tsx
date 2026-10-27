@@ -115,6 +115,7 @@ export function FeedThread({
                   comment={c}
                   canDelete={viewerId === c.author.id || viewerId === ownerId}
                   mine={viewerId === c.author.id}
+                  canReport={Boolean(viewerId) && viewerId !== c.author.id}
                   onDeleted={() => {
                     const rest = comments.filter((x) => x.id !== c.id);
                     const left = Math.max(0, count - 1);

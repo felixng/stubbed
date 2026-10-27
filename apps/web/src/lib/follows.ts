@@ -11,8 +11,9 @@ export type FollowCounts = { followers: number; following: number };
 export type FollowPerson = { id: string; handle: string; display_name: string | null; avatar_url: string | null };
 
 // Who is looking at a profile, and how they relate to it: signed out (null),
-// the owner, or someone else with their follow status (null if none).
-export type Viewer = { id: string; isOwner: boolean; status: FollowStatus | null };
+// the owner, or someone else with their follow status (null if none) and
+// whether they've blocked the profile (supabase/migrations/…_blocks.sql).
+export type Viewer = { id: string; isOwner: boolean; status: FollowStatus | null; blocked?: boolean };
 
 const PERSON = "id, handle, display_name, avatar_url";
 
@@ -32,13 +33,25 @@ type Client = Awaited<ReturnType<typeof createClient>>;
 export async function getViewer(supabase: Client, userId: string | null, profileId: string): Promise<Viewer | null> {
   if (!userId) return null;
   if (userId === profileId) return { id: userId, isOwner: true, status: null };
-  const { data } = await supabase
-    .from("follows")
-    .select("status")
-    .eq("follower_id", userId)
-    .eq("followee_id", profileId)
-    .maybeSingle<{ status: FollowStatus }>();
-  return { id: userId, isOwner: false, status: data?.status ?? null };
+  const [{ data }, { data: block }] = await Promise.all([
+    supabase
+      .from("follows")
+      .select("status")
+      .eq("follower_id", userId)
+      .eq("followee_id", profileId)
+      .maybeSingle<{ status: FollowStatus }>(),
+    supabase.from("blocks").select("blocked_id").eq("blocker_id", userId).eq("blocked_id", profileId).maybeSingle(),
+  ]);
+  return { id: userId, isOwner: false, status: data?.status ?? null, blocked: Boolean(block) };
+}
+
+// True when the profile's owner has blocked the signed-in viewer. Public
+// pages read through the publishable key, which can't see that, so they ask
+// with the viewer's session and show a 404, as the app does.
+export async function hasBlockedMe(supabase: Client, userId: string | null, profileId: string): Promise<boolean> {
+  if (!userId || userId === profileId) return false;
+  const { data } = await supabase.rpc("has_blocked_me", { profile_id: profileId });
+  return data === true;
 }
 
 export async function getFollowCounts(supabase: Client, profileId: string): Promise<FollowCounts> {

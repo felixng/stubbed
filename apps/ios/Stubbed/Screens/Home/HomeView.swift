@@ -1,16 +1,15 @@
 import SwiftUI
 
 /// Home: the feed. Your shows and the shows of people you follow, newest
-/// first, a page at a time, under a search field for finding people (like
-/// Spotlight: type and matches replace the feed). Your diary lives on the
-/// Profile tab.
+/// first, a page at a time. The search button in the bar finds people to
+/// follow. Your diary lives on the Profile tab.
 struct HomeView: View {
   @Environment(AppSession.self) private var session
   @Environment(AppRouter.self) private var router
 
   @State private var items: [FeedItem] = []
   @State private var next: Feed.Cursor?
-  @State private var query = ""
+  @State private var searching = false
   @State private var state = LoadState.loading
   @State private var loadingMore = false
   @State private var moreFailed = false
@@ -18,11 +17,14 @@ struct HomeView: View {
   enum LoadState { case loading, loaded, failed }
 
   var body: some View {
-    SearchSwitch(query: query) { content }
-      .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search people")
-      .textInputAutocapitalization(.never)
-      .autocorrectionDisabled()
+    content
       .navigationTitle("Home")
+      .toolbar {
+        ToolbarItem(placement: .topBarTrailing) {
+          Button("Search people", systemImage: "magnifyingglass") { searching = true }
+        }
+      }
+      .sheet(isPresented: $searching) { PeopleSearchSheet() }
       // Logging a show starts the feed over from the top.
       .task(id: router.dataVersion) { await load() }
   }
@@ -74,7 +76,7 @@ struct HomeView: View {
         ContentUnavailableView {
           Label("Nothing here yet", systemImage: "theatermasks")
         } description: {
-          Text("Shows you track appear here, along with shows from people you follow. Find them with the search above.")
+          Text("Shows you track appear here, along with shows from people you follow. Find them with the search button.")
         } actions: {
           Button("Track a show") { router.startLog() }
             .buttonStyle(.borderedProminent)
@@ -138,16 +140,31 @@ struct HomeView: View {
   }
 }
 
-/// The feed, or people matching the search while the search field is in
-/// use, as Spotlight swaps in its results.
-private struct SearchSwitch<Feed: View>: View {
-  let query: String
-  @ViewBuilder var feed: Feed
-
-  @Environment(\.isSearching) private var isSearching
+/// Search people, opened from Home's search button: a sheet with the field
+/// focused and the keyboard up, results with Follow as you type, and Done in
+/// the bar. Opening a profile closes the sheet and shows it on Home.
+private struct PeopleSearchSheet: View {
+  @Environment(\.dismiss) private var dismiss
+  @Environment(AppRouter.self) private var router
+  @State private var query = ""
+  @State private var active = true
 
   var body: some View {
-    if isSearching { PeopleResults(query: query) } else { feed }
+    NavigationStack {
+      PeopleResults(query: query) { person in
+        dismiss()
+        router.open(.profile(handle: person.handle))
+      }
+        .navigationTitle("Search people")
+        .navigationBarTitleDisplayMode(.inline)
+        .searchable(
+          text: $query, isPresented: $active, placement: .navigationBarDrawer(displayMode: .always),
+          prompt: "Name or @handle")
+        .textInputAutocapitalization(.never)
+        .autocorrectionDisabled()
+        .toolbar {
+          ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+        }
+    }
   }
 }
-

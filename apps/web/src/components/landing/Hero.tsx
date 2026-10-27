@@ -2,7 +2,6 @@ import Link from "next/link";
 
 import { Container } from "@/components/landing/Container";
 import { Phone } from "@/components/landing/Screens";
-import { WaitlistForm } from "@/components/landing/WaitlistForm";
 
 export function Hero() {
   return (
@@ -16,16 +15,20 @@ export function Hero() {
             Log the shows you see. Rate them. Your diary, shared with
             the people who get it.
           </p>
-          <div id="waitlist" className="mt-2 flex scroll-mt-24 flex-col gap-1">
-            <WaitlistForm />
-            <p className="text-footnote text-label-secondary">
-              One email to confirm, then one at launch. Unsubscribe any time.{" "}
-              <Link
-                href="/privacy"
-                className="underline underline-offset-2 hover:text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-              >
-                Privacy Policy
+          <div id="get-started" className="mt-2 flex scroll-mt-24 flex-col gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <Link href="/signup" className="inline-flex min-h-[50px] items-center justify-center rounded-pill bg-tint px-6 font-sans text-headline font-semibold text-on-tint shadow-btn transition-colors hover:bg-tint-pressed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
+                Sign up free
               </Link>
+              <Link
+                href="/login"
+                className="inline-flex min-h-[50px] items-center justify-center rounded-pill px-5 text-headline font-semibold text-tint-text transition-colors hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+              >
+                Sign in
+              </Link>
+            </div>
+            <p className="text-footnote text-label-secondary">
+              Sign up with Apple, Google or your email.
             </p>
           </div>
         </div>

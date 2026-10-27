@@ -341,8 +341,8 @@ Owner's ask: a page to share the design system with other AI tools. `/design-sys
 ### 2026-10-21: Light by default is a design system rule
 Owner's call, after `/design-system` showed dark on a dark-mode device. Light is the default everywhere: every web page sets `data-theme="light"` on its root and iOS sets `.preferredColorScheme(.light)`. Replaces the "follows the system appearance" principle in `docs/DESIGN.md` and on the design system page. Dark tokens stay defined and working, and the page still shows them, for when dark mode comes back.
 
-### 2026-10-21: iOS people search lives in Home's search field
-Owner's ask: the "Follow people you go to the theatre with" banner took too much room. Home now has a search field under its title (`.searchable`, always shown), like Spotlight: while it's in use, matching people with Follow replace the feed; cancel and the feed is back. The banner, the person-plus toolbar button and the separate Find people screen are gone. Matches the web, where people search moved into the header (2026-10-18).
+### 2026-10-22: iOS people search is a button; comments are a drawer
+Owner's asks. The "Follow people you go to the theatre with" banner on Home took too much room, and an always-visible search bar under the title still did. Home now has just a search button in its bar, as on Instagram and Hevy: it opens a **Search people** sheet with the field focused, results with Follow as you type, and choosing a person closes the sheet and opens their profile on Home. The banner, the Find people screen and its route are gone. **Comments on a feed post open as a pull-up drawer** over the feed, as on Instagram: half height, drag to full, swipe down to close, "No comments yet · Start the conversation." when empty, and the box ("Add a comment for @handle") pinned to the bottom. A show's own page keeps its comments inline.
 
 ### 2026-10-22: The design system page covers iOS
 The `/design-system` page (and its markdown) gains a full iOS section: the native rules, how each colour token is expressed in SwiftUI (system colours for backgrounds and text, `Palette` for the coral ones), the SwiftUI components with their files, and screenshots of the app's main screens from the simulator. The components table's SwiftUI column now names the real types (system button styles, `RatingStars`, `Poster`, `EntryRow`, `PostCard`, `Wordmark`) instead of planned `FL…` ones that were never built, and the iOS tab icons are the real ones. A test checks every token is mapped and every screenshot file exists.
@@ -492,3 +492,17 @@ Updates "Ideas go through Claude" (2026-10-25). The owner wants to prioritise by
 ### 2026-10-26: The favicon is the mark, not the app icon
 Owner's call. The browser tab icon (`favicon.ico`, `icon.svg`) now uses the mark (A2) squared up on a transparent background, so the tab matches the logo in the header. Home-screen icons (`apple-icon.png`, the PWA icons) stay on the app icon tile, because iOS and Android fill a transparent icon with black or white. Updates "The logo: two tickets in three variants" (2026-10-25).
 
+
+### 2026-10-27: Report and block, before the App Store
+App Review guideline 1.2 asks apps with user content to let people report content and block users, and to act on reports. Moderation was Phase 3's "hooks"; it's now built, on web and iOS (#144, #176):
+- **Blocking hides people from each other both ways.** Postgres decides (`blocks`, `profile_is_visible`, the follows, likes and comments policies): a blocked person can't see the blocker's profile, shows, likes or comments, and can't follow them; the blocker sees a "You've blocked @x" page with Unblock. Blocking ends follows both ways and removes the blocked person's likes on the blocker's shows. They aren't told. The web's public pages read through the publishable key, so they also ask with the visitor's session and show a 404 to someone who's been blocked.
+- **Reports** cover a show, a comment or a profile, with a reason, an optional note and "Also block". Only admins read them, at `/app/admin/reports`, where Hide deletes the comment or makes the show or profile private, and Dismiss leaves it. A report keeps a snapshot of the text, so it still makes sense after an edit.
+- **Not yet:** an email to the owner for each new report (needs a Resend API key) and a way to tell reporters the outcome. Until then, check `/app/admin/reports` daily.
+
+### 2026-10-27: Sign-up is open to everyone
+Owner's call ("user should be able to sign up going forwards"), answering #149's open question: open to everyone at once, not waitlist batches; no captcha unless abuse shows up.
+- **Web:** `/signup` (Apple, Google, or email + password of at least 8 characters), `/forgot-password` and `/reset-password`. Email accounts confirm by email first.
+- **iOS:** "Create an account" and "Forgot your password?" sheets on Sign in. The confirmation email carries a 6-digit code as well as the link, so the app confirms without leaving it; the reset link opens the web.
+- **Email links** go to `/auth/confirm` with a token hash (`supabase/templates/`), not a PKCE code, so they work in any browser, including a phone's mail app after signing up in the iOS app.
+- **Waitlist retired:** the landing page, join cards and prompts now lead to sign-up, and the Kit form code is removed. The list stays in Kit (and the old `waitlist` table) for one "we're open" email; `/confirmed` now points old links at sign-up.
+- **Hosted setup (owner):** turn on sign-ups and email confirmation, paste the two templates into Authentication → Emails, and check Resend's free 100 emails a day is enough.
