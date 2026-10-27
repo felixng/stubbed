@@ -16,7 +16,7 @@ CURRENT_PROJECT_VERSION = 1
 // Instagram Stories (#129): Meta asks for a Facebook App ID with every share
 // to Stories (developers.facebook.com, free). Empty: the Stories button
 // opens the share sheet instead.
-FACEBOOK_APP_ID =
+FACEBOOK_APP_ID = 1767653837628585
 
 GOOGLE_IOS_CLIENT_ID =
 GOOGLE_IOS_URL_SCHEME = app.getstubbed.google-unset
