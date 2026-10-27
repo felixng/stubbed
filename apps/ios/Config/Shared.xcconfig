@@ -10,16 +10,15 @@ CURRENT_PROJECT_VERSION = 1
 
 // Google sign-in with Google's own sheet (#180): the iOS OAuth client from
 // Google Cloud Console (not secret), and the same ID reversed for the URL
-// scheme Google returns to. Empty: the app falls back to the web flow
-// through Supabase, whose prompt names supabase.co. The scheme placeholder
-// keeps Info.plist free of an empty URL scheme until then.
+// scheme Google returns to. Empty client ID: the app falls back to the web
+// flow through Supabase, whose prompt names supabase.co.
 // Instagram Stories (#129): Meta asks for a Facebook App ID with every share
 // to Stories (developers.facebook.com, free). Empty: the Stories button
 // opens the share sheet instead.
 FACEBOOK_APP_ID = 1767653837628585
 
-GOOGLE_IOS_CLIENT_ID =
-GOOGLE_IOS_URL_SCHEME = app.getstubbed.google-unset
+GOOGLE_IOS_CLIENT_ID = 54482357757-gmq42guqcik6l0156vdfis84hojrjcpg.apps.googleusercontent.com
+GOOGLE_IOS_URL_SCHEME = com.googleusercontent.apps.54482357757-gmq42guqcik6l0156vdfis84hojrjcpg
 
 // iPhone only, portrait, iOS 17+ (docs/ARCHITECTURE.md §5).
 TARGETED_DEVICE_FAMILY = 1
