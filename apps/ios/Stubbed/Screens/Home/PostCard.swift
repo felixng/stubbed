@@ -27,6 +27,13 @@ struct PostCard: View {
   @State private var likeError: String?
   @State private var showingComments = false
   @State private var reporting = false
+  /// Your own show opens the Share screen with its cards; someone else's
+  /// opens the system share sheet with a link to its page.
+  @State private var sharingMine = false
+  @State private var sharingOthers = false
+
+  /// Planned shows have nothing to share yet.
+  private var canShare: Bool { !entry.planned }
 
   private var route: AppRouter.Route { mine ? .entry(entry.id) : .publicEntry(entry.id) }
   private var date: String { Day.formatPost(entry.date) }
@@ -50,6 +57,11 @@ struct PostCard: View {
       }
     }
     .sheet(isPresented: $reporting) { ReportSheet(target: .entry(entry.id), owner: owner) }
+    .sheet(isPresented: $sharingMine) { EntryShareSheet(entry: entry, photo: photo) }
+    .sheet(isPresented: $sharingOthers) {
+      ActivityView(items: EntryShare.othersItems(entry, owner: owner)) { _ in sharingOthers = false }
+        .presentationDetents([.medium, .large])
+    }
     .sheet(isPresented: $showingComments) {
       CommentsSheet(entryId: entry.id, ownerId: owner.id, ownerHandle: owner.handle)
     }
@@ -136,13 +148,17 @@ struct PostCard: View {
     .frame(maxWidth: .infinity, alignment: .leading)
   }
 
-  /// One row: counts on the left, trip pills on the right, no rule above.
+  /// One row: counts and share on the left, trip pills on the right, no
+  /// rule above.
   @ViewBuilder private var footer: some View {
     let trips = entry.trips.filter { $0.id != inTrip }
     let state = shown ?? reactions
-    if state != nil || !trips.isEmpty {
+    if state != nil || !trips.isEmpty || canShare {
       HStack(spacing: Space.s) {
-        if let state { metrics(state) }
+        HStack(spacing: Space.l) {
+          if let state { metrics(state) }
+          if canShare { shareButton }
+        }
         Spacer(minLength: Space.s)
         if let trip = trips.first {
           Group {
@@ -166,6 +182,22 @@ struct PostCard: View {
     if let likeError {
       Text(likeError).font(.caption).foregroundStyle(.red)
     }
+  }
+
+  /// Share, after the counts, as on Instagram.
+  private var shareButton: some View {
+    Button {
+      if mine { sharingMine = true } else { sharingOthers = true }
+    } label: {
+      Image(systemName: "square.and.arrow.up")
+        .font(.subheadline.weight(.medium))
+        .foregroundStyle(.secondary)
+        .frame(minWidth: Space.touch, minHeight: Space.touch, alignment: .leading)
+        .contentShape(.rect)
+    }
+    .buttonStyle(.plain)
+    .accessibilityLabel("Share")
+    .accessibilityHint(mine ? "Opens share cards for this show" : "Opens the share sheet")
   }
 
   private func pill(_ name: String) -> some View {
