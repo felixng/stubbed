@@ -18,6 +18,7 @@ internal enum PublicSchema {
     case opera = "opera"
     case dance = "dance"
     case comedy = "comedy"
+    case standup = "standup"
     case other = "other"
   }
   internal enum Visibility: String, Codable, Hashable, Sendable {

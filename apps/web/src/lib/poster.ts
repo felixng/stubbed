@@ -51,6 +51,7 @@ export const POSTER_KIND: Record<ShowType, string> = {
   opera: "Opera",
   dance: "Dance",
   comedy: "Comedy",
+  standup: "Stand-up",
   other: "Show",
 };
 

@@ -3,6 +3,17 @@ import Testing
 @testable import Stubbed
 
 struct EntryLogicTests {
+  @Test func readsStandUpAndUnknownShowTypes() throws {
+    func show(_ type: String) throws -> Show {
+      let json = #"{"id":"00000000-0000-4000-a000-000000000001","title":"Set","type":"\#(type)"}"#
+      return try JSONDecoder().decode(Show.self, from: Data(json.utf8))
+    }
+    #expect(try show("standup").type == .standup)
+    #expect(ShowType.standup.label == "Stand-up")
+    // A type added after this build reads as Other instead of failing the list.
+    #expect(try show("circus").type == .other)
+  }
+
   @Test func formatsDaysLikeTheWeb() {
     #expect(Day.format("2026-10-08") == "8 Oct 2026")
     #expect(Day.formatLong("2026-10-08") == "Thursday 8 October 2026")

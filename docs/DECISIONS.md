@@ -549,3 +549,7 @@ The owner wants Claude to pick up an epic from the board without being asked, an
 
 ### 2026-10-28: Import from photos on the iOS Profile tab
 #195. Once a show is logged (and the callout has gone), Profile offers import in two places: an "Import from photos" row (`photo.stack`) at the foot of Seen, like "Plan a trip" under Upcoming, hidden while selecting; and the same item in the ⋯ Account menu. A `PhotosPicker` inside a `Menu` doesn't present, so the menu item sets a flag that `.photosPicker(isPresented:)` presents. Web already links to `/app/import` from its profile menu and sidebar.
+
+### 2026-10-28: Stand-up is its own show type
+Owner's request, and their choice to keep Comedy beside it (comedic plays and sketch) rather than rename it. `show_type` gains `standup` after `comedy`, labelled "Stand-up" on web, iOS and posters, and the photo and email identifiers can return it.
+- **Older iOS builds:** the generated `ShowType` enum fails to decode a value it doesn't know, which would fail a whole feed or diary for builds from before this change. `Show` now decodes an unknown type as Other, so the next new type won't break older builds; builds already on TestFlight need updating once stand-up shows exist.
