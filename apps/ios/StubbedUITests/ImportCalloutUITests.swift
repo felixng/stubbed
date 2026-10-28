@@ -44,6 +44,24 @@ final class ImportCalloutUITests: XCTestCase {
     openTab("Profile", in: app)
     XCTAssertTrue(app.staticTexts["@ios_test"].waitForExistence(timeout: 10))
     XCTAssertFalse(app.staticTexts[heading].exists)
+
+    // Instead, import sits at the foot of the diary (#195)…
+    let row = app.buttons["Import from photos"]
+    for _ in 0..<6 where !row.isHittable { app.collectionViews.firstMatch.swipeUp() }
+    snapshot("profile-import-row")
+    row.tap()
+    pickPhoto(app, takenInNewYork: "2026-09-14 19:31")  // import-stage.jpg
+    app.buttons["Add"].firstMatch.tap()
+    XCTAssertTrue(app.navigationBars["Import from photos"].waitForExistence(timeout: 20), app.debugDescription)
+    app.navigationBars.buttons["Cancel"].tap()
+
+    // …and in the Account menu.
+    app.navigationBars.buttons["Account"].tap()
+    app.buttons["Import from photos"].firstMatch.tap()
+    pickPhoto(app, takenInNewYork: "2026-09-14 19:31")
+    app.buttons["Add"].firstMatch.tap()
+    XCTAssertTrue(app.navigationBars["Import from photos"].waitForExistence(timeout: 20), app.debugDescription)
+    app.navigationBars.buttons["Cancel"].tap()
   }
 
   /// The new user is recreated without a handle each run; another class

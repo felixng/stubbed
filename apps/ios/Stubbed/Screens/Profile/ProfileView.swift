@@ -1,3 +1,4 @@
+import PhotosUI
 import SwiftUI
 
 /// The Profile tab, like Contacts' card on a grouped list: who you are
@@ -20,6 +21,8 @@ struct ProfileView: View {
   @State private var deleting: Entry?
   @State private var trips: [Trip] = []
   @State private var selectError: String?
+  @State private var importItems: [PhotosPickerItem] = []
+  @State private var pickingImport = false
 
   struct Header {
     var profile: Profile
@@ -55,6 +58,14 @@ struct ProfileView: View {
     // While selecting, the tab bar makes way for Add to Trip and Delete.
     .toolbar(selecting ? .hidden : .visible, for: .tabBar)
     .onChange(of: section) { _, _ in endSelecting() }
+    .photosPicker(
+      isPresented: $pickingImport, selection: $importItems, maxSelectionCount: PhotoImport.maxPhotos,
+      selectionBehavior: .ordered, matching: .images)
+    .onChange(of: importItems) { _, picked in
+      guard !picked.isEmpty else { return }
+      importItems = []
+      router.startImport(picked)
+    }
     .refreshable { await load() }
     .task(id: router.dataVersion) { await load() }
     .confirmationDialog("Add \(picked.count) to a trip", isPresented: $choosingTrip, titleVisibility: .visible) {
@@ -131,6 +142,11 @@ struct ProfileView: View {
               Label("View public profile", systemImage: "person.crop.circle")
             }
           }
+          // Once the empty-diary callout has gone, which offers it itself.
+          if !(diary.value?.entries.allSatisfy(\.planned) ?? true) {
+            // A PhotosPicker inside a Menu doesn't present, so the menu asks for it.
+            Button("Import from photos", systemImage: "photo.stack") { pickingImport = true }
+          }
           Button("Sign out", systemImage: "rectangle.portrait.and.arrow.right", role: .destructive) {
             Task { await session.signOut() }
           }
@@ -146,6 +162,15 @@ struct ProfileView: View {
       .font(.subheadline.weight(.semibold))
       .lineLimit(1)
       .fixedSize()
+  }
+
+  /// Pick photos from several shows; the import opens on them (#195).
+  private func importPicker(@ViewBuilder label: () -> some View) -> some View {
+    PhotosPicker(
+      selection: $importItems, maxSelectionCount: PhotoImport.maxPhotos, selectionBehavior: .ordered,
+      matching: .images, label: label
+    )
+    .accessibilityHint("Pick photos from several shows and log each night in turn.")
   }
 
   private var chosen: [Entry] { diary.value?.entries.filter { picked.contains($0.id) } ?? [] }
@@ -237,6 +262,9 @@ struct ProfileView: View {
         }
         SwiftUI.Section {
           ForEach(seen) { row($0, photos: data.photos) }
+          if !selecting {
+            importPicker { Label("Import from photos", systemImage: "photo.stack") }
+          }
         } header: {
           Text("Seen")
         } footer: {
