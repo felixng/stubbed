@@ -170,7 +170,7 @@ struct ProfileView: View {
       selection: $importItems, maxSelectionCount: PhotoImport.maxPhotos, selectionBehavior: .ordered,
       matching: .images, label: label
     )
-    .accessibilityHint("Pick photos from several shows and log each night in turn.")
+    .accessibilityHint("Pick photos from several shows and log each show in turn.")
   }
 
   private var chosen: [Entry] { diary.value?.entries.filter { picked.contains($0.id) } ?? [] }

@@ -134,6 +134,13 @@ struct Trip: Codable, Hashable, Identifiable, Sendable {
   func covers(_ day: String) -> Bool { startDate <= day && day <= endDate }
 
   var dates: String { Day.formatRange(startDate, endDate) }
+
+  /// How long the trip is in nights, end date minus start date (9–17 Oct is
+  /// 8; a one-day trip is 0), as the web's `tripNights`. Never a count of
+  /// show dates: a show can be in the afternoon.
+  var nights: Int {
+    max(0, Calendar.current.dateComponents([.day], from: Day.date(startDate), to: Day.date(endDate)).day ?? 0)
+  }
 }
 
 /// An entry with its show, venue and trips, as the diary and entry screen

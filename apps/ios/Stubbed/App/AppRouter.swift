@@ -32,7 +32,7 @@ final class AppRouter {
   struct LogRequest: Identifiable {
     let id = UUID()
     var editing: Entry?
-    /// Photos picked to import, one night at a time (#155).
+    /// Photos picked to import, one show at a time (#155).
     var photos: [PhotosPickerItem] = []
   }
 

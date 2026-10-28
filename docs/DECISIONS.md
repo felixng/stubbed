@@ -549,3 +549,7 @@ The owner wants Claude to pick up an epic from the board without being asked, an
 
 ### 2026-10-28: Import from photos on the iOS Profile tab
 #195. Once a show is logged (and the callout has gone), Profile offers import in two places: an "Import from photos" row (`photo.stack`) at the foot of Seen, like "Plan a trip" under Upcoming, hidden while selecting; and the same item in the ⋯ Account menu. A `PhotosPicker` inside a `Menu` doesn't present, so the menu item sets a flag that `.photosPicker(isPresented:)` presents. Web already links to `/app/import` from its profile menu and sidebar.
+
+### 2026-10-28: Never assume a show was at night
+The owner: "it can be an afternoon show, we should never assume." Copy says **show** (or visit) where it said night: the iOS import reads "3 shows", "Show 2 of 6", "Skip this show", "1 show logged"; the import callout says "photos from shows you’ve been to … sorts them by show"; the landing page and the photo-identification prompt lose "night out" and "that night". In code the import's grouped photos are a `Visit`.
+- **Trip nights stay,** because they're the trip's length (end date minus start date), not a guess about show times. iOS had been counting distinct show dates as "nights" on the trip and public trip screens; it now uses the trip's dates like the web (`Trip.nights`, `tripNights`), and hides the stat for a one-day trip as the web does.
