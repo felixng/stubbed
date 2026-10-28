@@ -1,0 +1,65 @@
+import XCTest
+
+/// The import callout (#194): Home and Profile offer import until the first
+/// show is logged. The new test user has no shows; `ios_test` has a diary.
+final class ImportCalloutUITests: XCTestCase {
+  override func setUp() { continueAfterFailure = false }
+
+  private let heading = "Bring in the shows you’ve seen"
+
+  @MainActor
+  func testNewUserIsOfferedImportOnHomeAndProfile() throws {
+    let app = launchApp()
+    signOutIfNeeded(app)
+    try signIn(app, newUser: true)
+    finishOnboardingIfNeeded(app)
+
+    XCTAssertTrue(app.staticTexts[heading].waitForExistence(timeout: 15), app.debugDescription)
+    XCTAssertFalse(app.staticTexts["Nothing here yet"].exists)
+    snapshot("callout-home")
+
+    // Picking photos from Home goes straight into the import.
+    app.buttons["Import from photos"].tap()
+    pickPhoto(app, takenInNewYork: "2026-09-14 19:31")  // import-stage.jpg
+    app.buttons["Add"].firstMatch.tap()
+    XCTAssertTrue(app.navigationBars["Import from photos"].waitForExistence(timeout: 20), app.debugDescription)
+    app.navigationBars.buttons["Cancel"].tap()
+
+    openTab("Profile", in: app)
+    XCTAssertTrue(app.staticTexts[heading].waitForExistence(timeout: 15), app.debugDescription)
+    XCTAssertTrue(app.buttons["Track a show"].exists)
+    snapshot("callout-profile")
+  }
+
+  @MainActor
+  func testNoCalloutOnceShowsAreLogged() throws {
+    let app = launchApp()
+    signOutIfNeeded(app)
+    try signIn(app)
+    XCTAssertTrue(onHome(app))
+    XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "Hamilton")).firstMatch
+      .waitForExistence(timeout: 15))
+    XCTAssertFalse(app.staticTexts[heading].exists)
+
+    openTab("Profile", in: app)
+    XCTAssertTrue(app.staticTexts["@ios_test"].waitForExistence(timeout: 10))
+    XCTAssertFalse(app.staticTexts[heading].exists)
+  }
+
+  /// The new user is recreated without a handle each run; another class
+  /// may already have set one up.
+  @MainActor
+  private func finishOnboardingIfNeeded(_ app: XCUIApplication) {
+    guard app.staticTexts["Set up your profile"].waitForExistence(timeout: 15) else { return }
+    let name = app.textFields["Name"]
+    tap(name)
+    name.typeText("iOS New")
+    let handle = app.textFields["Handle"]
+    tap(handle)
+    handle.typeText("ios_new")
+    XCTAssertTrue(app.staticTexts["@ios_new is yours."].waitForExistence(timeout: 10))
+    app.scrollViews.firstMatch.swipeUp()
+    app.buttons["Continue"].tap()
+    XCTAssertTrue(app.buttons["Profile"].waitForExistence(timeout: 15))
+  }
+}

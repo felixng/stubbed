@@ -5,20 +5,23 @@ import { Suspense } from "react";
 import { EmptyState } from "@/components/app/EmptyState";
 import { FeedCard } from "@/components/app/FeedCard";
 import { FeedMore } from "@/components/app/FeedMore";
+import { ImportCallout } from "@/components/app/ImportCallout";
 import { PlaceholderRows } from "@/components/ui/PlaceholderRows";
 import { getFeed } from "@/lib/supabase/data";
 
 export const metadata: Metadata = { title: "Home" };
 
 async function Feed() {
-  const { items, next, following, failed } = await getFeed();
+  const { items, next, following, neverLogged, failed } = await getFeed();
   if (failed) {
     return <EmptyState title="Couldn’t load your feed">Check your connection and open Home again.</EmptyState>;
   }
 
   return (
     <>
-      {items.length === 0 ? (
+      {neverLogged && <ImportCallout />}
+      {/* With nothing logged, the callout stands in for the empty feed. */}
+      {items.length === 0 && !neverLogged && (
         <EmptyState title="Nothing here yet">
           <Link href="/app/log" className="font-semibold text-tint-text underline-offset-2 hover:underline">
             Log a show
@@ -26,16 +29,13 @@ async function Feed() {
           and it appears here, along with shows from people you follow.
           {following === 0 && " Search for people you go to the theatre with in the box above."}
         </EmptyState>
-      ) : (
-        <>
-          {items.map((item) => (
-            <FeedCard key={item.entry.id} item={item} />
-          ))}
-          {/* Older pages load in the browser. Keyed on the top show, so
-              logging a new one starts them over. */}
-          {next && <FeedMore key={items[0].entry.id} start={next} />}
-        </>
       )}
+      {items.map((item) => (
+        <FeedCard key={item.entry.id} item={item} />
+      ))}
+      {/* Older pages load in the browser. Keyed on the top show, so
+          logging a new one starts them over. */}
+      {next && items.length > 0 && <FeedMore key={items[0].entry.id} start={next} />}
     </>
   );
 }
