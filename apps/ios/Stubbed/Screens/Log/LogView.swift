@@ -1,11 +1,14 @@
 import PhotosUI
+import Supabase
 import SwiftUI
 
 /// Log or edit an entry, like the web's /app/log: show, venue, date, rating
 /// (or Upcoming for a future date), note, trip, photo and visibility.
-/// Presented as a sheet from the Log button or an entry's Edit.
+/// Presented as a sheet from the Log button or an entry's Edit, and once
+/// per night by a photo import (`importing`).
 struct LogView: View {
   let editing: Entry?
+  let importing: ImportStep?
 
   @Environment(AppSession.self) private var session
   @Environment(AppRouter.self) private var router
@@ -32,6 +35,8 @@ struct LogView: View {
   @State private var saving = false
   @State private var error: String?
   @State private var confirmDiscard = false
+  @State private var confirmStop = false
+  @State private var importItems: [PhotosPickerItem] = []
 
   /// Fields the user set themselves, which defaults and the photo never
   /// overwrite.
@@ -66,8 +71,10 @@ struct LogView: View {
     var id: String { rawValue }
   }
 
-  init(editing: Entry? = nil) {
+  init(editing: Entry? = nil, importing: ImportStep? = nil) {
     self.editing = editing
+    self.importing = importing
+    _started = State(initialValue: importing != nil)
     if let entry = editing {
       _show = State(initialValue: ShowChoice(entry.show))
       _venue = State(initialValue: entry.venue.map(VenueChoice.init))
@@ -100,16 +107,32 @@ struct LogView: View {
       Group {
         if started { form } else { start }
       }
-      .navigationTitle(editing == nil ? "Track a show" : "Edit")
+      .navigationTitle(title)
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {
-        ToolbarItem(placement: .cancellationAction) {
-          Button("Cancel") { if hasChanges { confirmDiscard = true } else { dismiss() } }
+        if let importing {
+          ToolbarItem(placement: .cancellationAction) {
+            Button("Stop") { confirmStop = true }
+          }
+          ToolbarItem(placement: .bottomBar) {
+            Button("Skip this night") { importing.onSkip() }
+              .disabled(saving)
+          }
+        } else {
+          ToolbarItem(placement: .cancellationAction) {
+            Button("Cancel") { if hasChanges { confirmDiscard = true } else { dismiss() } }
+          }
         }
       }
       .confirmationDialog("Discard this entry?", isPresented: $confirmDiscard, titleVisibility: .visible) {
         Button("Discard", role: .destructive) { dismiss() }
         Button("Keep editing", role: .cancel) {}
+      }
+      .confirmationDialog("Stop importing?", isPresented: $confirmStop, titleVisibility: .visible) {
+        Button("Stop", role: .destructive) { importing?.onStop() }
+        Button("Keep going", role: .cancel) {}
+      } message: {
+        Text("This night isn’t saved. Nights you’ve saved stay in your diary.")
       }
       .sheet(item: $picking) { picker in
         switch picker {
@@ -120,14 +143,24 @@ struct LogView: View {
         }
       }
     }
-    .interactiveDismissDisabled(hasChanges)
+    .interactiveDismissDisabled(hasChanges || importing != nil)
     .task { await load() }
+    .task { if let importing { await takeImported(importing) } }
     .onChange(of: date) { _, _ in preselectTrip() }
     .onChange(of: photoItem) { _, item in
       guard let item else { return }
       photoItem = nil
       Task { await takePhoto(item) }
     }
+    .onChange(of: importItems) { _, items in
+      guard !items.isEmpty else { return }
+      router.startImport(items)
+    }
+  }
+
+  private var title: String {
+    if let importing { return "Night \(importing.number) of \(importing.total)" }
+    return editing == nil ? "Track a show" : "Edit"
   }
 
   /// "Start with a photo": the curtain, the stage, the Playbill or a ticket.
@@ -164,6 +197,17 @@ struct LogView: View {
       .groupedCard()
       .accessibilityLabel("Start with a photo")
       .accessibilityHint("The curtain, the stage, the Playbill or your ticket.")
+
+      // Several photos at once: grouped into nights, each logged in turn.
+      PhotosPicker(
+        selection: $importItems, maxSelectionCount: PhotoImport.maxPhotos, selectionBehavior: .ordered,
+        matching: .images
+      ) {
+        Label("Import from photos", systemImage: "photo.stack")
+          .font(.subheadline.weight(.semibold))
+          .frame(minHeight: Space.touch)
+      }
+      .accessibilityHint("Pick photos from several shows and log each night in turn.")
 
       Button("No photo? Fill in by hand") { started = true }
         .font(.subheadline.weight(.semibold))
@@ -486,19 +530,22 @@ struct LogView: View {
 
   /// The photo's date at once, theatres near it within about a second, and
   /// the show suggestion when it's ready. Each fills only untouched fields.
-  private func detect(from data: Data) async {
+  /// `lookup` may already be under way (an import starts the next night's
+  /// early); otherwise it starts here.
+  private func detect(from data: Data, lookup: PhotoLookup? = nil) async {
     let token = run
     let current = { token == run }
     detect = .reading
-    let meta = PhotoMeta.read(data)
+    let lookup = lookup ?? PhotoLookup(data: data)
+    let meta = lookup.meta
     if let day = meta.date, !touchedDate {
       date = day
       fromPhoto.insert("date")
     }
 
-    if let lat = meta.lat, let lng = meta.lng {
+    if meta.lat != nil, meta.lng != nil {
       detect = .nearby
-      let found = await PhotoDetect.nearby(lat: lat, lng: lng, accuracy: meta.accuracy)
+      let found = await lookup.nearby.value ?? PhotoDetect.Nearby()
       guard current() else { return }
       nearby = found.candidates
       place = (found.city, found.country)
@@ -510,18 +557,16 @@ struct LogView: View {
     }
 
     detect = .identifying
-    guard let small = try? Photo.jpeg(from: data, maxEdge: Photo.identifyEdge, quality: 0.8) else {
-      detect = .done(nil, note: nil)
-      return
-    }
-    let outcome = await PhotoDetect.identify(photo: small, meta: meta, place: place, candidates: nearby)
+    let outcome = await lookup.identify.value
     guard current() else { return }
     switch outcome {
-    case .notConfigured:
+    case nil:
+      detect = .done(nil, note: nil)
+    case .notConfigured?:
       detect = .done(nil, note: "Show detection isn’t set up yet.")
-    case .failed:
+    case .failed?:
       detect = .done(nil, note: "Couldn’t work out the show.")
-    case .found(let result):
+    case .found(let result)?:
       detect = .done(result, note: nil)
       guard let result else { return }
       let differs = show.map { s in result.showTitle.map { s.title.lowercased() != $0.lowercased() } ?? false } ?? false
@@ -614,6 +659,24 @@ struct LogView: View {
     }
   }
 
+  /// An import night's photo, read (and its lookup started) ahead of time.
+  private func takeImported(_ step: ImportStep) async {
+    guard photo == nil, preview == nil else { return }
+    let token = run
+    detect = .reading
+    let prepared = await step.photo.value
+    // The user picked another photo meanwhile: that one wins.
+    guard token == run else { return }
+    guard let prepared, let jpeg = try? Photo.jpeg(from: prepared.original, maxEdge: Photo.storedEdge) else {
+      photoError = "Couldn’t read this photo. Fill in the details below, or skip this night."
+      detect = .idle
+      return
+    }
+    photo = jpeg
+    preview = UIImage(data: jpeg)
+    await detect(from: prepared.original, lookup: prepared.lookup)
+  }
+
   /// How far detection got, for entry_logged (same values as the web).
   private var detectionLabel: String {
     switch detect {
@@ -648,15 +711,20 @@ struct LogView: View {
     do {
       let saved = try await Entries.save(draft, userId: userId, editing: editing)
       if editing == nil, !planned {
-        Analytics.track(
-          .entryLogged,
-          [
-            "method": .string(photo != nil ? "photo" : "manual"), "detection": .string(detectionLabel),
-            "rated": .bool(rating != nil), "has_note": .bool(!note.trimmingCharacters(in: .whitespaces).isEmpty),
-            "platform": .string("ios"),
-          ])
+        var props: [String: AnyJSON] = [
+          "method": .string(photo != nil ? "photo" : "manual"), "detection": .string(detectionLabel),
+          "rated": .bool(rating != nil), "has_note": .bool(!note.trimmingCharacters(in: .whitespaces).isEmpty),
+          "platform": .string("ios"),
+        ]
+        if importing != nil { props["source"] = .string("photo_import") }
+        Analytics.track(.entryLogged, props)
       }
-      router.saved(saved.id, isNew: editing == nil, planned: planned, photoFailed: saved.photoFailed)
+      if let importing {
+        router.dataChanged()
+        importing.onSaved(saved.photoFailed)
+      } else {
+        router.saved(saved.id, isNew: editing == nil, planned: planned, photoFailed: saved.photoFailed)
+      }
     } catch {
       self.error = error.localizedDescription
     }

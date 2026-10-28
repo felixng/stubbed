@@ -17,12 +17,10 @@ final class PhotoLogUITests: XCTestCase {
     XCTAssertTrue(start.waitForExistence(timeout: 10), app.debugDescription)
     start.tap()
 
-    // The system photo picker labels photos by when they were taken.
-    let picked = app.images.matching(NSPredicate(format: "label CONTAINS[c] %@", "03 October")).firstMatch
-    XCTAssertTrue(picked.waitForExistence(timeout: 15), app.debugDescription)
+    // Wait for the picker, then pick curtain-call.jpg.
+    XCTAssertTrue(app.images.firstMatch.waitForExistence(timeout: 15), app.debugDescription)
     snapshot("photo-picker")
-    // The picker's grid reports its cells as not hittable; tap the centre.
-    picked.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+    pickPhoto(app, takenInNewYork: "2026-10-03 19:58")
 
     // With the web server reachable, OpenStreetMap may find a second
     // theatre in range: then the app offers chips instead of choosing.

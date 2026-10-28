@@ -189,10 +189,12 @@ case "$cmd" in
     # A copy started by `run` can't be closed by XCUITest and stalls it.
     xcrun simctl terminate "$udid" "$BUNDLE_ID" >/dev/null 2>&1 || true
     test_users >/dev/null
-    # Test photos (scripts/fixtures), added once per Simulator.
-    if [ ! -f "$BUILD_DIR/.media-$udid" ]; then
-      xcrun simctl addmedia "$udid" "$IOS_DIR"/scripts/fixtures/*.jpg && touch "$BUILD_DIR/.media-$udid"
-    fi
+    # Test photos (scripts/fixtures), each added once per Simulator, so a
+    # new fixture reaches Simulators set up before it.
+    for photo in "$IOS_DIR"/scripts/fixtures/*.jpg; do
+      marker="$BUILD_DIR/.media-$udid-$(basename "$photo")"
+      [ -f "$marker" ] || { xcrun simctl addmedia "$udid" "$photo" && touch "$marker"; }
+    done
     # Build once, then run each test class against freshly reset test data,
     # so one class's changes (a deleted account, a trip edit) can't leak
     # into the next. TEST_RUNNER_X reaches the UI test process as X.
