@@ -18,6 +18,11 @@ const variants = {
     "border border-separator bg-surface text-label shadow-sm hover:bg-fill",
 };
 
+// The same look for a link that goes somewhere instead of acting.
+export function buttonClass(variant: keyof typeof variants = "primary", size: keyof typeof sizes = "md") {
+  return `${base} ${sizes[size]} ${variants[variant]}`;
+}
+
 export function Button({
   variant = "primary",
   size = "md",

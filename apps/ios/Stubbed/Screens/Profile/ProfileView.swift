@@ -213,14 +213,21 @@ struct ProfileView: View {
       // Upcoming soonest first; the shows you've seen newest first.
       let upcoming = Array(data.entries.filter(\.planned).reversed())
       let seen = data.entries.filter { !$0.planned }
-      if data.entries.isEmpty {
-        EmptyState(title: "No shows yet") {
-          Text("Going to one soon? Track it with its date.")
-          Button("Add your first theatre visit") { router.startLog() }
-            .buttonStyle(.borderedProminent)
-            .padding(.top, Space.s)
+      if seen.isEmpty {
+        // Nothing logged yet: import comes first, any planned shows below.
+        SwiftUI.Section {
+          ImportCallout().padding(.vertical, Space.s)
+        } footer: {
+          if let selectError { Text(selectError).foregroundStyle(.red) }
         }
-        .listRowBackground(Color.clear)
+        if !upcoming.isEmpty {
+          SwiftUI.Section("Upcoming") {
+            ForEach(upcoming) { row($0, photos: data.photos) }
+            if !selecting {
+              Button("Plan a trip", systemImage: "plus") { router.newTrip() }
+            }
+          }
+        }
       } else {
         SwiftUI.Section("Upcoming") {
           ForEach(upcoming) { row($0, photos: data.photos) }

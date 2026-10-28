@@ -13,6 +13,8 @@ struct HomeView: View {
   @State private var state = LoadState.loading
   @State private var loadingMore = false
   @State private var moreFailed = false
+  /// No logged shows yet (planned ones don't count): the import callout.
+  @State private var neverLogged = false
 
   enum LoadState { case loading, loaded, failed }
 
@@ -72,7 +74,13 @@ struct HomeView: View {
 
   private var feed: some View {
     Screen(title: "Home") {
-      if items.isEmpty {
+      if neverLogged {
+        ImportCallout()
+          .padding(Space.l)
+          .groupedCard()
+      }
+      // With nothing logged, the callout stands in for the empty feed.
+      if items.isEmpty, !neverLogged {
         ContentUnavailableView {
           Label("Nothing here yet", systemImage: "theatermasks")
         } description: {
@@ -113,8 +121,10 @@ struct HomeView: View {
   private func load() async {
     guard let userId = session.userId else { return }
     async let page = Feed.page(after: nil, userId: userId)
+    async let logged = Profiles.loggedCount(userId)
     do {
       let first = try await page
+      neverLogged = await logged == 0
       items = first.items
       next = first.next
       moreFailed = false

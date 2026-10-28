@@ -540,3 +540,9 @@ The owner wants Claude to pick up an epic from the board without being asked, an
 - **Ahead of time:** `PhotoLookup` starts the nearby lookup and show identification as soon as a photo is read. The import starts the next night's while you're on the current one; single-photo logging uses the same type.
 - **After saving** a night, the import moves on instead of opening the share screen; closing it with anything saved opens the Profile tab. `entry_logged` gains `source: "photo_import"`.
 - **Fixtures:** `scripts/fixtures/import-*.jpg` are copies of `curtain-call.jpg` with only the EXIF date changed. `scripts/dev ui` now adds each fixture once per Simulator, so new ones reach Simulators set up earlier.
+
+### 2026-10-28: Import callout until the first logged show
+#194. New users start with an empty diary, so Home and the Profile diary (web and iOS) lead with one card: "Bring in the shows you’ve seen", Import from photos (primary) and Log a show / Track a show (secondary, each app's own wording).
+- **When:** the user has no `logged` entries; planned ones don't count. It can't be dismissed and goes once a show is logged. Home counts with a head-only query on `entries` (iOS reuses `Profiles.loggedCount`); the diary uses the entries it already loads.
+- **Where:** top of Home, above any posts from people you follow, standing in for the empty-feed state; on the diary, in place of "No shows yet", with planned shows still listed under Upcoming.
+- **iOS:** the card's `PhotosPicker` opens the log sheet straight into the import (`AppRouter.startImport` now creates the sheet when none is open). Web links to `/app/import`.

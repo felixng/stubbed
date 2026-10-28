@@ -57,8 +57,11 @@ final class AppRouter {
 
   func edit(_ entry: Entry) { log = LogRequest(editing: entry) }
 
-  /// The log sheet turns into the photo import, in place.
-  func startImport(_ photos: [PhotosPickerItem]) { log?.photos = photos }
+  /// The log sheet turns into the photo import, in place, or opens straight
+  /// into it when photos were picked outside the sheet (Home, Profile).
+  func startImport(_ photos: [PhotosPickerItem]) {
+    if log == nil { log = LogRequest(photos: photos) } else { log?.photos = photos }
+  }
 
   /// Closing the import: what was saved stays saved, and a diary with new
   /// shows in it opens on the Profile tab.

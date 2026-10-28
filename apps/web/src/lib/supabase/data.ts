@@ -180,11 +180,14 @@ export async function readFeedPage(supabase: Client, userId: string, cursor: Fee
 // so instead of looking empty.
 export async function getFeed() {
   const { supabase, userId } = await ownerContext();
-  const empty = { items: [] as FeedItem[], next: null, following: 0, failed: false };
+  const empty = { items: [] as FeedItem[], next: null, following: 0, neverLogged: false, failed: false };
   if (!userId) return empty;
-  const [page, { count: following }] = await Promise.all([
+  const [page, { count: following }, { count: logged }] = await Promise.all([
     readFeedPage(supabase, userId, null).catch(() => null),
     supabase.from("follows").select("followee_id", { count: "exact", head: true }).eq("follower_id", userId),
+    // Shows you've been to; planned ones don't count. Nothing yet: the import callout.
+    supabase.from("entries").select("id", { count: "exact", head: true }).eq("user_id", userId).eq("status", "logged"),
   ]);
-  return page ? { ...page, following: following ?? 0, failed: false } : { ...empty, following: following ?? 0, failed: true };
+  const counts = { following: following ?? 0, neverLogged: logged === 0 };
+  return page ? { ...page, ...counts, failed: false } : { ...empty, ...counts, failed: true };
 }
