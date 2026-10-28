@@ -44,6 +44,9 @@ final class TripsUITests: XCTestCase {
     // In edit mode the diary rows are selectable cells, not links.
     let row = app.cells.containing(NSPredicate(format: "label BEGINSWITH %@", "Stereophonic")).firstMatch
     scrollAndTap(row, in: app)
+    // The count reads on one line in the bottom bar, not squeezed between the buttons.
+    XCTAssertTrue(app.staticTexts["1 selected"].waitForExistence(timeout: 5))
+    snapshot("diary-select")
     app.buttons["Add to trip"].tap()
     app.buttons["New trip"].tap()
 
