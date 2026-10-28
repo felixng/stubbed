@@ -546,3 +546,6 @@ The owner wants Claude to pick up an epic from the board without being asked, an
 - **When:** the user has no `logged` entries; planned ones don't count. It can't be dismissed and goes once a show is logged. Home counts with a head-only query on `entries` (iOS reuses `Profiles.loggedCount`); the diary uses the entries it already loads.
 - **Where:** top of Home, above any posts from people you follow, standing in for the empty-feed state; on the diary, in place of "No shows yet", with planned shows still listed under Upcoming.
 - **iOS:** the card's `PhotosPicker` opens the log sheet straight into the import (`AppRouter.startImport` now creates the sheet when none is open). Web links to `/app/import`.
+
+### 2026-10-28: Import from photos on the iOS Profile tab
+#195. Once a show is logged (and the callout has gone), Profile offers import in two places: an "Import from photos" row (`photo.stack`) at the foot of Seen, like "Plan a trip" under Upcoming, hidden while selecting; and the same item in the ⋯ Account menu. A `PhotosPicker` inside a `Menu` doesn't present, so the menu item sets a flag that `.photosPicker(isPresented:)` presents. Web already links to `/app/import` from its profile menu and sidebar.
