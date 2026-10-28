@@ -104,8 +104,16 @@ struct ProfileView: View {
           .labelStyle(.titleAndIcon)
           .disabled(picked.isEmpty)
       }
-      ToolbarItem(placement: .status) {
-        Text(picked.isEmpty ? "Select shows" : "\(picked.count) selected").font(.subheadline.weight(.semibold))
+      if #available(iOS 26, *) {
+        // Without these, the count sits in its own glass capsule squeezed
+        // between the buttons and wraps ("3 / sel..."). Plain text with room
+        // either side reads like Photos' and Mail's selection bars.
+        ToolbarSpacer(.flexible, placement: .bottomBar)
+        ToolbarItem(placement: .status) { selectionCount }
+          .sharedBackgroundVisibility(.hidden)
+        ToolbarSpacer(.flexible, placement: .bottomBar)
+      } else {
+        ToolbarItem(placement: .status) { selectionCount }
       }
       ToolbarItem(placement: .bottomBar) {
         Button("Delete", systemImage: "trash", role: .destructive) { confirmDelete = true }
@@ -131,6 +139,13 @@ struct ProfileView: View {
         }
       }
     }
+  }
+
+  private var selectionCount: some View {
+    Text(picked.isEmpty ? "Select shows" : "\(picked.count) selected")
+      .font(.subheadline.weight(.semibold))
+      .lineLimit(1)
+      .fixedSize()
   }
 
   private var chosen: [Entry] { diary.value?.entries.filter { picked.contains($0.id) } ?? [] }
