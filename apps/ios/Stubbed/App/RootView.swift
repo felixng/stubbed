@@ -25,7 +25,11 @@ struct RootView: View {
     }
     .tint(Palette.tintText)
     .sheet(item: $router.log) { request in
-      LogView(editing: request.editing)
+      if request.photos.isEmpty {
+        LogView(editing: request.editing)
+      } else {
+        ImportView(photos: request.photos)
+      }
     }
     .sheet(item: $router.tripForm) { request in
       TripForm(request: request)

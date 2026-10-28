@@ -1,5 +1,7 @@
 import Foundation
 import Observation
+import PhotosUI
+import SwiftUI
 
 /// Where the app is: the selected tab, each tab's navigation stack, and the
 /// log sheet. Screens read `dataVersion` in `.task(id:)` to reload after any
@@ -26,10 +28,12 @@ final class AppRouter {
     case follows(handle: String, list: FollowList)
   }
 
-  /// The log sheet: a new entry, or editing one.
+  /// The log sheet: a new entry, editing one, or importing photos.
   struct LogRequest: Identifiable {
     let id = UUID()
     var editing: Entry?
+    /// Photos picked to import, one night at a time (#155).
+    var photos: [PhotosPickerItem] = []
   }
 
   /// The trip form sheet: a new trip (optionally with shows picked in the
@@ -52,6 +56,19 @@ final class AppRouter {
   func startLog() { log = LogRequest() }
 
   func edit(_ entry: Entry) { log = LogRequest(editing: entry) }
+
+  /// The log sheet turns into the photo import, in place.
+  func startImport(_ photos: [PhotosPickerItem]) { log?.photos = photos }
+
+  /// Closing the import: what was saved stays saved, and a diary with new
+  /// shows in it opens on the Profile tab.
+  func finishImport(logged: Int) {
+    log = nil
+    guard logged > 0 else { return }
+    dataChanged()
+    tab = .profile
+    profilePath = []
+  }
 
   /// After a save: a new entry opens on the Profile tab, where the entry
   /// screen offers sharing; an edit returns to the entry it came from.

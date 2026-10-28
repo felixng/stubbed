@@ -75,6 +75,28 @@ extension XCTestCase {
     element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
   }
 
+  /// Picks a fixture photo in the system photo picker. The picker labels
+  /// photos by when they were taken, in the Simulator's time zone; the
+  /// fixtures' EXIF has no offset, so Photos reads their times in the zone
+  /// of their GPS (New York). Working the label out the same way keeps the
+  /// tests passing on any Mac. The grid reports cells as not hittable, so
+  /// this taps their centres.
+  @MainActor
+  func pickPhoto(_ app: XCUIApplication, takenInNewYork time: String) {
+    let taken = DateFormatter()
+    taken.timeZone = TimeZone(identifier: "America/New_York")
+    taken.dateFormat = "yyyy-MM-dd HH:mm"
+    let shown = DateFormatter()
+    shown.locale = Locale(identifier: "en_US_POSIX")
+    shown.timeZone = .current
+    shown.dateFormat = "dd|MMMM|HH:mm"
+    let parts = shown.string(from: taken.date(from: time)!).split(separator: "|").map(String.init)
+    let cell = app.images.matching(NSPredicate(
+      format: "label CONTAINS %@ AND label CONTAINS %@ AND label CONTAINS %@", parts[0], parts[1], parts[2])).firstMatch
+    XCTAssertTrue(cell.waitForExistence(timeout: 15), app.debugDescription)
+    cell.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+  }
+
   /// A button whose label starts with `prefix` (rows with a second line read
   /// as "Title, Subtitle").
   @MainActor

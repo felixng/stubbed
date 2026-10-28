@@ -530,3 +530,13 @@ The owner wants Claude to pick up an epic from the board without being asked, an
 - **Migrations are applied by Claude** (owner's choice): `supabase db push` before merging, using the database password from the Mac's Keychain. Exception, added by Claude: a migration that drops or irreversibly rewrites data is held for the owner, since it can't be undone.
 - **One TestFlight build per epic,** after the last merge, when `apps/ios` changed.
 - **Anything needing the owner** (`needs-decision`, `needs-human`, a failed check twice, a failed deploy or upload) moves the epic to "In review" with a summary comment. Claude never merges a red pull request or one it didn't open.
+
+### 2026-10-28: iOS import by picking photos, held in memory
+#155, scoped by the owner to stand alone: no stored drafts, no review list, nothing kept between sessions.
+- **Where:** "Import from photos" under "Start with a photo" in the log sheet. A multi-select `PhotosPicker` (up to 100 photos) turns the sheet into `ImportView` in place (`AppRouter.startImport`).
+- **Grouping on the device:** `PhotoImport.group` is the web's `groupPhotos` (`lib/import/drafts.ts`) ported to Swift, with the same thresholds (same date, within 5 hours, within 250 m of every located photo in the night). It stays in Swift rather than Postgres because it runs on EXIF that never leaves the phone. Nights come oldest first.
+- **One form per night:** each night opens the normal `LogView` (`importing:`), titled "Night 2 of 6", with Save, "Skip this night" in the bottom bar, and Stop. It fills exactly as single-photo logging does, from the night's first photo (until #141); "Change photo" picks another.
+- **Memory:** each photo is read once for its date, place and a thumbnail, then let go. A night keeps only its `PhotosPickerItem` and reloads its photo when opened.
+- **Ahead of time:** `PhotoLookup` starts the nearby lookup and show identification as soon as a photo is read. The import starts the next night's while you're on the current one; single-photo logging uses the same type.
+- **After saving** a night, the import moves on instead of opening the share screen; closing it with anything saved opens the Profile tab. `entry_logged` gains `source: "photo_import"`.
+- **Fixtures:** `scripts/fixtures/import-*.jpg` are copies of `curtain-call.jpg` with only the EXIF date changed. `scripts/dev ui` now adds each fixture once per Simulator, so new ones reach Simulators set up earlier.
