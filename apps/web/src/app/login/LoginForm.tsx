@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useActionState, useId } from "react";
 
 import { Button } from "@/components/ui/Button";
-import { GOOGLE_CLIENT_ID, GoogleButton } from "./GoogleButton";
+import { GoogleButton } from "./GoogleButton";
 import { signInWithPassword, signInWithProvider, type LoginState } from "./actions";
 
 export const field =
@@ -92,19 +92,7 @@ export function ProviderButtons({ next }: { next: string }) {
             Continue with Apple
           </Button>
         </form>
-        {GOOGLE_CLIENT_ID ? (
-          <GoogleButton next={next} />
-        ) : (
-          // Without a client ID (local development), the redirect flow.
-          <form action={signInWithProvider}>
-            <input type="hidden" name="provider" value="google" />
-            <input type="hidden" name="next" value={next} />
-            <Button type="submit" variant="neutral" className="w-full">
-              <GoogleIcon />
-              Continue with Google
-            </Button>
-          </form>
-        )}
+        <GoogleButton next={next} />
       </div>
 
       <div className="flex items-center gap-3 text-footnote text-label-secondary">
@@ -129,18 +117,6 @@ function AppleIcon() {
   return (
     <svg viewBox="0 0 24 24" width={20} height={20} aria-hidden="true" focusable="false" fill="currentColor">
       <path d="M16.37 12.7c-.02-2.3 1.88-3.4 1.97-3.46a4.24 4.24 0 0 0-3.33-1.8c-1.42-.15-2.77.83-3.49.83-.72 0-1.83-.81-3.01-.79a4.46 4.46 0 0 0-3.77 2.29c-1.61 2.79-.41 6.92 1.16 9.18.77 1.11 1.68 2.35 2.88 2.31 1.16-.05 1.6-.75 3-.75s1.79.75 3.01.72c1.25-.02 2.04-1.13 2.8-2.24a9.9 9.9 0 0 0 1.27-2.6 4.04 4.04 0 0 1-2.45-3.69zM14.07 5.94a4.03 4.03 0 0 0 .95-2.94 4.1 4.1 0 0 0-2.66 1.37 3.84 3.84 0 0 0-.97 2.83 3.4 3.4 0 0 0 2.68-1.26z" />
-    </svg>
-  );
-}
-
-// Google's "G", in its brand colours as Google's sign-in guidelines require.
-function GoogleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width={20} height={20} aria-hidden="true" focusable="false">
-      <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5a5.5 5.5 0 0 1-2.4 3.6v3h3.9c2.2-2.1 3.5-5.2 3.5-8.8z" />
-      <path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-2.9l-3.9-3c-1.1.7-2.5 1.2-4.1 1.2-3.1 0-5.8-2.1-6.7-5H1.3v3.1A12 12 0 0 0 12 24z" />
-      <path fill="#FBBC05" d="M5.3 14.3a7.2 7.2 0 0 1 0-4.6V6.6h-4a12 12 0 0 0 0 10.8z" />
-      <path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.3 6.6l4 3.1c.9-2.9 3.6-4.9 6.7-4.9z" />
     </svg>
   );
 }

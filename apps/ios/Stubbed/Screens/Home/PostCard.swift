@@ -27,6 +27,13 @@ struct PostCard: View {
   @State private var likeError: String?
   @State private var showingComments = false
   @State private var reporting = false
+  /// Your own show opens the Share screen with its cards; someone else's
+  /// opens the system share sheet with a link to its page.
+  @State private var sharingMine = false
+
+  /// Planned shows have nothing to share yet, and a private profile's page
+  /// only opens for its approved followers, so its link would be a dead end.
+  private var canShare: Bool { !entry.planned && (mine || !owner.isPrivate) }
 
   private var route: AppRouter.Route { mine ? .entry(entry.id) : .publicEntry(entry.id) }
   private var date: String { Day.formatPost(entry.date) }
@@ -50,6 +57,7 @@ struct PostCard: View {
       }
     }
     .sheet(isPresented: $reporting) { ReportSheet(target: .entry(entry.id), owner: owner) }
+    .sheet(isPresented: $sharingMine) { EntryShareSheet(entry: entry, photo: photo) }
     .sheet(isPresented: $showingComments) {
       CommentsSheet(entryId: entry.id, ownerId: owner.id, ownerHandle: owner.handle)
     }
@@ -136,36 +144,84 @@ struct PostCard: View {
     .frame(maxWidth: .infinity, alignment: .leading)
   }
 
-  /// One row: counts on the left, trip pills on the right, no rule above.
+  /// One row: counts and share on the left, trip pills on the right, no
+  /// rule above. When that doesn't fit (a small phone, a long trip name or a
+  /// large text size), the trips move to a line of their own instead of
+  /// being cut off. Capped at the first accessibility size, so the icons and
+  /// counts never squeeze each other out.
   @ViewBuilder private var footer: some View {
     let trips = entry.trips.filter { $0.id != inTrip }
     let state = shown ?? reactions
-    if state != nil || !trips.isEmpty {
-      HStack(spacing: Space.s) {
-        if let state { metrics(state) }
-        Spacer(minLength: Space.s)
-        if let trip = trips.first {
-          Group {
-            if linkTrips {
-              Button { router.open(mine ? .trip(trip.id) : .publicTrip(trip.id)) } label: { pill(trip.name) }
-                .buttonStyle(.plain)
-            } else {
-              pill(trip.name)
-            }
-          }
-          if trips.count > 1 {
-            Text("+\(trips.count - 1)")
-              .font(.caption.weight(.medium))
-              .foregroundStyle(.secondary)
-              .accessibilityLabel("and \(trips.count - 1) more \(trips.count == 2 ? "trip" : "trips")")
-          }
+    if state != nil || !trips.isEmpty || canShare {
+      ViewThatFits(in: .horizontal) {
+        HStack(spacing: Space.s) {
+          actions(state)
+          Spacer(minLength: Space.s)
+          tripPills(trips)
+        }
+        VStack(alignment: .leading, spacing: Space.xs) {
+          actions(state)
+          tripPills(trips)
         }
       }
       .frame(minHeight: Space.touch)
+      .dynamicTypeSize(...DynamicTypeSize.accessibility1)
     }
     if let likeError {
       Text(likeError).font(.caption).foregroundStyle(.red)
     }
+  }
+
+  private func actions(_ state: Reactions?) -> some View {
+    HStack(spacing: Space.l) {
+      if let state { metrics(state) }
+      if canShare { shareButton }
+    }
+    .fixedSize()
+  }
+
+  @ViewBuilder private func tripPills(_ trips: [Entry.TripRef]) -> some View {
+    if let trip = trips.first {
+      HStack(spacing: Space.s) {
+        if linkTrips {
+          Button { router.open(mine ? .trip(trip.id) : .publicTrip(trip.id)) } label: { pill(trip.name) }
+            .buttonStyle(.plain)
+        } else {
+          pill(trip.name)
+        }
+        if trips.count > 1 {
+          Text("+\(trips.count - 1)")
+            .font(.caption.weight(.medium))
+            .foregroundStyle(.secondary)
+            .accessibilityLabel("and \(trips.count - 1) more \(trips.count == 2 ? "trip" : "trips")")
+        }
+      }
+    }
+  }
+
+  /// Share, after the counts, as on Instagram. Someone else's show goes
+  /// through `ShareLink`, the system share sheet (docs/IOS_NATIVE_GUIDE.md).
+  @ViewBuilder private var shareButton: some View {
+    if mine {
+      Button { sharingMine = true } label: { shareIcon }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Share")
+        .accessibilityHint("Opens share cards for this show")
+    } else {
+      let share = EntryShare.others(entry, owner: owner)
+      ShareLink(item: share.link, message: Text(share.text)) { shareIcon }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Share")
+        .accessibilityHint("Opens the share sheet")
+    }
+  }
+
+  private var shareIcon: some View {
+    Image(systemName: "square.and.arrow.up")
+      .font(.subheadline.weight(.medium))
+      .foregroundStyle(.secondary)
+      .frame(minWidth: Space.touch, minHeight: Space.touch, alignment: .leading)
+      .contentShape(.rect)
   }
 
   private func pill(_ name: String) -> some View {

@@ -9,6 +9,13 @@
 	<string>$(SUPABASE_PUBLISHABLE_KEY)</string>
 	<key>WebURL</key>
 	<string>$(WEB_URL)</string>
+	<key>FacebookAppID</key>
+	<string>$(FACEBOOK_APP_ID)</string>
+	<!-- Lets canOpenURL check for Instagram before sharing to Stories. -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>instagram-stories</string>
+	</array>
 	<key>GoogleIOSClientID</key>
 	<string>$(GOOGLE_IOS_CLIENT_ID)</string>
 	<key>CFBundleURLTypes</key>
