@@ -76,10 +76,27 @@ caffeinate -i claude -p "Build epic #$epic with the epic skill (.claude/skills/e
   --permission-mode acceptEdits --allowedTools "${allowed[@]}" --disallowedTools "${denied[@]}" \
   >"$run_log" 2>&1 || log "epic #$epic: Claude exited with an error"
 
-# The skill moves the epic to Done or In review. If it stopped before
-# that, hand it to the owner.
+# Never lose work: anything left uncommitted or unpushed goes to its
+# branch on GitHub, since the next run starts from a fresh main.
+branch=$(git branch --show-current)
+if [ -n "$branch" ] && [ "$branch" != "main" ]; then
+  if [ -n "$(git status --porcelain)" ]; then
+    git add -A
+    git -c user.name="Felix" -c user.email="felixng@users.noreply.github.com" \
+      commit -q -m "WIP: autopilot run on epic #$epic stopped here" || true
+  fi
+  git push -q -u origin "$branch" 2>/dev/null && log "epic #$epic: saved work on $branch"
+fi
+
+# The skill moves the epic to Done or In review. If Claude hit the usage
+# limit, put the epic back to be retried; if it stopped for another
+# reason, hand it to the owner.
 now=$("$STATUS" "$epic" 2>/dev/null || true)
-if [ "$now" = "In Progress" ]; then
+if [ "$now" = "In Progress" ] && grep -qiE "hit your (session|usage|weekly) limit|usage limit" "$run_log"; then
+  "$STATUS" "$epic" "Ready for Claude" >/dev/null
+  gh issue comment "$epic" --repo felixng/stubbed --body "The autopilot hit the Claude usage limit, so it paused. ${branch:+Work so far is saved on \`$branch\`. }It's back in Ready for Claude and will carry on in a later run, once the limit resets." >/dev/null
+  log "epic #$epic: usage limit, back to Ready for Claude"
+elif [ "$now" = "In Progress" ]; then
   "$STATUS" "$epic" "In review" >/dev/null
   gh issue comment "$epic" --repo felixng/stubbed --body "The autopilot stopped before finishing this epic, so it's back with you. The run's log is on the Mac: \`$run_log\`." >/dev/null
   log "epic #$epic: stopped early, moved to In review"
