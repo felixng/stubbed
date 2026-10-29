@@ -34,7 +34,6 @@ struct TripView: View {
     /// Shows seen (planned ones are listed but not counted yet).
     var seen: [Entry] { entries.filter { !$0.planned } }
     var venues: Int { Set(seen.compactMap { $0.venue?.id }).count }
-    var nights: Int { Set(seen.map(\.date)).count }
   }
 
   var body: some View {
@@ -86,8 +85,10 @@ struct TripView: View {
             stat(m.seen.count, m.seen.count == 1 ? "show" : "shows")
             Divider()
             stat(m.venues, m.venues == 1 ? "venue" : "venues")
-            Divider()
-            stat(m.nights, m.nights == 1 ? "night" : "nights")
+            if m.trip.nights > 0 {
+              Divider()
+              stat(m.trip.nights, m.trip.nights == 1 ? "night" : "nights")
+            }
           }
           .fixedSize(horizontal: false, vertical: true)
         }

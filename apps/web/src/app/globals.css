@@ -1,7 +1,8 @@
 @import "tailwindcss";
 
 /*
- * Stubbed design system ("Footlight Coral"). Source of truth:
+ * Stubbed design system ("Footlight Sweep"): the app icon's magenta, coral
+ * and amber on the system greys. Source of truth:
  * https://claude.ai/artifact/2r1EvQn2286Y29ZJNgPfP6 — see docs/DESIGN.md.
  * Native first: tokens are named after the iOS semantic colours and match
  * the SwiftUI app. The page follows the visitor's appearance.
@@ -14,36 +15,38 @@
   --label-secondary: #aeaeb2;
   --separator: #38383a;
   --outline: #7c7c82;
-  --tint: #ff6b4a;
-  --tint-pressed: #ff8a70;
-  --tint-text: #ff6b4a;
-  --tint-fill: #3d1a11;
+  --tint: #ff5a5a;
+  --tint-pressed: #ff7a7a;
+  --tint-text: #ff5a5a;
+  --tint-fill: #3a1418;
   --on-tint: #000000;
-  --star: #ffd60a;
+  --star: #ffa040;
   --destructive: #ff9f0a;
   --focus: #ffffff;
-  --glow: #2a140e;
+  --glow: #2a1216;
+  /* The app icon's gradient, the same in both appearances. */
+  --sweep: linear-gradient(45deg, #e8247f, #ff5a5a 50%, #ffa040);
   color-scheme: dark;
 }
 
 @media (prefers-color-scheme: light) {
   :root {
-    --background: #fff9f6;
+    --background: #f2f2f7;
     --surface: #ffffff;
-    --fill: #ffebe3;
-    --label: #1f1210;
-    --label-secondary: #5e4039;
-    --separator: #f9e0d6;
-    --outline: #98695b;
-    --tint: #ff7a5c;
-    --tint-pressed: #f2603f;
-    --tint-text: #b33a19;
-    --tint-fill: #ffe0d5;
-    --on-tint: #1f1210;
-    --star: #b96f00;
+    --fill: #e9e9ee;
+    --label: #1c1c1e;
+    --label-secondary: #6c6c70;
+    --separator: #e0e0e5;
+    --outline: #8e8e93;
+    --tint: #dc2f4f;
+    --tint-pressed: #c4234a;
+    --tint-text: #c4234a;
+    --tint-fill: #ffe4e1;
+    --on-tint: #ffffff;
+    --star: #e07400;
     --destructive: #9e1b2c;
-    --focus: #1f1210;
-    --glow: #ffd9cc;
+    --focus: #1c1c1e;
+    --glow: #ffdde2;
     color-scheme: light;
   }
 }
@@ -52,22 +55,22 @@
    data-theme="light"; :has() switches the whole document, body included.
    :is() is forgiving, so browsers without :has() still theme the wrapper. */
 :is(:root:has([data-theme="light"]), [data-theme="light"]) {
-  --background: #fff9f6;
+  --background: #f2f2f7;
   --surface: #ffffff;
-  --fill: #ffebe3;
-  --label: #1f1210;
-  --label-secondary: #5e4039;
-  --separator: #f9e0d6;
-  --outline: #98695b;
-  --tint: #ff7a5c;
-  --tint-pressed: #f2603f;
-  --tint-text: #b33a19;
-  --tint-fill: #ffe0d5;
-  --on-tint: #1f1210;
-  --star: #b96f00;
+  --fill: #e9e9ee;
+  --label: #1c1c1e;
+  --label-secondary: #6c6c70;
+  --separator: #e0e0e5;
+  --outline: #8e8e93;
+  --tint: #dc2f4f;
+  --tint-pressed: #c4234a;
+  --tint-text: #c4234a;
+  --tint-fill: #ffe4e1;
+  --on-tint: #ffffff;
+  --star: #e07400;
   --destructive: #9e1b2c;
-  --focus: #1f1210;
-  --glow: #ffd9cc;
+  --focus: #1c1c1e;
+  --glow: #ffdde2;
   color-scheme: light;
 }
 
@@ -110,12 +113,12 @@
   /* Cards and grouped lists (with a `separator` border), device mockups
      and sheets, the primary button. Dark mode lets the border do the work. */
   --shadow-sm:
-    0 1px 2px rgba(120, 50, 30, 0.08), 0 10px 22px -12px rgba(120, 50, 30, 0.28);
+    0 1px 2px rgba(20, 20, 30, 0.06), 0 10px 22px -12px rgba(20, 20, 30, 0.2);
   --shadow-lg:
-    0 2px 4px rgba(120, 50, 30, 0.12), 0 36px 60px -22px rgba(120, 50, 30, 0.5);
+    0 2px 4px rgba(20, 20, 30, 0.08), 0 36px 60px -22px rgba(20, 20, 30, 0.36);
   --shadow-btn:
-    0 1px 0 rgba(255, 255, 255, 0.5) inset,
-    0 6px 12px -6px rgba(120, 50, 30, 0.55);
+    0 1px 0 rgba(255, 255, 255, 0.3) inset,
+    0 6px 12px -6px rgba(196, 35, 74, 0.5);
 
   /* Titles (SF Pro Display, bold), the iOS text styles at default size. */
   --text-large-title: 34px;
@@ -161,6 +164,12 @@ body {
   color: var(--label);
 }
 
+/* The app icon's gradient: behind avatars and posters with no photo, and an
+   empty profile cover. Only white bold text goes on it, centred. */
+@utility bg-sweep {
+  background-image: var(--sweep);
+}
+
 /* A drawn share card fading in over its placeholder (ShareSheet). Used
    with motion-safe:, so reduced motion swaps it in at once. */
 @keyframes card-in {
@@ -181,13 +190,13 @@ body {
   --label-secondary: #aeaeb2;
   --separator: #38383a;
   --outline: #7c7c82;
-  --tint-text: #ff6b4a;
-  --star: #ffd60a;
+  --tint-text: #ff5a5a;
+  --star: #ffa040;
   --focus: #ffffff;
   color-scheme: dark;
   color: var(--label);
   background:
-    radial-gradient(circle at 72% 18%, rgb(255 107 74 / 0.35), rgb(255 107 74 / 0) 62%),
+    radial-gradient(circle at 72% 18%, rgb(255 90 90 / 0.35), rgb(255 90 90 / 0) 62%),
     var(--surface);
 }
 

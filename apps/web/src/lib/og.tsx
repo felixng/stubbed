@@ -25,8 +25,8 @@ const FONTS = [
 export const OG_SIZE = { width: 1200, height: 630 };
 
 export const INK = "#1C1C1E";
-export const CORAL = "#FF6B4A";
-export const STAR = "#FFD60A";
+export const CORAL = "#FF5A5A";
+export const STAR = "#FFA040";
 export const SECONDARY = "#AEAEB2";
 
 // Edited entries get a new preview URL (`?v=`), so a long CDN cache is safe
@@ -117,7 +117,7 @@ export function Ground({ children }: { children: React.ReactNode }) {
           width: 720,
           height: 720,
           borderRadius: 9999,
-          background: "radial-gradient(circle, rgba(255, 107, 74, 0.35) 0%, rgba(255, 107, 74, 0) 45%)",
+          background: "radial-gradient(circle, rgba(255, 90, 90, 0.35) 0%, rgba(255, 90, 90, 0) 45%)",
         }}
       />
       {children}

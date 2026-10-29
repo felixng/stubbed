@@ -40,7 +40,7 @@ export function posterFitSize(text: string, max = 28): number {
   return Math.round(Math.min(max, byWord, byArea) * 100) / 100;
 }
 
-// Three warm wells, all existing tokens: Blush Well, Coral Wash, Footlight Glow.
+// Three wells, all existing tokens: Grey Well, Coral Wash, Footlight Glow.
 export const POSTER_GROUNDS = ["fill", "wash", "glow"] as const;
 export type PosterGround = (typeof POSTER_GROUNDS)[number];
 

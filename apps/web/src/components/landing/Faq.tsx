@@ -9,7 +9,7 @@ export const FAQS = [
   {
     question: "Can I add shows I saw before joining?",
     answer:
-      "Yes. Paste or upload your ticket confirmation emails, or add photos from past nights out, and Stubbed reads the show, venue and date and suggests entries. Nothing is saved until you have checked it.",
+      "Yes. Paste or upload your ticket confirmation emails, or add photos from shows you’ve been to, and Stubbed reads the show, venue and date and suggests entries. Nothing is saved until you have checked it.",
   },
   {
     question: "Are my entries public?",

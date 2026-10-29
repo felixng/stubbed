@@ -70,7 +70,9 @@ struct PublicTripView: View {
     Section {
       LabeledContent(page.entries.count == 1 ? "Show" : "Shows", value: page.entries.count.formatted())
       LabeledContent(page.venues == 1 ? "Theatre" : "Theatres", value: page.venues.formatted())
-      LabeledContent(page.nights == 1 ? "Night" : "Nights", value: page.nights.formatted())
+      if page.trip.nights > 0 {
+        LabeledContent(page.trip.nights == 1 ? "Night" : "Nights", value: page.trip.nights.formatted())
+      }
       if let average = page.average {
         LabeledContent("Average rating", value: average.formatted(.number.precision(.fractionLength(1))))
       }

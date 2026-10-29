@@ -45,7 +45,7 @@ Details and reasoning: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs
 - **Supabase Free** for Postgres, Auth and Storage. Both apps talk to it directly; there is no custom API server. Vercel hosts only routes that need a server: AI calls (`/api/photo/identify`, `/api/import/email`), the nearby-theatre lookup (`/api/photo/nearby`) and link-preview images (`/api/og/*`). The routes accept the web session cookie or an `Authorization: Bearer` token from iOS.
 - **AI** goes through `apps/web/src/lib/ai`. Default chain: `claude-opus-5-5`, then `claude-haiku-5-5`. Groq, Gemini and Cerebras are optional providers.
 - **Share cards** are drawn on the device: Canvas 2D on web (`lib/share-card.ts`, `lib/share-card-trip.ts`), SwiftUI on iOS. Square 1080×1080. Card stats come from `entry_card_stats`.
-- **Design system:** Footlight Coral; tokens and mapping in `docs/DESIGN.md`. The app and sign-in are always light for now.
+- **Design system:** Footlight Sweep (the app icon's magenta, coral and amber on system greys); tokens and mapping in `docs/DESIGN.md`. The app and sign-in are always light for now.
 - **Auth:** Apple, Google and email + password. Sign-ups are open (#149): email accounts confirm by a link or a 6-digit code (`supabase/templates/`, landing on `/auth/confirm`). Admins have `app_metadata.role = "admin"`; admin pages live under `/app/admin`.
 - **Running cost target:** $0/month on free tiers, plus the Apple Developer Program ($99/year) and small Claude API spend.
 

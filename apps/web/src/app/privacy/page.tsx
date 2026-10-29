@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   description: "What Stubbed collects, why, who it is shared with, and your rights.",
 };
 
-export const viewport: Viewport = { themeColor: "#fff9f6" };
+export const viewport: Viewport = { themeColor: "#f2f2f7" };
 
 export default function PrivacyPage() {
   return (

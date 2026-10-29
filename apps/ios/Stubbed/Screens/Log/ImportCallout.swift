@@ -15,7 +15,7 @@ struct ImportCallout: View {
       } icon: {
         Image(systemName: "photo.stack").foregroundStyle(Palette.tint)
       }
-      Text("Pick photos from your theatre nights: the curtain, the stage, the Playbill or your ticket. Stubbed sorts them into nights and fills in what it can.")
+      Text("Pick photos from shows you’ve been to: the curtain, the stage, the Playbill or your ticket. Stubbed sorts them by show and fills in what it can.")
         .font(.subheadline)
         .foregroundStyle(.secondary)
         .fixedSize(horizontal: false, vertical: true)
@@ -27,7 +27,7 @@ struct ImportCallout: View {
           Text("Import from photos").frame(maxWidth: .infinity)
         }
         .buttonStyle(.borderedProminent)
-        .accessibilityHint("Pick photos from several shows and log each night in turn.")
+        .accessibilityHint("Pick photos from several shows and log each show in turn.")
         Button { router.startLog() } label: {
           Text("Track a show").frame(maxWidth: .infinity)
         }

@@ -5,7 +5,7 @@ import SwiftUI
 /// Log or edit an entry, like the web's /app/log: show, venue, date, rating
 /// (or Upcoming for a future date), note, trip, photo and visibility.
 /// Presented as a sheet from the Log button or an entry's Edit, and once
-/// per night by a photo import (`importing`).
+/// per show by a photo import (`importing`).
 struct LogView: View {
   let editing: Entry?
   let importing: ImportStep?
@@ -115,7 +115,7 @@ struct LogView: View {
             Button("Stop") { confirmStop = true }
           }
           ToolbarItem(placement: .bottomBar) {
-            Button("Skip this night") { importing.onSkip() }
+            Button("Skip this show") { importing.onSkip() }
               .disabled(saving)
           }
         } else {
@@ -132,7 +132,7 @@ struct LogView: View {
         Button("Stop", role: .destructive) { importing?.onStop() }
         Button("Keep going", role: .cancel) {}
       } message: {
-        Text("This night isn’t saved. Nights you’ve saved stay in your diary.")
+        Text("This show isn’t saved. Shows you’ve saved stay in your diary.")
       }
       .sheet(item: $picking) { picker in
         switch picker {
@@ -159,7 +159,7 @@ struct LogView: View {
   }
 
   private var title: String {
-    if let importing { return "Night \(importing.number) of \(importing.total)" }
+    if let importing { return "Show \(importing.number) of \(importing.total)" }
     return editing == nil ? "Track a show" : "Edit"
   }
 
@@ -198,7 +198,7 @@ struct LogView: View {
       .accessibilityLabel("Start with a photo")
       .accessibilityHint("The curtain, the stage, the Playbill or your ticket.")
 
-      // Several photos at once: grouped into nights, each logged in turn.
+      // Several photos at once: grouped by show, each logged in turn.
       PhotosPicker(
         selection: $importItems, maxSelectionCount: PhotoImport.maxPhotos, selectionBehavior: .ordered,
         matching: .images
@@ -207,7 +207,7 @@ struct LogView: View {
           .font(.subheadline.weight(.semibold))
           .frame(minHeight: Space.touch)
       }
-      .accessibilityHint("Pick photos from several shows and log each night in turn.")
+      .accessibilityHint("Pick photos from several shows and log each show in turn.")
 
       Button("No photo? Fill in by hand") { started = true }
         .font(.subheadline.weight(.semibold))
@@ -530,7 +530,7 @@ struct LogView: View {
 
   /// The photo's date at once, theatres near it within about a second, and
   /// the show suggestion when it's ready. Each fills only untouched fields.
-  /// `lookup` may already be under way (an import starts the next night's
+  /// `lookup` may already be under way (an import starts the next show's
   /// early); otherwise it starts here.
   private func detect(from data: Data, lookup: PhotoLookup? = nil) async {
     let token = run
@@ -659,7 +659,7 @@ struct LogView: View {
     }
   }
 
-  /// An import night's photo, read (and its lookup started) ahead of time.
+  /// An imported show's photo, read (and its lookup started) ahead of time.
   private func takeImported(_ step: ImportStep) async {
     guard photo == nil, preview == nil else { return }
     let token = run
@@ -668,7 +668,7 @@ struct LogView: View {
     // The user picked another photo meanwhile: that one wins.
     guard token == run else { return }
     guard let prepared, let jpeg = try? Photo.jpeg(from: prepared.original, maxEdge: Photo.storedEdge) else {
-      photoError = "Couldn’t read this photo. Fill in the details below, or skip this night."
+      photoError = "Couldn’t read this photo. Fill in the details below, or skip this show."
       detect = .idle
       return
     }

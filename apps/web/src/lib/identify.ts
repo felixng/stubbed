@@ -71,7 +71,7 @@ Work through it in this order:
 3. Match the photo. Describe the set to yourself (distinctive scenery and props, e.g. a pile of suitcases under a "Baggage Claim" sign, a band on a platform, a turntable; the size and style of the house) and compare it with the possible shows. Search for a production's set or production photos when that helps tell the candidates apart. Pick the show, and the theatre, that the photo matches.
 4. A title in the photo wins. Read every bit of text in the photos: a title or logo on the set or show curtain, a marquee, a programme or Playbill cover, a ticket. Text in any language counts. If the photos name the show, that is the show, whatever the search suggested; use steps 1–2 only to pick the theatre it was playing at. If the photos name the show and only one theatre is listed, don't search at all.
 
-Be quick: the user may be waiting. Stop searching as soon as you're sure. Give venue_name whenever you know the theatre, and venue_osm_id only when it's one of the listed theatres. Start the reason with what settled it ("Programme reads…", "Only show at the Belasco that night…", "Set matches…").
+Be quick: the user may be waiting. Stop searching as soon as you're sure. Give venue_name whenever you know the theatre, and venue_osm_id only when it's one of the listed theatres. Start the reason with what settled it ("Programme reads…", "Only show at the Belasco that day…", "Set matches…").
 
 Rules:
 - Never identify performers by their face. Who is on stage doesn't matter here.

@@ -417,34 +417,34 @@ function CardPlaceholder({
       className="absolute inset-0 flex flex-col justify-end gap-[2cqw] p-[5.2cqw]"
       style={{
         background: light
-          ? "#FFF9F6"
-          : "radial-gradient(circle at 70% 25%, rgba(255, 107, 74, 0.35), rgba(255, 107, 74, 0) 80%), #1C1C1E",
-        color: light ? "#1F1210" : "#FFFFFF",
+          ? "#F2F2F7"
+          : "radial-gradient(circle at 70% 25%, rgba(255, 90, 90, 0.35), rgba(255, 90, 90, 0) 80%), #1C1C1E",
+        color: light ? "#1C1C1E" : "#FFFFFF",
         // The light cards' separator edge, so the card reads on the light page.
-        boxShadow: light ? "inset 0 0 0 1px #F9E0D6" : undefined,
+        boxShadow: light ? "inset 0 0 0 1px #E0E0E5" : undefined,
         borderRadius: "inherit",
       }}
     >
       <p className="line-clamp-2 font-display text-[6.7cqw] leading-[1.1] font-bold">{title}</p>
       {meta && (
-        <p className="truncate text-[2.6cqw]" style={{ color: light ? "#5E4039" : SECONDARY }}>
+        <p className="truncate text-[2.6cqw]" style={{ color: light ? "#6C6C70" : SECONDARY }}>
           {meta}
         </p>
       )}
       {rating != null && <PlaceholderStars value={halfStep(rating)} light={light} />}
-      <p role="status" className="mt-[2cqw] min-h-[1lh] text-[2.6cqw] font-medium" style={{ color: light ? "#B33A19" : CORAL }}>
+      <p role="status" className="mt-[2cqw] min-h-[1lh] text-[2.6cqw] font-medium" style={{ color: light ? "#C4234A" : CORAL }}>
         {drawn ? "" : failed ? "Couldn’t draw this card." : "Drawing the card…"}
       </p>
     </div>
   );
 }
 
-// The card's stars in half steps: Applause Gold (its dark value on the dark
-// ground, as the drawn cards use), empty stars in the card's outline grey.
+// The card's stars in half steps: amber (its dark value on the dark ground,
+// as the drawn cards use), empty stars in the card's outline grey.
 function PlaceholderStars({ value, light }: { value: number; light: boolean }) {
   const id = useId();
-  const fill = light ? "#B96F00" : STAR;
-  const empty = light ? "#98695B" : "#7C7C82";
+  const fill = light ? "#E07400" : STAR;
+  const empty = light ? "#8E8E93" : "#7C7C82";
   return (
     <span className="flex gap-[0.55cqw]">
       {[0, 1, 2, 3, 4].map((i) => {

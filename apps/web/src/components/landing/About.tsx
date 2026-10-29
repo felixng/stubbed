@@ -7,14 +7,14 @@ export function About() {
       <p className="text-body text-label-secondary">
         Stubbed is a theatre diary app. You log the plays, musicals, operas,
         dance, comedy and stand-up you see, rate each one in half stars and add a line or
-        two on what you thought. Over time it becomes a record of every night
-        out at the theatre: what you saw, where, when and how much you loved
+        two on what you thought. Over time it becomes a record of every visit
+        to the theatre: what you saw, where, when and how much you loved
         it.
       </p>
       <p className="text-body text-label-secondary">
         It is built for theatre regulars: people who see a few shows a year and
         people who see a few a week. Add a show from your phone right after the
-        curtain call. Start with a photo from the night and Stubbed
+        curtain call. Start with a photo from the show and Stubbed
         fills in the date, finds the theatre you were at and suggests the show.
         Group shows into trips, like a week of theatre on holiday or a festival
         run, then share a good-looking card of any show or trip to Instagram.

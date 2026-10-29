@@ -53,10 +53,10 @@ struct PhotoImportTests {
   @Test func twentyPhotosFromSixNights() {
     let theatres = [(40.7593, -73.9868), (51.5115, -0.1281), (40.7590, -73.9845)]
     var shots: [Shot] = []
-    for night in 0..<6 {
-      let (lat, lng) = theatres[night % 3]
-      for i in 0..<(night < 2 ? 4 : 3) {
-        shots.append(Shot("\(night)-\(i)", "2026-0\(night + 1)-10", "19:\(10 + i * 10)", lat, lng))
+    for visit in 0..<6 {
+      let (lat, lng) = theatres[visit % 3]
+      for i in 0..<(visit < 2 ? 4 : 3) {
+        shots.append(Shot("\(visit)-\(i)", "2026-0\(visit + 1)-10", "19:\(10 + i * 10)", lat, lng))
       }
     }
     #expect(shots.count == 20)

@@ -71,14 +71,14 @@ const DARK = {
   accent: CORAL,
 };
 const LIGHT = {
-  ground: "#FFF9F6",
+  ground: "#F2F2F7",
   surface: "#FFFFFF",
-  fill: "#FFEBE3",
-  label: "#1F1210",
-  secondary: "#5E4039",
-  separator: "#F9E0D6",
-  outline: "#98695B",
-  accent: "#B33A19", // tint-text: coral as text on light
+  fill: "#E9E9EE",
+  label: "#1C1C1E",
+  secondary: "#6C6C70",
+  separator: "#E0E0E5",
+  outline: "#8E8E93",
+  accent: "#C4234A", // tint-text: coral as text on light
 };
 type Palette = typeof DARK;
 
@@ -562,9 +562,9 @@ function strokeRound(ctx: Ctx, x: number, y: number, w: number, h: number, r: nu
   ctx.stroke();
 }
 
-// Footlight's warm card shadow. Offsets and blur are in canvas pixels.
+// The cards' soft neutral shadow. Offsets and blur are in canvas pixels.
 function softShadow(ctx: Ctx) {
-  ctx.shadowColor = "rgba(120, 50, 30, 0.28)";
+  ctx.shadowColor = "rgba(20, 20, 30, 0.28)";
   ctx.shadowBlur = 22 * SCALE;
   ctx.shadowOffsetY = 10 * SCALE;
 }

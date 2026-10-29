@@ -32,9 +32,9 @@ const SCALE = CARD_SIZE / U;
 
 export const DISPLAY = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, sans-serif";
 export const TEXT = "-apple-system, 'SF Pro Text', BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, sans-serif";
-export const CORAL = "#FF6B4A";
-// Applause Gold on the dark cards (the dark `star` token); #b96f00 on light.
-export const STAR = "#FFD60A";
+export const CORAL = "#FF5A5A";
+// Amber on the dark cards (the dark `star` token); #e07400 on light.
+export const STAR = "#FFA040";
 export const SECONDARY = "#AEAEB2";
 // Shown small under the wordmark on every card, so a shared image leads back.
 // The plain domain, no "@": with one it reads as a handle next to the user's.
@@ -238,8 +238,8 @@ function drawPhoto(ctx: Ctx, photo: HTMLImageElement | null, focusY: number) {
   ctx.fillRect(0, 0, U, U);
   if (!photo) {
     const glow = ctx.createRadialGradient(U * 0.7, U * 0.25, 0, U * 0.7, U * 0.25, U * 0.8);
-    glow.addColorStop(0, "rgba(255, 107, 74, 0.35)");
-    glow.addColorStop(1, "rgba(255, 107, 74, 0)");
+    glow.addColorStop(0, "rgba(255, 90, 90, 0.35)");
+    glow.addColorStop(1, "rgba(255, 90, 90, 0)");
     ctx.fillStyle = glow;
     ctx.fillRect(0, 0, U, U);
     return;

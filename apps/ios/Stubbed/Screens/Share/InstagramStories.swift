@@ -24,8 +24,8 @@ enum InstagramStories {
       "com.instagram.sharedSticker.appID": appID,
     ]
     if !transparent {
-      item["com.instagram.sharedSticker.backgroundTopColor"] = "#1F1210"
-      item["com.instagram.sharedSticker.backgroundBottomColor"] = "#3D1A11"
+      item["com.instagram.sharedSticker.backgroundTopColor"] = "#1C1C1E"
+      item["com.instagram.sharedSticker.backgroundBottomColor"] = "#3A1418"
     }
     // Instagram reads it at once; don't leave the card on the pasteboard.
     UIPasteboard.general.setItems([item], options: [.expirationDate: Date().addingTimeInterval(5 * 60)])

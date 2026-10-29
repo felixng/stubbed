@@ -8,7 +8,7 @@ import { ForgotForm } from "./ForgotForm";
 // /auth/confirm, then /reset-password.
 export const metadata: Metadata = { title: "Reset your password — Stubbed", robots: { index: false, follow: false } };
 
-export const viewport: Viewport = { themeColor: "#fff9f6" };
+export const viewport: Viewport = { themeColor: "#f2f2f7" };
 
 export default function ForgotPasswordPage() {
   return (

@@ -1,9 +1,9 @@
-// The design system ("Footlight Coral") as data, for the /design-system page
+// The design system ("Footlight Sweep") as data, for the /design-system page
 // and its plain-markdown twin /design-system.md, which people paste into other
 // AI tools. The values mirror globals.css and docs/DESIGN.md;
 // test/design-system.test.ts fails if the colours drift from globals.css.
 
-export const DESIGN_SYSTEM_NAME = "Footlight Coral";
+export const DESIGN_SYSTEM_NAME = "Footlight Sweep";
 
 export type ColorToken = {
   name: string;
@@ -14,22 +14,22 @@ export type ColorToken = {
 };
 
 export const COLORS: ColorToken[] = [
-  { name: "background", tailwind: "bg-background", light: "#fff9f6", dark: "#000000", use: "Every screen; marketing pages stay on it" },
+  { name: "background", tailwind: "bg-background", light: "#f2f2f7", dark: "#000000", use: "Every screen; marketing pages stay on it" },
   { name: "surface", tailwind: "bg-surface", light: "#ffffff", dark: "#1c1c1e", use: "Grouped lists, cards, inputs, sheets" },
-  { name: "fill", tailwind: "bg-fill", light: "#ffebe3", dark: "#2c2c2e", use: "Poster fallback wells, chips, wells" },
-  { name: "label", tailwind: "text-label", light: "#1f1210", dark: "#ffffff", use: "Primary text" },
-  { name: "label-secondary", tailwind: "text-label-secondary", light: "#5e4039", dark: "#aeaeb2", use: "Secondary text: venue, date, captions" },
-  { name: "separator", tailwind: "border-separator", light: "#f9e0d6", dark: "#38383a", use: "Hairlines between rows, inset to the text" },
-  { name: "outline", tailwind: "border-outline", light: "#98695b", dark: "#7c7c82", use: "Control borders, empty stars, placeholder initials" },
-  { name: "tint", tailwind: "bg-tint", light: "#ff7a5c", dark: "#ff6b4a", use: "Fill of the one primary action; never text on its own" },
-  { name: "tint-pressed", tailwind: "hover:bg-tint-pressed", light: "#f2603f", dark: "#ff8a70", use: "Primary button hover and pressed" },
-  { name: "tint-text", tailwind: "text-tint-text", light: "#b33a19", dark: "#ff6b4a", use: "Links, ghost and secondary button labels, selected tab" },
-  { name: "tint-fill", tailwind: "bg-tint-fill", light: "#ffe0d5", dark: "#3d1a11", use: "Secondary buttons, highlighted rows" },
-  { name: "on-tint", tailwind: "text-on-tint", light: "#1f1210", dark: "#000000", use: "Text and icons on `tint`" },
-  { name: "star", tailwind: "fill-star", light: "#b96f00", dark: "#ffd60a", use: "Rating stars and award marks only" },
+  { name: "fill", tailwind: "bg-fill", light: "#e9e9ee", dark: "#2c2c2e", use: "Poster fallback wells, chips, wells" },
+  { name: "label", tailwind: "text-label", light: "#1c1c1e", dark: "#ffffff", use: "Primary text" },
+  { name: "label-secondary", tailwind: "text-label-secondary", light: "#6c6c70", dark: "#aeaeb2", use: "Secondary text: venue, date, captions" },
+  { name: "separator", tailwind: "border-separator", light: "#e0e0e5", dark: "#38383a", use: "Hairlines between rows, inset to the text" },
+  { name: "outline", tailwind: "border-outline", light: "#8e8e93", dark: "#7c7c82", use: "Control borders, empty stars, placeholder initials" },
+  { name: "tint", tailwind: "bg-tint", light: "#dc2f4f", dark: "#ff5a5a", use: "Fill of the one primary action, and state icons (liked heart, calendar day); not small text on `background`" },
+  { name: "tint-pressed", tailwind: "hover:bg-tint-pressed", light: "#c4234a", dark: "#ff7a7a", use: "Primary button hover and pressed" },
+  { name: "tint-text", tailwind: "text-tint-text", light: "#c4234a", dark: "#ff5a5a", use: "Links, ghost and secondary button labels, selected tab" },
+  { name: "tint-fill", tailwind: "bg-tint-fill", light: "#ffe4e1", dark: "#3a1418", use: "Secondary buttons, highlighted rows" },
+  { name: "on-tint", tailwind: "text-on-tint", light: "#ffffff", dark: "#000000", use: "Text and icons on `tint`" },
+  { name: "star", tailwind: "fill-star", light: "#e07400", dark: "#ffa040", use: "Rating stars and award marks only" },
   { name: "destructive", tailwind: "text-destructive", light: "#9e1b2c", dark: "#ff9f0a", use: "Delete, sign out, error text" },
-  { name: "focus", tailwind: "outline-focus", light: "#1f1210", dark: "#ffffff", use: "2px focus ring, 2px offset (web only)" },
-  { name: "glow", tailwind: "bg-glow", light: "#ffd9cc", dark: "#2a140e", use: "Decorative halo behind a hero image or device, and a poster fallback well; otherwise never behind text" },
+  { name: "focus", tailwind: "outline-focus", light: "#1c1c1e", dark: "#ffffff", use: "2px focus ring, 2px offset (web only)" },
+  { name: "glow", tailwind: "bg-glow", light: "#ffdde2", dark: "#2a1216", use: "Decorative halo behind a hero image or device, and a poster fallback well; otherwise never behind text" },
 ];
 
 // CSS custom properties for one appearance, so a preview can show light and
@@ -43,7 +43,9 @@ export function themeVars(appearance: "light" | "dark") {
 export const PRINCIPLES = [
   "**Native first.** Built for the SwiftUI iOS app. The web shares its features, data and rules, not its layouts. On iOS the background and text tokens are the system colours; the coral ones are `Palette` (see iOS).",
   "**Light by default.** Every page and screen is light, whatever the device setting: on the web, `data-theme=\"light\"` on the page root; on iOS, `.preferredColorScheme(.light)`. The dark values are defined and kept working, but nothing ships dark for now.",
-  "**One tint.** `tint` is coral in both appearances and fills the one primary action per screen. Where the brand colour is read as text, use `tint-text`. Nothing else is coral. The one exception is the logo, whose gradient is brand art (see Logo).",
+  "**Colours from the icon.** Every brand colour comes from the app icon's sweep: magenta `#e8247f`, coral `#ff5a5a`, amber `#ffa040`. The neutrals are Apple's system greys.",
+  "**One tint.** `tint` is the icon's coral (a step deeper on light, so white text on it passes) and fills the one primary action per screen. Where the brand colour is read as text, use `tint-text`. Nothing else is coral.",
+  "**The sweep is identity.** The icon's gradient (`bg-sweep`, `Palette.sweep`) stands in for a missing picture: avatars with no photo, iOS posters with no photo, an empty profile cover, and the ring around your own avatar on iOS. Only white bold text goes on it, centred. Never a button or a background for reading.",
   "**Copy:** terse and confident, sentence case, no emoji, no exclamation marks. Button labels are verbs. Numbers are digits and tabular. Sample handle: `@sillyelphaba`; never a real person's name.",
   "**Ratings** always show as five stars in half steps, never a bare number.",
 ];
@@ -87,7 +89,7 @@ export const LOGO_GRADIENT = [
 ];
 
 export const LOGO_RULES = [
-  "**The gradient is brand art, not a UI colour.** Magenta to coral to amber, bottom left to top right. It belongs to the logo and marketing artwork only; interface elements keep `tint`.",
+  "**The gradient is the sweep.** Magenta to coral to amber, bottom left to top right. In the interface it is the identity stand-in (see Principles); controls and text keep `tint`.",
   "**Lockup:** the mark before the wordmark, 1.05× the wordmark's size tall, with a 0.28em gap (`<Wordmark mark />` on the web). The wordmark stays in `label`.",
   "**Clear space:** at least a quarter of the mark's height on every side.",
   "**Minimum size:** the mark 16px tall; the app icon 16px. Below 24px use the mark or icon, never the outline mark.",
@@ -153,13 +155,13 @@ export const RADII = [
 ];
 
 export const SHADOWS = [
-  { name: "shadow-sm", value: "0 1px 2px rgba(120, 50, 30, 0.08), 0 10px 22px -12px rgba(120, 50, 30, 0.28)", use: "Cards, grouped lists, the email field; always with a `separator` border" },
-  { name: "shadow-lg", value: "0 2px 4px rgba(120, 50, 30, 0.12), 0 36px 60px -22px rgba(120, 50, 30, 0.5)", use: "Device mockups and sheets" },
-  { name: "shadow-btn", value: "0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 6px 12px -6px rgba(120, 50, 30, 0.55)", use: "The primary button" },
+  { name: "shadow-sm", value: "0 1px 2px rgba(20, 20, 30, 0.06), 0 10px 22px -12px rgba(20, 20, 30, 0.2)", use: "Cards, grouped lists, the email field; always with a `separator` border" },
+  { name: "shadow-lg", value: "0 2px 4px rgba(20, 20, 30, 0.08), 0 36px 60px -22px rgba(20, 20, 30, 0.36)", use: "Device mockups and sheets" },
+  { name: "shadow-btn", value: "0 1px 0 rgba(255, 255, 255, 0.3) inset, 0 6px 12px -6px rgba(196, 35, 74, 0.5)", use: "The primary button" },
 ];
 
 export const SHADOW_RULES = [
-  "Shadows are warm (brown-tinted), never grey. In dark mode the border does the work.",
+  "Shadows are soft and cool; only the primary button's takes colour, from the coral it sits under. In dark mode the border does the work.",
   "The iOS app uses no drop shadows: system grouped backgrounds instead.",
 ];
 
@@ -185,7 +187,7 @@ export const IOS_RULES = [
   "**Lists are Lists.** List-like screens are `List(.insetGrouped)` on the grouped background, with system chevrons from `NavigationLink`, `.swipeActions` and `.contextMenu`. Bulk select is the system edit mode with bottom-bar actions. Detail and edit screens are a `Form`.",
   "**One custom container:** the feed post (`PostCard`), photo first like Instagram or Hevy: header, the photo at the card's full width (4:5), the show, stars and note, then counts and a trip tag on one row. The whole card is one tap target that scales to 98% when pressed.",
   "**Surfaces.** `Color(.secondarySystemGroupedBackground)` with 16pt continuous corners and a 1pt stroke at 6% of the label colour (`.groupedCard()`). No drop shadows anywhere.",
-  "**Type and colour.** Dynamic Type text styles only; system semantic colours for text and backgrounds; coral only on interactive elements. Text on coral is `onTint` (dark), never white.",
+  "**Type and colour.** Dynamic Type text styles only; system semantic colours for text and backgrounds; coral only on interactive elements, the sweep only behind a missing picture. Text on coral is `onTint` (white on light, black on dark).",
   "**Controls.** System button styles: one `.borderedProminent` per screen, otherwise `.bordered` or plain tinted text. Toggles, pickers, date pickers, `.searchable` (people search opens from Home's search button as a sheet, the field focused), `ShareLink`, `PhotosPicker`.",
   "**Presentations.** Sheets for self-contained tasks, each with its own `NavigationStack` and Cancel / Save (or Done) in the bar: log a show, edit a trip, Share. Comments on a feed post open as a pull-up drawer (`.presentationDetents([.medium, .large])`), as on Instagram. Destructive steps confirm with a `.confirmationDialog`.",
   "**Loading.** Grey placeholder rows in the shape of the content (`.redacted`), never a spinner over the screen. Likes update at once and sync in the background.",
@@ -202,9 +204,10 @@ export const IOS_TOKENS = [
   { token: "separator", swift: "system list separators", note: "Drawn by `List`; cards use a 6% label-colour stroke" },
   { token: "tint", swift: "`Palette.tint`", note: "Accent fills: liked heart, calendar days, avatar badge" },
   { token: "tint-text", swift: "`Palette.tintText`, set as the app `.tint`", note: "Buttons, links, the selected tab, `.borderedProminent` fills" },
-  { token: "tint-fill", swift: "`Palette.tintFill`", note: "Initials avatars, icon badges" },
+  { token: "tint-fill", swift: "`Palette.tintFill`", note: "Icon badges" },
   { token: "on-tint", swift: "`Palette.onTint`", note: "Text and icons on `tint`" },
   { token: "star", swift: "`Palette.star`", note: "Rating stars" },
+  { token: "sweep", swift: "`Palette.sweep`", note: "Avatars and posters with no photo, an empty profile cover, the ring around your own avatar" },
   { token: "destructive", swift: "`role: .destructive` / `.red`", note: "System red; the system styles destructive buttons" },
 ];
 
@@ -214,8 +217,8 @@ export const IOS_COMPONENTS = [
   { name: ".groupedCard()", file: "Design/Theme.swift", notes: "The inset grouped surface: secondary grouped background, 16pt continuous corners, 1pt stroke, no shadow." },
   { name: "PostCard", file: "Screens/Home/PostCard.swift", notes: "A feed post, photo first. One tap target with `CardPressStyle`; the avatar, counts and trip tag push through the router (a `NavigationLink` inside a List row would gain a chevron)." },
   { name: "EntryRow", file: "Screens/Entry/EntryList.swift", notes: "A diary or trip row in a List: 48×64 poster, headline title, `venue · date`, stars or \"Going\", then trips and privacy as caption metadata." },
-  { name: "Poster", file: "Design/Components.swift", notes: "The show's photo, or its initials on `tertiarySystemFill`, at 8pt continuous corners." },
-  { name: "Avatar", file: "Design/Components.swift", notes: "Circular profile photo, or the first letter in `tintText` on `tintFill`." },
+  { name: "Poster", file: "Design/Components.swift", notes: "The show's photo, or its initials in white bold on `Palette.sweep`, at 8pt continuous corners." },
+  { name: "Avatar", file: "Design/Components.swift", notes: "Circular profile photo, or the first letter in white bold on `Palette.sweep`. Your own avatar on the Profile tab wears a 2.5pt sweep ring." },
   { name: "RatingStars / RatingInput", file: "Design/Components.swift, Screens/Log/RatingInput.swift", notes: "Five SF Symbol stars in half steps, scaled with Dynamic Type. The input drags or taps, with a haptic, and is an adjustable control for VoiceOver." },
   { name: "PersonRow / FollowButton", file: "Screens/People/", notes: "A person as a List row (avatar, @handle, name) with Follow (`.borderedProminent`), or Following / Requested (`.bordered`)." },
   { name: "ShareScreen / ShareCarousel / ShareRow", file: "Screens/Share/ShareCarousel.swift", notes: "The Share sheet: the card at full width with 16pt margins, swipe between designs, then Stories, More, Download, Copy text and Link. A row with a thumbnail opens it from a detail screen." },

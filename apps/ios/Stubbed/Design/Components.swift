@@ -52,8 +52,8 @@ struct RatingStars: View {
   }
 }
 
-/// Round avatar: the profile photo, or the first letter of the name on
-/// `tint-fill` when there isn't one.
+/// Round avatar: the profile photo, or the first letter of the name in white
+/// on the `sweep` gradient when there isn't one.
 struct Avatar: View {
   let name: String
   let url: URL?
@@ -66,9 +66,9 @@ struct Avatar: View {
       } else {
         Text(String(name.drop(while: { $0 == "@" }).prefix(1)).uppercased())
           .font(.system(size: size * 0.42, weight: .bold))
-          .foregroundStyle(Palette.tintText)
+          .foregroundStyle(.white)
           .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .background(Palette.tintFill)
+          .background(Palette.sweep)
       }
     }
     .frame(width: size, height: size)
@@ -77,7 +77,8 @@ struct Avatar: View {
   }
 }
 
-/// A 2:3 poster; with no image, the show's initials in `outline` on `fill`.
+/// A 2:3 poster; with no image, the show's initials in white on the `sweep`
+/// gradient.
 struct Poster: View {
   let title: String
   var url: URL?
@@ -92,9 +93,9 @@ struct Poster: View {
       } else {
         Text(Self.initials(title))
           .font(.system(size: width * 0.39, weight: .bold))
-          .foregroundStyle(.secondary)
+          .foregroundStyle(.white)
           .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .background(Color(.tertiarySystemFill))
+          .background(Palette.sweep)
       }
     }
     .frame(width: width, height: height ?? width * 1.5)
