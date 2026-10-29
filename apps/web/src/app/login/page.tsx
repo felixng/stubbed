@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 };
 
 // Always light, like the landing page and the app (owner's call).
-export const viewport: Viewport = { themeColor: "#fff9f6" };
+export const viewport: Viewport = { themeColor: "#f2f2f7" };
 
 export default function LoginPage() {
   return (

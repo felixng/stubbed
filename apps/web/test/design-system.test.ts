@@ -31,7 +31,8 @@ test("designSystemMarkdown: every token and the page link", () => {
 
 test("iOS: every token is mapped and every screenshot exists", () => {
   assert.deepEqual(
-    IOS_TOKENS.map((t) => t.token).sort(),
+    // `sweep` is a gradient (LOGO_GRADIENT), not one of the hex COLORS.
+    IOS_TOKENS.map((t) => t.token).filter((t) => t !== "sweep").sort(),
     COLORS.map((c) => c.name).filter((n) => !["tint-pressed", "focus", "glow", "outline"].includes(n)).sort(),
   );
   for (const shot of IOS_SCREENSHOTS) {

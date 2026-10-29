@@ -6,7 +6,7 @@ import { ResetForm } from "./ResetForm";
 // Choose a new password, signed in by the reset email's link (#149).
 export const metadata: Metadata = { title: "Choose a new password — Stubbed", robots: { index: false, follow: false } };
 
-export const viewport: Viewport = { themeColor: "#fff9f6" };
+export const viewport: Viewport = { themeColor: "#f2f2f7" };
 
 export default function ResetPasswordPage() {
   return (

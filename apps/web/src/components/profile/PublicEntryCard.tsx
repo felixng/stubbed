@@ -187,7 +187,7 @@ export function PublicEntryCard({
           <img src={photoUrl} alt={`Photo from ${entry.show.title}`} loading="lazy" className="aspect-4/5 max-h-[600px] w-full object-cover" />
           {/* The gradient is always dark, so the stars take the dark appearance's
               star and white empty stars, whatever the page's appearance. */}
-          <div className="absolute inset-x-0 bottom-0 [--outline:rgb(255_255_255/0.75)] [--star:#ffd60a] bg-linear-to-t from-black/80 via-black/55 to-transparent px-4 pt-20 pb-4 [text-shadow:0_1px_2px_rgb(0_0_0/0.5)]">
+          <div className="absolute inset-x-0 bottom-0 [--outline:rgb(255_255_255/0.75)] [--star:#ffa040] bg-linear-to-t from-black/80 via-black/55 to-transparent px-4 pt-20 pb-4 [text-shadow:0_1px_2px_rgb(0_0_0/0.5)]">
             {show}
           </div>
         </div>

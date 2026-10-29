@@ -8,8 +8,8 @@ const GROUND: Record<PosterGround, string> = {
 };
 
 // A 2:3 poster at radius-sm. The show's photo when there is one; without it,
-// "House Lights": the title in Velvet Ink on one of three warm wells, the
-// show type in small caps and a short Clay rule, seeded from the title so the
+// "House Lights": the title in Velvet Ink on one of three wells, the
+// show type in small caps and a short Steel Outline rule, seeded from the title so the
 // same show always looks the same (lib/poster). Below 80px wide it falls back
 // to the monogram over the rule. Decorative: the title is always printed
 // beside it. Shared by EntryList, ShowRow and ShowCard.

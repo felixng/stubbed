@@ -64,8 +64,8 @@ struct TripCardView: View {
       ground: .black, surface: rgb(0x1C1C1E), fill: rgb(0x2C2C2E), label: .white, secondary: rgb(0xAEAEB2),
       separator: rgb(0x38383A), outline: rgb(0x7C7C82), accent: CardInk.coral)
     static let light = Ink(
-      ground: rgb(0xFFF9F6), surface: .white, fill: rgb(0xFFEBE3), label: rgb(0x1F1210), secondary: rgb(0x5E4039),
-      separator: rgb(0xF9E0D6), outline: rgb(0x98695B), accent: rgb(0xB33A19))
+      ground: rgb(0xF2F2F7), surface: .white, fill: rgb(0xE9E9EE), label: rgb(0x1C1C1E), secondary: rgb(0x6C6C70),
+      separator: rgb(0xE0E0E5), outline: rgb(0x8E8E93), accent: rgb(0xC4234A))
   }
 
   private var ink: Ink { design == .collage || design == .square ? .light : .dark }

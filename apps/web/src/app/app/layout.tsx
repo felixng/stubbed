@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 // viewportFit lets the tab bar sit above the home indicator on iPhones.
 // Always light for now (owner's call), like the landing page.
-export const viewport: Viewport = { viewportFit: "cover", themeColor: "#fff9f6" };
+export const viewport: Viewport = { viewportFit: "cover", themeColor: "#f2f2f7" };
 
 // Phones get a header and a bottom tab bar. From md (768px) a sidebar on the
 // left holds the wordmark, people search and navigation instead, and the page
