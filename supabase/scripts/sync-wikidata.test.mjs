@@ -1,9 +1,21 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { mapCatalogue, normaliseTitle, sparql, fetchCatalogue, syncSql, detailQuery } from './sync-wikidata.mjs';
+import { mapCatalogue, normaliseTitle, sparql, fetchCatalogue, syncSql, detailQuery, parsePsqlOutput } from './sync-wikidata.mjs';
 
 const fixture = JSON.parse(await readFile(new URL('./fixtures/mapping.json', import.meta.url)));
+
+test('serializes multi-row merge results on one line and decodes escaped newlines in titles', () => {
+  const { rows } = mapCatalogue(fixture);
+  assert.match(syncSql(rows, false), /jsonb_agg/);
+  assert.match(syncSql(rows, true), /jsonb_agg/);
+  assert.doesNotMatch(syncSql(rows, false), /\bjson_agg/);
+  const output = '{"added":2}\n[{"title":"Hadestown\\nThe Musical","outcome":"merged"}, {"title":"Operation Mincemeat","outcome":"ambiguous"}]\n';
+  assert.deepEqual(parsePsqlOutput(output), [{ added: 2 }, [
+    { title: 'Hadestown\nThe Musical', outcome: 'merged' },
+    { title: 'Operation Mincemeat', outcome: 'ambiguous' },
+  ]]);
+});
 
 test('maps captured live Wikidata statements for real musicals and plays', async () => {
   const live = JSON.parse(await readFile(new URL('./fixtures/wikidata-live.json', import.meta.url)));

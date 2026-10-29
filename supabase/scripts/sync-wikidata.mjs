@@ -184,7 +184,7 @@ export function syncSql(rows, dryRun) {
   const incoming = `select * from jsonb_to_recordset(${literal(payload)}::jsonb)
     as x(wikidata_id text, title text, type public.show_type, first_performed smallint, aliases text[])`;
   const counts = `with incoming as (${incoming})
-    select json_build_object('added', count(*) filter (where s.id is null),
+    select jsonb_build_object('added', count(*) filter (where s.id is null),
       'updated', count(*) filter (where s.id is not null and
         (s.title, s.type, s.first_performed, s.aliases) is distinct from
         (i.title, i.type, i.first_performed, i.aliases)),
@@ -206,7 +206,7 @@ export function syncSql(rows, dryRun) {
       from public.shows s join catalogue c
         on public.normalise_show_title(c.title) = public.normalise_show_title(s.title)
       where s.wikidata_id is null group by s.id, s.title, s.type
-    ) select coalesce(json_agg(planned order by title), '[]') from planned;
+    ) select coalesce(jsonb_agg(planned order by title), '[]') from planned;
     commit;`;
   return `begin;
     set local standard_conforming_strings = on;
@@ -221,8 +221,14 @@ export function syncSql(rows, dryRun) {
       first_performed = excluded.first_performed, aliases = excluded.aliases
     where (shows.title, shows.type, shows.first_performed, shows.aliases) is distinct from
       (excluded.title, excluded.type, excluded.first_performed, excluded.aliases);
-    select coalesce(json_agg(m order by title), '[]') from public.merge_into_catalogue() m;
+    select coalesce(jsonb_agg(m order by title), '[]') from public.merge_into_catalogue() m;
     commit;`;
+}
+
+export function parsePsqlOutput(output) {
+  // SQL deliberately uses jsonb_agg, whose text output is one physical line.
+  // json_agg(record) inserts physical newlines between records instead.
+  return output.split('\n').filter(record => record.trim()).map(record => JSON.parse(record));
 }
 
 export function runPsql(sql) {
@@ -243,7 +249,7 @@ export function runPsql(sql) {
         reject(new Error('Database operation failed (check connection, privileges and catalogue migration); transaction rolled back'));
         return;
       }
-      try { resolve(output.trim().split('\n').map(line => JSON.parse(line))); }
+      try { resolve(parsePsqlOutput(output)); }
       catch { reject(new Error('Unexpected database response')); }
     });
     child.stdin.on('error', () => {});
