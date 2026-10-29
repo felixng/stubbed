@@ -1,0 +1,427 @@
+{
+  "head": {},
+  "results": {
+    "bindings": [
+      {
+        "item": {
+          "type": "uri",
+          "value": "http://www.wikidata.org/entity/Q1018439"
+        },
+        "alias": {
+          "xml:lang": "en",
+          "type": "literal",
+          "value": "Jeeves"
+        },
+        "description": {
+          "xml:lang": "en",
+          "type": "literal",
+          "value": "musical"
+        },
+        "title": {
+          "xml:lang": "en",
+          "type": "literal",
+          "value": "By Jeeves"
+        },
+        "published": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+          "type": "literal",
+          "value": "1975-01-01T00:00:00Z"
+        },
+        "ibdb": {
+          "type": "literal",
+          "value": "10770"
+        },
+        "opera": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "dance": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "musical": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "true"
+        },
+        "play": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "true"
+        },
+        "excluded": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        }
+      },
+      {
+        "item": {
+          "type": "uri",
+          "value": "http://www.wikidata.org/entity/Q10268314"
+        },
+        "alias": {
+          "xml:lang": "en",
+          "type": "literal",
+          "value": "Goat, or Who Is Sylvia?"
+        },
+        "description": {
+          "xml:lang": "en",
+          "type": "literal",
+          "value": "play written by Edward Albee"
+        },
+        "title": {
+          "xml:lang": "en",
+          "type": "literal",
+          "value": "The Goat, or Who Is Sylvia?"
+        },
+        "ibdb": {
+          "type": "literal",
+          "value": "10961"
+        },
+        "opera": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "dance": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "musical": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "play": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "true"
+        },
+        "excluded": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "premiere": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+          "type": "literal",
+          "value": "2002-03-10T00:00:00Z"
+        }
+      },
+      {
+        "item": {
+          "type": "uri",
+          "value": "http://www.wikidata.org/entity/Q10268314"
+        },
+        "alias": {
+          "xml:lang": "en",
+          "type": "literal",
+          "value": "Edward Albee's The Goat, or, Who is Sylvia?"
+        },
+        "description": {
+          "xml:lang": "en",
+          "type": "literal",
+          "value": "play written by Edward Albee"
+        },
+        "title": {
+          "xml:lang": "en",
+          "type": "literal",
+          "value": "The Goat, or Who Is Sylvia?"
+        },
+        "ibdb": {
+          "type": "literal",
+          "value": "10961"
+        },
+        "opera": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "dance": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "musical": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "play": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "true"
+        },
+        "excluded": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "premiere": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+          "type": "literal",
+          "value": "2002-03-10T00:00:00Z"
+        }
+      },
+      {
+        "item": {
+          "type": "uri",
+          "value": "http://www.wikidata.org/entity/Q10330444"
+        },
+        "description": {
+          "xml:lang": "en",
+          "type": "literal",
+          "value": "2000 concert, album by Liza Minnelli"
+        },
+        "title": {
+          "xml:lang": "en",
+          "type": "literal",
+          "value": "Minnelli on Minnelli: Live at the Palace"
+        },
+        "ibdb": {
+          "type": "literal",
+          "value": "6104"
+        },
+        "opera": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "dance": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "musical": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "play": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "excluded": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "true"
+        },
+        "published": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+          "type": "literal",
+          "value": "2000-01-01T00:00:00Z"
+        }
+      },
+      {
+        "item": {
+          "type": "uri",
+          "value": "http://www.wikidata.org/entity/Q10336513"
+        },
+        "description": {
+          "xml:lang": "en",
+          "type": "literal",
+          "value": "1939 film by Elliott Nugent"
+        },
+        "title": {
+          "xml:lang": "en",
+          "type": "literal",
+          "value": "Never Say Die"
+        },
+        "ibdb": {
+          "type": "literal",
+          "value": "6475"
+        },
+        "opera": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "dance": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "musical": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "play": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "excluded": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "true"
+        },
+        "published": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+          "type": "literal",
+          "value": "1939-01-01T00:00:00Z"
+        }
+      },
+      {
+        "item": {
+          "type": "uri",
+          "value": "http://www.wikidata.org/entity/Q1044703"
+        },
+        "description": {
+          "xml:lang": "en",
+          "type": "literal",
+          "value": "1945 musical by Richard Rodgers (music) and Oscar Hammerstein II (book and lyrics)"
+        },
+        "title": {
+          "xml:lang": "en",
+          "type": "literal",
+          "value": "Carousel"
+        },
+        "ibdb": {
+          "type": "literal",
+          "value": "2419"
+        },
+        "opera": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "dance": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "musical": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "true"
+        },
+        "play": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "true"
+        },
+        "excluded": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "published": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+          "type": "literal",
+          "value": "1945-07-19T00:00:00Z"
+        }
+      },
+      {
+        "item": {
+          "type": "uri",
+          "value": "http://www.wikidata.org/entity/Q1024739"
+        },
+        "description": {
+          "xml:lang": "en",
+          "type": "literal",
+          "value": "theatrical musical by John Kander debuted in 1966"
+        },
+        "title": {
+          "xml:lang": "en",
+          "type": "literal",
+          "value": "Cabaret"
+        },
+        "ibdb": {
+          "type": "literal",
+          "value": "2338"
+        },
+        "opera": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "dance": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "musical": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "true"
+        },
+        "play": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "true"
+        },
+        "excluded": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "premiere": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+          "type": "literal",
+          "value": "1966-11-20T00:00:00Z"
+        }
+      },
+      {
+        "item": {
+          "type": "uri",
+          "value": "http://www.wikidata.org/entity/Q1018482"
+        },
+        "description": {
+          "xml:lang": "en",
+          "type": "literal",
+          "value": "musical"
+        },
+        "title": {
+          "xml:lang": "en",
+          "type": "literal",
+          "value": "Bye Bye Birdie"
+        },
+        "ibdb": {
+          "type": "literal",
+          "value": "2333"
+        },
+        "opera": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "dance": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "musical": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "true"
+        },
+        "play": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "true"
+        },
+        "excluded": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#boolean",
+          "type": "literal",
+          "value": "false"
+        },
+        "premiere": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+          "type": "literal",
+          "value": "1960-01-01T00:00:00Z"
+        },
+        "published": {
+          "datatype": "http://www.w3.org/2001/XMLSchema#dateTime",
+          "type": "literal",
+          "value": "1960-01-01T00:00:00Z"
+        }
+      }
+    ]
+  }
+}

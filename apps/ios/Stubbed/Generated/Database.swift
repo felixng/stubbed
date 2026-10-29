@@ -518,51 +518,69 @@ internal enum PublicSchema {
     }
   }
   internal struct ShowsSelect: Codable, Hashable, Sendable {
+    internal let aliases: [String]
     internal let createdAt: String
     internal let createdBy: UUID?
+    internal let firstPerformed: Int16?
     internal let id: UUID
     internal let title: String
     internal let type: ShowType
     internal let verified: Bool
+    internal let wikidataId: String?
     internal enum CodingKeys: String, CodingKey {
+      case aliases = "aliases"
       case createdAt = "created_at"
       case createdBy = "created_by"
+      case firstPerformed = "first_performed"
       case id = "id"
       case title = "title"
       case type = "type"
       case verified = "verified"
+      case wikidataId = "wikidata_id"
     }
   }
   internal struct ShowsInsert: Codable, Hashable, Sendable {
+    internal let aliases: [String]?
     internal let createdAt: String?
     internal let createdBy: UUID?
+    internal let firstPerformed: Int16?
     internal let id: UUID?
     internal let title: String
     internal let type: ShowType?
     internal let verified: Bool?
+    internal let wikidataId: String?
     internal enum CodingKeys: String, CodingKey {
+      case aliases = "aliases"
       case createdAt = "created_at"
       case createdBy = "created_by"
+      case firstPerformed = "first_performed"
       case id = "id"
       case title = "title"
       case type = "type"
       case verified = "verified"
+      case wikidataId = "wikidata_id"
     }
   }
   internal struct ShowsUpdate: Codable, Hashable, Sendable {
+    internal let aliases: [String]?
     internal let createdAt: String?
     internal let createdBy: UUID?
+    internal let firstPerformed: Int16?
     internal let id: UUID?
     internal let title: String?
     internal let type: ShowType?
     internal let verified: Bool?
+    internal let wikidataId: String?
     internal enum CodingKeys: String, CodingKey {
+      case aliases = "aliases"
       case createdAt = "created_at"
       case createdBy = "created_by"
+      case firstPerformed = "first_performed"
       case id = "id"
       case title = "title"
       case type = "type"
       case verified = "verified"
+      case wikidataId = "wikidata_id"
     }
   }
   internal struct VenuesSelect: Codable, Hashable, Sendable {
