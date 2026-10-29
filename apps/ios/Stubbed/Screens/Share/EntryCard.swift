@@ -19,25 +19,30 @@ struct EntryCardData: Hashable, Sendable {
   var handle: String?
 }
 
-/// The entry card designs, in the web's order (apps/web/src/lib/share-card.ts).
+/// The entry card designs, in the web's order (apps/web/src/lib/share-card.ts):
+/// stats across the top, or the name alone (owner, 2026-10-29). Both keep the
+/// middle of the photo clear, and either can hide the rating.
 enum EntryCardDesign: String, CaseIterable, Identifiable, Sendable {
-  case square
-  case hevyVenue = "hevy-venue"
-  case hevySeen = "hevy-seen"
+  case stats
+  case name
 
   var id: String { rawValue }
 
   var name: String {
     switch self {
-    case .square: "Photo"
-    case .hevyVenue: "Photo with stats"
-    case .hevySeen: "Photo, times seen"
+    case .stats: "Stats"
+    case .name: "Name only"
     }
   }
+
+  /// Off by default for 2 stars or below, and when there's no rating (the
+  /// web's `showsRatingByDefault`).
+  static func showsRating(_ rating: Double?) -> Bool { (rating ?? 0) > 2 }
 }
 
-/// Shown small under the wordmark on every card (the web's `CARD_DOMAIN`),
-/// so a shared image leads back.
+/// Stubbed's Instagram handle (the web's `CARD_DOMAIN`): the share screen
+/// asks you to tag it, and trip cards show it under the wordmark. Entry
+/// cards leave it off (owner, 2026-10-29).
 let cardDomain = "@getstubbed.app"
 
 /// Fixed colours from the card designs: cards are always dark, whatever the
@@ -46,7 +51,7 @@ enum CardInk {
   static let coral = Color(red: 1, green: 90 / 255, blue: 90 / 255)
   static let star = Color(red: 1, green: 160 / 255, blue: 64 / 255)
   static let secondary = Color(red: 174 / 255, green: 174 / 255, blue: 178 / 255)
-  static let softWhite = Color.white.opacity(0.85)
+  static let softWhite = Color.white.opacity(0.9)
   static let ground = Color(red: 28 / 255, green: 28 / 255, blue: 30 / 255)
   static let rule = Color(red: 56 / 255, green: 56 / 255, blue: 58 / 255)
 }
@@ -66,6 +71,7 @@ func ordinal(_ n: Int) -> String {
 /// One entry card, laid out in the designs' 540pt square. Render it with
 /// `ShareCards.render` for the 1080px image. `transparent` drops the photo
 /// and shading (text only, with shadows), for laying over your own story.
+/// Pass `data` with `rating` nil to hide the rating.
 struct EntryCardView: View {
   let design: EntryCardDesign
   let data: EntryCardData
@@ -73,183 +79,124 @@ struct EntryCardView: View {
   var transparent = false
 
   static let size: CGFloat = 540
+  private let side: CGFloat = 28
 
   var body: some View {
-    ZStack {
-      switch design {
-      case .square: square
-      case .hevyVenue: hevy(middle: .venue)
-      case .hevySeen: hevy(middle: .seen)
+    ZStack(alignment: .topLeading) {
+      if !transparent { background }
+      VStack(alignment: .leading, spacing: 0) {
+        if design == .stats { stats }
+        Spacer(minLength: 0)
+        if design == .stats {
+          CardTitle(text: data.title, size: 26, lineHeight: 30, width: Self.size - side * 2, maxLines: 1)
+            .padding(.bottom, 10)
+        } else {
+          CardTitle(text: data.title, size: 36, lineHeight: 40, width: Self.size - side * 2)
+            .padding(.bottom, 12)
+          if let rating = data.rating {
+            CardStars(value: rating, size: 24, gap: 3, outline: .white.opacity(0.75))
+              .padding(.bottom, 12)
+          }
+        }
+        footer
       }
+      .padding(.horizontal, side)
+      .padding(.bottom, 26)
+      .cardTextShadow(true)
     }
     .frame(width: Self.size, height: Self.size)
+    .clipShape(.rect(cornerRadius: transparent ? 0 : 32))
     .environment(\.colorScheme, .dark)
   }
 
-  // MARK: - "Square · single, full photo"
-
-  private var square: some View {
-    let pad: CGFloat = 28
-    return ZStack(alignment: .bottomLeading) {
-      if !transparent {
-        CardBackground(photo: photo, focusY: 0.5)
-        LinearGradient(
-          stops: [
-            .init(color: .black.opacity(0), location: 0), .init(color: .black.opacity(0.78), location: 0.5),
-            .init(color: .black, location: 1),
-          ], startPoint: .top, endPoint: .bottom
-        )
-        .frame(height: Self.size - 150)
-      }
-      VStack(alignment: .leading, spacing: 0) {
-        CardTitle(text: data.title, size: 36, lineHeight: 40, width: Self.size - pad * 2)
-          .padding(.bottom, 4)
-        Text(meta)
-          .font(.system(size: 14))
-          .tracking(-0.17)
-          .foregroundStyle(CardInk.secondary)
-          .lineLimit(1)
-          .frame(height: 19, alignment: .leading)
-          .padding(.bottom, 10)
-        HStack(alignment: .center, spacing: 0) {
-          if let rating = data.rating {
-            CardStars(value: rating, size: 22, gap: 3, outline: Color(red: 124 / 255, green: 124 / 255, blue: 130 / 255))
-            Spacer(minLength: 8)
-          }
-          HStack(alignment: .firstTextBaseline, spacing: 8) {
-            Text(ordinal(data.showOfYear))
-              .font(.system(size: 17, weight: .semibold))
-              .tracking(-0.4)
-              .foregroundStyle(CardInk.coral)
-            Text("show of \(String(data.year))")
-              .font(.system(size: 13))
-              .foregroundStyle(CardInk.secondary)
-          }
-          if data.rating == nil { Spacer(minLength: 0) }
+  /// Shade only where there's text: a band at the top behind the stats, and
+  /// the bottom quarter behind the name and logo.
+  private var background: some View {
+    ZStack {
+      CardBackground(photo: photo, focusY: 0.4)
+      VStack(spacing: 0) {
+        if design == .stats {
+          LinearGradient(colors: [.black.opacity(0.55), .black.opacity(0)], startPoint: .top, endPoint: .bottom)
+            .frame(height: 150)
         }
-        .frame(height: 22)
-        .padding(.bottom, 15)
-        CardInk.rule.frame(height: 1).padding(.bottom, 9)
-        HStack {
-          Text(verbatim: "stubbed")
-            .font(.system(size: 18, weight: .heavy))
-            .tracking(-0.81)
-            .foregroundStyle(.white)
-          Spacer()
-          if let handle = data.handle {
-            Text(verbatim: "@\(handle)")
-              .font(.system(size: 13))
-              .tracking(-0.08)
-              .foregroundStyle(CardInk.secondary)
-          }
-        }
-        .frame(height: 18)
-        Text(verbatim: cardDomain)
-          .font(.system(size: 10, weight: .medium))
-          .foregroundStyle(CardInk.secondary)
-          .frame(height: 12)
+        Spacer(minLength: 0)
+        LinearGradient(colors: [.black.opacity(0), .black.opacity(0.75)], startPoint: .top, endPoint: .bottom)
+          .frame(height: Self.size - 360)
       }
-      .padding([.horizontal, .top], pad)
-      .padding(.bottom, pad - 7)
-      .cardTextShadow(transparent)
     }
-    .clipShape(.rect(cornerRadius: transparent ? 0 : 20))
   }
 
-  // MARK: - "Hevy-style · photo" (venue visits) and "· photo, seen before"
-
-  private enum Middle { case venue, seen }
-
-  private func hevy(middle: Middle) -> some View {
-    let side: CGFloat = 24
-    var stats: [(label: String, value: String?, color: Color)] = [
+  /// Show of the year, the venue visit (or times seen with no venue), then
+  /// the rating, or times seen when it's hidden.
+  private var stats: some View {
+    var columns: [(label: String, value: String?, color: Color)] = [
       ("Show of \(String(data.year))", ordinal(data.showOfYear), CardInk.coral)
     ]
-    if middle == .venue, let venue = data.venue {
-      stats.append((venue, "\(ordinal(data.venueVisit)) visit", .white))
+    if let venue = data.venue {
+      columns.append((venue, "\(ordinal(data.venueVisit)) visit", .white))
     } else {
-      stats.append(("Time seen", ordinal(data.timesSeen), .white))
+      columns.append(("Seen", "\(ordinal(data.timesSeen)) time", .white))
     }
-    if data.rating != nil { stats.append(("Rating", nil, .white)) }
-
-    return ZStack(alignment: .topLeading) {
-      if !transparent {
-        CardBackground(photo: photo, focusY: middle == .seen ? 0.4 : 0.35)
-        VStack(spacing: 0) {
-          LinearGradient(colors: [.black.opacity(0.6), .black.opacity(0)], startPoint: .top, endPoint: .bottom)
-            .frame(height: 170)
-          Spacer(minLength: 0)
-          LinearGradient(colors: [.black.opacity(0), .black.opacity(0.82)], startPoint: .top, endPoint: .bottom)
-            .frame(height: Self.size - 270)
-        }
-      }
-      VStack(spacing: 0) {
-        HStack(spacing: 0) {
-          ForEach(Array(stats.enumerated()), id: \.offset) { _, stat in
-            VStack(spacing: 4) {
-              Text(stat.label)
-                .font(.system(size: 15))
-                .tracking(-0.15)
-                .foregroundStyle(CardInk.softWhite)
-                .lineLimit(1)
-                .frame(height: 20)
-              if let value = stat.value {
-                Text(value)
-                  .font(.system(size: 24, weight: .bold))
-                  .tracking(0.24)
-                  .foregroundStyle(stat.color)
-                  .lineLimit(1)
-                  .frame(height: 28)
-              } else if let rating = data.rating {
-                CardStars(value: rating, size: 20, gap: 2, outline: .white.opacity(0.75))
-                  .frame(height: 28)
-              }
-            }
-            .padding(.horizontal, 6)
-            .frame(maxWidth: .infinity)
-          }
-        }
-        .padding(.horizontal, side)
-        .padding(.top, 28)
-        Spacer(minLength: 0)
-        VStack(alignment: .leading, spacing: 0) {
-          CardTitle(text: data.title, size: 34, lineHeight: 38, width: Self.size - (side + 4) * 2)
-            .padding(.bottom, 2)
-          Text(meta)
-            .font(.system(size: 15))
-            .tracking(-0.18)
+    if data.rating != nil {
+      columns.append(("Rating", nil, .white))
+    } else if data.venue != nil {
+      columns.append(("Seen", "\(ordinal(data.timesSeen)) time", .white))
+    }
+    return HStack(spacing: 0) {
+      ForEach(Array(columns.enumerated()), id: \.offset) { _, column in
+        VStack(spacing: 4) {
+          Text(column.label)
+            .font(.system(size: 20, weight: .medium))
+            .tracking(-0.2)
             .foregroundStyle(CardInk.softWhite)
             .lineLimit(1)
-            .frame(height: 20, alignment: .leading)
-            .padding(.bottom, 6)
-          HStack {
-            Text(verbatim: "stubbed")
-              .font(.system(size: 28, weight: .heavy))
-              .tracking(-1.26)
-              .foregroundStyle(.white)
-            Spacer()
-            if let handle = data.handle {
-              Text(verbatim: "@\(handle)")
-                .font(.system(size: 20))
-                .tracking(-0.32)
-                .foregroundStyle(CardInk.softWhite)
-            }
+            .frame(height: 26)
+          if let value = column.value {
+            Text(value)
+              .font(.system(size: 30, weight: .bold))
+              .tracking(0.2)
+              .foregroundStyle(column.color)
+              .lineLimit(1)
+              .minimumScaleFactor(0.7)
+              .frame(height: 36)
+          } else if let rating = data.rating {
+            CardStars(value: rating, size: 24, gap: 3, outline: .white.opacity(0.75))
+              .frame(height: 36)
           }
-          .frame(height: 28)
-          Text(verbatim: cardDomain)
-            .font(.system(size: 12, weight: .medium))
-            .foregroundStyle(CardInk.softWhite)
-            .frame(height: 14)
         }
-        .padding(.horizontal, side + 4)
-        .padding(.bottom, 20)
+        .padding(.horizontal, 6)
+        .frame(maxWidth: .infinity)
       }
-      .cardTextShadow(true)
     }
-    .clipShape(.rect(cornerRadius: transparent ? 0 : 32))
+    .padding(.horizontal, 20 - side)
+    .padding(.top, 30)
   }
 
-  private var meta: String { [data.whereText, data.date].filter { !$0.isEmpty }.joined(separator: " · ") }
+  /// The logo (ticket mark and wordmark), and the @handle on the right.
+  private var footer: some View {
+    HStack(alignment: .center) {
+      HStack(spacing: 36 * 0.28) {
+        Image("BrandMark")
+          .resizable()
+          .scaledToFit()
+          .frame(height: 36 * 1.05)
+        Text(verbatim: "stubbed")
+          .font(.system(size: 36, weight: .heavy))
+          .tracking(-0.045 * 36)
+          .foregroundStyle(.white)
+      }
+      Spacer(minLength: 12)
+      if let handle = data.handle {
+        Text(verbatim: "@\(handle)")
+          .font(.system(size: 24, weight: .medium))
+          .tracking(-0.3)
+          .foregroundStyle(.white)
+          .lineLimit(1)
+          .frame(maxWidth: 200, alignment: .trailing)
+      }
+    }
+    .frame(height: 44)
+  }
 }
 
 /// The photo, filling the square (cropped, centred across, `focusY` down).
@@ -287,26 +234,27 @@ struct CardTitle: View {
   let size: CGFloat
   let lineHeight: CGFloat
   let width: CGFloat
+  var maxLines = 2
 
   var body: some View {
-    let fitted = Self.fit(text, size: size, width: width)
+    let fitted = Self.fit(text, size: size, width: width, maxLines: maxLines)
     Text(text)
       .font(.system(size: fitted, weight: .bold))
       .tracking(fitted * 0.01)
       .lineSpacing(lineHeight / size * fitted - fitted * 1.2)
       .foregroundStyle(.white)
-      .lineLimit(2)
+      .lineLimit(maxLines)
       .truncationMode(.tail)
       .frame(width: width, alignment: .leading)
       .fixedSize(horizontal: false, vertical: true)
   }
 
-  /// The largest size, down to 70%, at which the title wraps to two lines.
-  static func fit(_ text: String, size: CGFloat, width: CGFloat) -> CGFloat {
+  /// The largest size, down to 70%, at which the title fits in `maxLines`.
+  static func fit(_ text: String, size: CGFloat, width: CGFloat, maxLines: Int = 2) -> CGFloat {
     var s = size
     while s > size * 0.7 {
       let font = UIFont.systemFont(ofSize: s, weight: .bold)
-      if lines(text, font: font, width: width) <= 2 { return s }
+      if lines(text, font: font, width: width) <= maxLines { return s }
       s -= 2
     }
     return size * 0.7

@@ -13,6 +13,9 @@ enum EntryShare {
     let info: Info
     /// nil when drawing failed.
     let cards: [RenderedCard]?
+    var rating: Double?
+    /// The same cards without the rating; nil when there's no rating.
+    var ratingHidden: [RenderedCard]?
   }
 
   /// The public page for a show: getstubbed.app/e/<id>.
@@ -37,7 +40,9 @@ enum EntryShare {
       let isPublic = entry.visibility == .public && !profile.isPrivate
       let info = Info(text: "\(caption). Tracked on Stubbed \(stubbedInstagram)", link: isPublic ? link(entry.id) : nil)
       do {
-        return Prepared(info: info, cards: try ShareCards.entryCards(data, photo: picture))
+        let hidden = entry.rating == nil ? nil : try ShareCards.entryCards(data, photo: picture, showRating: false)
+        return Prepared(
+          info: info, cards: try ShareCards.entryCards(data, photo: picture), rating: entry.rating, ratingHidden: hidden)
       } catch {
         Log.app.error("Drawing the share cards failed: \(error.localizedDescription, privacy: .public)")
         return Prepared(info: info, cards: nil)
@@ -68,7 +73,8 @@ struct EntryShareSheet: View {
     ShareScreen {
       ShareCarousel(
         subject: .show, cards: prepared?.cards, failed: prepared != nil && prepared?.cards == nil,
-        text: prepared?.info.text ?? entry.show.title, link: prepared?.info.link)
+        text: prepared?.info.text ?? entry.show.title, link: prepared?.info.link, rating: prepared?.rating,
+        ratingHidden: prepared?.ratingHidden)
     }
     .task { prepared = await EntryShare.prepare(entry, photo: photo) }
   }

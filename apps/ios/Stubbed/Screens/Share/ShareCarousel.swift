@@ -4,7 +4,7 @@ import SwiftUI
 import UIKit
 
 /// Stubbed's Instagram account, tagged in the caption and the copied text.
-let stubbedInstagram = "@stubbedapp"
+let stubbedInstagram = cardDomain
 
 /// A drawn card: the image with its background and, for entry cards, the
 /// same card without it (text only, for laying over your own story photo).
@@ -37,11 +37,14 @@ enum ShareCards {
   }
 
   /// Draws every entry design, with and without its background.
+  /// `showRating: false` draws them with the rating left off.
   @MainActor
-  static func entryCards(_ data: EntryCardData, photo: UIImage?) throws -> [RenderedCard] {
+  static func entryCards(_ data: EntryCardData, photo: UIImage?, showRating: Bool = true) throws -> [RenderedCard] {
     let slug = slug(data.title)
+    var data = data
+    if !showRating { data.rating = nil }
     return try EntryCardDesign.allCases.map { design in
-      let name = "stubbed-\(slug)-\(design.id)"
+      let name = "stubbed-\(slug)-\(design.id)\(showRating ? "" : "-no-rating")"
       let full = try render(EntryCardView(design: design, data: data, photo: photo), name: name)
       let clear = try render(EntryCardView(design: design, data: data, photo: nil, transparent: true), name: "\(name)-clear")
       return RenderedCard(id: design.id, name: design.name, file: full.file, image: full.image, clear: clear)
@@ -80,9 +83,15 @@ struct ShareCarousel: View {
   let text: String
   /// The public page, for the Link button; nil when private.
   var link: URL?
+  /// Entry cards only: the rating, and the same cards drawn without it, for
+  /// the Rating toggle. Both nil when there's no rating.
+  var rating: Double?
+  var ratingHidden: [RenderedCard]?
 
   @State private var active = 0
   @State private var transparent = false
+  /// The toggle's choice; until it's tapped, a low rating starts hidden.
+  @State private var ratingChoice: Bool?
   @State private var notice: String?
   @State private var sharing: SharePayload?
 
@@ -92,7 +101,10 @@ struct ShareCarousel: View {
     let action: String
   }
 
-  private var current: RenderedCard? { cards?[safe: active] }
+  private var showRating: Bool { ratingChoice ?? EntryCardDesign.showsRating(rating) }
+  /// The cards on screen: without the rating when it's toggled off.
+  private var visible: [RenderedCard]? { (showRating ? nil : ratingHidden) ?? cards }
+  private var current: RenderedCard? { visible?[safe: active] }
   private var currentFile: URL? {
     guard let current else { return nil }
     return transparent ? current.clear?.file ?? current.file : current.file
@@ -138,6 +150,20 @@ struct ShareCarousel: View {
               transparent.toggle()
             }
             .disabled(cards == nil)
+            if rating != nil, ratingHidden != nil {
+              action("Rating", selected: showRating) {
+                ZStack {
+                  if showRating { Color.primary } else { Color(.secondarySystemGroupedBackground) }
+                  Image(systemName: showRating ? "star.fill" : "star.slash")
+                    .font(.title3.weight(.medium))
+                    .foregroundStyle(showRating ? Color(.systemBackground) : Palette.tintText)
+                }
+              } perform: {
+                ratingChoice = !showRating
+              }
+              .disabled(cards == nil)
+              .accessibilityLabel(showRating ? "Rating shown" : "Rating hidden")
+            }
             Divider().frame(height: 48).padding(.top, 4)
           }
           action("Stories") {
@@ -195,7 +221,7 @@ struct ShareCarousel: View {
 
   /// The drawn cards, or empty slots while they're drawn.
   private var shown: [RenderedCard?] {
-    cards.map { $0.map(Optional.some) } ?? Array(repeating: nil, count: subject == .show ? 3 : 4)
+    visible.map { $0.map(Optional.some) } ?? Array(repeating: nil, count: subject == .show ? EntryCardDesign.allCases.count : 4)
   }
 
   @ViewBuilder private func cardImage(_ card: RenderedCard?, index: Int) -> some View {
@@ -206,7 +232,7 @@ struct ShareCarousel: View {
         Image(uiImage: clear ? card.clear!.image : card.image)
           .resizable()
           .scaledToFit()
-          .accessibilityLabel("Share card \(index + 1) of \(cards?.count ?? 0), \(card.name.lowercased())\(clear ? ", no background" : "")")
+          .accessibilityLabel("Share card \(index + 1) of \(visible?.count ?? 0), \(card.name.lowercased())\(clear ? ", no background" : "")")
       } else {
         Color(.tertiarySystemFill).overlay {
           Text(failed ? "Couldn’t draw this card." : "Drawing…")
@@ -291,12 +317,13 @@ struct ShareCarousel: View {
   }
 
   private func record(_ action: String) {
-    let designs = cards?.map(\.id) ?? []
+    let designs = visible?.map(\.id) ?? []
     Analytics.track(
       .cardShared,
       [
         "action": .string(action), "design": .string(designs[safe: active] ?? ""),
         "transparent": .bool(transparent && subject == .show), "platform": .string("ios"),
+        "rating": .bool(subject == .show && rating != nil && showRating),
       ])
   }
 }

@@ -5,12 +5,12 @@ import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react"
 import { Button } from "@/components/ui/Button";
 
 import { track } from "@/lib/analytics";
-import { CARD_DESIGNS, CORAL, halfStep, renderCard, SECONDARY, STAR, type CardData } from "@/lib/share-card";
+import { CARD_DESIGNS, CARD_DOMAIN, CORAL, halfStep, renderCard, SECONDARY, showsRatingByDefault, STAR, type CardData } from "@/lib/share-card";
 import { isLightTripCard, renderTripCard, TRIP_CARD_DESIGNS, type TripCardData } from "@/lib/share-card-trip";
 import { createClient } from "@/lib/supabase/client";
 
 // Stubbed's Instagram account, tagged in the caption and the copied text.
-const INSTAGRAM = "@stubbedapp";
+const INSTAGRAM = CARD_DOMAIN;
 
 // The transparency checkerboard, deliberately outside the palette: neutral
 // greys, as in Photos and image editors, so it reads as "nothing here" and
@@ -24,6 +24,9 @@ type Rendered = { file: File; url: string };
 // `stories`: `photo` with square corners, for the Stories button, since
 // Instagram turns transparent corners black. `clear` goes as it is.
 type Variants = { photo: Rendered; stories: Rendered; clear: Rendered | null };
+// Entry cards are drawn with the rating and without, so the Rating toggle
+// swaps them at once; `hidden` is null when there's no rating to hide.
+type Drawn = { shown: Variants[]; hidden: Variants[] | null };
 
 // What's being shared: one entry, or a trip recap (#16) with one photo URL
 // per show, in the same order as `data.shows`.
@@ -31,9 +34,10 @@ export type ShareSubject =
   | { kind: "entry"; data: CardData; photoUrl: string | null }
   | { kind: "trip"; data: TripCardData; photoUrls: (string | null)[] };
 
-// Hevy-style share screen: swipe between card designs, optionally drop the
-// background (entry cards), then send the card in view to an Instagram story
-// (the one primary action) or, under More, the share sheet, the camera roll,
+// Hevy-style share screen: swipe between card designs, optionally hide the
+// rating or drop the background (entry cards), then send the card in view to
+// an Instagram story (the one primary action) or, under More, the share
+// sheet, the camera roll,
 // the clipboard or the public link. Every card is drawn on the device, with and
 // without its background, before any button is tapped, so the share sheet
 // opens straight from the tap (iOS needs that). `publicHref` is the public
@@ -49,10 +53,12 @@ export function ShareSheet({
   publicHref?: string | null;
 }) {
   const designs = subject.kind === "entry" ? CARD_DESIGNS : TRIP_CARD_DESIGNS;
-  const [cards, setCards] = useState<Variants[] | null>(null);
+  const [drawn, setDrawn] = useState<Drawn | null>(null);
   const [failed, setFailed] = useState(false);
   const [active, setActive] = useState(0);
   const [transparent, setTransparent] = useState(false);
+  const rating = subject.kind === "entry" ? subject.data.rating : null;
+  const [showRating, setShowRating] = useState(() => showsRatingByDefault(rating));
   const [notice, setNotice] = useState<string | null>(null);
   const [moreOpen, setMoreOpen] = useState(false);
   const scroller = useRef<HTMLDivElement>(null);
@@ -69,16 +75,24 @@ export function ShareSheet({
     };
     (async () => {
       const out: Variants[] = [];
+      let hidden: Variants[] | null = null;
       if (subject.kind === "entry") {
         const photo = subject.photoUrl ? await loadPhoto(subject.photoUrl) : null;
-        for (const design of CARD_DESIGNS) {
-          const name = `stubbed-${slug}-${design.id}`;
-          out.push({
-            photo: make(await renderCard(design.id, subject.data, photo), `${name}.png`),
-            stories: make(await renderCard(design.id, subject.data, photo, { square: true }), `${name}-story.png`),
-            clear: make(await renderCard(design.id, subject.data, null, { transparent: true }), `${name}-clear.png`),
-          });
-        }
+        const draw = async (showRating: boolean) => {
+          const set: Variants[] = [];
+          for (const design of CARD_DESIGNS) {
+            const name = `stubbed-${slug}-${design.id}${showRating ? "" : "-no-rating"}`;
+            const opts = { showRating };
+            set.push({
+              photo: make(await renderCard(design.id, subject.data, photo, opts), `${name}.png`),
+              stories: make(await renderCard(design.id, subject.data, photo, { ...opts, square: true }), `${name}-story.png`),
+              clear: make(await renderCard(design.id, subject.data, null, { ...opts, transparent: true }), `${name}-clear.png`),
+            });
+          }
+          return set;
+        };
+        out.push(...(await draw(true)));
+        if (subject.data.rating != null) hidden = await draw(false);
         if (photo) URL.revokeObjectURL(photo.src);
       } else {
         const photos = await Promise.all(subject.photoUrls.map((u) => (u ? loadPhoto(u) : null)));
@@ -92,7 +106,7 @@ export function ShareSheet({
         }
         photos.forEach((p) => p && URL.revokeObjectURL(p.src));
       }
-      if (!cancelled) setCards(out);
+      if (!cancelled) setDrawn({ shown: out, hidden });
     })().catch((err) => {
       console.error("Drawing the share cards failed", err);
       if (!cancelled) setFailed(true);
@@ -102,12 +116,13 @@ export function ShareSheet({
       urls.forEach((u) => URL.revokeObjectURL(u));
       // This also runs when the page is hidden (cacheComponents); the cards
       // are drawn again when it's shown, so don't keep the freed ones.
-      setCards(null);
+      setDrawn(null);
       setFailed(false);
       setNotice(null);
     };
   }, [subject, slug]);
 
+  const cards = drawn ? (!showRating && drawn.hidden) || drawn.shown : null;
   const variants = cards?.[active];
   const clear = transparent ? variants?.clear : null;
   const card = clear || variants?.photo;
@@ -152,7 +167,12 @@ export function ShareSheet({
 
   // Which button was used, on which design: the share loop's main signal.
   function record(action: "stories" | "more" | "download" | "copy_text" | "copy_link") {
-    void track(createClient(), "card_shared", { action, design: designs[active].id, transparent: transparent && subject.kind === "entry" });
+    void track(createClient(), "card_shared", {
+      action,
+      design: designs[active].id,
+      transparent: transparent && subject.kind === "entry",
+      rating: subject.kind === "entry" && rating != null && showRating,
+    });
   }
 
   function saveImage(image: Rendered) {
@@ -239,7 +259,9 @@ export function ShareSheet({
                   the card's own ground, so the sheet is never blank. It stays
                   under the drawn card, which fades in over it; not under a
                   card without a background, whose clear parts would show it. */}
-              {!clear && <CardPlaceholder subject={subject} design={design.id} failed={failed} drawn={Boolean(shown)} />}
+              {!clear && (
+                <CardPlaceholder subject={subject} design={design.id} failed={failed} drawn={Boolean(shown)} showRating={showRating} />
+              )}
               {shown && (
                 // eslint-disable-next-line @next/next/no-img-element -- local PNG drawn on the device
                 <img
@@ -309,6 +331,20 @@ export function ShareSheet({
               className={`size-4 rounded-pill border border-outline ${CHECKER_LIGHT}`}
             />
             Transparent
+          </button>
+        )}
+        {rating != null && (
+          <button
+            type="button"
+            onClick={() => setShowRating((r) => !r)}
+            disabled={!cards}
+            aria-pressed={showRating}
+            className={`${PILL} ${showRating ? "bg-label text-background" : "bg-fill text-label"}`}
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="currentColor">
+              <path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z" />
+            </svg>
+            Rating
           </button>
         )}
         <button
@@ -398,19 +434,19 @@ function CardPlaceholder({
   design,
   failed,
   drawn,
+  showRating,
 }: {
   subject: ShareSubject;
   design: string;
   failed: boolean;
   drawn: boolean;
+  showRating: boolean;
 }) {
   const light = subject.kind === "trip" && isLightTripCard(design);
   const title = subject.kind === "entry" ? subject.data.title : subject.data.name;
-  const meta =
-    subject.kind === "entry"
-      ? [subject.data.where, subject.data.date].filter(Boolean).join(" · ")
-      : [subject.data.place, subject.data.dates].filter(Boolean).join(" · ");
-  const rating = subject.kind === "entry" ? subject.data.rating : subject.data.average;
+  // Entry cards show no venue or date line, so neither does their stand-in.
+  const meta = subject.kind === "entry" ? "" : [subject.data.place, subject.data.dates].filter(Boolean).join(" · ");
+  const rating = subject.kind === "entry" ? (showRating ? subject.data.rating : null) : subject.data.average;
   return (
     <div
       aria-hidden={drawn}
