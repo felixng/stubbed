@@ -65,14 +65,26 @@ struct PeopleResults: View {
 /// Approve…) that takes its own taps.
 struct PersonRow<Trailing: View>: View {
   let person: Person
-  /// Opens the profile some other way (from a sheet) instead of pushing.
+  /// Opens the profile some other way (from a sheet, or through the router
+  /// where a NavigationLink would misbehave) instead of pushing.
   var onOpen: ((Person) -> Void)?
+  /// Draws the chevron a NavigationLink row would have, for `onOpen` rows
+  /// that still push a screen.
+  var chevron = false
   @ViewBuilder var trailing: Trailing
 
   var body: some View {
     if let onOpen {
-      Button { onOpen(person) } label: { label }
-        .foregroundStyle(.primary)
+      Button { onOpen(person) } label: {
+        HStack(spacing: Space.m) {
+          label
+          if chevron {
+            Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
+          }
+        }
+        .contentShape(Rectangle())
+      }
+      .foregroundStyle(.primary)
     } else {
       NavigationLink(value: AppRouter.Route.profile(handle: person.handle)) { label }
     }
