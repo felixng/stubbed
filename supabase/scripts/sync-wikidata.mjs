@@ -23,13 +23,26 @@ PREFIX pq: <http://www.wikidata.org/prop/qualifier/>`;
 // of a work's author or publisher. It uses a reviewed list of theatre
 // building IDs, verified from Wikidata (see DECISIONS.md). No commercial sites
 // are scraped. P1191's P276 qualifier also records premiere venues in Wikidata.
+// The two English Wikipedia branches take any stage work notable enough for an
+// article, wherever it played: by form of creative work (play, musical, opera,
+// ballet), or by class (dramatico-musical work, ballet). Many plays carry only
+// P7937, with P31 "literary work", and no premiere venue (#145 follow-up).
+const ENWIKI = '?article schema:about ?item ; schema:isPartOf <https://en.wikipedia.org/> .';
+export const SOURCES = {
+  'ibdb': '?item wdt:P1219 ?ibdb .',
+  'west-end': `VALUES ?venue { ${VENUES} }
+    { ?item wdt:P4647 ?venue } UNION { ?item p:P1191/pq:P276 ?venue }`,
+  'enwiki-form': `VALUES ?form { wd:Q25379 wd:Q2743 wd:Q1344 wd:Q15079786 }
+    ?item wdt:P7937 ?form . ${ENWIKI}`,
+  'enwiki-class': `VALUES ?class { wd:Q58483083 wd:Q15079786 }
+    ?item wdt:P31 ?class . ${ENWIKI}`,
+};
+
 export function candidateQuery(offset, source = 'ibdb') {
+  if (!SOURCES[source]) throw new Error(`Unknown source ${source}`);
   return `${PREFIXES}
 SELECT DISTINCT ?item WHERE {
-  ${source === 'ibdb' ? '?item wdt:P1219 ?ibdb .' : `
-    VALUES ?venue { ${VENUES} }
-    { ?item wdt:P4647 ?venue } UNION { ?item p:P1191/pq:P276 ?venue }
-  `}
+  ${SOURCES[source]}
 } ORDER BY ?item LIMIT ${PAGE_SIZE} OFFSET ${offset}`;
 }
 
@@ -46,13 +59,19 @@ SELECT DISTINCT ?item ?title ?description ?alias ?website ?premiere ?published ?
   OPTIONAL { ?item wdt:P1191 ?premiere }
   OPTIONAL { ?item wdt:P577 ?published }
   OPTIONAL { ?item wdt:P1219 ?ibdb }
-  BIND(EXISTS { ?item (wdt:P31|wdt:P136)/wdt:P279* wd:Q1344 } AS ?opera)
-  BIND(EXISTS { ?item (wdt:P31|wdt:P136)/wdt:P279* wd:Q15079786 }
+  # Form "opera" alone is weak: Jesus Christ Superstar carries it, operetta is
+  # a subclass of it, and many musicals list it beside "musical". Count only the
+  # exact form, never with "musical" too, and never for a Broadway (IBDB) show.
+  BIND(EXISTS { ?item (wdt:P31|wdt:P136)/wdt:P279* wd:Q1344 }
+    || (EXISTS { ?item wdt:P7937 wd:Q1344 } && NOT EXISTS { ?item wdt:P7937 wd:Q2743 }
+      && NOT EXISTS { ?item wdt:P1219 ?anyIbdb }) AS ?opera)
+  BIND(EXISTS { ?item (wdt:P31|wdt:P136|wdt:P7937)/wdt:P279* wd:Q15079786 }
     || EXISTS { ?item (wdt:P31|wdt:P136)/wdt:P279* ?class . ?class rdfs:label "dance work"@en } AS ?dance)
   BIND(EXISTS { ?item wdt:P31/wdt:P279* wd:Q58483083 }
-    || EXISTS { ?item (wdt:P31|wdt:P136)/wdt:P279* wd:Q2743 } AS ?musical)
+    || EXISTS { ?item (wdt:P31|wdt:P136|wdt:P7937)/wdt:P279* wd:Q2743 } AS ?musical)
   BIND(EXISTS { VALUES ?class { wd:Q7725634 wd:Q116476516 wd:Q25379 }
     ?item wdt:P31/wdt:P279* ?class }
+    || EXISTS { ?item wdt:P7937/wdt:P279* wd:Q25379 }
     || EXISTS { VALUES ?genreLabel { "drama"@en "tragedy"@en "comedy"@en "farce"@en }
       ?item wdt:P136 ?genre . ?genre rdfs:label ?genreLabel } AS ?play)
   BIND(EXISTS { VALUES ?class { wd:Q11424 wd:Q482994 wd:Q5398426 wd:Q7366 wd:Q429785 }
@@ -93,7 +112,7 @@ export async function fetchCatalogue({ request = sparql, sleep = delay, onProgre
   const ids = new Set();
   // Keep source queries separate: the public endpoint can time out when its
   // optimiser joins the IBDB set with the venue/qualifier UNION.
-  for (const source of ['ibdb', 'west-end']) {
+  for (const source of Object.keys(SOURCES)) {
     for (let offset = 0; ; offset += PAGE_SIZE) {
       await sleep(1000);
       const page = await request(candidateQuery(offset, source));

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { mapCatalogue, normaliseTitle, sparql, fetchCatalogue, syncSql, detailQuery, parsePsqlOutput } from './sync-wikidata.mjs';
+import { mapCatalogue, normaliseTitle, sparql, fetchCatalogue, syncSql, detailQuery, candidateQuery, parsePsqlOutput } from './sync-wikidata.mjs';
 
 const fixture = JSON.parse(await readFile(new URL('./fixtures/mapping.json', import.meta.url)));
 
@@ -103,13 +103,27 @@ test('fetches candidate pages before details and refuses an empty catalogue', as
     if (query.includes('SELECT DISTINCT ?item WHERE')) return [{ item: { value: 'http://www.wikidata.org/entity/Q830581' } }];
     return fixture.results.bindings.slice(0, 1);
   } });
-  assert.equal(calls.length, 3);
+  assert.equal(calls.length, 5);
   assert.match(calls[0], /P1219/);
   assert.match(calls[1], /P4647/);
+  assert.match(calls[2], /P7937/);
+  assert.match(calls[3], /wdt:P31 \?class/);
   assert.doesNotMatch(calls[0], /P1218/);
-  assert.match(calls[2], /VALUES \?item \{ wd:Q830581 \}/);
+  assert.match(calls[4], /VALUES \?item \{ wd:Q830581 \}/);
   assert.equal(response.results.bindings.length, 1);
   await assert.rejects(fetchCatalogue({ request: async () => [], sleep: async () => {} }), /no candidates/);
+});
+
+test('English Wikipedia sources require an article and type plays by form of creative work', () => {
+  for (const source of ['enwiki-form', 'enwiki-class']) {
+    assert.match(candidateQuery(0, source), /schema:isPartOf <https:\/\/en\.wikipedia\.org\/>/);
+  }
+  // The Woman in Black (Q7775533): P31 literary work, P7937 play, no IBDB ID or premiere venue.
+  assert.match(candidateQuery(0, 'enwiki-form'), /wd:Q25379/);
+  assert.match(detailQuery(['Q7775533']), /wdt:P7937\/wdt:P279\* wd:Q25379/);
+  // Form "opera" never overrides a musical or a Broadway show (Jesus Christ Superstar, Q242667).
+  assert.match(detailQuery(['Q242667']), /NOT EXISTS \{ \?item wdt:P7937 wd:Q2743 \}\s+&& NOT EXISTS \{ \?item wdt:P1219/);
+  assert.throws(() => candidateQuery(0, 'nope'), /Unknown source/);
 });
 
 test('dry run uses a read-only transaction; write is atomic and only refreshes owned fields', () => {
