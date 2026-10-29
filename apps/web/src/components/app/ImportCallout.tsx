@@ -19,8 +19,8 @@ export function ImportCallout() {
         Bring in the shows you’ve seen
       </h2>
       <p className="text-subheadline text-label-secondary">
-        Pick photos from your theatre nights: the curtain, the stage, the Playbill or your ticket. Stubbed sorts them
-        into nights and fills in what it can.
+        Pick photos from shows you’ve been to: the curtain, the stage, the Playbill or your ticket. Stubbed sorts them
+        by show and fills in what it can.
       </p>
       <div className="mt-1 flex flex-col gap-2 sm:flex-row">
         <Link href="/app/import" className={`${buttonClass("primary", "sm")} sm:flex-1`}>

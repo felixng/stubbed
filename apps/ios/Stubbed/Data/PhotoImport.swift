@@ -1,11 +1,11 @@
 import Foundation
 
-/// Importing several photos at once (#155): group them into theatre nights,
-/// then log each night from its photo. Nothing here is stored; leaving the
+/// Importing several photos at once (#155): group them into theatre visits,
+/// then log each visit from its photo. Nothing here is stored; leaving the
 /// import part-way just stops it.
 enum PhotoImport {
   /// The most photos one import reads. Each is read once for its date and
-  /// place, then let go; only the night's own photo is read again.
+  /// place, then let go; only the visit's own photo is read again.
   static let maxPhotos = 100
 
   /// Photos within this distance and time of each other count as one visit
@@ -20,7 +20,7 @@ enum PhotoImport {
 
   /// The web's `groupPhotos`: photos from the same visit (same date, within
   /// a few hours, and close together when both have a location) form one
-  /// night. Photos with no date stay on their own. Nights come back in time
+  /// visit. Photos with no date stay on their own. Visits come back in time
   /// order, each with its photos in time order.
   static func group<T>(_ photos: [T], meta: (T) -> PhotoMeta) -> [[T]] {
     func key(_ p: T) -> String {
@@ -56,7 +56,7 @@ enum PhotoImport {
 }
 
 /// A photo's detection, started as soon as it's made: theatres near where
-/// it was taken, then which show it was. The import starts the next night's
+/// it was taken, then which show it was. The import starts the next visit's
 /// lookup while you're on the current one, so its form opens already filled.
 final class PhotoLookup: Sendable {
   let meta: PhotoMeta

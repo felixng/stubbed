@@ -1,13 +1,13 @@
 import PhotosUI
 import SwiftUI
 
-/// A night's photo, read and its lookup started, ready for the log form.
+/// A visit's photo, read and its lookup started, ready for the log form.
 struct PreparedPhoto: Sendable {
   let original: Data
   let lookup: PhotoLookup
 }
 
-/// One night of a photo import, as the log form sees it.
+/// One visit of a photo import, as the log form sees it.
 struct ImportStep {
   let number: Int
   let total: Int
@@ -18,7 +18,7 @@ struct ImportStep {
 }
 
 /// Import by picking photos (#155): the picked photos are grouped into
-/// theatre nights on the device, then each night opens the log form,
+/// theatre visits on the device, then each visit opens the log form,
 /// pre-filled from its photo, to save or skip. Nothing is stored between
 /// sessions; stopping part-way keeps what was saved.
 struct ImportView: View {
@@ -28,19 +28,19 @@ struct ImportView: View {
 
   @State private var phase = Phase.reading
   @State private var read = 0
-  @State private var nights: [Night] = []
+  @State private var visits: [Visit] = []
   @State private var unreadable = 0
-  /// The current night's photo and the next one's, loaded ahead.
+  /// The current visit's photo and the next one's, loaded ahead.
   @State private var prepared: [Int: Task<PreparedPhoto?, Never>] = [:]
   @State private var logged = 0
   @State private var skipped = 0
   @State private var photoFailed = 0
 
-  private enum Phase: Equatable { case reading, found, night(Int), finished }
+  private enum Phase: Equatable { case reading, found, visit(Int), finished }
 
-  struct Night: Identifiable {
+  struct Visit: Identifiable {
     let id = UUID()
-    /// The night's first photo, the one its entry starts from.
+    /// The visit's first photo, the one its entry starts from.
     let item: PhotosPickerItem
     let date: String?
     let count: Int
@@ -50,16 +50,16 @@ struct ImportView: View {
   private var total: Int { min(photos.count, PhotoImport.maxPhotos) }
 
   var body: some View {
-    if case .night(let index) = phase, nights.indices.contains(index) {
+    if case .visit(let index) = phase, visits.indices.contains(index) {
       LogView(importing: step(index))
-        .id(nights[index].id)
+        .id(visits[index].id)
     } else {
       NavigationStack {
         Group {
           switch phase {
           case .reading: reading
           case .found:
-            if nights.isEmpty { nothingFound } else { found }
+            if visits.isEmpty { nothingFound } else { found }
           default: finished
           }
         }
@@ -67,7 +67,7 @@ struct ImportView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { toolbar }
       }
-      .interactiveDismissDisabled(phase == .found && !nights.isEmpty)
+      .interactiveDismissDisabled(phase == .found && !visits.isEmpty)
       .task { await readPhotos() }
     }
   }
@@ -78,7 +78,7 @@ struct ImportView: View {
       ToolbarItem(placement: .cancellationAction) {
         Button("Cancel") { router.finishImport(logged: 0) }
       }
-      if phase == .found, !nights.isEmpty {
+      if phase == .found, !visits.isEmpty {
         ToolbarItem(placement: .confirmationAction) {
           Button("Start") { open(0) }.fontWeight(.semibold)
         }
@@ -102,9 +102,9 @@ struct ImportView: View {
     List {
       Section {
         VStack(alignment: .leading, spacing: Space.xs) {
-          Text(Self.nights(nights.count))
+          Text(Self.shows(visits.count))
             .font(.title2.bold())
-          Text("From \(Self.photos(total - unreadable)). Go through them one at a time: save the nights you want and skip the rest.")
+          Text("From \(Self.photos(total - unreadable)). Go through them one at a time: save the shows you want and skip the rest.")
             .font(.subheadline)
             .foregroundStyle(.secondary)
         }
@@ -112,10 +112,10 @@ struct ImportView: View {
         .listRowInsets(EdgeInsets(top: Space.s, leading: 0, bottom: Space.s, trailing: 0))
       }
       Section {
-        ForEach(nights) { night in
+        ForEach(visits) { visit in
           HStack(spacing: Space.m) {
             Group {
-              if let thumbnail = night.thumbnail {
+              if let thumbnail = visit.thumbnail {
                 Image(uiImage: thumbnail).resizable().scaledToFill()
               } else {
                 Image(systemName: "photo")
@@ -128,9 +128,9 @@ struct ImportView: View {
             .clipShape(.rect(cornerRadius: Radius.sm, style: .continuous))
             .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
-              Text(night.date.map(Day.formatPost) ?? "No date")
+              Text(visit.date.map(Day.formatPost) ?? "No date")
                 .font(.headline)
-              Text(Self.photos(night.count))
+              Text(Self.photos(visit.count))
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
             }
@@ -154,7 +154,7 @@ struct ImportView: View {
 
   private var finished: some View {
     ContentUnavailableView {
-      Label(logged == 0 ? "Nothing logged" : "\(Self.nights(logged)) logged", systemImage: "checkmark.circle")
+      Label(logged == 0 ? "Nothing logged" : "\(Self.shows(logged)) logged", systemImage: "checkmark.circle")
     } description: {
       Text(finishedDetail)
     }
@@ -162,7 +162,7 @@ struct ImportView: View {
 
   private var finishedDetail: String {
     var parts: [String] = []
-    if skipped > 0 { parts.append("You skipped \(Self.nights(skipped)).") }
+    if skipped > 0 { parts.append("You skipped \(Self.shows(skipped)).") }
     if photoFailed > 0 {
       parts.append(photoFailed == 1
         ? "One photo didn’t upload; add it again from its entry."
@@ -172,15 +172,15 @@ struct ImportView: View {
     return parts.joined(separator: " ")
   }
 
-  static func nights(_ n: Int) -> String { n == 1 ? "1 theatre night" : "\(n) theatre nights" }
+  static func shows(_ n: Int) -> String { n == 1 ? "1 show" : "\(n) shows" }
   static func photos(_ n: Int) -> String { n == 1 ? "1 photo" : "\(n) photos" }
 
   // MARK: - Steps
 
   /// Reads each photo once for its date and place (and a thumbnail), then
-  /// lets it go; the nights keep only a reference to their first photo.
+  /// lets it go; the visits keep only a reference to their first photo.
   private func readPhotos() async {
-    guard phase == .reading, nights.isEmpty else { return }
+    guard phase == .reading, visits.isEmpty else { return }
     struct Read {
       let item: PhotosPickerItem
       let meta: PhotoMeta
@@ -196,22 +196,22 @@ struct ImportView: View {
       }
       read += 1
     }
-    nights = PhotoImport.group(all, meta: \.meta).map { group in
-      Night(item: group[0].item, date: group[0].meta.date, count: group.count, thumbnail: group[0].thumbnail)
+    visits = PhotoImport.group(all, meta: \.meta).map { group in
+      Visit(item: group[0].item, date: group[0].meta.date, count: group.count, thumbnail: group[0].thumbnail)
     }
     phase = .found
   }
 
-  /// Opens a night, loading its photo (if not already) and the next one's.
+  /// Opens a visit, loading its photo (if not already) and the next one's.
   private func open(_ index: Int) {
     prepare(index)
     prepare(index + 1)
-    phase = .night(index)
+    phase = .visit(index)
   }
 
   private func prepare(_ index: Int) {
-    guard nights.indices.contains(index), prepared[index] == nil else { return }
-    let item = nights[index].item
+    guard visits.indices.contains(index), prepared[index] == nil else { return }
+    let item = visits[index].item
     prepared[index] = Task {
       guard let data = try? await item.loadTransferable(type: Data.self) else { return nil }
       return PreparedPhoto(original: data, lookup: PhotoLookup(data: data))
@@ -220,23 +220,23 @@ struct ImportView: View {
 
   private func next(after index: Int) {
     prepared[index] = nil
-    if index + 1 < nights.count { open(index + 1) } else { phase = .finished }
+    if index + 1 < visits.count { open(index + 1) } else { phase = .finished }
   }
 
-  /// A night's Save and Skip only count while that night is on screen: the
+  /// A visit's Save and Skip only count while that visit is on screen: the
   /// outgoing form can still take a tap while the next one slides in, and
-  /// acting on it would skip a night twice.
+  /// acting on it would skip a visit twice.
   private func step(_ index: Int) -> ImportStep {
     ImportStep(
-      number: index + 1, total: nights.count, photo: prepared[index] ?? Task { nil },
+      number: index + 1, total: visits.count, photo: prepared[index] ?? Task { nil },
       onSaved: { failed in
-        guard phase == .night(index) else { return }
+        guard phase == .visit(index) else { return }
         logged += 1
         if failed { photoFailed += 1 }
         next(after: index)
       },
       onSkip: {
-        guard phase == .night(index) else { return }
+        guard phase == .visit(index) else { return }
         skipped += 1
         next(after: index)
       },

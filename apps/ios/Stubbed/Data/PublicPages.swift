@@ -106,7 +106,6 @@ enum PublicPages {
     let reactions: [UUID: Reactions]
 
     var venues: Int { Set(entries.compactMap { $0.venue?.id }).count }
-    var nights: Int { Set(entries.map(\.date)).count }
     var cities: [String] {
       Array(Set(entries.compactMap { $0.venue?.city?.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }))
         .sorted()
