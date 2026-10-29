@@ -59,7 +59,7 @@ export function ProfileHeader({
           ))}
         </div>
       ) : (
-        <div aria-hidden="true" className="h-16 rounded-t-md bg-tint-fill sm:h-28" />
+        <div aria-hidden="true" className="h-16 rounded-t-md bg-sweep sm:h-28" />
       )}
       <div className="flex flex-col gap-3 px-4 pb-4 sm:gap-4 sm:px-6 sm:pb-5">
         <div className="flex items-end justify-between gap-3">

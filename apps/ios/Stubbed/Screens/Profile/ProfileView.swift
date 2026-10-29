@@ -187,7 +187,12 @@ struct ProfileView: View {
       SwiftUI.Section {
         VStack(alignment: .leading, spacing: Space.m) {
           HStack(spacing: Space.l) {
+            // Your own avatar wears the app icon's gradient as a ring.
             Avatar(name: h.profile.name, url: h.profile.avatarURL, size: 64)
+              .padding(2.5)
+              .background(Color(.secondarySystemGroupedBackground), in: .circle)
+              .padding(2.5)
+              .background(Palette.sweep, in: .circle)
             VStack(alignment: .leading, spacing: 2) {
               Text(verbatim: "@\(h.profile.handle)")
                 .font(.title2.bold())

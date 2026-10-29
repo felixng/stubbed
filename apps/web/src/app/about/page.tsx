@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/about" },
 };
 
-export const viewport: Viewport = { themeColor: "#fff9f6" };
+export const viewport: Viewport = { themeColor: "#f2f2f7" };
 
 export default function AboutPage() {
   return (

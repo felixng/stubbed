@@ -131,7 +131,7 @@ struct PublicProfileView: View {
     return VStack(alignment: .leading, spacing: 0) {
       Group {
         if cover.isEmpty {
-          Palette.tintFill.frame(height: 80)
+          Palette.sweep.frame(height: 80)
         } else {
           HStack(spacing: 2) {
             ForEach(Array(cover), id: \.self) { url in

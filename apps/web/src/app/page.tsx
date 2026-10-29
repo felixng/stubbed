@@ -55,7 +55,7 @@ const JSON_LD = {
 };
 
 // The landing page is always light, whatever the visitor's appearance.
-export const viewport: Viewport = { themeColor: "#fff9f6" };
+export const viewport: Viewport = { themeColor: "#f2f2f7" };
 
 // Public landing page: hero with sign-up, and features (#9, #149). The menu
 // links to /login.

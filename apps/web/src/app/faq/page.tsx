@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/faq" },
 };
 
-export const viewport: Viewport = { themeColor: "#fff9f6" };
+export const viewport: Viewport = { themeColor: "#f2f2f7" };
 
 // FAQPage structured data, built from the same list the page shows.
 const JSON_LD = {

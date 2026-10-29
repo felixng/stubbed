@@ -9,8 +9,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Log, rate and share every show you see.",
     start_url: "/app",
     display: "browser",
-    background_color: "#fff9f6",
-    theme_color: "#fff9f6",
+    background_color: "#f2f2f7",
+    theme_color: "#f2f2f7",
     icons: [
       { src: "/brand/icon-192.png", sizes: "192x192", type: "image/png" },
       { src: "/brand/icon-512.png", sizes: "512x512", type: "image/png" },

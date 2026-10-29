@@ -43,8 +43,8 @@ let cardDomain = "@getstubbed.app"
 /// Fixed colours from the card designs: cards are always dark, whatever the
 /// app's theme.
 enum CardInk {
-  static let coral = Color(red: 1, green: 107 / 255, blue: 74 / 255)
-  static let star = Color(red: 1, green: 214 / 255, blue: 10 / 255)
+  static let coral = Color(red: 1, green: 90 / 255, blue: 90 / 255)
+  static let star = Color(red: 1, green: 160 / 255, blue: 64 / 255)
   static let secondary = Color(red: 174 / 255, green: 174 / 255, blue: 178 / 255)
   static let softWhite = Color.white.opacity(0.85)
   static let ground = Color(red: 28 / 255, green: 28 / 255, blue: 30 / 255)

@@ -1,5 +1,5 @@
-// Round avatar: the profile photo, or the first letter of the name on
-// `tint-fill` when there isn't one.
+// Round avatar: the profile photo, or the first letter of the name in white
+// on the `sweep` gradient when there isn't one.
 export function Avatar({
   name,
   url,
@@ -22,7 +22,7 @@ export function Avatar({
     <span
       aria-hidden="true"
       style={{ ...style, fontSize: size * 0.42 }}
-      className={`flex flex-none items-center justify-center rounded-pill bg-tint-fill font-display font-bold text-tint-text uppercase ${className}`}
+      className={`flex flex-none items-center justify-center rounded-pill bg-sweep font-display font-bold text-white uppercase ${className}`}
     >
       {name.replace(/^@/, "").charAt(0)}
     </span>

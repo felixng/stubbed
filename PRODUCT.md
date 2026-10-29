@@ -8,7 +8,7 @@
 
 adaptive
 
-One product on two platforms with the same features, data and rules. The web app (Next.js) follows the Footlight Coral system in `docs/DESIGN.md`. The iOS app (SwiftUI, iOS 17+) is designed as a premium native app; its rules are in `apps/ios/CLAUDE.md` and `docs/IOS_NATIVE_GUIDE.md`.
+One product on two platforms with the same features, data and rules. The web app (Next.js) follows the Footlight Sweep system in `docs/DESIGN.md`. The iOS app (SwiftUI, iOS 17+) is designed as a premium native app; its rules are in `apps/ios/CLAUDE.md` and `docs/IOS_NATIVE_GUIDE.md`.
 
 ## Users
 

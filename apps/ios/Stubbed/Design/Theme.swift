@@ -1,20 +1,28 @@
 import SwiftUI
 import UIKit
 
-/// Stubbed's coral accent, from the web's tokens (apps/web/src/app/globals.css),
-/// with light and dark values. Only for interactive elements, highlights and
-/// stars; text and backgrounds use system colours (apps/ios/CLAUDE.md,
-/// "Design direction"). The app is light-only for now, set in StubbedApp.
+/// Footlight Sweep: the app icon's colours, from the web's tokens
+/// (apps/web/src/app/globals.css), with light and dark values. The coral is
+/// only for interactive elements, highlights and stars; text and backgrounds
+/// use system colours (apps/ios/CLAUDE.md, "Design direction"). The app is
+/// light-only for now, set in StubbedApp.
 enum Palette {
-  static let tint = Color(light: 0xFF7A5C, dark: 0xFF6B4A)
-  static let tintPressed = Color(light: 0xF2603F, dark: 0xFF8A70)
-  static let tintText = Color(light: 0xB33A19, dark: 0xFF6B4A)
-  static let tintFill = Color(light: 0xFFE0D5, dark: 0x3D1A11)
-  /// Text on `tint`: dark, since white on coral fails contrast.
-  static let onTint = Color(light: 0x1F1210, dark: 0x000000)
-  static let star = Color(light: 0xB96F00, dark: 0xFFD60A)
-  /// The warm shadow under the trip cards' photo stacks (share cards only).
-  static let shadow = Color(red: 120 / 255, green: 50 / 255, blue: 30 / 255)
+  /// The icon's coral, a step deeper on light so white text on it passes.
+  static let tint = Color(light: 0xDC2F4F, dark: 0xFF5A5A)
+  static let tintPressed = Color(light: 0xC4234A, dark: 0xFF7A7A)
+  static let tintText = Color(light: 0xC4234A, dark: 0xFF5A5A)
+  static let tintFill = Color(light: 0xFFE4E1, dark: 0x3A1418)
+  /// Text on `tint`.
+  static let onTint = Color(light: 0xFFFFFF, dark: 0x000000)
+  static let star = Color(light: 0xE07400, dark: 0xFFA040)
+  /// The app icon's gradient, magenta to coral to amber: behind avatars and
+  /// posters with no photo, an empty profile cover and your own avatar's
+  /// ring. Only white bold text goes on it, centred, where the coral passes 3:1.
+  static let sweep = LinearGradient(
+    colors: [Color(light: 0xE8247F, dark: 0xE8247F), Color(light: 0xFF5A5A, dark: 0xFF5A5A), Color(light: 0xFFA040, dark: 0xFFA040)],
+    startPoint: .bottomLeading, endPoint: .topTrailing)
+  /// The neutral shadow under the trip cards' photo stacks (share cards only).
+  static let shadow = Color(red: 20 / 255, green: 20 / 255, blue: 30 / 255)
 }
 
 /// Corner radii: posters, and inputs outside a Form. Grouped containers

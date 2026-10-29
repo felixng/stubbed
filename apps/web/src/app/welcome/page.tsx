@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 // Always light, like the app and sign-in (owner's call).
-export const viewport: Viewport = { themeColor: "#fff9f6" };
+export const viewport: Viewport = { themeColor: "#f2f2f7" };
 
 // Prefills what we already know: a name saved earlier, or the one Google gave us.
 async function Form({ searchParams }: { searchParams: Promise<{ next?: string | string[] }> }) {

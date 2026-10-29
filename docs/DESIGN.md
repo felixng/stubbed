@@ -1,23 +1,26 @@
 ---
 name: Stubbed
-description: Footlight Coral, a warm native-first system for logging and sharing nights at the theatre.
+description: Footlight Sweep, a native-first system in the app icon's magenta, coral and amber, for logging and sharing shows at the theatre.
 colors:
-  background: "#fff9f6"
+  background: "#f2f2f7"
   surface: "#ffffff"
-  fill: "#ffebe3"
-  label: "#1f1210"
-  label-secondary: "#5e4039"
-  separator: "#f9e0d6"
-  outline: "#98695b"
-  tint: "#ff7a5c"
-  tint-pressed: "#f2603f"
-  tint-text: "#b33a19"
-  tint-fill: "#ffe0d5"
-  on-tint: "#1f1210"
-  star: "#b96f00"
+  fill: "#e9e9ee"
+  label: "#1c1c1e"
+  label-secondary: "#6c6c70"
+  separator: "#e0e0e5"
+  outline: "#8e8e93"
+  tint: "#dc2f4f"
+  tint-pressed: "#c4234a"
+  tint-text: "#c4234a"
+  tint-fill: "#ffe4e1"
+  on-tint: "#ffffff"
+  star: "#e07400"
   destructive: "#9e1b2c"
-  focus: "#1f1210"
-  glow: "#ffd9cc"
+  focus: "#1c1c1e"
+  glow: "#ffdde2"
+  sweep-magenta: "#e8247f"
+  sweep-coral: "#ff5a5a"
+  sweep-amber: "#ffa040"
 typography:
   large-title:
     fontFamily: "-apple-system, SF Pro Display, BlinkMacSystemFont, system-ui, Segoe UI, Roboto, sans-serif"
@@ -177,14 +180,15 @@ The frontmatter holds the light tokens, which are the ones every screen uses tod
 
 **Creative North Star: "Front of House"**
 
-Stubbed should feel like a good theatre lobby: warm, welcoming and orderly, so you know where to go without being told twice. The structure is calm native iOS (grouped surfaces, system type, standard navigation), and one coral cue lights the next thing to do. Nothing performs for attention; the shows, posters and photos are the show.
+Stubbed should feel like a good theatre lobby: welcoming and orderly, so you know where to go without being told twice. The structure is calm native iOS (grouped surfaces on system grey, system type, standard navigation), and the colour comes from the app icon: one coral cue lights the next thing to do, and the icon's magenta-to-amber sweep marks identity. Nothing performs for attention; the shows, posters and photos are the show.
 
-Density is comfortable, never cramped: 17px body text, 44px minimum targets, rows that breathe at 16px padding. Warmth comes from the paper-tinted background, the coral-tinged neutrals and, on the web, shadows cast in a warm brown rather than grey. The system is native first. The iOS app uses Apple's controls and semantic colours with the coral tint; the web app mirrors the same tokens in Tailwind and keeps the same calm.
+Density is comfortable, never cramped: 17px body text, 44px minimum targets, rows that breathe at 16px padding. The neutrals are Apple's system greys, so the app feels at home on an iPhone; warmth comes from the icon's colours set against them, never from tinted neutrals. The system is native first. The iOS app uses Apple's controls and semantic colours with the coral tint; the web app mirrors the same tokens in Tailwind and keeps the same calm.
 
 Light by default: every page and screen is light, whatever the device setting (owner's call). On the web each page sets `data-theme="light"` on its root, which switches the whole document to the light tokens (`globals.css`); a new page must do the same. iOS sets `.preferredColorScheme(.light)`. The dark tokens stay defined and working for when dark mode comes back.
 
 **Key Characteristics:**
-- One coral accent on warm paper, used for the next action and nothing else.
+- One coral accent on system grey, used for the next action and nothing else.
+- The app icon's gradient (the sweep) wherever a person or show has no picture yet.
 - System type only (SF Pro on Apple devices), at the iOS text-style sizes.
 - Grouped surfaces with hairline separators; capsule buttons and chips.
 - Native first: iOS uses system controls; the web mirrors the tokens, not iOS chrome.
@@ -192,33 +196,40 @@ Light by default: every page and screen is light, whatever the device setting (o
 
 ## Colors
 
-A warm, paper-and-coral palette: one saturated accent, and neutrals that all lean toward the same red-orange hue so nothing reads as cold grey.
+Every brand colour comes from the app icon, a diagonal sweep from magenta (`#e8247f`) through coral (`#ff5a5a`) to amber (`#ffa040`). Coral is the accent, amber marks ratings, and the full sweep marks identity. The neutrals are Apple's system greys, the same as the iOS app's system colours. Chosen 2026-10-29 from four logo-derived options (see `docs/DECISIONS.md`).
+
+Contrast: `tint` takes white text at 4.6:1; `tint-text` reads at 5.7:1 on white and 5.1:1 on `background`; `star` is 3.2:1 on white (graphics need 3:1). Dark mode uses the icon's own coral and amber, which pass on `#1c1c1e`.
 
 ### Primary
-- **Footlight Coral** (`tint`): fills the one primary action on a screen, and nothing else. In dark mode it is a slightly deeper coral (`#ff6b4a`). Never used as text on light backgrounds.
+- **Footlight Coral** (`tint`): fills the one primary action on a screen, and icons that mark a state (a liked heart, the selected calendar day). The icon's coral, a step deeper on light so white text passes; in dark mode it is the icon's coral exactly (`#ff5a5a`). Not used as small text on `background`, where it falls short of 4.5:1.
 - **Footlight Coral, pressed** (`tint-pressed`): the hover and pressed fill of the primary button.
-- **Deep Coral Ink** (`tint-text`): the brand colour wherever it is read as text: links, ghost and secondary button labels, the selected tab. Deeper than the tint on light so it passes contrast; the same coral on dark.
-- **Coral Wash** (`tint-fill`): secondary button fill, highlighted rows, the avatar placeholder behind an initial.
-- **Ink on Coral** (`on-tint`): text and icons on a coral fill. Dark, since white on coral fails contrast.
+- **Deep Coral Ink** (`tint-text`): the brand colour wherever it is read as text: links, ghost and secondary button labels, the selected tab, and the iOS app's global tint. The same coral as `tint` on dark.
+- **Coral Wash** (`tint-fill`): secondary button fill, highlighted rows.
+- **White on Coral** (`on-tint`): text and icons on a coral fill. White on light, black on dark.
+
+### Signature
+- **Footlight Sweep** (`sweep`): the app icon's gradient at 45°, magenta at the bottom left to amber at the top right (`--sweep` and `bg-sweep` on the web, `Palette.sweep` on iOS). Behind an avatar with no photo, an iOS poster with no photo, an empty profile cover, and as a 2.5pt ring around your own avatar on the iOS Profile tab. Only white bold text goes on it, centred, where the coral midpoint gives 3:1 for large text; never body text, never a button or control fill.
 
 ### Secondary
-- **Applause Gold** (`star`): rating stars and award marks only.
+- **Applause Amber** (`star`): rating stars and award marks only. The icon's amber on dark; a deeper `#e07400` on light so the stars hold 3:1 on white.
 
 ### Neutral
-- **Lobby Paper** (`background`): every screen; marketing pages stay on it.
+- **Lobby Grey** (`background`): every screen; marketing pages stay on it. iOS `systemGroupedBackground`.
 - **Programme White** (`surface`): grouped lists, cards, inputs, sheets, the tab bar.
-- **Blush Well** (`fill`): poster placeholders, chips, wells, hover fills.
+- **Grey Well** (`fill`): chips, wells, hover fills, one of the three web poster fallback wells.
 - **Velvet Ink** (`label`): all primary text, the wordmark, the focus ring.
-- **Faded Velvet** (`label-secondary`): secondary text, placeholders, unselected tabs.
-- **Rose Hairline** (`separator`): hairlines between rows, inset to the text, and card and input borders.
-- **Clay Outline** (`outline`): control borders, empty stars, placeholder initials on posters.
-- **Curtain Red** (`destructive`): delete, sign out and error text.
-- **Footlight Glow** (`glow`): decorative halo behind a hero image or device mockup, and one of the three poster fallback wells; otherwise never behind text.
+- **Faded Velvet** (`label-secondary`): secondary text, placeholders, unselected tabs. 5.2:1 on white, 4.7:1 on `background`.
+- **Hairline** (`separator`): hairlines between rows, inset to the text, and card and input borders.
+- **Steel Outline** (`outline`): control borders, empty stars, placeholder initials on posters.
+- **Curtain Red** (`destructive`): delete, sign out and error text. iOS uses `.red` for the same jobs.
+- **Footlight Glow** (`glow`): decorative halo behind a hero image or device mockup, and one of the three web poster fallback wells; otherwise never behind text.
 
 ### Named Rules
 **The One Tint Rule.** `tint` is the only accent, and it fills the one primary action per screen. Where the brand colour is read as text, use `tint-text`. Nothing else is coral.
 
-**The Gold Is for Stars Rule.** `star` appears only on ratings and award marks, never as a second accent.
+**The Sweep Is Identity Rule.** The sweep stands in for a picture (a person, a show, a cover) and marks you as you. It is never a button, a background for reading, or decoration on its own.
+
+**The Amber Is for Stars Rule.** `star` appears only on ratings and award marks, never as a second accent.
 
 ## Typography
 
@@ -256,15 +267,15 @@ iOS follows its own layout rules in `apps/ios/CLAUDE.md` ("Design direction"): e
 
 ## Elevation & Depth
 
-Depth is mostly tonal: paper background, white surfaces, hairline separators. On the light web, cards, grouped lists and inputs add a soft ambient shadow cast in warm brown (`rgba(120, 50, 30, …)`), always paired with a `separator` border; the shadow lifts, the border defines. In dark mode the border does the work alone. iOS uses no drop shadows at all: inset grouped containers on `secondarySystemGroupedBackground` with a 1pt stroke at `Color.primary.opacity(0.06)`.
+Depth is mostly tonal: grey background, white surfaces, hairline separators. On the light web, cards, grouped lists and inputs add a soft ambient shadow cast in a cool near-black (`rgba(20, 20, 30, …)`), always paired with a `separator` border; the shadow lifts, the border defines. In dark mode the border does the work alone. iOS uses no drop shadows at all: inset grouped containers on `secondarySystemGroupedBackground` with a 1pt stroke at `Color.primary.opacity(0.06)`.
 
 ### Shadow Vocabulary (web)
-- **shadow-sm** (`0 1px 2px rgba(120,50,30,0.08), 0 10px 22px -12px rgba(120,50,30,0.28)`): cards, grouped lists, the email field and other inputs, the neutral button.
-- **shadow-lg** (`0 2px 4px rgba(120,50,30,0.12), 0 36px 60px -22px rgba(120,50,30,0.5)`): device mockups and sheets.
-- **shadow-btn** (`0 1px 0 rgba(255,255,255,0.5) inset, 0 6px 12px -6px rgba(120,50,30,0.55)`): the primary button only.
+- **shadow-sm** (`0 1px 2px rgba(20,20,30,0.06), 0 10px 22px -12px rgba(20,20,30,0.2)`): cards, grouped lists, the email field and other inputs, the neutral button.
+- **shadow-lg** (`0 2px 4px rgba(20,20,30,0.08), 0 36px 60px -22px rgba(20,20,30,0.36)`): device mockups and sheets.
+- **shadow-btn** (`0 1px 0 rgba(255,255,255,0.3) inset, 0 6px 12px -6px rgba(196,35,74,0.5)`): the primary button only, its glow cast in Deep Coral Ink.
 
 ### Named Rules
-**The Warm Shadow Rule.** Shadows are ambient, never structural, and never grey: every web shadow is cast in the coral-brown `rgb(120, 50, 30)`, always with a hairline border beside it.
+**The Quiet Shadow Rule.** Shadows are ambient, never structural: soft and cool, always with a hairline border beside it. Only the primary button's shadow takes colour, from the coral it sits under.
 
 **The Native Depth Rule.** No drop shadows on iOS. Grouping and system backgrounds carry the depth.
 
@@ -274,7 +285,7 @@ Soft and friendly, never sharp. Four radii: `rounded-sm` 8px (posters, thumbnail
 
 ## Components
 
-Native and warm: iOS controls with a warm tint, capsule buttons, grouped surfaces and, on the web, soft coral-tinted shadows.
+Native and bright: iOS controls with the coral tint, capsule buttons, grouped surfaces on system grey, the sweep for identity and, on the web, soft cool shadows.
 
 React components live in `apps/web/src/components/ui/`. The iOS app no longer mirrors them one to one: it uses system controls (`.borderedProminent`, `.bordered`, `List`, `Form`) with the components listed in `apps/web/src/lib/design-system.ts` (`IOS_COMPONENTS`).
 
@@ -291,17 +302,17 @@ React components live in `apps/web/src/components/ui/`. The iOS app no longer mi
 
 ### Buttons
 - **Shape:** capsule (`rounded-pill`), 50px tall (`md`) or 44px (`sm`, 15px text).
-- **Primary:** Footlight Coral fill, Ink on Coral label, `shadow-btn`, 24px side padding, headline weight. One per screen.
+- **Primary:** Footlight Coral fill, White on Coral label, `shadow-btn`, 24px side padding, headline weight. One per screen.
 - **Secondary:** Coral Wash fill with a Deep Coral Ink label. **Ghost:** transparent with a Deep Coral Ink label. **Neutral:** surface, hairline border and `shadow-sm`, for third-party sign-in.
 - **Hover / Focus:** colour-only transitions (primary to `tint-pressed`, others to `fill` or `tint-fill`). Focus is a 2px `focus` outline at a 2px offset. Disabled drops to 40% opacity.
 
 ### Chips
-- **Style:** 28px capsule, Blush Well fill, Velvet Ink footnote text at medium weight, 12px side padding.
-- **State:** selected inverts (Velvet Ink fill, paper text), never coral. With `onClick` a chip is a toggle button (`aria-pressed`).
+- **Style:** 28px capsule, Grey Well fill, Velvet Ink footnote text at medium weight, 12px side padding.
+- **State:** selected inverts (Velvet Ink fill, white text), never coral. With `onClick` a chip is a toggle button (`aria-pressed`).
 
 ### Cards / Containers
 - **Corner Style:** 12px (`rounded-md`); iOS grouped containers 16pt continuous.
-- **Background:** Programme White on Lobby Paper.
+- **Background:** Programme White on Lobby Grey.
 - **Shadow Strategy:** `shadow-sm` with a `separator` border on the web; none on iOS.
 - **Internal Padding:** 16px.
 
@@ -311,18 +322,18 @@ React components live in `apps/web/src/components/ui/`. The iOS app no longer mi
 
 ### Navigation
 - **Web, below `md`:** a bottom tab bar on Programme White with a top hairline: Home, Log and Profile as three equal tabs, as on iOS (Log is a plain tab, never a raised coral button, so the page's own primary stays the only coral fill). 49px items with a 24px line icon over an 11px medium label (`text-caption-2`). Unselected tabs in Faded Velvet, the selected tab in Deep Coral Ink (`aria-current="page"`).
-- **Web, from `md`:** a sidebar on Lobby Paper (`AppSidebar`): the wordmark (28px), the people search box (its results open 384px wide over the page), then Home, Log and Profile, a hairline, Import shows, and Sign out pinned to the bottom in Curtain Red. Items are 44px capsule rows with a 24px line icon and a body-size label in Velvet Ink, hovering to Blush Well; the selected item is Deep Coral Ink on Coral Wash, semibold, with `aria-current="page"`. Log is a plain item here, not a coral button, so the page's own primary action stays the only coral fill. Trip and settings pages select Profile, as in the tab bar.
+- **Web, from `md`:** a sidebar on Lobby Grey (`AppSidebar`): the wordmark (28px), the people search box (its results open 384px wide over the page), then Home, Log and Profile, a hairline, Import shows, and Sign out pinned to the bottom in Curtain Red. Items are 44px capsule rows with a 24px line icon and a body-size label in Velvet Ink, hovering to Grey Well; the selected item is Deep Coral Ink on Coral Wash, semibold, with `aria-current="page"`. Log is a plain item here, not a coral button, so the page's own primary action stays the only coral fill. Trip and settings pages select Profile, as in the tab bar.
 - **iOS:** a native `TabView` (Home, Log, Profile); Log opens the log sheet rather than a screen.
 
 ### Poster and ratings (signature)
-- **Poster:** the show's photo at 2:3, 8px corners; without a photo, the House Lights fallback below.
+- **Poster:** the show's photo at 2:3, 8px corners; without a photo, the House Lights fallback below on the web, and the show's initials in white bold on the sweep on iOS.
 
-### Poster fallback ("House Lights")
-A show with no photo still gets a poster, set from its title and type. The title in bold Velvet Ink on one of three warm wells (Blush Well, Coral Wash, Footlight Glow), the type in small caps in Faded Velvet ("Show" for other), and one short Clay Outline rule above the title, with a 1px Clay hairline inside the edge. The well, and whether the title sits at the top or the foot, come from an FNV-1a hash of the trimmed, lowercased title (`lib/poster.ts`), so the same show always looks the same; the title size is fitted to its longest word and its length, in container units. Below 80px wide (diary and trip rows) a container query swaps the title for a monogram (two initials, skipping a leading article and minor words) in Clay Outline over the rule. Only existing tokens and the system type: never coral or gold. The poster is `aria-hidden`, since the title is always printed beside it. Feed cards show no cover without a photo, so the feed stays compact.
-- **Ratings** always show as the five `RatingStars` in Applause Gold, in half steps, never a bare number. Empty stars use Clay Outline.
+### Poster fallback ("House Lights", web)
+A show with no photo still gets a poster, set from its title and type. The title in bold Velvet Ink on one of three wells (Grey Well, Coral Wash, Footlight Glow), the type in small caps in Faded Velvet ("Show" for other), and one short Steel Outline rule above the title, with a 1px hairline inside the edge. The well, and whether the title sits at the top or the foot, come from an FNV-1a hash of the trimmed, lowercased title (`lib/poster.ts`), so the same show always looks the same; the title size is fitted to its longest word and its length, in container units. Below 80px wide (diary and trip rows) a container query swaps the title for a monogram (two initials, skipping a leading article and minor words) in Steel Outline over the rule. Only existing tokens and the system type: never coral or amber. The poster is `aria-hidden`, since the title is always printed beside it. Feed cards show no cover without a photo, so the feed stays compact.
+- **Ratings** always show as the five `RatingStars` in Applause Amber, in half steps, never a bare number. Empty stars use Steel Outline.
 
 ### Calendar and feed
-- **Profile header:** one `ProfileHeader` for `/@handle` and the Profile tab: cover (up to five recent photos, or a Coral Wash band), an 80px avatar overlapping it with the page's action on the right, handle, name, follow counts, bio, link, then Shows, Theatres and Cities with labels that agree with their numbers (`lib/plural`). Visitors get Follow; the owner gets a secondary Edit profile and a "…" menu (View public profile, Import shows), a footnote for private shows the public profile leaves out, and a full-width "N follow requests ›" row at the card's foot. On the Profile tab the calendar sits in the diary, between Upcoming and Seen, so the diary starts above the fold at 390px.
+- **Profile header:** one `ProfileHeader` for `/@handle` and the Profile tab: cover (up to five recent photos, or a sweep band), an 80px avatar (on the sweep when there's no photo) overlapping it with the page's action on the right, handle, name, follow counts, bio, link, then Shows, Theatres and Cities with labels that agree with their numbers (`lib/plural`). Visitors get Follow; the owner gets a secondary Edit profile and a "…" menu (View public profile, Import shows), a footnote for private shows the public profile leaves out, and a full-width "N follow requests ›" row at the card's foot. On the Profile tab the calendar sits in the diary, between Upcoming and Seen, so the diary starts above the fold at 390px.
 - **Profile calendar:** a day with a show sits on Coral Wash with its number in Deep Coral Ink and a small dot beneath, so it isn't colour alone; today is Deep Coral Ink text with no fill. Each show day is a link labelled with the date and the shows.
 - **Feed cards:** like and comment counts, then the note and the latest comments. The comment box stays folded until Comment is tapped, and folds again after posting; its Post button is secondary, since a feed has no single primary action.
 
@@ -334,7 +345,8 @@ SF Symbols on iOS (`book`, `plus.circle`, `chart.bar`, `person` for the tabs). O
 ### Do:
 - **Do** set `data-theme="light"` on the root of every new web page; iOS keeps `.preferredColorScheme(.light)`.
 - **Do** keep exactly one `primary` button per screen, and use `tint-text` wherever the brand colour is read as text.
-- **Do** pair every web shadow with a `separator` border, and cast shadows in the warm `rgb(120, 50, 30)`.
+- **Do** pair every web shadow with a `separator` border, and cast shadows in the cool `rgb(20, 20, 30)`.
+- **Do** take every brand colour from the app icon: coral, amber, or the sweep.
 - **Do** use the text styles and spacing steps above; make every tap target at least 44px.
 - **Do** show ratings as five stars, and use `@sillyelphaba` as the sample handle, never a real person's name.
 - **Do** use system controls on iOS (`.borderedProminent`, `List`, `Form`, SF Symbols), per `apps/ios/CLAUDE.md`.
@@ -342,7 +354,8 @@ SF Symbols on iOS (`book`, `plus.circle`, `chart.bar`, `person` for the tabs). O
 ### Don't:
 - **Don't** use `tint` as text, as a background for anything but the primary action, or for a selected chip.
 - **Don't** colour the wordmark coral, uppercase it, or set it below 16px.
-- **Don't** add web fonts, an icon package or grey shadows.
+- **Don't** add web fonts or an icon package, or tint the neutrals warm.
+- **Don't** use the sweep as a button, behind body text, or as decoration with nothing to stand in for.
 - **Don't** put drop shadows on iOS, or port web layout patterns (floating action buttons, custom card styles) to the iOS app.
 - **Don't** set body text below Footnote (13px), or use `glow` behind text outside the poster fallback. Tab bar labels (Caption 2, 11px) are the only exception.
 - **Don't** write copy with emoji, exclamation marks or title case.
