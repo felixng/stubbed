@@ -27,7 +27,7 @@ Names are fixed by a check constraint on `events.name`; adding one means a migra
 | Name | When | Props |
 |---|---|---|
 | `entry_logged` | A **new** entry is saved from the log form | `method` (`photo`/`manual`), `detection` (`high`/`medium`/`low`/`none` once the photo check finished, `pending` if saved before it did, `skipped` with no photo), `rated`, `has_note`; `source: "photo_import"` for a show saved from the iOS photo import (#155) |
-| `card_shared` | A share card is sent from the share screen | `action` (`stories`/`more`/`download`/`copy_text`/`copy_link`), `design` (card design id), `transparent` |
+| `card_shared` | A share card is sent from the share screen | `action` (`stories`/`more`/`download`/`copy_text`/`copy_link`), `design` (card design id), `transparent`, `rating` (entry cards: whether the rating was shown) |
 
 `card_shared` is recorded once the share sheet completes (cancelling records nothing), or when the image is saved or the text or the public page's link copied. On browsers that can't share files, Stories and More save the image, and are recorded under the button tapped.
 

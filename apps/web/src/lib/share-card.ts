@@ -1,9 +1,9 @@
 // Share cards for one entry, drawn on the device with Canvas 2D. Drawing in
 // the browser uses the system font (SF Pro on iPhone, as in Footlight), keeps
 // the photo private (it never goes to a server) and needs no image library.
-// Designs: the "Share cards" canvas,
-// https://claude.ai/artifact/JBrH9jzd4ke4YtpRLQWhPC (square 1:1 row).
-// Coordinates are in the designs' 540px units, scaled up to SIZE.
+// The iOS app draws the same cards in SwiftUI (Screens/Share/EntryCard.swift);
+// change both together. Coordinates are in 540px design units, scaled up to
+// CARD_SIZE.
 
 export type CardData = {
   title: string;
@@ -20,11 +20,16 @@ export type CardData = {
 
 export type CardDesign = { id: string; name: string };
 
+// Two designs (owner, 2026-10-29): stats across the top, or the name alone.
+// Both keep the middle of the photo clear, Hevy-style, and either can hide
+// the rating (`showRating`), for a low score or a card that tags the cast.
 export const CARD_DESIGNS: CardDesign[] = [
-  { id: "square", name: "Photo" },
-  { id: "hevy-venue", name: "Photo with stats" },
-  { id: "hevy-seen", name: "Photo, times seen" },
+  { id: "stats", name: "Stats" },
+  { id: "name", name: "Name only" },
 ];
+
+// Off by default for 2 stars or below, and when there's no rating.
+export const showsRatingByDefault = (rating: number | null) => rating != null && rating > 2;
 
 export const CARD_SIZE = 1080;
 const U = 540; // design units
@@ -33,14 +38,19 @@ const SCALE = CARD_SIZE / U;
 export const DISPLAY = "-apple-system, 'SF Pro Display', BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, sans-serif";
 export const TEXT = "-apple-system, 'SF Pro Text', BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, sans-serif";
 export const CORAL = "#FF5A5A";
-// Amber on the dark cards (the dark `star` token); #e07400 on light.
+// The icon's amber, which reads on the cards' dark ground.
 export const STAR = "#FFA040";
 export const SECONDARY = "#AEAEB2";
-// Shown small under the wordmark on every card, so a shared image leads back.
-// The plain domain, no "@": with one it reads as a handle next to the user's.
-export const CARD_DOMAIN = "getstubbed.app";
-const SOFT_WHITE = "rgba(255, 255, 255, 0.85)";
-// Same star as the designs (24px viewBox).
+// Stubbed's Instagram handle: the share screen asks you to tag it, and trip
+// cards show it under the wordmark. Entry cards leave it off (owner,
+// 2026-10-29).
+export const CARD_DOMAIN = "@getstubbed.app";
+const SOFT_WHITE = "rgba(255, 255, 255, 0.9)";
+const SIDE = 28;
+// The ticket mark beside the wordmark (public/brand/stubbed-mark.svg).
+const MARK_SRC = "/brand/stubbed-mark.svg";
+const MARK_RATIO = 770 / 627;
+
 const STAR_PATH = "M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z";
 
 export type Ctx = CanvasRenderingContext2D;
@@ -48,164 +58,134 @@ export type Ctx = CanvasRenderingContext2D;
 export function ordinal(n: number) {
   const rem100 = n % 100;
   if (rem100 >= 11 && rem100 <= 13) return `${n}th`;
-  return `${n}${({ 1: "st", 2: "nd", 3: "rd" } as Record<number, string>)[n % 10] ?? "th"}`;
+  switch (n % 10) {
+    case 1:
+      return `${n}st`;
+    case 2:
+      return `${n}nd`;
+    case 3:
+      return `${n}rd`;
+    default:
+      return `${n}th`;
+  }
 }
 
-// `transparent`: no photo and no shading, just the text, like Hevy's
-// "Background" toggle. It goes on top of the person's own story photo, so
-// every line gets a shadow to stay readable on any picture.
-// `square`: square corners, for Instagram Stories, which turns transparent
-// corners black.
+let markImage: Promise<HTMLImageElement | null> | null = null;
+function loadMark() {
+  markImage ??= new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = MARK_SRC;
+  });
+  return markImage;
+}
+
 export async function renderCard(
   design: CardDesign["id"],
   data: CardData,
   photo: HTMLImageElement | null,
-  { transparent = false, square = false } = {},
+  { transparent = false, square = false, showRating = true } = {},
 ) {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = CARD_SIZE;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas isn’t available");
   ctx.scale(SCALE, SCALE);
-  const bg: Background = transparent ? null : { photo, round: !square };
-  if (transparent) textShadow(ctx);
-  if (design === "square") drawSquare(ctx, data, bg);
-  else drawHevy(ctx, data, bg, design === "hevy-seen" ? "seen" : "venue");
+  const mark = await loadMark();
+  const d = showRating ? data : { ...data, rating: null };
+  if (!transparent) drawBackground(ctx, photo, !square, design === "stats");
+  textShadow(ctx);
+  if (design === "stats") drawStats(ctx, d);
+  const footerTop = drawFooter(ctx, d, mark);
+  if (design === "stats") {
+    drawTitle(ctx, d.title, SIDE, footerTop - 10, U - SIDE * 2, 26, 30, 1);
+  } else {
+    let bottom = footerTop - 12;
+    if (d.rating != null) {
+      drawStars(ctx, d.rating, SIDE, bottom - 24, 24, 3, "rgba(255, 255, 255, 0.75)");
+      bottom -= 24 + 12;
+    }
+    drawTitle(ctx, d.title, SIDE, bottom, U - SIDE * 2, 36, 40, 2);
+  }
   return new Promise<Blob>((resolve, reject) =>
     canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Couldn’t make the image"))), "image/png"),
   );
 }
 
-// "Square · single, full photo"
-function drawSquare(ctx: Ctx, d: CardData, bg: Background) {
-  const pad = 28;
-  if (bg) {
-    clipRounded(ctx, bg.round ? 20 : 0);
-    drawPhoto(ctx, bg.photo, 0.5);
-    verticalGradient(ctx, 150, U, [
-      [0, "rgba(0, 0, 0, 0)"],
-      [0.5, "rgba(0, 0, 0, 0.78)"],
-      [1, "#000000"],
-    ]);
-  }
-
-  // Laid out bottom up, as the design is bottom aligned.
-  const footerTop = U - pad - 18;
-  setFont(ctx, 800, 18, DISPLAY, -0.81);
-  ctx.fillStyle = "#FFFFFF";
-  ctx.textBaseline = "middle";
-  ctx.fillText("stubbed", pad, footerTop + 4);
-  setFont(ctx, 500, 10, TEXT, 0);
-  ctx.fillStyle = SECONDARY;
-  ctx.fillText(CARD_DOMAIN, pad, footerTop + 19);
-  if (d.handle) {
-    setFont(ctx, 400, 13, TEXT, -0.08);
-    ctx.fillStyle = SECONDARY;
-    ctx.textAlign = "right";
-    ctx.fillText(`@${d.handle}`, U - pad, footerTop + 4);
-    ctx.textAlign = "left";
-  }
-  ctx.fillStyle = "#38383A";
-  ctx.fillRect(pad, footerTop - 14 - 1, U - pad * 2, 1);
-
-  const rowTop = footerTop - 15 - 16 - 22;
-  const statX = d.rating != null ? U - pad : null;
-  if (d.rating != null) drawStars(ctx, d.rating, pad, rowTop, 22, 3, "#7C7C82");
-  // "14th show of 2026": right aligned beside the stars, or alone on the left.
-  setFont(ctx, 400, 13, TEXT, 0);
-  const ofYear = `show of ${d.year}`;
-  const ofWidth = ctx.measureText(ofYear).width;
-  setFont(ctx, 600, 17, TEXT, -0.4);
-  const nth = ordinal(d.showOfYear);
-  const nthWidth = ctx.measureText(nth).width;
-  const startX = statX != null ? statX - ofWidth - 8 - nthWidth : pad;
-  ctx.textBaseline = "alphabetic";
-  ctx.fillStyle = CORAL;
-  ctx.fillText(nth, startX, rowTop + 17);
-  setFont(ctx, 400, 13, TEXT, 0);
-  ctx.fillStyle = SECONDARY;
-  ctx.fillText(ofYear, startX + nthWidth + 8, rowTop + 17);
-
-  const metaBottom = rowTop - 10;
-  setFont(ctx, 400, 14, TEXT, -0.17);
-  ctx.fillStyle = SECONDARY;
-  ctx.textBaseline = "middle";
-  ctx.fillText(fit(ctx, [d.where, d.date].filter(Boolean).join(" · "), U - pad * 2), pad, metaBottom - 9.5);
-
-  drawTitle(ctx, d.title, pad, metaBottom - 19 - 4, U - pad * 2, 36, 40);
-}
-
-// "Hevy-style · photo" (venue visits) and "· photo, seen before" (times seen)
-function drawHevy(ctx: Ctx, d: CardData, bg: Background, middle: "venue" | "seen") {
-  const side = 24;
-  if (bg) {
-    clipRounded(ctx, bg.round ? 32 : 0);
-    drawPhoto(ctx, bg.photo, middle === "seen" ? 0.4 : 0.35);
-    verticalGradient(ctx, 0, 170, [
-      [0, "rgba(0, 0, 0, 0.6)"],
+// The photo, with shade only at the edges that carry text: a band at the
+// top behind the stats, and the bottom quarter behind the name and logo.
+function drawBackground(ctx: Ctx, photo: HTMLImageElement | null, round: boolean, top: boolean) {
+  clipRounded(ctx, round ? 32 : 0);
+  drawPhoto(ctx, photo, 0.4);
+  if (top) {
+    verticalGradient(ctx, 0, 150, [
+      [0, "rgba(0, 0, 0, 0.55)"],
       [1, "rgba(0, 0, 0, 0)"],
     ]);
-    verticalGradient(ctx, 270, U, [
-      [0, "rgba(0, 0, 0, 0)"],
-      [1, "rgba(0, 0, 0, 0.82)"],
-    ]);
   }
-  textShadow(ctx);
+  verticalGradient(ctx, 360, U, [
+    [0, "rgba(0, 0, 0, 0)"],
+    [1, "rgba(0, 0, 0, 0.75)"],
+  ]);
+}
 
-  // Stats row: two or three equal columns (no rating, no rating column).
+// Up to three columns: show of the year, the venue visit (or times seen
+// with no venue), then the rating, or times seen when it's hidden.
+function drawStats(ctx: Ctx, d: CardData) {
   const stats: { label: string; value: string | number; color?: string }[] = [
     { label: `Show of ${d.year}`, value: ordinal(d.showOfYear), color: CORAL },
-    middle === "venue" && d.venue
-      ? { label: d.venue, value: `${ordinal(d.venueVisit)} visit` }
-      : { label: "Time seen", value: ordinal(d.timesSeen) },
+    d.venue ? { label: d.venue, value: `${ordinal(d.venueVisit)} visit` } : { label: "Seen", value: `${ordinal(d.timesSeen)} time` },
   ];
   if (d.rating != null) stats.push({ label: "Rating", value: d.rating });
+  else if (d.venue) stats.push({ label: "Seen", value: `${ordinal(d.timesSeen)} time` });
+  const side = 20;
   const colWidth = (U - side * 2) / stats.length;
   stats.forEach((s, i) => {
     const cx = side + colWidth * i + colWidth / 2;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    setFont(ctx, 400, 15, TEXT, -0.15);
+    setFont(ctx, 500, 20, TEXT, -0.2);
     ctx.fillStyle = SOFT_WHITE;
-    ctx.fillText(fit(ctx, s.label, colWidth - 12), cx, 28 + 10);
+    ctx.fillText(fit(ctx, s.label, colWidth - 12), cx, 30 + 13);
     if (typeof s.value === "number") {
-      const w = 5 * 20 + 4 * 2;
-      drawStars(ctx, s.value, cx - w / 2, 28 + 20 + 4, 20, 2, "rgba(255, 255, 255, 0.75)");
+      const w = 5 * 24 + 4 * 3;
+      drawStars(ctx, s.value, cx - w / 2, 30 + 26 + 8, 24, 3, "rgba(255, 255, 255, 0.75)");
     } else {
-      setFont(ctx, 700, 24, DISPLAY, 0.24);
+      setFont(ctx, 700, 30, DISPLAY, 0.2);
       ctx.fillStyle = s.color ?? "#FFFFFF";
-      ctx.fillText(fit(ctx, s.value, colWidth - 12), cx, 28 + 20 + 14);
+      ctx.fillText(fit(ctx, s.value, colWidth - 12), cx, 30 + 26 + 4 + 18);
     }
   });
   ctx.textAlign = "left";
+}
 
-  // Bottom block, laid out bottom up.
-  const x = side + 4;
-  const footerMid = U - 24 - 14;
+// The logo (ticket mark and wordmark), and the @handle on the right.
+// Returns the footer's top edge.
+function drawFooter(ctx: Ctx, d: CardData, mark: HTMLImageElement | null) {
+  const logoMid = U - 26 - 22;
+  const size = 36;
+  let x = SIDE;
+  if (mark) {
+    const h = size * 1.05;
+    ctx.drawImage(mark, x, logoMid - h / 2, h * MARK_RATIO, h);
+    x += h * MARK_RATIO + size * 0.28;
+  }
   ctx.textBaseline = "middle";
-  setFont(ctx, 800, 28, DISPLAY, -1.26);
+  setFont(ctx, 800, size, DISPLAY, -0.045 * size);
   ctx.fillStyle = "#FFFFFF";
-  ctx.fillText("stubbed", x, footerMid - 10);
-  setFont(ctx, 500, 12, TEXT, 0);
-  ctx.fillStyle = SOFT_WHITE;
-  ctx.fillText(CARD_DOMAIN, x, footerMid + 11);
+  ctx.fillText("stubbed", x, logoMid);
   if (d.handle) {
-    setFont(ctx, 400, 20, TEXT, -0.32);
-    ctx.fillStyle = SOFT_WHITE;
+    setFont(ctx, 500, 24, TEXT, -0.3);
+    ctx.fillStyle = "#FFFFFF";
     ctx.textAlign = "right";
-    ctx.fillText(`@${d.handle}`, U - x, footerMid - 10);
+    ctx.fillText(fit(ctx, `@${d.handle}`, 200), U - SIDE, logoMid);
     ctx.textAlign = "left";
   }
-  const metaBottom = footerMid - 14 - 16;
-  setFont(ctx, 400, 15, TEXT, -0.18);
-  ctx.fillStyle = SOFT_WHITE;
-  ctx.fillText(fit(ctx, [d.where, d.date].filter(Boolean).join(" · "), U - x * 2), x, metaBottom - 10);
-  drawTitle(ctx, d.title, x, metaBottom - 20 - 2, U - x * 2, 34, 38);
+  return logoMid - 22;
 }
 
 // --- helpers ---------------------------------------------------------------
-
-type Background = { photo: HTMLImageElement | null; round: boolean } | null;
 
 // Shadow offsets and blur are in canvas pixels, not the scaled units.
 function textShadow(ctx: Ctx) {
@@ -289,18 +269,29 @@ export function drawStars(ctx: Ctx, value: number, x: number, y: number, size: n
   }
 }
 
-// Title above `bottom`: up to two lines, shrinking for very long titles,
+// Title above `bottom`: up to `maxLines`, shrinking for very long titles,
 // then an ellipsis as a last resort.
-function drawTitle(ctx: Ctx, title: string, x: number, bottom: number, maxWidth: number, size: number, lineHeight: number) {
+function drawTitle(
+  ctx: Ctx,
+  title: string,
+  x: number,
+  bottom: number,
+  maxWidth: number,
+  size: number,
+  lineHeight: number,
+  maxLines: 1 | 2,
+) {
   let lines: string[] = [];
   let s = size;
   let lh = lineHeight;
   for (; s >= size * 0.7; s -= 2, lh = (lineHeight / size) * s) {
     setFont(ctx, 700, s, DISPLAY, s * 0.01);
     lines = wrap(ctx, title, maxWidth);
-    if (lines.length <= 2) break;
+    if (lines.length <= maxLines) break;
   }
-  if (lines.length > 2) lines = [lines[0], fit(ctx, lines.slice(1).join(" "), maxWidth)];
+  if (lines.length > maxLines) {
+    lines = maxLines === 1 ? [fit(ctx, title, maxWidth)] : [lines[0], fit(ctx, lines.slice(1).join(" "), maxWidth)];
+  }
   ctx.fillStyle = "#FFFFFF";
   ctx.textBaseline = "middle";
   ctx.textAlign = "left";

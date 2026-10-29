@@ -12,7 +12,9 @@ struct EntryView: View {
   @State private var state: Loadable<Entry> = .loading
   @State private var photo: URL?
   @State private var cards: [RenderedCard]?
+  @State private var cardsWithoutRating: [RenderedCard]?
   @State private var cardsFailed = false
+  @State private var shareRating: Double?
   /// The caption and public page for the share screen.
   @State private var share: EntryShare.Info?
   @State private var reactions: Reactions?
@@ -55,7 +57,9 @@ struct EntryView: View {
     .sheet(isPresented: $sharing) {
       if let share {
         ShareScreen {
-          ShareCarousel(subject: .show, cards: cards, failed: cardsFailed, text: share.text, link: share.link)
+          ShareCarousel(
+            subject: .show, cards: cards, failed: cardsFailed, text: share.text, link: share.link,
+            rating: cardsWithoutRating == nil ? nil : shareRating, ratingHidden: cardsWithoutRating)
         }
       }
     }
@@ -188,6 +192,8 @@ struct EntryView: View {
     let prepared = await EntryShare.prepare(entry, photo: photo)
     share = prepared.info
     cards = prepared.cards
+    cardsWithoutRating = prepared.ratingHidden
+    shareRating = prepared.rating
     cardsFailed = prepared.cards == nil
   }
 
