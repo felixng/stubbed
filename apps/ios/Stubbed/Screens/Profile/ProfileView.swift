@@ -212,12 +212,8 @@ struct ProfileView: View {
         }
         .padding(.vertical, Space.xs)
         LabeledContent("Shows", value: h.shows.formatted())
-        NavigationLink(value: AppRouter.Route.follows(handle: h.profile.handle, list: .followers)) {
-          LabeledContent("Followers", value: h.counts.followers.formatted())
-        }
-        NavigationLink(value: AppRouter.Route.follows(handle: h.profile.handle, list: .following)) {
-          LabeledContent("Following", value: h.counts.following.formatted())
-        }
+        followsRow("Followers", count: h.counts.followers, .follows(handle: h.profile.handle, list: .followers))
+        followsRow("Following", count: h.counts.following, .follows(handle: h.profile.handle, list: .following))
       }
       .selectionDisabled()
       // Only private profiles get requests; going public approves them all.
@@ -228,6 +224,22 @@ struct ProfileView: View {
         .selectionDisabled()
       }
     }
+  }
+
+  /// Followers or Following. A button through the router rather than a
+  /// NavigationLink: in this List(selection:), a NavigationLink pushed its
+  /// screen twice, so going back took two swipes.
+  private func followsRow(_ title: String, count: Int, _ route: AppRouter.Route) -> some View {
+    Button { router.open(route) } label: {
+      HStack {
+        LabeledContent(title) { Text(count.formatted()).foregroundStyle(.secondary) }
+        Image(systemName: "chevron.right")
+          .font(.footnote.weight(.semibold))
+          .foregroundStyle(.tertiary)
+      }
+      .contentShape(Rectangle())
+    }
+    .foregroundStyle(.primary)
   }
 
   // MARK: - Diary
