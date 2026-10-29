@@ -41,4 +41,18 @@ jobs:
       - run: supabase db start
       - run: supabase test db
       - run: apps/ios/scripts/dev types
-      - run: git diff --exit-code -- apps/ios/Stubbed/Generated/Database.swift
+      - name: Check generated Swift types
+        run: |
+          python3 - <<'PY'
+          import subprocess
+          result = subprocess.run(
+              ['git', 'diff', '--exit-code', '--', 'apps/ios/Stubbed/Generated/Database.swift'],
+              capture_output=True, text=True,
+          )
+          if result.returncode:
+              print(result.stderr)
+              message = 'Regenerate with apps/ios/scripts/dev types.\n' + result.stdout
+              message = message.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+              print('::error file=apps/ios/Stubbed/Generated/Database.swift::' + message)
+          raise SystemExit(result.returncode)
+          PY
