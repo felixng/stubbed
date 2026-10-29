@@ -23,7 +23,7 @@ export type IdentifyInput = {
   candidates: { osm_id: string; name: string; distance_m: number }[];
 };
 
-export const SHOW_TYPES = ["musical", "play", "opera", "dance", "comedy", "other"] as const;
+export const SHOW_TYPES = ["musical", "play", "opera", "dance", "comedy", "standup", "other"] as const;
 
 export type Identification = {
   show_title: string | null;

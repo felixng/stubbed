@@ -9,7 +9,7 @@ typealias Visibility = PublicSchema.Visibility
 typealias EntryStatus = PublicSchema.EntryStatus
 
 extension ShowType {
-  static let ordered: [ShowType] = [.musical, .play, .opera, .dance, .comedy, .other]
+  static let ordered: [ShowType] = [.musical, .play, .opera, .dance, .comedy, .standup, .other]
 
   var label: String {
     switch self {
@@ -18,6 +18,7 @@ extension ShowType {
     case .opera: "Opera"
     case .dance: "Dance"
     case .comedy: "Comedy"
+    case .standup: "Stand-up"
     case .other: "Other"
     }
   }
@@ -27,6 +28,21 @@ struct Show: Codable, Hashable, Identifiable, Sendable {
   let id: UUID
   let title: String
   let type: ShowType
+
+  init(id: UUID, title: String, type: ShowType) {
+    self.id = id
+    self.title = title
+    self.type = type
+  }
+
+  /// A type added to Postgres after this build reads as Other, so older
+  /// builds keep loading feeds and diaries that include it.
+  init(from decoder: any Decoder) throws {
+    let c = try decoder.container(keyedBy: CodingKeys.self)
+    id = try c.decode(UUID.self, forKey: .id)
+    title = try c.decode(String.self, forKey: .title)
+    type = ShowType(rawValue: try c.decode(String.self, forKey: .type)) ?? .other
+  }
 }
 
 /// A show picked on the form: one from the catalogue (`id` set) or a new
