@@ -27,6 +27,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
+      - run: node --test supabase/scripts/sync-wikidata.test.mjs
       - run: pnpm build
 
   db:
@@ -39,3 +40,5 @@ jobs:
       # Only Postgres is needed: applies the migrations, then runs the pgTAP tests.
       - run: supabase db start
       - run: supabase test db
+      - run: apps/ios/scripts/dev types
+      - run: git diff --exit-code -- apps/ios/Stubbed/Generated/Database.swift

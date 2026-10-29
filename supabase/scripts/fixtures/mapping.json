@@ -1,0 +1,19 @@
+{
+  "_note": "Synthetic SPARQL-shaped edge cases; Q100001-Q100008 are test identifiers, not assertions about those real entities. Live captured sample is documented separately when available.",
+  "head": { "vars": ["item", "title", "alias", "premiere", "published", "ibdb", "musical", "opera", "dance", "play", "excluded"] },
+  "results": {
+    "bindings": [
+      { "item": {"value":"http://www.wikidata.org/entity/Q830581"}, "title":{"value":"Les Misérables"}, "alias":{"value":"Les Mis"}, "premiere":{"value":"1980-09-17T00:00:00Z"}, "published":{"value":"1862-01-01T00:00:00Z"}, "ibdb":{"value":"5349"}, "musical":{"value":"true"}, "website":{"value":"https://www.lesmis.com/"} },
+      { "item": {"value":"http://www.wikidata.org/entity/Q830581"}, "title":{"value":"Les Misérables"}, "alias":{"value":"Les Miz"}, "musical":{"value":"true"} },
+      { "item": {"value":"http://www.wikidata.org/entity/Q830581"}, "title":{"value":"Les Misérables"}, "alias":{"value":"Les Mis"} },
+      { "item": {"value":"http://www.wikidata.org/entity/Q111905785"}, "title":{"value":"Les Miserables (Broadway)"}, "premiere":{"value":"1985-01-01T00:00:00Z"}, "musical":{"value":"true"} },
+      { "item": {"value":"http://www.wikidata.org/entity/Q100001"}, "title":{"value":"An Opera"}, "opera":{"value":"true"}, "musical":{"value":"true"} },
+      { "item": {"value":"http://www.wikidata.org/entity/Q100002"}, "title":{"value":"A Ballet"}, "dance":{"value":"true"}, "musical":{"value":"true"} },
+      { "item": {"value":"http://www.wikidata.org/entity/Q100003"}, "title":{"value":"A Comedic Play"}, "play":{"value":"true"}, "published":{"value":"1950-06-01T00:00:00Z"} },
+      { "item": {"value":"http://www.wikidata.org/entity/Q100004"}, "title":{"value":"Unclassified Work"}, "premiere":{"value":"-0100-01-01T00:00:00Z"} },
+      { "item": {"value":"http://www.wikidata.org/entity/Q100005"}, "title":{"value":"A Film"}, "excluded":{"value":"true"}, "musical":{"value":"true"} },
+      { "item": {"value":"http://www.wikidata.org/entity/Q100006"}, "title":{"value":"A Cast Album"}, "excluded":{"value":"true"} },
+      { "item": {"value":"http://www.wikidata.org/entity/Q100007"}, "musical":{"value":"true"} }
+    ]
+  }
+}

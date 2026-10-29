@@ -8,7 +8,39 @@ migrations/   timestamped SQL migrations
 tests/        pgTAP privacy tests
 ```
 
-There is no seed catalogue: shows and venues are added through the app and by imports. Use `search_shows(q)` and `search_venues(q, near_lat, near_lng)` to find an existing row before creating one.
+The show catalogue can optionally be populated from Wikidata (below); shows and venues can still be added through the app and by imports. Use `search_shows(q)` and `search_venues(q, near_lat, near_lng)` to find an existing row before creating one. Nothing requires the catalogue to have been synced.
+
+## Optional Wikidata catalogue (#145)
+
+`scripts/sync-wikidata.mjs` queries Wikidata (CC0), never commercial theatre sites. Requires **Node 24+** and **psql** (PostgreSQL client); no npm packages or API keys. Apply `20261029130000_show_catalogue.sql` first. From the repository root, against a running local Supabase database:
+
+```sh
+# Defaults to postgresql://postgres:postgres@127.0.0.1:54322/postgres.
+node --use-env-proxy supabase/scripts/sync-wikidata.mjs --dry-run
+node --use-env-proxy supabase/scripts/sync-wikidata.mjs
+```
+
+`--use-env-proxy` honours the managed environment's proxy. Keep its CA trust and TLS verification enabled. Allow `query.wikidata.org`; this script uses no Wikidata API key. Requests run sequentially with a descriptive User-Agent, paging and backoff for 429/5xx responses.
+
+For the hosted project, **the owner runs the first sync**, after reviewing the dry run and applying the migration. Set `SUPABASE_DB_URL` securely in your shell/environment settings to a privileged Postgres connection string (including the provider's TLS settings). Never commit it, paste it into an issue, or put it in a command argument. Then use the same two commands above. This bypasses RLS: do not run against production without the owner's explicit go-ahead. The PR does not run a hosted sync or enable a schedule.
+
+Dry run uses a **read-only transaction**: it reports added, updated, unchanged, proposed merged rows, ambiguous titles and skipped candidates without changing the database. It includes existing catalogue rows in its merge preview. Actual sync upserts by `wikidata_id` and merges in one transaction; failures roll back the whole database change. Repeat runs leave unchanged rows untouched. New catalogue rows have `verified = true`, `created_by = null`; refresh updates only title, type, year and aliases. Missing source items are never deleted. Websites and descriptions are fetched for inspection but not stored (artwork has its own future schema).
+
+Source criteria: an IBDB **show** ID (`P1219`, not production ID `P1218`), or a premiere at one of the reviewed West End theatre buildings in `scripts/west-end-theatres.json`. Premiere venues use `P4647` or the `P276` qualifier on `P1191`. These are catalogue selection criteria, not regions shown in the app. Coverage is limited by Wikidata's statements. Type mapping follows class/genre subclasses, prioritises opera and ballet over musical, treats comedic plays as plays, and excludes films, albums, TV series, songs and posters. Source duplicates prefer an IBDB ID, then the earliest known performance, then numeric Wikidata ID; skipped candidates are reported.
+
+The merge compares **titles only, not aliases**, using NFKD accent decomposition, lowercase, collapsed whitespace, a leading `the ` removed and one trailing `the musical`, `(musical)`, `(the musical)`, `(play)`, `(broadway)` or `(west end)` removed. Punctuation otherwise stays significant; transliterations such as `ø` → `o` are deliberately not guessed. Only a single catalogue match with the same type is merged. Any multiple-title match or type disagreement stays untouched and is listed for an admin. Only `entries.show_id` is reassigned (the normal `updated_at` trigger runs); owner, status, rating, visibility, note, photo, date and trip links stay intact. The service-only merge function cannot be called by app users.
+
+To save/replay a source response without fetching Wikidata again:
+
+```sh
+# Creates a new file; refuses to overwrite one. Keep bulk captures out of Git.
+node --use-env-proxy supabase/scripts/sync-wikidata.mjs --dry-run --save-source /tmp/catalogue.json
+node supabase/scripts/sync-wikidata.mjs --source /tmp/catalogue.json --dry-run
+node --test supabase/scripts/sync-wikidata.test.mjs
+supabase test db
+```
+
+The source option accepts the script's combined SPARQL `results.bindings` JSON. Unit tests include synthetic edge cases and a small captured live response. SQL tests seed and roll back their own catalogue, covering the empty-catalogue workflow, grants, aliases, ranking and privacy-preserving merges.
 
 ## Local
 
