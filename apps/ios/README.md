@@ -13,7 +13,19 @@ Debug builds use local Supabase; Release builds use the hosted project. [`CLAUDE
 
 ## Getting it on your phone (TestFlight)
 
-One-off setup in [App Store Connect](https://appstoreconnect.apple.com): create the app (bundle ID `app.getstubbed`, team `AAW3XNQ6D3`) and an internal testing group with yourself in it. Sign in to Xcode with your Apple account (Xcode → Settings → Accounts).
+One-off setup in [App Store Connect](https://appstoreconnect.apple.com): create the app (bundle ID `app.getstubbed`, team `AAW3XNQ6D3`) and an internal testing group with yourself in it.
+
+For command-line releases, use a **team API key** from Users and Access → Integrations → App Store Connect API. The Developer role supports build uploads; automatic provisioning also needs the appropriate Certificates, Identifiers & Profiles access. Keep the downloaded `.p8` outside the repository, with permissions `600`. Apple only lets you download it once.
+
+Create `~/.config/stubbed/app-store-connect.env` (also permissions `600`):
+
+```sh
+ASC_KEY_PATH="$HOME/.config/stubbed/AuthKey_YOUR_KEY_ID.p8"
+ASC_KEY_ID="YOUR_KEY_ID"
+ASC_ISSUER_ID="YOUR_ISSUER_ID"
+```
+
+This is a trusted local shell configuration file. `STUBBED_ASC_CONFIG` can override its location. CI can supply all three variables directly without a config file. The release command passes the key to both archive and export, bypassing Xcode's saved Apple-account session. It rejects incomplete configuration before starting a build. Without API-key configuration, it falls back to the Apple account signed in under Xcode → Settings → Accounts.
 
 Then, from `apps/ios`:
 

@@ -7,8 +7,8 @@
 #   scripts/dev ui [Class[/test]]   Run UI tests (StubbedUITests) as the
 #                              local test users; screenshots go to build/ui/
 #   scripts/dev archive        Archive a Release build and upload it to
-#                              TestFlight (needs the owner's Apple account
-#                              signed in to Xcode)
+#                              TestFlight (App Store Connect API key preferred;
+#                              otherwise the owner's Xcode account)
 #   scripts/dev test-users     Create or reset the local test users
 #                              (ios-test@ and ios-new@stubbed.local)
 #   scripts/dev marketing      Screenshots for the landing page, from a local
@@ -244,15 +244,35 @@ case "$cmd" in
     exit $status
     ;;
   archive)
+    # Keep credentials outside the checkout. CI can supply these variables directly.
+    asc_config="${STUBBED_ASC_CONFIG:-$HOME/.config/stubbed/app-store-connect.env}"
+    if [ -f "$asc_config" ]; then
+      source "$asc_config"
+    fi
+    asc_auth=()
+    if [ -n "${ASC_KEY_PATH:-}${ASC_KEY_ID:-}${ASC_ISSUER_ID:-}" ]; then
+      if [ -z "${ASC_KEY_PATH:-}" ] || [ -z "${ASC_KEY_ID:-}" ] || [ -z "${ASC_ISSUER_ID:-}" ]; then
+        echo "Set ASC_KEY_PATH, ASC_KEY_ID and ASC_ISSUER_ID together." >&2
+        exit 1
+      fi
+      if [ ! -r "$ASC_KEY_PATH" ]; then
+        echo "ASC_KEY_PATH must point to a readable App Store Connect .p8 key." >&2
+        exit 1
+      fi
+      asc_auth=(-authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID")
+      echo "Using App Store Connect API-key authentication."
+    else
+      echo "Using the Apple account signed in to Xcode (no API key configured)."
+    fi
     # Release talks to the hosted Supabase project (Config/Release.xcconfig).
     archive="$BUILD_DIR/Stubbed.xcarchive"
     rm -rf "$archive"
     xcodebuild archive -project "$IOS_DIR/Stubbed.xcodeproj" -scheme Stubbed -configuration Release \
-      -destination "generic/platform=iOS" -archivePath "$archive" -allowProvisioningUpdates \
+      -destination "generic/platform=iOS" -archivePath "$archive" -allowProvisioningUpdates "${asc_auth[@]}" \
       CURRENT_PROJECT_VERSION="${BUILD_NUMBER:-$(date +%Y%m%d%H%M)}" >"$BUILD_DIR/logs/archive.log" 2>&1 \
       || { grep -E "error:" "$BUILD_DIR/logs/archive.log" | head -20; echo "Archive failed. Full log: $BUILD_DIR/logs/archive.log" >&2; exit 1; }
     xcodebuild -exportArchive -archivePath "$archive" -exportOptionsPlist "$IOS_DIR/Config/ExportOptions.plist" \
-      -exportPath "$BUILD_DIR/export" -allowProvisioningUpdates >"$BUILD_DIR/logs/export.log" 2>&1 \
+      -exportPath "$BUILD_DIR/export" -allowProvisioningUpdates "${asc_auth[@]}" >"$BUILD_DIR/logs/export.log" 2>&1 \
       || { grep -E "error" "$BUILD_DIR/logs/export.log" | head -20; echo "Upload failed. Full log: $BUILD_DIR/logs/export.log" >&2; exit 1; }
     echo "Uploaded to App Store Connect. It appears in TestFlight once processed (a few minutes)."
     ;;
