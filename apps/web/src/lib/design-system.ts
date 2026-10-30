@@ -230,12 +230,14 @@ export const IOS_COMPONENTS = [
   { name: "Wordmark", file: "Design/Components.swift", notes: "Lowercase `stubbed`, heavy, tight tracking, in `label`; VoiceOver reads \"Stubbed\". `mark: true` adds the ticket mark (`BrandMark`) before it, as on launch, sign-in and welcome." },
 ];
 
-/** Screenshots of the iOS app (iPhone 17 Pro simulator, test data), in public/design-system/ios. */
+/** iOS simulator screenshots (iPhone 17 Pro and SE, synthetic test data), in public/design-system/ios. */
 export const IOS_SCREENSHOTS = [
   { file: "profile-insights.jpg", title: "Profile activity summary", caption: "Current-year shows, current and best weekly streaks, and a scrollable yearly activity grid. iPhone SE.", width: 562, height: 1000 },
   { file: "insights.jpg", title: "Insights", caption: "A native year Picker, performance counts and daily activity, in an inset grouped List.", width: 460, height: 1000 },
   { file: "insights-world.jpg", title: "Country visits", caption: "An on-device world choropleth and native rows opening each country's visits.", width: 460, height: 1000 },
   { file: "insights-types.jpg", title: "Show mix", caption: "Show-type radar with an accessible count/percentage list and native drill-down navigation.", width: 460, height: 1000 },
+  { file: "insights-empty.jpg", title: "Empty Insights", caption: "An empty diary keeps year navigation and the daily grid, with clear zero counts.", width: 460, height: 1000 },
+  { file: "insights-accessibility.jpg", title: "Insights at accessibility text sizes", caption: "Largest accessibility text and increased contrast on iPhone SE: month labels and grid spacing scale together.", width: 562, height: 1000 },
   { file: "home.jpg", title: "Home", caption: "Large title, the search button in the bar, feed posts on the grouped background.", width: 460, height: 1000 },
   { file: "post-photo.jpg", title: "Feed post with a photo", caption: "Photo first at the card's full width; counts and a trip tag on one row.", width: 735, height: 1000 },
   { file: "people-search.jpg", title: "People search", caption: "A sheet from Home's search button: the field focused, people with Follow as you type.", width: 964, height: 1000 },
