@@ -22,12 +22,21 @@ enum PublicPages {
     var cities = 0
   }
 
+  struct YearActivity: Decodable, Sendable {
+    let total: Int
+    let current_weekly: Int
+    let longest_weekly: Int
+    let days: [InsightStats.Activity]
+    var counts: [String: Int] { Dictionary(days.map { ($0.date, $0.count) }, uniquingKeysWith: +) }
+  }
+
   struct ProfilePage: Sendable {
     let profile: Profile
     let viewer: Viewer
     let follows: FollowCounts
     /// Nil for a private profile the viewer isn't approved to see.
     let stats: ProfileStats?
+    let yearActivity: YearActivity?
     let entries: [Entry]
     let photos: [String: URL]
     let reactions: [UUID: Reactions]
@@ -54,25 +63,40 @@ enum PublicPages {
     v.blocked = await blocked
     // Someone you've blocked: the header and Unblock, nothing else.
     if v.blocked {
-      return ProfilePage(profile: profile, viewer: v, follows: f, stats: nil, entries: [], photos: [:], reactions: [:])
+      return ProfilePage(profile: profile, viewer: v, follows: f, stats: nil, yearActivity: nil, entries: [], photos: [:], reactions: [:])
     }
 
     // A private profile shows its header only, unless the viewer is approved
     // (or it's their own).
     if profile.isPrivate, !v.isOwner, v.status != .accepted {
-      return ProfilePage(profile: profile, viewer: v, follows: f, stats: nil, entries: [], photos: [:], reactions: [:])
+      return ProfilePage(profile: profile, viewer: v, follows: f, stats: nil, yearActivity: nil, entries: [], photos: [:], reactions: [:])
     }
     async let entries: [Entry] = supabase.from("entries").select(Entry.select).eq("user_id", value: profile.id)
       .eq("visibility", value: "public").eq("status", value: "logged")
       .order("date", ascending: false).order("created_at", ascending: false).execute().value
     async let stats: ProfileStats? = try? supabase.rpc("public_profile_stats", params: ["profile_id": profile.id])
       .single().execute().value
+    struct ActivityParams: Encodable {
+      let profile_id: UUID
+      let selected_year: Int
+      let today: String
+    }
+    async let activity: YearActivity? = try? supabase.rpc(
+      "public_profile_activity", params: ActivityParams(
+        profile_id: profile.id, selected_year: InsightStats.currentYear, today: Day.today())
+    ).execute().value
     let (list, s) = try await (entries, stats)
     async let photos = Entries.signPhotos(list.map(\.photoPath))
     async let reactions = ReactionsAPI.load(list.map(\.id))
     return ProfilePage(
-      profile: profile, viewer: v, follows: f, stats: s ?? ProfileStats(), entries: list, photos: await photos,
+      profile: profile, viewer: v, follows: f, stats: s ?? ProfileStats(), yearActivity: await activity, entries: list, photos: await photos,
       reactions: await reactions)
+  }
+
+  static func entries(profileId: UUID, day: String) async throws -> [Entry] {
+    try await supabase.from("entries").select(Entry.select).eq("user_id", value: profileId)
+      .eq("visibility", value: "public").eq("status", value: "logged").eq("date", value: day)
+      .order("created_at", ascending: false).execute().value
   }
 
   struct EntryPage: Sendable {

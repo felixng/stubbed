@@ -18,6 +18,7 @@ final class AppRouter {
   enum Route: Hashable {
     case entry(UUID, notice: Notice? = nil)
     case trip(UUID, addFailed: Bool = false)
+    case trips
     case settings
     case insights
     case insightVisits(Insights.Filter)

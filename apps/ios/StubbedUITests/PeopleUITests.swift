@@ -30,8 +30,9 @@ final class PeopleUITests: XCTestCase {
 
     result.tap()
     XCTAssertTrue(app.staticTexts["Fringe every August."].waitForExistence(timeout: 10))
-    XCTAssertTrue(app.staticTexts["Calendar"].exists)
-    XCTAssertTrue(app.staticTexts["October 2026"].exists)
+    XCTAssertTrue(app.staticTexts["IN PROGRESS"].exists || app.staticTexts.containing(NSPredicate(format: "label CONTAINS %@", "IN PROGRESS")).firstMatch.exists)
+    XCTAssertFalse(app.buttons["profile-insights"].exists)
+    XCTAssertFalse(app.buttons["profile-trips"].exists)
     snapshot("public-profile")
 
     // Unfollow (a public profile: no confirmation), then follow again.
@@ -39,6 +40,22 @@ final class PeopleUITests: XCTestCase {
     XCTAssertTrue(app.buttons["Follow"].firstMatch.waitForExistence(timeout: 10))
     app.buttons["Follow"].firstMatch.tap()
     XCTAssertTrue(app.buttons["Following"].firstMatch.waitForExistence(timeout: 10))
+
+    let yearHeader = app.descendants(matching: .any)["public-profile-year-header"].firstMatch
+    for _ in 0..<6 where !yearHeader.isHittable { app.collectionViews.firstMatch.swipeUp() }
+    let delta = yearHeader.frame.minY - app.navigationBars.firstMatch.frame.maxY - 64
+    if delta > 25 {
+      let start = app.collectionViews.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.8))
+      start.press(forDuration: 0.05, thenDragTo: start.withOffset(CGVector(dx: 0, dy: -delta)),
+        withVelocity: .slow, thenHoldForDuration: 0.3)
+    }
+    snapshot("public-profile-year")
+    let grid = app.otherElements["activity-heatmap"]
+    XCTAssertTrue(grid.waitForExistence(timeout: 5))
+    grid.coordinate(withNormalizedOffset: CGVector(dx: 0.6, dy: 0.45)).tap()
+    XCTAssertTrue(app.buttons["Done"].waitForExistence(timeout: 5))
+    snapshot("public-profile-day")
+    app.buttons["Done"].tap()
 
     // Their newest show, as a public page.
     scrollAndTap(button(app, startingWith: "Operation Mincemeat"), in: app)

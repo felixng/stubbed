@@ -19,7 +19,7 @@ final class TripsUITests: XCTestCase {
   @MainActor
   func testTripStatsRemoveAndAddShows() throws {
     let app = try openProfile()
-    app.buttons["Trips"].tap()
+    scrollAndTap(app.buttons["profile-trips"], in: app)
     scrollAndTap(button(app, startingWith: "NYC Oct 2026"), in: app)
     XCTAssertTrue(app.staticTexts["4 Oct – 8 Oct 2026"].waitForExistence(timeout: 10))
     XCTAssertTrue(app.otherElements["2, shows"].exists || app.staticTexts["shows"].exists)
@@ -71,7 +71,7 @@ final class TripsUITests: XCTestCase {
   @MainActor
   func testTripRecapCardsDraw() throws {
     let app = try openProfile()
-    app.buttons["Trips"].tap()
+    scrollAndTap(app.buttons["profile-trips"], in: app)
     scrollAndTap(button(app, startingWith: "NYC Oct 2026"), in: app)
     scrollAndTap(app.buttons["Share this trip"], in: app)
     XCTAssertTrue(app.navigationBars["Share"].waitForExistence(timeout: 5))

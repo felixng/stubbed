@@ -5,25 +5,68 @@ final class ProfileUITests: XCTestCase {
   override func setUp() { continueAfterFailure = false }
 
   @MainActor
-  func testDiaryTripsPicker() throws {
-    let app = launchApp()
-    if app.buttons["Profile"].waitForExistence(timeout: 5) { openTab("Profile", in: app) }
-    if !app.staticTexts["@ios_test"].waitForExistence(timeout: 3) {
-      signOutIfNeeded(app)
-      try signIn(app)
-      openTab("Profile", in: app)
+  func testYearSummaryAndTrips() throws {
+    try checkYearSummaryAndTrips(accessibility: false)
+  }
+
+  @MainActor
+  func testYearSummaryAccessibility() throws {
+    try checkYearSummaryAndTrips(accessibility: true)
+  }
+
+  @MainActor
+  private func checkYearSummaryAndTrips(accessibility: Bool) throws {
+    let app = XCUIApplication()
+    if accessibility {
+      app.launchArguments = ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
     }
-    let picker = app.segmentedControls["profile-sections"]
-    for _ in 0..<8 where !picker.exists || !picker.isHittable {
+    app.launch()
+    signOutIfNeeded(app)
+    try signIn(app)
+    XCTAssertTrue(onHome(app))
+    openTab("Profile", in: app)
+    if !accessibility { snapshot("profile-header") }
+    let yearHeader = app.descendants(matching: .any)["profile-year-header"].firstMatch
+    for _ in 0..<12 where !yearHeader.exists || !yearHeader.isHittable {
+      let list = app.collectionViews.firstMatch
+      list.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.75)).press(
+        forDuration: 0.05,
+        thenDragTo: list.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.55)))
+    }
+    XCTAssertTrue(yearHeader.exists)
+    for _ in 0..<4 {
+      let top = app.navigationBars.firstMatch.frame.maxY + 64
+      let delta = yearHeader.frame.minY - top
+      if delta < 25 { break }
+      let list = app.collectionViews.firstMatch
+      let start = list.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.8))
+      start.press(forDuration: 0.05, thenDragTo: start.withOffset(
+        CGVector(dx: 0, dy: -min(delta, app.frame.height * 0.4))),
+        withVelocity: .slow, thenHoldForDuration: 0.3)
+    }
+    snapshot(accessibility ? "profile-year-accessibility" : "profile-year-overview")
+    let trips = app.buttons["profile-trips"]
+    for _ in 0..<8 where !trips.exists || !trips.isHittable {
       app.collectionViews.firstMatch.swipeUp()
     }
-    XCTAssertTrue(picker.waitForExistence(timeout: 5))
-    snapshot("profile-picker-diary")
-    picker.buttons["Trips"].tap()
-    XCTAssertTrue(app.buttons["New trip"].waitForExistence(timeout: 10))
-    snapshot("profile-picker-trips")
-    picker.buttons["Diary"].tap()
-    XCTAssertTrue(app.staticTexts["Upcoming"].waitForExistence(timeout: 5))
+    XCTAssertTrue(trips.waitForExistence(timeout: 5))
+    XCTAssertFalse(app.segmentedControls["profile-sections"].exists)
+    snapshot(accessibility ? "profile-year-accessibility-links" : "profile-year-summary")
+    trips.tap()
+    XCTAssertTrue(app.navigationBars["Trips"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons["New trip"].exists)
+    snapshot(accessibility ? "profile-trips-accessibility" : "profile-trips-list")
+    app.buttons["New trip"].tap()
+    XCTAssertTrue(app.navigationBars["New trip"].waitForExistence(timeout: 5))
+    app.buttons["Cancel"].tap()
+    scrollAndTap(button(app, startingWith: "NYC Oct 2026"), in: app)
+    XCTAssertTrue(app.navigationBars["NYC Oct 2026"].waitForExistence(timeout: 10))
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+    XCTAssertTrue(app.navigationBars["Trips"].waitForExistence(timeout: 5))
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+    XCTAssertTrue(app.navigationBars["Profile"].waitForExistence(timeout: 5))
+    scrollAndTap(app.buttons["profile-insights"], in: app)
+    XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 10))
   }
 
   @MainActor

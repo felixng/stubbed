@@ -213,8 +213,9 @@ export const IOS_TOKENS = [
 
 /** The SwiftUI building blocks, in apps/ios/Stubbed. */
 export const IOS_COMPONENTS = [
-  { name: "Profile section picker", file: "Screens/Profile/ProfileView.swift", notes: "Native Diary/Trips segmented Picker with a 44pt minimum touch area. Local 8pt section spacing and zero vertical row insets keep it connected to the activity summary and the selected list; horizontal insets match the card content." },
-  { name: "ProfileInsightsSection / InsightsView", file: "Screens/Insights/", notes: "Owner-only activity and weekly streaks on Profile, then a pushed inset-grouped Insights List with year Picker, charts, country map and accessible drill-down rows. System type and semantic surfaces; no shadows." },
+  { name: "PublicProfileView / ProfileYearHeading / ProfileYearMetrics", file: "Screens/People/PublicProfileView.swift, Screens/Profile/ProfileYearSummary.swift", notes: "Public profiles match the compact avatar/identity header and Shows/Followers/Following row. The shared current-year card and heat map use public, logged entries under the viewer’s RLS. Follow/Edit and More remain; owner-only Trips/Insights links are omitted. Day selection opens a public-only date sheet." },
+  { name: "TripsList", file: "Screens/Trips/TripsList.swift", notes: "Dedicated inset-grouped destination from Profile, with a native back button and + toolbar action. Trips open their detail screens; creation uses a sheet. Loading, empty and error states stay inside the list." },
+  { name: "ProfileInsightsSection / InsightsView", file: "Screens/Insights/", notes: "Profile shows the current year with an IN PROGRESS badge, three equal metrics (shows, live weekly streak, best weekly streak in the current year), and the heat map. The heading and metrics stack at accessibility text sizes. Trips precedes Insights beneath the grid; the diary remains visible. Insights opens a separate inset-grouped List." },
   { name: "ActivityHeatmap", file: "Screens/Insights/ActivityHeatmap.swift", notes: "Monday-first yearly grid, scrollable horizontally. Chart cells have visual day selection and a full-size native calendar picker alternative for VoiceOver." },
   { name: "Screen", file: "Design/Screen.swift", notes: "A scrolling screen on the grouped background with a large (or inline) title and room above the tab bar. For screens that aren't lists, like the feed." },
   { name: ".groupedCard()", file: "Design/Theme.swift", notes: "The inset grouped surface: secondary grouped background, 16pt continuous corners, 1pt stroke, no shadow." },
@@ -233,10 +234,13 @@ export const IOS_COMPONENTS = [
 
 /** iOS simulator screenshots (iPhone 17 Pro and SE, synthetic test data), in public/design-system/ios. */
 export const IOS_SCREENSHOTS = [
-  { file: "profile-picker-small.jpg", title: "Profile picker on a small screen", caption: "Compact section spacing around the native Diary/Trips picker on iPhone SE. System dark appearance; the app retains its configured light appearance.", width: 562, height: 1000 },
-  { file: "profile-picker-diary.jpg", title: "Profile Diary picker", caption: "Native segmented control with compact local section spacing, a 44pt touch area and horizontal alignment with card content. Diary selected on iPhone 17 Pro.", width: 460, height: 1000 },
-  { file: "profile-picker-trips.jpg", title: "Profile Trips picker", caption: "The same segmented control connects the activity summary to the Trips list without an oversized gap. Trips selected on iPhone 17 Pro.", width: 460, height: 1000 },
-  { file: "profile-insights.jpg", title: "Profile activity summary", caption: "Current-year shows, current and best weekly streaks, and a scrollable yearly activity grid. iPhone SE.", width: 562, height: 1000 },
+  { file: "public-profile-day.jpg", title: "Public activity date", caption: "Selecting a heat-map day opens a native sheet queried for public, logged shows on that date. Empty dates have a native empty state.", width: 460, height: 1000 },
+  { file: "public-profile.jpg", title: "Public profile", caption: "Compact identity header and three counts, with the existing Follow control. Year metrics count only public logged shows; owner-only buttons are absent.", width: 460, height: 1000 },
+  { file: "public-profile-year.jpg", title: "Public year summary", caption: "The same year heading, three metrics and heat map as Profile, backed by public-only aggregates. The diary follows directly.", width: 460, height: 1000 },
+  { file: "profile-trips.jpg", title: "Your trips", caption: "A dedicated Trips screen reached from Profile, with a native back button and + toolbar action.", width: 460, height: 1000 },
+  { file: "profile-year-small.jpg", title: "Year summary on iPhone SE", caption: "Three metrics share a row on the smaller phone. The same card contains the heat map, Trips and Insights.", width: 562, height: 1000 },
+  { file: "profile-year-accessibility.jpg", title: "Year summary at accessibility text sizes", caption: "The year, IN PROGRESS badge and metrics stack vertically at the largest accessibility text size. iPhone 17 Pro.", width: 460, height: 1000 },
+  { file: "profile-insights.jpg", title: "Year in progress", caption: "Current year with an IN PROGRESS badge, three equal metrics and the heat map. Trips opens above Insights; the diary follows without a toggle. iPhone 17 Pro.", width: 460, height: 1000 },
   { file: "insights.jpg", title: "Insights", caption: "A native year Picker, performance counts and daily activity, in an inset grouped List.", width: 460, height: 1000 },
   { file: "insights-world.jpg", title: "Country visits", caption: "An on-device world choropleth and native rows opening each country's visits.", width: 460, height: 1000 },
   { file: "insights-types.jpg", title: "Show mix", caption: "Show-type radar with an accessible count/percentage list and native drill-down navigation.", width: 460, height: 1000 },
@@ -246,7 +250,7 @@ export const IOS_SCREENSHOTS = [
   { file: "post-photo.jpg", title: "Feed post with a photo", caption: "Photo first at the card's full width; counts and a trip tag on one row.", width: 735, height: 1000 },
   { file: "people-search.jpg", title: "People search", caption: "A sheet from Home's search button: the field focused, people with Follow as you type.", width: 964, height: 1000 },
   { file: "comments-drawer.jpg", title: "Comments drawer", caption: "A post's comments as a pull-up drawer over the feed, the composer pinned to the bottom.", width: 460, height: 1000 },
-  { file: "profile.jpg", title: "Profile", caption: "An inset grouped List: header, counts as rows, follow requests, Diary and Trips.", width: 460, height: 1000 },
+  { file: "profile.jpg", title: "Profile", caption: "An inset grouped List: header, counts in one row, follow requests and the current-year summary. iPhone SE.", width: 562, height: 1000 },
   { file: "diary.jpg", title: "Diary rows", caption: "EntryRow in Upcoming and Seen sections; swipe or long press to edit or delete.", width: 460, height: 1000 },
   { file: "entry.jpg", title: "A show", caption: "A Form: the show first, then Share, then likes, trips and privacy, then Delete.", width: 460, height: 1000 },
   { file: "share.jpg", title: "Share", caption: "The Share sheet: the card at full width, then the ways to send it.", width: 460, height: 1000 },
