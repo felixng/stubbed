@@ -17,6 +17,8 @@ One-off setup in [App Store Connect](https://appstoreconnect.apple.com): create 
 
 For command-line releases, use a **team API key** from Users and Access → Integrations → App Store Connect API. The Developer role supports build uploads; automatic provisioning also needs the appropriate Certificates, Identifiers & Profiles access. Keep the downloaded `.p8` outside the repository, with permissions `600`. Apple only lets you download it once.
 
+Upload permission and signing permission are separate. The App Manager key successfully reads Stubbed and its builds, but cloud signing was denied during a real export check on this Mac. Install an Apple Distribution signing identity (certificate **and private key**) locally to avoid cloud signing, or configure a key with the cloud-signing access Apple requires. A development certificate alone is insufficient. Verify export before relying on an unattended release; see [Apple's cloud-managed certificate guidance](https://developer.apple.com/help/account/certificates/cloud-managed-certificates/).
+
 Create `~/.config/stubbed/app-store-connect.env` (also permissions `600`):
 
 ```sh
