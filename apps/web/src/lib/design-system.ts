@@ -213,6 +213,7 @@ export const IOS_TOKENS = [
 
 /** The SwiftUI building blocks, in apps/ios/Stubbed. */
 export const IOS_COMPONENTS = [
+  { name: "Profile section picker", file: "Screens/Profile/ProfileView.swift", notes: "Native Diary/Trips segmented Picker with a 44pt minimum touch area. Local 8pt section spacing and zero vertical row insets keep it connected to the activity summary and the selected list; horizontal insets match the card content." },
   { name: "ProfileInsightsSection / InsightsView", file: "Screens/Insights/", notes: "Owner-only activity and weekly streaks on Profile, then a pushed inset-grouped Insights List with year Picker, charts, country map and accessible drill-down rows. System type and semantic surfaces; no shadows." },
   { name: "ActivityHeatmap", file: "Screens/Insights/ActivityHeatmap.swift", notes: "Monday-first yearly grid, scrollable horizontally. Chart cells have visual day selection and a full-size native calendar picker alternative for VoiceOver." },
   { name: "Screen", file: "Design/Screen.swift", notes: "A scrolling screen on the grouped background with a large (or inline) title and room above the tab bar. For screens that aren't lists, like the feed." },
@@ -232,6 +233,9 @@ export const IOS_COMPONENTS = [
 
 /** iOS simulator screenshots (iPhone 17 Pro and SE, synthetic test data), in public/design-system/ios. */
 export const IOS_SCREENSHOTS = [
+  { file: "profile-picker-small.jpg", title: "Profile picker on a small screen", caption: "Compact section spacing around the native Diary/Trips picker on iPhone SE. System dark appearance; the app retains its configured light appearance.", width: 562, height: 1000 },
+  { file: "profile-picker-diary.jpg", title: "Profile Diary picker", caption: "Native segmented control with compact local section spacing, a 44pt touch area and horizontal alignment with card content. Diary selected on iPhone 17 Pro.", width: 460, height: 1000 },
+  { file: "profile-picker-trips.jpg", title: "Profile Trips picker", caption: "The same segmented control connects the activity summary to the Trips list without an oversized gap. Trips selected on iPhone 17 Pro.", width: 460, height: 1000 },
   { file: "profile-insights.jpg", title: "Profile activity summary", caption: "Current-year shows, current and best weekly streaks, and a scrollable yearly activity grid. iPhone SE.", width: 562, height: 1000 },
   { file: "insights.jpg", title: "Insights", caption: "A native year Picker, performance counts and daily activity, in an inset grouped List.", width: 460, height: 1000 },
   { file: "insights-world.jpg", title: "Country visits", caption: "An on-device world choropleth and native rows opening each country's visits.", width: 460, height: 1000 },
