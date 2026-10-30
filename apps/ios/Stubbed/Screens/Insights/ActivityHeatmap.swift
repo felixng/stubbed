@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Compact visual grid plus a native date picker for accessible 44pt day selection.
+/// Compact visual grid with a native date picker available as an accessibility action.
 /// Tiny heatmap cells are a chart, not undersized individual touch targets.
 struct ActivityHeatmap: View {
   let year: Int
@@ -71,22 +71,15 @@ struct ActivityHeatmap: View {
           .font(.footnote).foregroundStyle(.secondary)
         Spacer(minLength: 0)
       }
-      Button {
-        let today = Day.today()
-        selectedDate = Day.date(today.hasPrefix(String(year)) ? today : "\(year)-01-01")
-        choosingDay = true
-      } label: {
-        HStack(alignment: .firstTextBaseline, spacing: Space.s) {
-          Image(systemName: "calendar")
-          Text("Explore a day").fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, minHeight: Space.touch, alignment: .leading)
-        .contentShape(.rect)
-      }
-      .buttonStyle(.borderless)
-      .accessibilityLabel("Explore a day")
-      .accessibilityHint(
-        "Choose a date to see its shows. The activity grid has one column per week.")
+    }
+    .accessibilityElement(children: .ignore)
+    .accessibilityLabel("Activity in \(year.formatted(.number.grouping(.never)))")
+    .accessibilityValue("\(counts.values.reduce(0, +)) shows. One column per week, Monday to Sunday.")
+    .accessibilityIdentifier("activity-heatmap")
+    .accessibilityAction(named: Text("Choose date")) {
+      let today = Day.today()
+      selectedDate = Day.date(today.hasPrefix(String(year)) ? today : "\(year)-01-01")
+      choosingDay = true
     }
     .sheet(isPresented: $choosingDay) {
       NavigationStack {

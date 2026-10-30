@@ -3,6 +3,7 @@ import SwiftUI
 
 struct InsightsView: View {
   @Environment(AppRouter.self) private var router
+  @Environment(\.dynamicTypeSize) private var typeSize
   @State private var year: Int? = InsightStats.currentYear
   @State private var gridYear = InsightStats.currentYear
   @State private var stats: InsightStats?
@@ -20,8 +21,8 @@ struct InsightsView: View {
       }
       if let stats {
         overview(stats)
-        activity(stats)
         streaks(stats)
+        activity(stats)
         geography(stats)
         categories(stats)
         history(stats)
@@ -103,18 +104,19 @@ struct InsightsView: View {
 
   private func streaks(_ stats: InsightStats) -> some View {
     Section {
-      if year == nil || year == InsightStats.currentYear {
-        LabeledContent(
-          "Current weekly streak", value: streakLabel(stats.streaks.current_weekly, unit: "week")
-        )
-        .accessibilityIdentifier("insights-current-weekly")
-        LabeledContent(
-          "Current daily streak", value: streakLabel(stats.streaks.current_daily, unit: "day"))
+      LazyVGrid(
+        columns: Array(repeating: GridItem(.flexible(), alignment: .topLeading),
+          count: typeSize.isAccessibilitySize ? 1 : 2), spacing: Space.l
+      ) {
+        if year == nil || year == InsightStats.currentYear {
+          streakTile("Current weekly streak", count: stats.streaks.current_weekly, unit: "week")
+            .accessibilityIdentifier("insights-current-weekly")
+          streakTile("Current daily streak", count: stats.streaks.current_daily, unit: "day")
+        }
+        streakTile("Longest weekly streak", count: stats.streaks.longest_weekly, unit: "week")
+        streakTile("Longest daily streak", count: stats.streaks.longest_daily, unit: "day")
       }
-      LabeledContent(
-        "Longest weekly streak", value: streakLabel(stats.streaks.longest_weekly, unit: "week"))
-      LabeledContent(
-        "Longest daily streak", value: streakLabel(stats.streaks.longest_daily, unit: "day"))
+      .padding(.vertical, Space.s)
     } header: {
       Text("Streaks")
     } footer: {
@@ -122,6 +124,18 @@ struct InsightsView: View {
         "A show each day or each Monday–Sunday week. An unfinished day or week doesn’t break your current streak. Best streaks are for the selected period."
       )
     }
+  }
+
+  private func streakTile(_ title: String, count: Int, unit: String) -> some View {
+    VStack(alignment: .leading, spacing: Space.s) {
+      Text(streakLabel(count, unit: unit)).font(.title2.bold()).monospacedDigit()
+      Text(title).font(.footnote).foregroundStyle(.secondary)
+        .fixedSize(horizontal: false, vertical: true)
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(Space.m)
+    .background(Color(.tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: Radius.md))
+    .accessibilityElement(children: .combine)
   }
 
   private func geography(_ stats: InsightStats) -> some View {

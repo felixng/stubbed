@@ -18,7 +18,7 @@ final class InsightsUITests: XCTestCase {
     snapshot("insights-accessibility-profile")
     app.buttons["profile-insights"].tap()
     XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 10))
-    reveal(app.buttons["Explore a day"], in: app, snapshots: "insights-accessibility-grid")
+    reveal(app.otherElements["activity-heatmap"], in: app, snapshots: "insights-accessibility-grid")
     snapshot("insights-accessibility")
   }
 
@@ -61,7 +61,7 @@ final class InsightsUITests: XCTestCase {
     snapshot("insights-profile")
     insights.tap()
     XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 10))
-    XCTAssertTrue(app.buttons["Explore a day"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.otherElements["activity-heatmap"].waitForExistence(timeout: 10))
     snapshot("insights-activity")
     // Capture overlapping pages instead of trying to infer chart positions
     // from SwiftUI's grouped accessibility frames.
@@ -83,14 +83,6 @@ final class InsightsUITests: XCTestCase {
     // Year picker can be reached by scrolling to the top; switching to All time
     // must not replace the Profile summary's current-year period.
     for _ in 0..<8 { app.swipeDown() }
-    let explore = app.buttons["Explore a day"]
-    XCTAssertTrue(explore.waitForExistence(timeout: 5))
-    explore.tap()
-    app.buttons["View shows"].tap()
-    XCTAssertTrue(app.staticTexts["A new play"].waitForExistence(timeout: 10))
-    snapshot("insights-day-shows")
-    app.navigationBars.buttons.element(boundBy: 0).tap()
-    for _ in 0..<3 { app.swipeDown() }
     let picker = app.buttons["insights-year"]
     XCTAssertTrue(picker.waitForExistence(timeout: 5))
     picker.tap()
