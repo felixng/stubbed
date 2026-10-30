@@ -31,8 +31,8 @@ test("designSystemMarkdown: every token and the page link", () => {
 
 test("iOS: every token is mapped and every screenshot exists", () => {
   assert.deepEqual(
-    // `sweep` is a gradient (LOGO_GRADIENT), not one of the hex COLORS.
-    IOS_TOKENS.map((t) => t.token).filter((t) => t !== "sweep").sort(),
+    // The native gradient and progress-status text/fill pair have no web hex counterpart.
+    IOS_TOKENS.map((t) => t.token).filter((t) => !["sweep", "progress-status"].includes(t)).sort(),
     COLORS.map((c) => c.name).filter((n) => !["tint-pressed", "focus", "glow", "outline"].includes(n)).sort(),
   );
   for (const shot of IOS_SCREENSHOTS) {
