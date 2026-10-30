@@ -43,10 +43,13 @@ struct ProfileView: View {
           ForEach(Section.allCases, id: \.self) { Text($0.rawValue) }
         }
         .pickerStyle(.segmented)
+        .labelsHidden()
+        .frame(minHeight: Space.touch)
+        .accessibilityIdentifier("profile-sections")
         .disabled(selecting)
       }
-      .listRowInsets(EdgeInsets())
       .listRowBackground(Color.clear)
+      .selectionDisabled()
 
       switch section {
       case .diary: diarySections
@@ -214,9 +217,12 @@ struct ProfileView: View {
           }
         }
         .padding(.vertical, Space.xs)
-        LabeledContent("Shows", value: h.shows.formatted())
-        followsRow("Followers", count: h.counts.followers, .follows(handle: h.profile.handle, list: .followers))
-        followsRow("Following", count: h.counts.following, .follows(handle: h.profile.handle, list: .following))
+        HStack(alignment: .top, spacing: Space.s) {
+          profileCount("Shows", count: h.shows)
+          followsRow("Followers", count: h.counts.followers, .follows(handle: h.profile.handle, list: .followers))
+          followsRow("Following", count: h.counts.following, .follows(handle: h.profile.handle, list: .following))
+        }
+        .padding(.vertical, Space.xs)
       }
       .selectionDisabled()
       // Only private profiles get requests; going public approves them all.
@@ -234,15 +240,20 @@ struct ProfileView: View {
   /// screen twice, so going back took two swipes.
   private func followsRow(_ title: String, count: Int, _ route: AppRouter.Route) -> some View {
     Button { router.open(route) } label: {
-      HStack {
-        LabeledContent(title) { Text(count.formatted()).foregroundStyle(.secondary) }
-        Image(systemName: "chevron.right")
-          .font(.footnote.weight(.semibold))
-          .foregroundStyle(.tertiary)
-      }
-      .contentShape(Rectangle())
+      profileCount(title, count: count)
+        .contentShape(Rectangle())
     }
+    .buttonStyle(.borderless)
     .foregroundStyle(.primary)
+  }
+
+  private func profileCount(_ title: String, count: Int) -> some View {
+    VStack(spacing: Space.xs) {
+      Text(count.formatted()).font(.title3.bold()).monospacedDigit()
+      Text(title).font(.footnote).foregroundStyle(.secondary)
+    }
+    .frame(maxWidth: .infinity, minHeight: Space.touch)
+    .accessibilityElement(children: .combine)
   }
 
   // MARK: - Diary
