@@ -10,10 +10,12 @@ final class ProfileUITests: XCTestCase {
     signOutIfNeeded(app)
     try signIn(app)
     XCTAssertTrue(onHome(app))
-    app.buttons["Profile"].tap()
+    openTab("Profile", in: app)
 
     XCTAssertTrue(app.staticTexts["@ios_test"].waitForExistence(timeout: 10))
     XCTAssertTrue(app.staticTexts["iOS Test"].exists)
+    // The owner activity summary now precedes the diary.
+    for _ in 0..<4 where !app.staticTexts["Upcoming"].exists { app.collectionViews.firstMatch.swipeUp() }
     XCTAssertTrue(app.staticTexts["Upcoming"].waitForExistence(timeout: 10))
     snapshot("profile")
     // The diary is a List: rows below the fold are built as they scroll in.

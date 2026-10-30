@@ -16,11 +16,29 @@ extension XCTestCase {
   /// over from an earlier run.
   @MainActor
   func signOutIfNeeded(_ app: XCUIApplication) {
-    let profileTab = app.buttons["Profile"]
+    let profileTab = app.buttons["person.crop.circle"].firstMatch
     if profileTab.waitForExistence(timeout: 5) {
       profileTab.tap()
+      // A previous test can leave the Profile navigation stack in Insights
+      // or an entry. Switching tabs preserves that stack, so pop to its root.
+      for _ in 0..<6 {
+        if app.buttons["Account"].waitForExistence(timeout: 1) { break }
+        if app.navigationBars["Home"].exists {
+          // A tab tap during launch can be ignored while the bar animates.
+          profileTab.tap()
+        } else {
+          let back = app.navigationBars.buttons.element(boundBy: 0)
+          guard back.exists else { break }
+          back.tap()
+        }
+      }
       app.buttons["Account"].tap()
       app.buttons["Sign out"].tap()
+      // Menu presentation can finish after XCTest reports the app idle.
+      for _ in 0..<3 {
+        if app.textFields["Email"].waitForExistence(timeout: 2) { break }
+        if app.buttons["Sign out"].exists { app.buttons["Sign out"].tap() }
+      }
     } else if app.buttons["Sign out"].exists {
       app.buttons["Sign out"].tap()
     }
@@ -34,12 +52,12 @@ extension XCTestCase {
     let email = try XCTUnwrap(env[newUser ? "STUBBED_NEW_EMAIL" : "STUBBED_EMAIL"], "Run through scripts/dev ui")
     let password = try XCTUnwrap(env["STUBBED_PASSWORD"])
     let field = app.textFields["Email"]
-    field.tap()
-    field.typeText(email)
+    tap(field)
+    // Use the form's native Next/Go actions: the password field and Sign in
+    // button can sit behind the keyboard on a small phone.
+    field.typeText(email + "\n")
     let secure = app.secureTextFields["Password"]
-    secure.tap()
-    secure.typeText(password)
-    app.buttons["Sign in"].firstMatch.tap()
+    secure.typeText(password + "\n")
     dismissSavePassword(app)
   }
 
@@ -162,8 +180,9 @@ extension XCTestCase {
 /// bar can still be animating in and miss the first tap, so it tries twice.
 @MainActor
 func openTab(_ name: String, in app: XCUIApplication) {
+  let symbol = ["Home": "house", "Log": "plus.circle.fill", "Profile": "person.crop.circle"][name] ?? name
   for _ in 0..<2 {
-    app.buttons[name].tap()
+    app.buttons[symbol].firstMatch.tap()
     if app.navigationBars[name].waitForExistence(timeout: 3) { return }
   }
   XCTFail("The \(name) tab didn't open")

@@ -134,3 +134,18 @@ Approved followers of a private profile see what everyone sees of a public one: 
 ## Account deletion
 
 `delete_my_account(confirm)` deletes the caller's auth user when `confirm` is their handle (case, spaces and a leading `@` ignored). That cascades to their profile, entries, collections, links and events; shows and venues they added stay, with `created_by` set to null. Postgres can't delete Storage files, so clients first remove everything under `{user_id}/` in `entry-photos` and `avatars` through the Storage API, then call the function.
+
+## Owner Insights (#131)
+
+`own_insights(selected_year, today)` returns one JSON aggregate for the caller's
+logged visits, including private entries. A null year selects all time; `today`
+is the phone's calendar date for current streaks. Daily activity, month/year
+counts, unique shows, country totals, type totals and daily/weekly streaks share
+the same ownership and performance-date rules. Current streaks span years;
+longest streaks use the selected period. Neither this RPC nor
+`own_insight_entries(selected_year, selected_day, selected_country,
+selected_type, page_offset)` is granted to anonymous callers. Both are
+security-invoker functions and explicitly constrain `user_id` to `auth.uid()`.
+The drill-down returns 100 visits per page. Country aliases are normalised by
+`insight_country`; missing countries remain in overall counts. Public-profile
+Insights and share-card rendering are separate features.
