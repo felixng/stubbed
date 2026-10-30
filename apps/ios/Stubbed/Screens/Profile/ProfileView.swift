@@ -37,7 +37,10 @@ struct ProfileView: View {
   var body: some View {
     List(selection: $picked) {
       headerSections
-      if !selecting { ProfileInsightsSection(refreshVersion: statsRefresh) }
+      if !selecting {
+        ProfileInsightsSection(refreshVersion: statsRefresh)
+          .listSectionSpacing(Space.s)
+      }
       SwiftUI.Section {
         Picker("Profile sections", selection: $section) {
           ForEach(Section.allCases, id: \.self) { Text($0.rawValue) }
@@ -48,7 +51,9 @@ struct ProfileView: View {
         .accessibilityIdentifier("profile-sections")
         .disabled(selecting)
       }
+      .listRowInsets(EdgeInsets(top: 0, leading: Space.l, bottom: 0, trailing: Space.l))
       .listRowBackground(Color.clear)
+      .listSectionSpacing(Space.s)
       .selectionDisabled()
 
       switch section {

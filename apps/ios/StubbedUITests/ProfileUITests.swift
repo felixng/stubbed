@@ -5,6 +5,28 @@ final class ProfileUITests: XCTestCase {
   override func setUp() { continueAfterFailure = false }
 
   @MainActor
+  func testDiaryTripsPicker() throws {
+    let app = launchApp()
+    if app.buttons["Profile"].waitForExistence(timeout: 5) { openTab("Profile", in: app) }
+    if !app.staticTexts["@ios_test"].waitForExistence(timeout: 3) {
+      signOutIfNeeded(app)
+      try signIn(app)
+      openTab("Profile", in: app)
+    }
+    let picker = app.segmentedControls["profile-sections"]
+    for _ in 0..<8 where !picker.exists || !picker.isHittable {
+      app.collectionViews.firstMatch.swipeUp()
+    }
+    XCTAssertTrue(picker.waitForExistence(timeout: 5))
+    snapshot("profile-picker-diary")
+    picker.buttons["Trips"].tap()
+    XCTAssertTrue(app.buttons["New trip"].waitForExistence(timeout: 10))
+    snapshot("profile-picker-trips")
+    picker.buttons["Diary"].tap()
+    XCTAssertTrue(app.staticTexts["Upcoming"].waitForExistence(timeout: 5))
+  }
+
+  @MainActor
   func testProfileShowsHeaderUpcomingAndDiary() throws {
     let app = launchApp()
     signOutIfNeeded(app)
