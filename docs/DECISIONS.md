@@ -618,3 +618,7 @@ Replace the Diary/Trips segmented control with a permanent diary and a Trips nav
 The Profile summary is explicitly the current year, with an IN PROGRESS badge and equally weighted Shows, Weekly streak and Best this year metrics. Use the current-year insights response: the live streak can cross a year boundary; the best streak is limited to the displayed year. Stack metrics for accessibility text sizes. Keep the existing activity heat map and its accessible date action.
 
 Public iOS profiles share the compact identity/counts layout and year-summary presentation, retaining Follow/Edit/More controls and omitting owner-only Trips and Insights navigation. A new SECURITY INVOKER public_profile_activity RPC computes public-only logged counts and weekly streaks under existing RLS, including private-profile approval and blocks; it never uses own_insights. Heat-map dates open a separately queried public date sheet. Apply migration 20261030211500_public_profile_activity.sql before releasing this client.
+
+## 2026-10-30: Native Profile navigation rows and progress status
+
+Trips and Insights rely on the List's native minimum row height instead of adding a 44pt label inside native row padding. Align the system separator to the leading content edge so it matches the separator above the rows. Preserve system Dynamic Type and row hit targets. The shared IN PROGRESS chip uses contrasting green text/fill tokens. Remove the public-profile footer remark while preserving public-only queries and RLS. This follow-up changes presentation only.

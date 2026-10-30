@@ -49,10 +49,10 @@ struct ProfileInsightsSection: View {
         if let count { Text(count.formatted()).foregroundStyle(.secondary) }
         Image(systemName: "chevron.right").font(.footnote).foregroundStyle(.tertiary)
       }
-      .frame(minHeight: Space.touch)
       .contentShape(.rect)
     }
     .foregroundStyle(.primary)
+    .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
   }
 
   private func load() async {
