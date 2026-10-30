@@ -6,7 +6,9 @@ struct ActivityHeatmap: View {
   let year: Int
   let counts: [String: Int]
   let onSelect: (String) -> Void
-  @ScaledMetric(relativeTo: .footnote) private var monthLabelHeight = 20.0
+  @ScaledMetric(relativeTo: .footnote) private var monthLabelHeight: CGFloat = 20
+  @ScaledMetric(relativeTo: .footnote) private var cellSide: CGFloat = 12
+  @ScaledMetric(relativeTo: .footnote) private var cellGap: CGFloat = 4
   @State private var selectedDate = Date()
   @State private var choosingDay = false
 
@@ -16,11 +18,11 @@ struct ActivityHeatmap: View {
     VStack(alignment: .leading, spacing: Space.m) {
       ScrollViewReader { proxy in
         ScrollView(.horizontal) {
-          HStack(alignment: .top, spacing: Space.xs) {
+          HStack(alignment: .top, spacing: cellGap) {
             ForEach(Array(weeks.enumerated()), id: \.offset) { index, week in
-              VStack(spacing: Space.xs) {
+              VStack(spacing: cellGap) {
                 // Month labels appear at the first full week of each month.
-                Color.clear.frame(width: Space.m, height: monthLabelHeight)
+                Color.clear.frame(width: cellSide, height: monthLabelHeight)
                   .overlay(alignment: .leading) {
                     Text(monthLabel(week)).font(.footnote).foregroundStyle(.secondary).fixedSize()
                   }
@@ -30,13 +32,14 @@ struct ActivityHeatmap: View {
                     .fill(week[day] == nil ? Color.clear : cellColor(count))
                     .overlay {
                       if count > 0 {
-                        Circle().fill(Palette.tintText).frame(width: 3, height: 3)
+                        Circle().fill(Palette.tintText).frame(
+                          width: cellSide / 4, height: cellSide / 4)
                       }
                     }
-                    .frame(width: Space.m, height: Space.m)
+                    .frame(width: cellSide, height: cellSide)
                 }
               }
-              .frame(width: Space.m)
+              .frame(width: cellSide)
               .id(index)
             }
           }
@@ -44,9 +47,10 @@ struct ActivityHeatmap: View {
           .contentShape(.rect)
           .gesture(
             SpatialTapGesture().onEnded { tap in
-              guard tap.location.y >= monthLabelHeight + Space.xs * 2 else { return }
-              let column = Int(tap.location.x / (Space.m + Space.xs))
-              let row = Int((tap.location.y - monthLabelHeight - Space.xs * 2) / (Space.m + Space.xs))
+              guard tap.location.y >= monthLabelHeight + cellGap + Space.xs else { return }
+              let column = Int(tap.location.x / (cellSide + cellGap))
+              let row = Int(
+                (tap.location.y - monthLabelHeight - cellGap - Space.xs) / (cellSide + cellGap))
               guard weeks.indices.contains(column), (0..<7).contains(row),
                 let day = weeks[column][row]
               else { return }
@@ -67,13 +71,20 @@ struct ActivityHeatmap: View {
           .font(.footnote).foregroundStyle(.secondary)
         Spacer(minLength: 0)
       }
-      Button("Explore a day", systemImage: "calendar") {
+      Button {
         let today = Day.today()
         selectedDate = Day.date(today.hasPrefix(String(year)) ? today : "\(year)-01-01")
         choosingDay = true
+      } label: {
+        HStack(alignment: .firstTextBaseline, spacing: Space.s) {
+          Image(systemName: "calendar")
+          Text("Explore a day").fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, minHeight: Space.touch, alignment: .leading)
+        .contentShape(.rect)
       }
       .buttonStyle(.borderless)
-      .frame(minHeight: Space.touch, alignment: .leading)
+      .accessibilityLabel("Explore a day")
       .accessibilityHint(
         "Choose a date to see its shows. The activity grid has one column per week.")
     }

@@ -18,7 +18,7 @@ final class InsightsUITests: XCTestCase {
     snapshot("insights-accessibility-profile")
     app.buttons["profile-insights"].tap()
     XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 10))
-    reveal(app.buttons["Explore a day"], in: app)
+    reveal(app.buttons["Explore a day"], in: app, snapshots: "insights-accessibility-grid")
     snapshot("insights-accessibility")
   }
 
@@ -101,12 +101,16 @@ final class InsightsUITests: XCTestCase {
     XCTAssertTrue(app.navigationBars["Profile"].waitForExistence(timeout: 5))
   }
   @MainActor
-  private func reveal(_ element: XCUIElement, in app: XCUIApplication) {
+  private func reveal(_ element: XCUIElement, in app: XCUIApplication, snapshots: String? = nil) {
     let list = app.collectionViews.firstMatch
-    for _ in 0..<12 {
+    for step in 0..<50 {
       if element.exists && element.isHittable { return }
-      list.swipeUp()
+      let from = list.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.75))
+      let to = list.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.55))
+      from.press(forDuration: 0.05, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.3)
+      if let snapshots { snapshot("\(snapshots)-\(step)") }
     }
+    snapshot("insights-reveal-failed")
     XCTFail("Could not reveal \(element)")
   }
 

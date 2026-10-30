@@ -16,7 +16,7 @@ extension XCTestCase {
   /// over from an earlier run.
   @MainActor
   func signOutIfNeeded(_ app: XCUIApplication) {
-    let profileTab = app.buttons["Profile"]
+    let profileTab = app.buttons["person.crop.circle"].firstMatch
     if profileTab.waitForExistence(timeout: 5) {
       profileTab.tap()
       // A previous test can leave the Profile navigation stack in Insights
@@ -180,8 +180,9 @@ extension XCTestCase {
 /// bar can still be animating in and miss the first tap, so it tries twice.
 @MainActor
 func openTab(_ name: String, in app: XCUIApplication) {
+  let symbol = ["Home": "house", "Log": "plus.circle.fill", "Profile": "person.crop.circle"][name] ?? name
   for _ in 0..<2 {
-    app.buttons[name].tap()
+    app.buttons[symbol].firstMatch.tap()
     if app.navigationBars[name].waitForExistence(timeout: 3) { return }
   }
   XCTFail("The \(name) tab didn't open")
