@@ -15,7 +15,8 @@ struct ProfileYearHeading: View {
         .font(.caption2.weight(.semibold))
         .padding(.horizontal, Space.s)
         .padding(.vertical, Space.xs)
-        .background(.quaternary, in: .capsule)
+        .foregroundStyle(Palette.progressText)
+        .background(Palette.progressFill, in: .capsule)
     }
     .foregroundStyle(.primary)
     .textCase(nil)

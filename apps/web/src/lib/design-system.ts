@@ -196,6 +196,7 @@ export const IOS_RULES = [
 
 /** How each colour token is expressed in SwiftUI. */
 export const IOS_TOKENS = [
+  { token: "progress-status", swift: "`Palette.progressText` / `Palette.progressFill`", note: "Green IN PROGRESS status chip: contrasting text/fill pairs for light and dark appearance" },
   { token: "background", swift: "Color(.systemGroupedBackground)", note: "Every screen" },
   { token: "surface", swift: "Color(.secondarySystemGroupedBackground)", note: "List cells, cards (`.groupedCard()`)" },
   { token: "fill", swift: "Color(.tertiarySystemFill)", note: "Placeholders, capsule tags" },
@@ -215,7 +216,7 @@ export const IOS_TOKENS = [
 export const IOS_COMPONENTS = [
   { name: "PublicProfileView / ProfileYearHeading / ProfileYearMetrics", file: "Screens/People/PublicProfileView.swift, Screens/Profile/ProfileYearSummary.swift", notes: "Public profiles match the compact avatar/identity header and Shows/Followers/Following row. The shared current-year card and heat map use public, logged entries under the viewer’s RLS. Follow/Edit and More remain; owner-only Trips/Insights links are omitted. Day selection opens a public-only date sheet." },
   { name: "TripsList", file: "Screens/Trips/TripsList.swift", notes: "Dedicated inset-grouped destination from Profile, with a native back button and + toolbar action. Trips open their detail screens; creation uses a sheet. Loading, empty and error states stay inside the list." },
-  { name: "ProfileInsightsSection / InsightsView", file: "Screens/Insights/", notes: "Profile shows the current year with an IN PROGRESS badge, three equal metrics (shows, live weekly streak, best weekly streak in the current year), and the heat map. The heading and metrics stack at accessibility text sizes. Trips precedes Insights beneath the grid; the diary remains visible. Insights opens a separate inset-grouped List." },
+  { name: "ProfileInsightsSection / InsightsView", file: "Screens/Insights/", notes: "Profile shows the current year with an IN PROGRESS badge, three equal metrics (shows, live weekly streak, best weekly streak in the current year), and the heat map. The green IN PROGRESS chip uses the progress status tokens. The heading and metrics stack at accessibility text sizes. Trips precedes Insights beneath the grid, using native List row heights and system separators aligned to content leading; the diary remains visible. Insights opens a separate inset-grouped List." },
   { name: "ActivityHeatmap", file: "Screens/Insights/ActivityHeatmap.swift", notes: "Monday-first yearly grid, scrollable horizontally. Chart cells have visual day selection and a full-size native calendar picker alternative for VoiceOver." },
   { name: "Screen", file: "Design/Screen.swift", notes: "A scrolling screen on the grouped background with a large (or inline) title and room above the tab bar. For screens that aren't lists, like the feed." },
   { name: ".groupedCard()", file: "Design/Theme.swift", notes: "The inset grouped surface: secondary grouped background, 16pt continuous corners, 1pt stroke, no shadow." },
@@ -250,7 +251,7 @@ export const IOS_SCREENSHOTS = [
   { file: "post-photo.jpg", title: "Feed post with a photo", caption: "Photo first at the card's full width; counts and a trip tag on one row.", width: 735, height: 1000 },
   { file: "people-search.jpg", title: "People search", caption: "A sheet from Home's search button: the field focused, people with Follow as you type.", width: 964, height: 1000 },
   { file: "comments-drawer.jpg", title: "Comments drawer", caption: "A post's comments as a pull-up drawer over the feed, the composer pinned to the bottom.", width: 460, height: 1000 },
-  { file: "profile.jpg", title: "Profile", caption: "An inset grouped List: header, counts in one row, follow requests and the current-year summary. iPhone SE.", width: 562, height: 1000 },
+  { file: "profile.jpg", title: "Profile", caption: "An inset grouped List: header, counts in one row, follow requests and the current-year summary. iPhone 17 Pro.", width: 460, height: 1000 },
   { file: "diary.jpg", title: "Diary rows", caption: "EntryRow in Upcoming and Seen sections; swipe or long press to edit or delete.", width: 460, height: 1000 },
   { file: "entry.jpg", title: "A show", caption: "A Form: the show first, then Share, then likes, trips and privacy, then Delete.", width: 460, height: 1000 },
   { file: "share.jpg", title: "Share", caption: "The Share sheet: the card at full width, then the ways to send it.", width: 460, height: 1000 },

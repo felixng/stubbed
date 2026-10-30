@@ -62,8 +62,6 @@ struct PublicProfileView: View {
             } header: {
               ProfileYearHeading(year: InsightStats.currentYear)
                 .accessibilityIdentifier("public-profile-year-header")
-            } footer: {
-              Text("Public shows only.")
             }
           }
           if page.viewer.blocked {
