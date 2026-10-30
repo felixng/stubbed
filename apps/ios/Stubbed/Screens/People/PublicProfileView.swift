@@ -1,9 +1,8 @@
 import SwiftUI
 
 /// Someone's profile as everyone sees it (yours too, from "View public
-/// profile"), like the web's /@handle: photos from their shows, avatar,
-/// handle, name, bio, link, follow counts, stats, then the calendar and
-/// their public shows. A private profile shows just its header unless
+/// profile"): compact identity and counts, a public-only year summary,
+/// then their public shows. A private profile shows just its header unless
 /// you're an approved follower.
 struct PublicProfileView: View {
   let handle: String
@@ -12,11 +11,12 @@ struct PublicProfileView: View {
   @Environment(AppRouter.self) private var router
   @State private var state: Loadable<PublicPages.ProfilePage?> = .loading
   @State private var reporting = false
+  @State private var selectedDay: PublicProfileDay?
   @State private var confirmBlock = false
   @State private var blockError = false
 
   var body: some View {
-    ScrollViewReader { proxy in
+    Group {
       List {
         switch state {
         case .loading:
@@ -30,14 +30,40 @@ struct PublicProfileView: View {
           }
           .listRowBackground(Color.clear)
         case .loaded(let page?):
-          Section { header(page) }
-            .listRowInsets(EdgeInsets())
-            .listRowBackground(Color.clear)
-          if let stats = page.stats {
+          Section {
+            header(page)
+            HStack(alignment: .top, spacing: Space.s) {
+              count(page.stats?.shows, "Shows")
+              Button { router.open(.follows(handle: page.profile.handle, list: .followers)) } label: {
+                count(page.follows.followers, "Followers")
+              }
+              Button { router.open(.follows(handle: page.profile.handle, list: .following)) } label: {
+                count(page.follows.following, "Following")
+              }
+            }
+            .buttonStyle(.borderless)
+            .foregroundStyle(.primary)
+            .padding(.vertical, Space.xs)
+          }
+          if page.stats != nil {
             Section {
-              LabeledContent("Shows", value: stats.shows.formatted())
-              LabeledContent("Theatres", value: stats.venues.formatted())
-              LabeledContent("Cities", value: stats.cities.formatted())
+              if let activity = page.yearActivity {
+                VStack(alignment: .leading, spacing: Space.l) {
+                  ProfileYearMetrics(shows: activity.total, weekly: activity.current_weekly, best: activity.longest_weekly)
+                  ActivityHeatmap(year: InsightStats.currentYear, counts: activity.counts) { day in
+                    selectedDay = PublicProfileDay(profile: page.profile, date: day)
+                  }
+                }
+                .padding(.vertical, Space.s)
+              } else {
+                Text("Year summary couldn’t load.").foregroundStyle(.secondary)
+                Button("Try again") { Task { await load() } }
+              }
+            } header: {
+              ProfileYearHeading(year: InsightStats.currentYear)
+                .accessibilityIdentifier("public-profile-year-header")
+            } footer: {
+              Text("Public shows only.")
             }
           }
           if page.viewer.blocked {
@@ -57,11 +83,6 @@ struct PublicProfileView: View {
             }
             .listRowBackground(Color.clear)
           } else {
-            Section("Calendar") {
-              ProfileCalendar(entries: page.entries.map { .init(id: $0.id, date: $0.date, title: $0.show.title) }) { id in
-                withAnimation { proxy.scrollTo(id, anchor: .top) }
-              }
-            }
             Section("Recent shows") {
               ForEach(page.entries) { entry in
                 PostCard(
@@ -99,6 +120,9 @@ struct PublicProfileView: View {
         }
       }
     }
+    .sheet(item: $selectedDay) { selection in
+      PublicProfileDayView(selection: selection)
+    }
     .sheet(isPresented: $reporting) {
       if case .loaded(let page?) = state {
         ReportSheet(target: .profile(page.profile.id), owner: page.viewer.blocked ? nil : page.profile.person)
@@ -127,86 +151,46 @@ struct PublicProfileView: View {
 
   private func header(_ page: PublicPages.ProfilePage) -> some View {
     let p = page.profile
-    let cover = page.entries.compactMap { $0.photoPath.flatMap { page.photos[$0] } }.prefix(3)
-    return VStack(alignment: .leading, spacing: 0) {
-      Group {
-        if cover.isEmpty {
-          Palette.sweep.frame(height: 80)
-        } else {
-          HStack(spacing: 2) {
-            ForEach(Array(cover), id: \.self) { url in
-              RemoteImage(url: url)
-                .frame(maxWidth: .infinity, maxHeight: 112)
-                .clipped()
-            }
-          }
-          .frame(height: 112)
-        }
-      }
-      .accessibilityHidden(true)
-
-      VStack(alignment: .leading, spacing: Space.m) {
-        HStack(alignment: .bottom) {
-          Avatar(name: p.name, url: p.avatarURL, size: 80)
-            .overlay(Circle().strokeBorder(Color(.secondarySystemGroupedBackground), lineWidth: 4))
-            .padding(.top, -40)
-          Spacer()
-          if !page.viewer.blocked {
-            FollowButton(profile: p, viewer: page.viewer)
-          }
-        }
+    return VStack(alignment: .leading, spacing: Space.m) {
+      HStack(spacing: Space.l) {
+        Avatar(name: p.name, url: p.avatarURL, size: 64)
+          .padding(2.5)
+          .background(Color(.secondarySystemGroupedBackground), in: .circle)
+          .padding(2.5)
+          .background(Palette.sweep, in: .circle)
         VStack(alignment: .leading, spacing: 2) {
-          HStack(spacing: Space.s) {
-            Text(verbatim: "@\(p.handle)")
-              .font(.title2.bold())
-              .accessibilityAddTraits(.isHeader)
-            if p.isPrivate {
-              Image(systemName: "lock.fill")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-                .accessibilityLabel("Private profile")
-            }
-          }
+          Text(verbatim: "@\(p.handle)").font(.title2.bold())
+            .accessibilityAddTraits(.isHeader)
           if let name = p.displayName, !name.isEmpty {
             Text(name).font(.subheadline).foregroundStyle(.secondary)
           }
-        }
-        if let bio = p.bio, !bio.isEmpty {
-          Text(bio).font(.body)
-        }
-        if let link = p.link, let url = URL(string: link) {
-          // Borderless, like every control in this header: it shares one List
-          // row, where a default-styled control takes taps on the whole row.
-          Link(destination: url) {
-            Label(Self.displayLink(link), systemImage: "link")
-              .font(.subheadline.weight(.semibold))
-              .lineLimit(1)
-          }
-          .buttonStyle(.borderless)
-        }
-        HStack(spacing: Space.l) {
-          // Buttons, not NavigationLinks: this sits in a List row, which would add chevrons.
-          Button { router.open(.follows(handle: p.handle, list: .followers)) } label: {
-            count(page.follows.followers, page.follows.followers == 1 ? "follower" : "followers")
-          }
-          Button { router.open(.follows(handle: p.handle, list: .following)) } label: {
-            count(page.follows.following, "following")
+          if p.isPrivate {
+            Label("Private profile", systemImage: "lock.fill").font(.footnote).foregroundStyle(.secondary)
           }
         }
-        .buttonStyle(.plain)
       }
-      .padding(.horizontal, Space.l)
-      .padding(.bottom, Space.l)
+      if let bio = p.bio, !bio.isEmpty { Text(bio).font(.body) }
+      if let link = p.link, let url = URL(string: link) {
+        Link(destination: url) {
+          Label(Self.displayLink(link), systemImage: "link")
+            .font(.subheadline.weight(.semibold))
+            .lineLimit(1)
+        }
+        .buttonStyle(.borderless)
+      }
+      if !page.viewer.blocked { FollowButton(profile: p, viewer: page.viewer) }
     }
-    .groupedCard()
+    .padding(.vertical, Space.xs)
   }
 
-  private func count(_ value: Int, _ label: String) -> some View {
-    (Text("\(value)").fontWeight(.semibold).foregroundStyle(.primary)
-      + Text(" \(label)").foregroundStyle(.secondary))
-      .font(.subheadline)
-      .monospacedDigit()
-      .frame(minHeight: Space.touch)
+  private func count(_ value: Int?, _ label: String) -> some View {
+    VStack(spacing: Space.xs) {
+      Text(value?.formatted() ?? "—").font(.title3.bold()).monospacedDigit()
+      Text(label).font(.footnote).foregroundStyle(.secondary)
+    }
+    .frame(maxWidth: .infinity, minHeight: Space.touch)
+    .accessibilityElement(children: .combine)
+    .accessibilityLabel("\(label), \(value.map { $0.formatted() } ?? "not available")")
   }
 
   private func privateMessage(_ page: PublicPages.ProfilePage) -> String {

@@ -610,3 +610,11 @@ calendar date for current-streak evaluation. Owner-only components are not added
 to public profiles. Share cards remain independent, and this PR does not implement
 the web Insights surface or public-profile stats. Synthetic screenshot fixtures
 run only for InsightsUITests and never change hosted data.
+
+## 2026-10-30: Profile year summary and dedicated Trips destination
+
+Replace the Diary/Trips segmented control with a permanent diary and a Trips navigation row above Insights. Trips are a collection of visits and open their own inset-grouped screen, with creation in its navigation bar. Keep diary bulk-selection and Add to trip unchanged.
+
+The Profile summary is explicitly the current year, with an IN PROGRESS badge and equally weighted Shows, Weekly streak and Best this year metrics. Use the current-year insights response: the live streak can cross a year boundary; the best streak is limited to the displayed year. Stack metrics for accessibility text sizes. Keep the existing activity heat map and its accessible date action.
+
+Public iOS profiles share the compact identity/counts layout and year-summary presentation, retaining Follow/Edit/More controls and omitting owner-only Trips and Insights navigation. A new SECURITY INVOKER public_profile_activity RPC computes public-only logged counts and weekly streaks under existing RLS, including private-profile approval and blocks; it never uses own_insights. Heat-map dates open a separately queried public date sheet. Apply migration 20261030211500_public_profile_activity.sql before releasing this client.

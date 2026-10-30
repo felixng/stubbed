@@ -3,16 +3,13 @@ import SwiftUI
 
 /// The Profile tab, like Contacts' card on a grouped list: who you are
 /// (avatar, handle, name, bio), your counts, any follow requests, then your
-/// diary or your trips. Select puts the diary in edit mode, with Add to trip
-/// and Delete in the bottom bar, as Photos does.
+/// diary, with a separate destination for trips. Select puts the diary in
+/// edit mode, with Add to trip and Delete in the bottom bar, as Photos does.
 struct ProfileView: View {
-  enum Section: String, CaseIterable { case diary = "Diary", trips = "Trips" }
-
   @Environment(AppSession.self) private var session
   @Environment(AppRouter.self) private var router
 
   @State private var statsRefresh = 0
-  @State private var section = Section.diary
   @State private var header: Loadable<Header> = .loading
   @State private var diary: Loadable<(entries: [Entry], photos: [String: URL])> = .loading
   @State private var editMode = EditMode.inactive
@@ -38,28 +35,9 @@ struct ProfileView: View {
     List(selection: $picked) {
       headerSections
       if !selecting {
-        ProfileInsightsSection(refreshVersion: statsRefresh)
-          .listSectionSpacing(Space.s)
+        ProfileInsightsSection(refreshVersion: statsRefresh, tripCount: trips.count)
       }
-      SwiftUI.Section {
-        Picker("Profile sections", selection: $section) {
-          ForEach(Section.allCases, id: \.self) { Text($0.rawValue) }
-        }
-        .pickerStyle(.segmented)
-        .labelsHidden()
-        .frame(minHeight: Space.touch)
-        .accessibilityIdentifier("profile-sections")
-        .disabled(selecting)
-      }
-      .listRowInsets(EdgeInsets(top: 0, leading: Space.l, bottom: 0, trailing: Space.l))
-      .listRowBackground(Color.clear)
-      .listSectionSpacing(Space.s)
-      .selectionDisabled()
-
-      switch section {
-      case .diary: diarySections
-      case .trips: TripsList()
-      }
+      diarySections
     }
     .listStyle(.insetGrouped)
     .tabBarClearance()
@@ -68,7 +46,6 @@ struct ProfileView: View {
     .toolbar { toolbar }
     // While selecting, the tab bar makes way for Add to Trip and Delete.
     .toolbar(selecting ? .hidden : .visible, for: .tabBar)
-    .onChange(of: section) { _, _ in endSelecting() }
     .photosPicker(
       isPresented: $pickingImport, selection: $importItems, maxSelectionCount: PhotoImport.maxPhotos,
       selectionBehavior: .ordered, matching: .images)
@@ -112,7 +89,7 @@ struct ProfileView: View {
   }
 
   @ToolbarContentBuilder private var toolbar: some ToolbarContent {
-    if section == .diary, !(diary.value?.entries.isEmpty ?? true) {
+    if !(diary.value?.entries.isEmpty ?? true) {
       ToolbarItem(placement: .topBarLeading) {
         Button(selecting ? "Done" : "Select") {
           withAnimation { if selecting { endSelecting() } else { editMode = .active } }
@@ -259,6 +236,7 @@ struct ProfileView: View {
     }
     .frame(maxWidth: .infinity, minHeight: Space.touch)
     .accessibilityElement(children: .combine)
+    .accessibilityLabel("\(title), \(count.formatted())")
   }
 
   // MARK: - Diary

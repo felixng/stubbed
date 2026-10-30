@@ -45,7 +45,7 @@ final class MarketingUITests: XCTestCase {
     app.navigationBars["Share"].buttons["Done"].tap()
 
     app.navigationBars.buttons.firstMatch.tap()
-    let trips = app.segmentedControls.buttons["Trips"]
+    let trips = app.buttons["profile-trips"]
     for _ in 0..<6 where !trips.isHittable { app.collectionViews.firstMatch.swipeDown() }
     trips.tap()
     scrollAndTap(button(app, startingWith: "Birthday weekend"), in: app)
