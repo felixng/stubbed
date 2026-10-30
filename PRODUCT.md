@@ -44,7 +44,7 @@ A purpose-built home for a behaviour theatregoers already have, with structure I
 - The show catalogue is optional: everything works for shows that aren't in it, and with no catalogue at all.
 - Official show artwork (from the show catalogue) appears only inside the app, never on share cards, public pages or link previews.
 - Sign-ups are closed; the landing page collects a waitlist.
-- Monetisation is deferred: no payment, paywall or upsell UI.
+- Monetisation is deferred for launch: no payment, paywall or upsell UI. Approved future paid additions: extra photos, deeper historical insights and premium card customisation. Logging and getting your data out remain free. Infrastructure may be prepared with all launch capabilities free; prices, trials and founder offers are undecided.
 - Not built yet, so never shown as working: CSV export, a stats page, diary filters, notifications, moderation, show pages.
 
 ## Brand Commitments

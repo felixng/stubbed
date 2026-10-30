@@ -584,3 +584,19 @@ The owner found the cards' logo, handle and stats too small, and the middle of t
 - **The photo shows:** shade only behind the stats (top 150) and the bottom quarter, instead of the bottom half.
 - **Rating toggle** on the share screen, beside Background/Transparent, hides the rating on both cards (Stats swaps in "Seen · 1st time"). It starts off for 2 stars or below. Both versions are drawn up front, so the share sheet still opens straight from the tap. `card_shared` gains `rating`.
 - **Tag @getstubbed.app:** that's Stubbed's Instagram handle; the share screen and captions said @stubbedapp.
+
+
+## 2026-10-30 — Provider-independent feature access foundation
+
+Owner approved extra photos, deeper historical insights and premium card
+customisation as future paid additions. Launch remains free. RevenueCat + Stripe
+is the likely provider combination; the access contract must remain independent
+of either. Initial implementation adds shared capability policies and independent
+expiring access grants in Postgres, with caller-scoped RPCs and no client writes.
+No existing feature is gated and no checkout is connected. Technical rollout and
+adapter requirements: `docs/FEATURE_ACCESS.md`.
+
+Drive follow-up: update **Stubbed: Monetisation Ideas** with these three approved
+paid additions and the free-launch/provider-independent direction. Trial length,
+founder terms, prices and exact feature boundaries remain undecided. This session
+has no Drive editing connector, so the authoritative product document was not edited.
