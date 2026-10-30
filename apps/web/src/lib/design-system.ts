@@ -213,6 +213,8 @@ export const IOS_TOKENS = [
 
 /** The SwiftUI building blocks, in apps/ios/Stubbed. */
 export const IOS_COMPONENTS = [
+  { name: "ProfileInsightsSection / InsightsView", file: "Screens/Insights/", notes: "Owner-only activity and weekly streaks on Profile, then a pushed inset-grouped Insights List with year Picker, charts, country map and accessible drill-down rows. System type and semantic surfaces; no shadows." },
+  { name: "ActivityHeatmap", file: "Screens/Insights/ActivityHeatmap.swift", notes: "Monday-first yearly grid, scrollable horizontally. Chart cells have visual day selection and a full-size native calendar picker alternative for VoiceOver." },
   { name: "Screen", file: "Design/Screen.swift", notes: "A scrolling screen on the grouped background with a large (or inline) title and room above the tab bar. For screens that aren't lists, like the feed." },
   { name: ".groupedCard()", file: "Design/Theme.swift", notes: "The inset grouped surface: secondary grouped background, 16pt continuous corners, 1pt stroke, no shadow." },
   { name: "PostCard", file: "Screens/Home/PostCard.swift", notes: "A feed post, photo first. One tap target with `CardPressStyle`; the avatar, counts and trip tag push through the router (a `NavigationLink` inside a List row would gain a chevron)." },

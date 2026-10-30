@@ -11,6 +11,7 @@ struct ProfileView: View {
   @Environment(AppSession.self) private var session
   @Environment(AppRouter.self) private var router
 
+  @State private var statsRefresh = 0
   @State private var section = Section.diary
   @State private var header: Loadable<Header> = .loading
   @State private var diary: Loadable<(entries: [Entry], photos: [String: URL])> = .loading
@@ -36,6 +37,7 @@ struct ProfileView: View {
   var body: some View {
     List(selection: $picked) {
       headerSections
+      if !selecting { ProfileInsightsSection(refreshVersion: statsRefresh) }
       SwiftUI.Section {
         Picker("Profile sections", selection: $section) {
           ForEach(Section.allCases, id: \.self) { Text($0.rawValue) }
@@ -52,6 +54,7 @@ struct ProfileView: View {
       }
     }
     .listStyle(.insetGrouped)
+    .tabBarClearance()
     .environment(\.editMode, $editMode)
     .navigationTitle("Profile")
     .toolbar { toolbar }
@@ -66,7 +69,7 @@ struct ProfileView: View {
       importItems = []
       router.startImport(picked)
     }
-    .refreshable { await load() }
+    .refreshable { await load(); statsRefresh += 1 }
     .task(id: router.dataVersion) { await load() }
     .confirmationDialog("Add \(picked.count) to a trip", isPresented: $choosingTrip, titleVisibility: .visible) {
       let dates = chosen.map(\.date).sorted()

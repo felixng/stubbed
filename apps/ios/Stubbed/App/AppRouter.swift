@@ -19,6 +19,8 @@ final class AppRouter {
     case entry(UUID, notice: Notice? = nil)
     case trip(UUID, addFailed: Bool = false)
     case settings
+    case insights
+    case insightVisits(Insights.Filter)
     case blockedAccounts
     case profile(handle: String)
     /// Someone's public show (yours too, as others see it); `comments`

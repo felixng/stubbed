@@ -19,6 +19,19 @@ extension XCTestCase {
     let profileTab = app.buttons["Profile"]
     if profileTab.waitForExistence(timeout: 5) {
       profileTab.tap()
+      // A previous test can leave the Profile navigation stack in Insights
+      // or an entry. Switching tabs preserves that stack, so pop to its root.
+      for _ in 0..<6 {
+        if app.buttons["Account"].waitForExistence(timeout: 1) { break }
+        if app.navigationBars["Home"].exists {
+          // A tab tap during launch can be ignored while the bar animates.
+          profileTab.tap()
+        } else {
+          let back = app.navigationBars.buttons.element(boundBy: 0)
+          guard back.exists else { break }
+          back.tap()
+        }
+      }
       app.buttons["Account"].tap()
       app.buttons["Sign out"].tap()
     } else if app.buttons["Sign out"].exists {
@@ -34,12 +47,12 @@ extension XCTestCase {
     let email = try XCTUnwrap(env[newUser ? "STUBBED_NEW_EMAIL" : "STUBBED_EMAIL"], "Run through scripts/dev ui")
     let password = try XCTUnwrap(env["STUBBED_PASSWORD"])
     let field = app.textFields["Email"]
-    field.tap()
-    field.typeText(email)
+    tap(field)
+    // Use the form's native Next/Go actions: the password field and Sign in
+    // button can sit behind the keyboard on a small phone.
+    field.typeText(email + "\n")
     let secure = app.secureTextFields["Password"]
-    secure.tap()
-    secure.typeText(password)
-    app.buttons["Sign in"].firstMatch.tap()
+    secure.typeText(password + "\n")
     dismissSavePassword(app)
   }
 

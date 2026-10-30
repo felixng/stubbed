@@ -584,3 +584,29 @@ The owner found the cards' logo, handle and stats too small, and the middle of t
 - **The photo shows:** shade only behind the stats (top 150) and the bottom quarter, instead of the bottom half.
 - **Rating toggle** on the share screen, beside Background/Transparent, hides the rating on both cards (Stats swaps in "Seen · 1st time"). It starts off for 2 stars or below. Both versions are drawn up front, so the share sheet still opens straight from the tap. `card_shared` gains `rating`.
 - **Tag @getstubbed.app:** that's Stubbed's Instagram handle; the share screen and captions said @stubbedapp.
+
+## 2026-10-30 — Owner Profile stats and iOS Insights (#131)
+
+Profile carries current-year performances, current weekly streak, all-time
+longest weekly streak and a GitHub-style daily grid above Diary / Trips.
+Insights pushes from Profile using native inset-grouped List sections, a system
+year Picker, Swift Charts monthly bars, a country-level MapKit choropleth and a
+show-type radar with a readable percentage list. Existing theme, text styles,
+SF Symbols and semantic surfaces apply; no new packages, shadows or brand tokens.
+The tiny calendar cells are chart marks, with visual tap drill-down plus a native
+calendar picker as the full-size/VoiceOver interaction alternative. Radar axes
+are relative to the most-seen type; the exact share of visits is printed in the
+list. Map boundaries are bundled public-domain Natural Earth 1:110m geometry;
+small countries remain accessible through the country list.
+
+Shared SQL owns aggregates, canonical country aliases, caller isolation and
+calendar streak rules. Dates are performance dates; planned entries are excluded,
+repeat/private visits count, and missing countries remain in totals. Current
+streaks span calendar years and tolerate the unfinished current day/week;
+selected-period longest streaks only use selected visits (weeks are Monday-first).
+`own_insights` and paginated `own_insight_entries` are security-invoker RPCs,
+explicitly scoped to auth.uid(), with no anon grants. The phone supplies its
+calendar date for current-streak evaluation. Owner-only components are not added
+to public profiles. Share cards remain independent, and this PR does not implement
+the web Insights surface or public-profile stats. Synthetic screenshot fixtures
+run only for InsightsUITests and never change hosted data.
