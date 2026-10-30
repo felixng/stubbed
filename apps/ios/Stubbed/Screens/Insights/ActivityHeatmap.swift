@@ -6,6 +6,7 @@ struct ActivityHeatmap: View {
   let year: Int
   let counts: [String: Int]
   let onSelect: (String) -> Void
+  @ScaledMetric(relativeTo: .footnote) private var monthLabelHeight = 20.0
   @State private var selectedDate = Date()
   @State private var choosingDay = false
 
@@ -19,7 +20,7 @@ struct ActivityHeatmap: View {
             ForEach(Array(weeks.enumerated()), id: \.offset) { index, week in
               VStack(spacing: Space.xs) {
                 // Month labels appear at the first full week of each month.
-                Color.clear.frame(width: Space.m, height: Space.xl)
+                Color.clear.frame(width: Space.m, height: monthLabelHeight)
                   .overlay(alignment: .leading) {
                     Text(monthLabel(week)).font(.footnote).foregroundStyle(.secondary).fixedSize()
                   }
@@ -43,9 +44,9 @@ struct ActivityHeatmap: View {
           .contentShape(.rect)
           .gesture(
             SpatialTapGesture().onEnded { tap in
-              guard tap.location.y >= Space.xl + Space.xs * 2 else { return }
+              guard tap.location.y >= monthLabelHeight + Space.xs * 2 else { return }
               let column = Int(tap.location.x / (Space.m + Space.xs))
-              let row = Int((tap.location.y - Space.xl - Space.xs * 2) / (Space.m + Space.xs))
+              let row = Int((tap.location.y - monthLabelHeight - Space.xs * 2) / (Space.m + Space.xs))
               guard weeks.indices.contains(column), (0..<7).contains(row),
                 let day = weeks[column][row]
               else { return }

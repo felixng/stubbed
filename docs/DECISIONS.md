@@ -590,14 +590,14 @@ The owner found the cards' logo, handle and stats too small, and the middle of t
 Profile carries current-year performances, current weekly streak, all-time
 longest weekly streak and a GitHub-style daily grid above Diary / Trips.
 Insights pushes from Profile using native inset-grouped List sections, a system
-year Picker, Swift Charts monthly bars, a country-level MapKit choropleth and a
+year Picker, Swift Charts monthly bars, an on-device country choropleth and a
 show-type radar with a readable percentage list. Existing theme, text styles,
 SF Symbols and semantic surfaces apply; no new packages, shadows or brand tokens.
 The tiny calendar cells are chart marks, with visual tap drill-down plus a native
 calendar picker as the full-size/VoiceOver interaction alternative. Radar axes
 are relative to the most-seen type; the exact share of visits is printed in the
 list. Map boundaries are bundled public-domain Natural Earth 1:110m geometry;
-small countries remain accessible through the country list.
+small countries remain accessible through the country list. Country outlines use a fixed world projection rather than a live map camera, so compact screens show all countries at once and scrolling stays with the List.
 
 Shared SQL owns aggregates, canonical country aliases, caller isolation and
 calendar streak rules. Dates are performance dates; planned entries are excluded,

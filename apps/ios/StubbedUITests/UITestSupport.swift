@@ -34,6 +34,11 @@ extension XCTestCase {
       }
       app.buttons["Account"].tap()
       app.buttons["Sign out"].tap()
+      // Menu presentation can finish after XCTest reports the app idle.
+      for _ in 0..<3 {
+        if app.textFields["Email"].waitForExistence(timeout: 2) { break }
+        if app.buttons["Sign out"].exists { app.buttons["Sign out"].tap() }
+      }
     } else if app.buttons["Sign out"].exists {
       app.buttons["Sign out"].tap()
     }

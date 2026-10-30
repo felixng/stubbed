@@ -6,14 +6,19 @@ final class InsightsUITests: XCTestCase {
   @MainActor
   func testAccessibilitySummary() throws {
     let app = launchApp()
-    signOutIfNeeded(app)
-    try signIn(app)
-    XCTAssertTrue(onHome(app))
-    openTab("Profile", in: app)
+    if app.buttons["Profile"].waitForExistence(timeout: 5) { openTab("Profile", in: app) }
+    if !app.staticTexts["@ios_test"].waitForExistence(timeout: 3) {
+      signOutIfNeeded(app)
+      try signIn(app)
+      XCTAssertTrue(onHome(app))
+      openTab("Profile", in: app)
+    }
     snapshot("insights-accessibility-profile-top")
-    scrollAndTap(app.buttons["profile-insights"], in: app)
+    reveal(app.buttons["profile-insights"], in: app)
+    snapshot("insights-accessibility-profile")
+    app.buttons["profile-insights"].tap()
     XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 10))
-    XCTAssertTrue(app.buttons["Explore a day"].waitForExistence(timeout: 10))
+    reveal(app.buttons["Explore a day"], in: app)
     snapshot("insights-accessibility")
   }
 
@@ -41,25 +46,34 @@ final class InsightsUITests: XCTestCase {
   @MainActor
   func testProfileAndInsights() throws {
     let app = launchApp()
-    signOutIfNeeded(app)
-    try signIn(app)
-    XCTAssertTrue(onHome(app))
-    openTab("Profile", in: app)
+    // Reuse the correct local test session; authentication is covered by
+    // SignInUITests and need not be repeated for every screenshot run.
+    if app.buttons["Profile"].waitForExistence(timeout: 5) { openTab("Profile", in: app) }
+    if !app.staticTexts["@ios_test"].waitForExistence(timeout: 3) {
+      signOutIfNeeded(app)
+      try signIn(app)
+      XCTAssertTrue(onHome(app))
+      openTab("Profile", in: app)
+    }
     XCTAssertTrue(app.staticTexts["@ios_test"].waitForExistence(timeout: 10))
     let insights = app.buttons["profile-insights"]
-    reveal(insights, in: app, top: 450)
+    reveal(insights, in: app)
     snapshot("insights-profile")
     insights.tap()
     XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 10))
     XCTAssertTrue(app.buttons["Explore a day"].waitForExistence(timeout: 10))
     snapshot("insights-activity")
-    reveal(app.descendants(matching: .any)["insights-current-weekly"].firstMatch, in: app, top: 130)
-    snapshot("insights-streaks")
-    reveal(
-      app.descendants(matching: .any)["insights-countries-count"].firstMatch, in: app, top: 130)
-    snapshot("insights-world")
-    reveal(app.buttons["insights-type-musical"], in: app, top: 400)
-    snapshot("insights-types")
+    // Capture overlapping pages instead of trying to infer chart positions
+    // from SwiftUI's grouped accessibility frames.
+    for page in 0..<14 {
+      let list = app.collectionViews.firstMatch
+      let from = list.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.75))
+      let to = list.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.55))
+      from.press(forDuration: 0.05, thenDragTo: to, withVelocity: .slow, thenHoldForDuration: 0.3)
+      snapshot("insights-page-\(page)")
+    }
+    for _ in 0..<8 { app.collectionViews.firstMatch.swipeDown() }
+    reveal(app.buttons["insights-type-musical"], in: app)
     let musical = app.buttons["insights-type-musical"]
     scrollAndTap(musical, in: app)
     XCTAssertTrue(app.navigationBars["Musical"].waitForExistence(timeout: 10))
@@ -87,18 +101,11 @@ final class InsightsUITests: XCTestCase {
     XCTAssertTrue(app.navigationBars["Profile"].waitForExistence(timeout: 5))
   }
   @MainActor
-  private func reveal(_ element: XCUIElement, in app: XCUIApplication, top: CGFloat) {
+  private func reveal(_ element: XCUIElement, in app: XCUIApplication) {
     let list = app.collectionViews.firstMatch
-    for _ in 0..<35 {
-      if element.exists && element.frame.minY >= top - 60 && element.frame.minY <= top + 60 {
-        return
-      }
-      let movingDown = element.exists && element.frame.minY < top - 60
-      let from = list.coordinate(
-        withNormalizedOffset: CGVector(dx: 0.92, dy: movingDown ? 0.5 : 0.72))
-      let to = list.coordinate(
-        withNormalizedOffset: CGVector(dx: 0.92, dy: movingDown ? 0.65 : 0.57))
-      from.press(forDuration: 0.05, thenDragTo: to)
+    for _ in 0..<12 {
+      if element.exists && element.isHittable { return }
+      list.swipeUp()
     }
     XCTFail("Could not reveal \(element)")
   }
