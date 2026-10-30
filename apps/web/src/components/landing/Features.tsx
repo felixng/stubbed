@@ -69,8 +69,13 @@ export function Features() {
             role="tabpanel"
             id={`${id}-panel`}
             aria-labelledby={`${id}-tab-${active}`}
-            className="relative mx-auto aspect-[4/5] w-full max-w-[420px] overflow-hidden rounded-lg border border-separator bg-glow shadow-sm lg:mx-0 lg:flex-[1_1_420px]"
+            className="relative mx-auto aspect-[4/5] w-full max-w-[420px] overflow-hidden rounded-lg border border-separator bg-surface shadow-sm lg:mx-0 lg:flex-[1_1_420px]"
           >
+            {/* The same sweep glow as the hero, behind the phone. */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-[9%_9%_-10%] rounded-full bg-sweep opacity-50 blur-[56px]"
+            />
             {/* All four stay mounted, so switching is an instant cross-fade.
                 The phone sits at the top and runs off the bottom edge. */}
             {FEATURES.map(({ shot, alt, title }, index) => (

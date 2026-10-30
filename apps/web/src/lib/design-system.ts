@@ -29,7 +29,7 @@ export const COLORS: ColorToken[] = [
   { name: "star", tailwind: "fill-star", light: "#e07400", dark: "#ffa040", use: "Rating stars and award marks only" },
   { name: "destructive", tailwind: "text-destructive", light: "#9e1b2c", dark: "#ff9f0a", use: "Delete, sign out, error text" },
   { name: "focus", tailwind: "outline-focus", light: "#1c1c1e", dark: "#ffffff", use: "2px focus ring, 2px offset (web only)" },
-  { name: "glow", tailwind: "bg-glow", light: "#ffdde2", dark: "#2a1216", use: "Decorative halo behind a hero image or device, and a poster fallback well; otherwise never behind text" },
+  { name: "glow", tailwind: "bg-glow", light: "#ffdde2", dark: "#2a1216", use: "A poster fallback well; otherwise never behind text" },
 ];
 
 // CSS custom properties for one appearance, so a preview can show light and
@@ -45,7 +45,7 @@ export const PRINCIPLES = [
   "**Light by default.** Every page and screen is light, whatever the device setting: on the web, `data-theme=\"light\"` on the page root; on iOS, `.preferredColorScheme(.light)`. The dark values are defined and kept working, but nothing ships dark for now.",
   "**Colours from the icon.** Every brand colour comes from the app icon's sweep: magenta `#e8247f`, coral `#ff5a5a`, amber `#ffa040`. The neutrals are Apple's system greys.",
   "**One tint.** `tint` is the icon's coral (a step deeper on light, so white text on it passes) and fills the one primary action per screen. Where the brand colour is read as text, use `tint-text`. Nothing else is coral.",
-  "**The sweep is identity.** The icon's gradient (`bg-sweep`, `Palette.sweep`) stands in for a missing picture: avatars with no photo, iOS posters with no photo, an empty profile cover, and the ring around your own avatar on iOS. Only white bold text goes on it, centred. Never a button or a background for reading.",
+  "**The sweep is identity.** The icon's gradient (`bg-sweep`, `Palette.sweep`) stands in for a missing picture: avatars with no photo, iOS posters with no photo, an empty profile cover, and the ring around your own avatar on iOS. Only white bold text goes on it, centred. Never a button or a background for reading. On the landing page only, it is blurred into a glow behind each phone mockup.",
   "**Copy:** terse and confident, sentence case, no emoji, no exclamation marks. Button labels are verbs. Numbers are digits and tabular. Sample handle: `@sillyelphaba`; never a real person's name.",
   "**Ratings** always show as five stars in half steps, never a bare number.",
 ];

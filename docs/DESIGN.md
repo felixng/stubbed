@@ -222,12 +222,12 @@ Contrast: `tint` takes white text at 4.6:1; `tint-text` reads at 5.7:1 on white 
 - **Hairline** (`separator`): hairlines between rows, inset to the text, and card and input borders.
 - **Steel Outline** (`outline`): control borders, empty stars, placeholder initials on posters.
 - **Curtain Red** (`destructive`): delete, sign out and error text. iOS uses `.red` for the same jobs.
-- **Footlight Glow** (`glow`): decorative halo behind a hero image or device mockup, and one of the three web poster fallback wells; otherwise never behind text.
+- **Footlight Glow** (`glow`): one of the three web poster fallback wells; otherwise never behind text.
 
 ### Named Rules
 **The One Tint Rule.** `tint` is the only accent, and it fills the one primary action per screen. Where the brand colour is read as text, use `tint-text`. Nothing else is coral.
 
-**The Sweep Is Identity Rule.** The sweep stands in for a picture (a person, a show, a cover) and marks you as you. It is never a button, a background for reading, or decoration on its own.
+**The Sweep Is Identity Rule.** The sweep stands in for a picture (a person, a show, a cover) and marks you as you. It is never a button, a background for reading, or decoration on its own. The one marketing exception: on the landing page, the sweep blurred into a soft glow (`bg-sweep` at 50–60% opacity, 56–64px blur) sits behind each phone mockup, centred on it, lighting the app from behind.
 
 **The Amber Is for Stars Rule.** `star` appears only on ratings and award marks, never as a second accent.
 
@@ -355,7 +355,7 @@ SF Symbols on iOS (`book`, `plus.circle`, `chart.bar`, `person` for the tabs). O
 - **Don't** use `tint` as text, as a background for anything but the primary action, or for a selected chip.
 - **Don't** colour the wordmark coral, uppercase it, or set it below 16px.
 - **Don't** add web fonts or an icon package, or tint the neutrals warm.
-- **Don't** use the sweep as a button, behind body text, or as decoration with nothing to stand in for.
+- **Don't** use the sweep as a button, behind body text, or as decoration with nothing to stand in for (the blurred glow behind the landing page's phones is the one exception).
 - **Don't** put drop shadows on iOS, or port web layout patterns (floating action buttons, custom card styles) to the iOS app.
 - **Don't** set body text below Footnote (13px), or use `glow` behind text outside the poster fallback. Tab bar labels (Caption 2, 11px) are the only exception.
 - **Don't** write copy with emoji, exclamation marks or title case.

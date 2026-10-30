@@ -469,7 +469,7 @@
       },
       {
         "name": "The Sweep Is Identity Rule",
-        "body": "The sweep stands in for a picture (a person, a show, a cover) and marks you as you. It is never a button, a background for reading, or decoration on its own.",
+        "body": "The sweep stands in for a picture (a person, a show, a cover) and marks you as you. It is never a button, a background for reading, or decoration on its own. The one marketing exception: on the landing page, the sweep blurred into a soft glow (bg-sweep at 50–60% opacity, 56–64px blur) sits behind each phone mockup, centred on it, lighting the app from behind.",
         "section": "colors"
       },
       {
@@ -506,7 +506,7 @@
       "**Don't** use `tint` as text, as a background for anything but the primary action, or for a selected chip.",
       "**Don't** colour the wordmark coral, uppercase it, or set it below 16px.",
       "**Don't** add web fonts or an icon package, or tint the neutrals warm.",
-      "**Don't** use the sweep as a button, behind body text, or as decoration with nothing to stand in for.",
+      "**Don't** use the sweep as a button, behind body text, or as decoration with nothing to stand in for (the blurred glow behind the landing page's phones is the one exception).",
       "**Don't** put drop shadows on iOS, or port web layout patterns (floating action buttons, custom card styles) to the iOS app.",
       "**Don't** set body text below Footnote (13px), or use `glow` behind text outside the poster fallback. Tab bar labels (Caption 2, 11px) are the only exception.",
       "**Don't** write copy with emoji, exclamation marks or title case."

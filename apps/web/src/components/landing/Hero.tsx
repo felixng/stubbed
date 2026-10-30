@@ -5,7 +5,7 @@ import { Phone } from "@/components/landing/Screens";
 
 export function Hero() {
   return (
-    <section className="overflow-hidden pt-8 pb-16 sm:pb-20">
+    <section className="overflow-x-clip pt-8 pb-16 sm:pb-20">
       <Container className="flex flex-col gap-12 lg:flex-row lg:items-start lg:gap-16">
         <div className="flex min-w-0 flex-col gap-6 lg:flex-[1_1_520px]">
           <h1 className="font-display text-[clamp(44px,7vw,76px)] leading-[1.02] font-extrabold tracking-[-0.03em] text-balance text-label">
@@ -35,10 +35,10 @@ export function Hero() {
 
         <div className="flex min-w-0 justify-center lg:flex-[1_1_400px]">
           <div className="relative flex w-full max-w-[540px] justify-center">
-            {/* Decorative halo: a `glow` circle with a soft tint ring. */}
+            {/* The app icon's sweep, blurred into a glow behind the phone. */}
             <div
               aria-hidden="true"
-              className="absolute top-1/2 left-1/2 aspect-square w-[min(100%,520px)] -translate-1/2 rounded-full bg-glow shadow-[0_0_0_28px_color-mix(in_srgb,var(--tint)_16%,transparent)]"
+              className="absolute top-1/2 left-1/2 aspect-[4/5] w-[min(90%,450px)] -translate-1/2 rounded-full bg-sweep opacity-60 blur-[64px]"
             />
             <div className="relative">
               <Phone
