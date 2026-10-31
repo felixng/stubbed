@@ -8,6 +8,7 @@ import SwiftUI
 struct ProfileView: View {
   @Environment(AppSession.self) private var session
   @Environment(AppRouter.self) private var router
+  @Environment(\.dynamicTypeSize) private var typeSize
 
   @State private var statsRefresh = 0
   @State private var header: Loadable<Header> = .loading
@@ -20,7 +21,6 @@ struct ProfileView: View {
   @State private var trips: [Trip] = []
   @State private var selectError: String?
   @State private var importItems: [PhotosPickerItem] = []
-  @State private var pickingImport = false
 
   struct Header {
     var profile: Profile
@@ -46,9 +46,6 @@ struct ProfileView: View {
     .toolbar { toolbar }
     // While selecting, the tab bar makes way for Add to Trip and Delete.
     .toolbar(selecting ? .hidden : .visible, for: .tabBar)
-    .photosPicker(
-      isPresented: $pickingImport, selection: $importItems, maxSelectionCount: PhotoImport.maxPhotos,
-      selectionBehavior: .ordered, matching: .images)
     .onChange(of: importItems) { _, picked in
       guard !picked.isEmpty else { return }
       importItems = []
@@ -120,26 +117,8 @@ struct ProfileView: View {
       }
     } else {
       ToolbarItem(placement: .primaryAction) {
-        NavigationLink(value: AppRouter.Route.settings) { Text("Edit") }
-          .accessibilityLabel("Edit profile")
-      }
-      ToolbarItem(placement: .primaryAction) {
-        Menu {
-          if let handle = header.value?.profile.handle {
-            NavigationLink(value: AppRouter.Route.profile(handle: handle)) {
-              Label("View public profile", systemImage: "person.crop.circle")
-            }
-          }
-          // Once the empty-diary callout has gone, which offers it itself.
-          if !(diary.value?.entries.allSatisfy(\.planned) ?? true) {
-            // A PhotosPicker inside a Menu doesn't present, so the menu asks for it.
-            Button("Import from photos", systemImage: "photo.stack") { pickingImport = true }
-          }
-          Button("Sign out", systemImage: "rectangle.portrait.and.arrow.right", role: .destructive) {
-            Task { await session.signOut() }
-          }
-        } label: {
-          Label("Account", systemImage: "ellipsis.circle")
+        NavigationLink(value: AppRouter.Route.settings) {
+          Label("Settings", systemImage: "gearshape")
         }
       }
     }
@@ -174,24 +153,19 @@ struct ProfileView: View {
     case .loaded(let h):
       SwiftUI.Section {
         VStack(alignment: .leading, spacing: Space.m) {
-          HStack(spacing: Space.l) {
-            // Your own avatar wears the app icon's gradient as a ring.
-            Avatar(name: h.profile.name, url: h.profile.avatarURL, size: 64)
-              .padding(2.5)
-              .background(Color(.secondarySystemGroupedBackground), in: .circle)
-              .padding(2.5)
-              .background(Palette.sweep, in: .circle)
-            VStack(alignment: .leading, spacing: 2) {
-              Text(verbatim: "@\(h.profile.handle)")
-                .font(.title2.bold())
-                .lineLimit(1)
-                .accessibilityAddTraits(.isHeader)
-              if let name = h.profile.displayName, !name.isEmpty {
-                Text(name).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
-              }
-              if h.profile.isPrivate {
-                Label("Private profile", systemImage: "lock.fill").font(.footnote).foregroundStyle(.secondary)
-              }
+          if typeSize.isAccessibilitySize {
+            HStack(alignment: .top) {
+              profileAvatar(h.profile)
+              Spacer()
+              editProfileButton
+            }
+            profileIdentity(h.profile)
+          } else {
+            HStack(alignment: .top, spacing: Space.m) {
+              profileAvatar(h.profile)
+              profileIdentity(h.profile)
+              Spacer(minLength: 0)
+              editProfileButton
             }
           }
           if let bio = h.profile.bio, !bio.isEmpty {
@@ -199,7 +173,10 @@ struct ProfileView: View {
           }
         }
         .padding(.vertical, Space.xs)
-        HStack(alignment: .top, spacing: Space.s) {
+        let countsLayout = typeSize.isAccessibilitySize
+          ? AnyLayout(VStackLayout(alignment: .leading, spacing: Space.m))
+          : AnyLayout(HStackLayout(alignment: .top, spacing: Space.s))
+        countsLayout {
           profileCount("Shows", count: h.shows)
           followsRow("Followers", count: h.counts.followers, .follows(handle: h.profile.handle, list: .followers))
           followsRow("Following", count: h.counts.following, .follows(handle: h.profile.handle, list: .following))
@@ -217,6 +194,41 @@ struct ProfileView: View {
     }
   }
 
+  private func profileAvatar(_ profile: Profile) -> some View {
+    Avatar(name: profile.name, url: profile.avatarURL, size: 64)
+      .padding(2.5)
+      .background(Color(.secondarySystemGroupedBackground), in: .circle)
+      .padding(2.5)
+      .background(Palette.sweep, in: .circle)
+  }
+
+  private func profileIdentity(_ profile: Profile) -> some View {
+    VStack(alignment: .leading, spacing: 2) {
+      Text(verbatim: "@\(profile.handle)")
+        .font(.title2.bold())
+        .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
+        .accessibilityAddTraits(.isHeader)
+      if let name = profile.displayName, !name.isEmpty {
+        Text(name).font(.subheadline).foregroundStyle(.secondary)
+          .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
+      }
+      if profile.isPrivate {
+        Label("Private profile", systemImage: "lock.fill").font(.footnote).foregroundStyle(.secondary)
+      }
+    }
+  }
+
+  private var editProfileButton: some View {
+    // The pencil edits this card; other screen actions stay in the bar.
+    Button { router.open(.editProfile) } label: {
+      Label("Edit profile", systemImage: "pencil")
+        .labelStyle(.iconOnly)
+        .frame(minWidth: Space.touch, minHeight: Space.touch)
+    }
+    .buttonStyle(.borderless)
+    .disabled(selecting)
+  }
+
   /// Followers or Following. A button through the router rather than a
   /// NavigationLink: in this List(selection:), a NavigationLink pushed its
   /// screen twice, so going back took two swipes.
@@ -230,9 +242,15 @@ struct ProfileView: View {
   }
 
   private func profileCount(_ title: String, count: Int) -> some View {
-    VStack(spacing: Space.xs) {
-      Text(count.formatted()).font(.title3.bold()).monospacedDigit()
-      Text(title).font(.footnote).foregroundStyle(.secondary)
+    Group {
+      if typeSize.isAccessibilitySize {
+        LabeledContent(title, value: count.formatted())
+      } else {
+        VStack(spacing: Space.xs) {
+          Text(count.formatted()).font(.title3.bold()).monospacedDigit()
+          Text(title).font(.footnote).foregroundStyle(.secondary)
+        }
+      }
     }
     .frame(maxWidth: .infinity, minHeight: Space.touch)
     .accessibilityElement(children: .combine)

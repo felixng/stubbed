@@ -628,3 +628,19 @@ Trips and Insights rely on the List's native minimum row height instead of addin
 Give IN PROGRESS more presence on owner and public profiles with native caption bold (previously caption2 semibold) and 12pt horizontal capsule padding (previously 8pt). Keep 4pt vertical padding and the existing accessibility-size stacking. The badge remains a status label.
 
 Derive a warm lime around 91° hue by bringing Sweep magenta’s complementary green (about 152°) toward Sweep amber (about 30°). Light appearance uses #2D4D12 text on #BEF28C; dark uses #BEF28C on #263C17. The stronger lime fill complements the warm brand palette without adopting the reference app’s turquoise or conventional muted green. Text contrast is 7.46:1 in light appearance and 9.34:1 in dark appearance. Keep the pair scoped to progress status; the app’s interactive tint stays coral.
+
+### 2026-10-30: Separate Settings from the profile card editor
+
+The owner requested the non-notification UI slice independently of #137's
+undecided delivery behaviour. Web and iOS now use a Settings hub for profile,
+privacy, import, help and account actions. The Profile navigation action is a
+gear; a labelled pencil lives in the identity card it edits (an explicit
+exception to iOS's usual navigation-bar edit placement). The editor writes
+identity fields only; the separate privacy form writes only `is_private`, so
+saving an older profile draft cannot overwrite a newer privacy choice. Existing
+public-profile Edit actions target the focused editor. No backend/schema changes
+or notification controls are included. Web's global mobile overflow is removed
+in favour of the Profile Settings entry point; desktop import/sign-out shortcuts
+remain available. At accessibility text sizes the iOS identity header stacks
+below the avatar/pencil, and counts use vertical labelled rows to avoid cramped
+text.

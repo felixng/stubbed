@@ -20,6 +20,8 @@ final class AppRouter {
     case trip(UUID, addFailed: Bool = false)
     case trips
     case settings
+    case editProfile
+    case privacySettings
     case insights
     case insightVisits(Insights.Filter)
     case blockedAccounts

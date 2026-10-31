@@ -3,9 +3,9 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { Diary } from "@/components/app/Diary";
-import { OwnerProfileMenu } from "@/components/app/OwnerProfileMenu";
 import { TripsList } from "@/components/app/TripsList";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
+import { ProfileIconLink } from "@/components/profile/ProfileIconLink";
 import { PlaceholderRows } from "@/components/ui/PlaceholderRows";
 import { signPhotos } from "@/lib/entries";
 import { getFollowCounts, listFollowRequests } from "@/lib/follows";
@@ -20,7 +20,7 @@ const loading = <p className="text-subheadline text-label-secondary">Loading…<
 type OwnStats = ProfileStats & { public_shows: number };
 
 // The public profile's header (ProfileHeader, as on /@handle), with the
-// owner's controls: Edit profile and a menu with the public view, a row for
+// owner's pencil action, a row for
 // follow requests, and a note on how many private shows the public profile
 // leaves out. The stats count every logged show (own_profile_stats), private
 // ones included, since only the owner sees this page.
@@ -58,17 +58,7 @@ async function Header() {
       cover={cover}
       stats={own}
       follows={follows}
-      action={
-        <>
-          <Link
-            href="/app/settings"
-            className="inline-flex min-h-11 items-center justify-center rounded-pill bg-tint-fill px-4 text-subheadline font-semibold text-tint-text hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-          >
-            Edit profile
-          </Link>
-          <OwnerProfileMenu handle={profile.handle} />
-        </>
-      }
+      action={<ProfileIconLink kind="edit" />}
     >
       {hidden > 0 && !profile.is_private && (
         <p className="-mt-1 text-footnote text-label-secondary">
@@ -152,10 +142,13 @@ async function Body({ searchParams }: { searchParams: PageProps<"/app/profile">[
 
 // The Profile tab: your profile as others see it, with your controls, then
 // your diary (with the calendar) or your trips. Editing the profile and
-// deleting the account live on /app/settings.
+// account actions live in Settings; the pencil opens its focused profile editor.
 export default function ProfilePage({ searchParams }: PageProps<"/app/profile">) {
   return (
     <div className="flex flex-col gap-4">
+      <div className="-my-2 flex justify-end">
+        <ProfileIconLink kind="settings" />
+      </div>
       <Suspense fallback={loading}>
         <Header />
       </Suspense>

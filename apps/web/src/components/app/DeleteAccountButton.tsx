@@ -10,7 +10,7 @@ import { fieldClass } from "./log/Typeahead";
 // Opens a confirmation modal; the account is deleted only once the user types
 // their handle. Native <dialog>: focus moves in and stays there, Escape
 // closes it.
-export function DeleteAccountButton({ handle }: { handle: string }) {
+export function DeleteAccountButton({ handle, asRow = false }: { handle: string; asRow?: boolean }) {
   const id = useId();
   const dialog = useRef<HTMLDialogElement>(null);
   const [typed, setTyped] = useState("");
@@ -30,7 +30,9 @@ export function DeleteAccountButton({ handle }: { handle: string }) {
           setTyped("");
           dialog.current?.showModal();
         }}
-        className="min-h-11 self-start rounded-pill px-4 text-subheadline font-semibold text-destructive hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+        className={asRow
+          ? "min-h-12 w-full cursor-pointer px-4 py-3 text-left text-body text-destructive hover:bg-fill focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus"
+          : "min-h-11 self-start rounded-pill px-4 text-subheadline font-semibold text-destructive hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"}
       >
         Delete account
       </button>

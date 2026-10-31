@@ -44,7 +44,7 @@ export function FollowButton({
   }
   if (viewer.isOwner) {
     return (
-      <Link href="/app/settings" className={`${LINK_BUTTON} bg-tint-fill text-tint-text hover:bg-fill`}>
+      <Link href="/app/settings/profile" className={`${LINK_BUTTON} bg-tint-fill text-tint-text hover:bg-fill`}>
         Edit profile
       </Link>
     );
