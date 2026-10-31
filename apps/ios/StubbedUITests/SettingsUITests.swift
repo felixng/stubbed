@@ -71,15 +71,14 @@ final class SettingsUITests: XCTestCase {
     let row = app.switches.matching(NSPredicate(format: "label BEGINSWITH %@", "Private profile")).firstMatch
     XCTAssertTrue(row.waitForExistence(timeout: 10))
     app.collectionViews.firstMatch.swipeUp()
-    // The switch sits at the row's trailing edge.
-    let toggle = row.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5))
-    toggle.tap()
-    XCTAssertEqual(row.value as? String, "1")
+    row.tap()
+    expectation(for: NSPredicate(format: "value == %@", "1"), evaluatedWith: row)
+    waitForExpectations(timeout: 10)
     scrollAndTap(app.buttons["Save"], in: app)
     XCTAssertTrue(app.staticTexts["Saved. Your profile is private."].waitForExistence(timeout: 10))
     snapshot("settings-private")
 
-    toggle.tap()
+    row.tap()
     scrollAndTap(app.buttons["Save"], in: app)
     XCTAssertTrue(app.staticTexts["Saved. Your profile is public."].waitForExistence(timeout: 10))
   }
