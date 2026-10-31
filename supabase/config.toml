@@ -423,3 +423,8 @@ enabled = true
 # formatted with uppercase keywords, indent 2, max width 180, trailing commas,
 # and column/key alignment. Set to "null" to emit raw, unformatted SQL.
 # format_options = "{\"keywordCase\":\"upper\",\"indent\":2,\"maxWidth\":180,\"commaStyle\":\"trailing\"}"
+
+# Authenticated with a server-only worker secret, not a public browser JWT.
+# No schedule or hosted deployment is activated by this configuration.
+[functions.notification-worker]
+verify_jwt = false

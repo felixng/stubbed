@@ -215,6 +215,7 @@ export const IOS_TOKENS = [
 
 /** The SwiftUI building blocks, in apps/ios/Stubbed. */
 export const IOS_COMPONENTS = [
+  { name: "Native push settings", file: "Screens/Notifications/NativePushSettings.swift", notes: "Separate account push preference and device permission state. Enable requests OS authorization only after a tap; denial/revocation offers system Settings, never another prompt. Per-type switches, previews-off sample copy and optional named-zone quiet hours use native Form sections." },
   { name: "Notifications", file: "Screens/Notifications/NotificationsView.swift", notes: "Home’s labelled bell shows the shared unread count. The inset-grouped inbox has Today/Yesterday/This week/Earlier sections, avatars, activity symbols, unread dots and exact-entry destinations. Its actions menu marks a snapshot read or opens per-category settings. Follow-request rows open actionable requests." },
   { name: "Settings / Edit profile", file: "Screens/Profile/", notes: "Profile gear pushes a grouped Settings Form with profile, privacy, import, help and account sections. A borderless, labelled pencil in the identity card opens its focused editor; privacy saves independently. At accessibility text sizes, identity stacks below the avatar/pencil and counts become labelled rows." },
   { name: "PublicProfileView / ProfileYearHeading / ProfileYearMetrics", file: "Screens/People/PublicProfileView.swift, Screens/Profile/ProfileYearSummary.swift", notes: "Public profiles match the compact avatar/identity header and Shows/Followers/Following row. The shared current-year card and heat map use public, logged entries under the viewer’s RLS. Follow/Edit and More remain; owner-only Trips/Insights links are omitted. Day selection opens a public-only date sheet." },
@@ -238,7 +239,7 @@ export const IOS_COMPONENTS = [
 
 /** iOS simulator screenshots (iPhone 17 Pro and SE, synthetic test data), in public/design-system/ios. */
 export const IOS_SCREENSHOTS = [
-  { file: "notification-settings.jpg", title: "Notification settings", caption: "Independent social category switches for the shared inbox. Future activity is controlled without removing history. iPhone SE.", width: 562, height: 1000 },
+  { file: "notification-settings.jpg", title: "Notification settings", caption: "Account push starts on, separately from contextual device permission. Per-category push and inbox controls, previews and optional quiet hours share the same preferences. iPhone SE.", width: 562, height: 1000 },
   { file: "notifications.jpg", title: "Notifications", caption: "Shared social activity with avatars, activity symbols, unread dots and time sections. Actions include mark all read and notification settings. iPhone SE.", width: 562, height: 1000 },
   { file: "public-profile-day.jpg", title: "Public activity date", caption: "Selecting a heat-map day opens a native sheet queried for public, logged shows on that date. Empty dates have a native empty state.", width: 460, height: 1000 },
   { file: "public-profile.jpg", title: "Public profile", caption: "Compact identity header and three counts, with the existing Follow control. Year metrics count only public logged shows; owner-only buttons are absent.", width: 460, height: 1000 },

@@ -92,7 +92,7 @@ struct NotificationsView: View {
 
 struct NotificationSettingsView: View {
   var body: some View {
-    Form { NotificationCategorySection(channel: "inbox") }
+    Form { NativePushSettings(); NotificationCategorySection(channel: "inbox") }
       .navigationTitle("Notification settings")
       .navigationBarTitleDisplayMode(.inline)
       .tabBarClearance()
@@ -121,7 +121,13 @@ struct NotificationCategorySection: View {
   }
   private func save(_ category: NotificationCategory, _ value: Bool) async {
     busy = true; defer { busy = false }
-    do { try await Notifications.set(category, channel: channel, enabled: value); await load() } catch { failed = true }
+    do {
+      try await Notifications.set(category, channel: channel, enabled: value)
+      if let index = choices.firstIndex(where: { $0.category == category }) {
+        if channel == "inbox" { choices[index].inbox = value } else { choices[index].push = value }
+      }
+      failed = false
+    } catch { failed = true }
   }
 }
 

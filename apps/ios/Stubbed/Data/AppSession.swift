@@ -55,6 +55,7 @@ final class AppSession {
 
   /// This device only, like the web: other devices stay signed in.
   func signOut() async {
+    await PushRegistration.shared.prepareSignOut()
     do {
       try await supabase.auth.signOut(scope: .local)
     } catch {
@@ -70,11 +71,14 @@ final class AppSession {
 
   private func update(_ session: Session?) async {
     guard let session else {
+      await PushRegistration.shared.prepareSignOut()
       userId = nil
       user = nil
       phase = .signedOut
       return
     }
+    let changedUser = userId != session.user.id
+    if changedUser, userId != nil { await PushRegistration.shared.prepareSignOut() }
     deletedNotice = false
     userId = session.user.id
     user = session.user
@@ -87,7 +91,7 @@ final class AppSession {
         .execute()
         .value
       let next: Phase = rows.first?.handle == nil ? .needsProfile : .ready
-      if next == .ready, phase != .ready { router = AppRouter() }
+      if next == .ready, phase != .ready || changedUser { router = AppRouter() }
       phase = next
     } catch {
       Log.data.error("Profile check failed: \(error.localizedDescription, privacy: .public)")

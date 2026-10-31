@@ -7,6 +7,7 @@ import UIKit
 /// stack, so switching tabs and back returns you where you were.
 struct RootView: View {
   @Environment(AppSession.self) private var session
+  @Environment(\.scenePhase) private var scenePhase
   private var router: AppRouter { session.router }
 
   var body: some View {
@@ -35,6 +36,14 @@ struct RootView: View {
       TripForm(request: request)
     }
     .environment(router)
+    .task(id: session.userId) { await PushRegistration.shared.activate() }
+    .onChange(of: scenePhase) { _, phase in if phase == .active { Task { await PushRegistration.shared.refresh() } } }
+    .onChange(of: PushRegistration.shared.activityVersion) { _, _ in router.dataChanged() }
+    .onChange(of: PushRegistration.shared.openedNotification, initial: true) { _, id in
+      guard let id else { return }
+      PushRegistration.shared.openedNotification = nil
+      router.open(.openNotification(id))
+    }
     // Choosing Log opens the sheet and goes back to the tab you were on.
     .onChange(of: router.tab) { previous, picked in
       guard picked == .log else { return }
@@ -58,6 +67,7 @@ struct RootView: View {
           case .trips: TripsList()
           case .settings: SettingsView()
           case .notifications: NotificationsView()
+          case .openNotification(let id): OpenNotificationView(id: id)
           case .followRequests: NotificationRequestsView()
           case .notificationSettings: NotificationSettingsView()
           case .editProfile: EditProfileView()

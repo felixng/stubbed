@@ -53,6 +53,8 @@ extension XCTestCase {
     let password = try XCTUnwrap(env["STUBBED_PASSWORD"])
     let field = app.textFields["Email"]
     tap(field)
+    // Simulator focus can lag the first coordinate tap after sign-out.
+    if !app.keyboards.firstMatch.waitForExistence(timeout: 3) { tap(field) }
     // Use the form's native Next/Go actions: the password field and Sign in
     // button can sit behind the keyboard on a small phone.
     field.typeText(email + "\n")
