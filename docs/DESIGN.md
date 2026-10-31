@@ -366,6 +366,6 @@ SF Symbols on iOS (`book`, `plus.circle`, `chart.bar`, `person` for the tabs). O
 
 `/press` uses the existing always-light public header, footer, system type and Footlight Sweep semantic tokens. A readable story column sits beside the links on desktop and stacks below them on smaller screens. Inline 24px line icons replace the source document's emoji.
 
-`PressMedia` groups the app icon, four screenshot subjects (each horizontal, vertical and transparent) and walkthrough video. Unavailable assets are labelled, non-interactive placeholders, never broken previews or download buttons. Commented image, video and anchor examples identify the drop-in points. Missing beta, App Store and creator URLs remain honest text statuses; the website and shared support email are live links.
+`PressMedia` groups the app icon, four screenshot subjects (each horizontal, vertical and transparent) and walkthrough video. Unavailable assets are labelled, non-interactive placeholders, never broken previews or download buttons. Commented image, video and anchor examples identify the drop-in points. The missing beta invitation remains an honest text status, and App Store availability reads “Not published yet”. The website, shared support email and owner-supplied creator Instagram are live links.
 
 Runtime screenshot gallery pending: local browser access is disabled in Work settings. Mobile, tablet and desktop captures must be added after visual review; no mockups or stale screenshots substitute for them.

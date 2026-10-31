@@ -58,9 +58,8 @@ export default function PressPage() {
                   <div><dt className="text-label-secondary">Website</dt><dd><a href="https://getstubbed.app/" className={linkClass}>getstubbed.app</a></dd></div>
                   <div><dt className="text-label-secondary">Contact</dt><dd><a href={`mailto:${LEGAL.email}`} className={linkClass}>{LEGAL.email}</a></dd></div>
                   {/* TODO: <a href="OWNER_SUPPLIED_APP_STORE_URL">Stubbed on the App Store</a> */}
-                  <div><dt className="text-label-secondary">App Store</dt><dd className="mt-1">Link pending</dd></div>
-                  {/* TODO: <a href="OWNER_SUPPLIED_CREATOR_SOCIAL_URL">Felix’s social profile</a>. The brand Instagram is not the creator's profile. */}
-                  <div><dt className="text-label-secondary">Creator</dt><dd className="mt-1">Felix&apos;s social link pending</dd></div>
+                  <div><dt className="text-label-secondary">App Store</dt><dd className="mt-1">Not published yet</dd></div>
+                  <div><dt className="text-label-secondary">Creator</dt><dd><a href="https://www.instagram.com/hellofelix__/" className={linkClass}>Felix on Instagram</a></dd></div>
                 </dl>
               </aside>
               <div className="min-w-0 space-y-12">

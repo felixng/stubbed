@@ -649,3 +649,8 @@ text.
 ## 2026-10-31: Press kit placeholders (#229)
 
 Build `/press` from the owner's press-kit document using existing public-page conventions and light Footlight Sweep tokens. Preserve the authorised product and founder copy; Personal Best informs section order only. Keep media and absent beta/App Store/creator links visibly pending and non-interactive, with commented drop-in tags. Use `LEGAL.email` for the support address specified by #236 rather than duplicating it. No third-party services or dependencies. The brand Instagram in the brief is not evidence of Felix's personal creator URL. #236 remains blocked on owner-supplied URLs; do not represent its acceptance as passed.
+
+
+### Press kit owner clarification
+
+The app is not published on the App Store, so show “Not published yet” rather than suggesting an outstanding available URL. The owner supplied `https://www.instagram.com/hellofelix__/` as the creator profile; use the canonical profile URL without QR/tracking parameters. Beta invitation remains pending; the existing public web beta is accessible through `/signup`, but no TestFlight invitation has been supplied for the press CTA.
