@@ -33,7 +33,7 @@ final class SettingsUITests: XCTestCase {
     XCTAssertTrue(app.buttons["Profile privacy"].exists)
     XCTAssertTrue(app.buttons["Blocked accounts"].exists)
     XCTAssertTrue(app.buttons["Import from photos"].exists)
-    XCTAssertFalse(app.buttons["Notifications"].exists)
+    XCTAssertTrue(app.buttons["Notifications"].exists)
     snapshot("settings-hub")
     app.buttons["Edit profile"].tap()
     XCTAssertTrue(app.navigationBars["Edit profile"].waitForExistence(timeout: 10))

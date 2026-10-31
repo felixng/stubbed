@@ -57,6 +57,8 @@ struct RootView: View {
           case .trip(let id, let addFailed): TripView(id: id, addFailed: addFailed)
           case .trips: TripsList()
           case .settings: SettingsView()
+          case .notifications: NotificationsView()
+          case .notificationSettings: NotificationSettingsView()
           case .editProfile: EditProfileView()
           case .privacySettings: PrivacySettingsView()
           case .insights: InsightsView()

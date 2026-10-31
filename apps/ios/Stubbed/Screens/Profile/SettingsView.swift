@@ -22,6 +22,9 @@ struct SettingsView: View {
           }
         }
       }
+      Section("Notifications") {
+        NavigationLink(value: AppRouter.Route.notificationSettings) { Label("Notifications", systemImage: "bell") }
+      }
       Section("Privacy") {
         NavigationLink(value: AppRouter.Route.privacySettings) {
           Label("Profile privacy", systemImage: "lock")

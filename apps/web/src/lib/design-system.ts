@@ -215,6 +215,7 @@ export const IOS_TOKENS = [
 
 /** The SwiftUI building blocks, in apps/ios/Stubbed. */
 export const IOS_COMPONENTS = [
+  { name: "Notifications", file: "Screens/Notifications/NotificationsView.swift", notes: "Home’s labelled bell opens a dedicated inbox with native back navigation and a gear linking to notification settings. Empty activity uses ContentUnavailableView; notification preferences have a separate Form destination." },
   { name: "Settings / Edit profile", file: "Screens/Profile/", notes: "Profile gear pushes a grouped Settings Form with profile, privacy, import, help and account sections. A borderless, labelled pencil in the identity card opens its focused editor; privacy saves independently. At accessibility text sizes, identity stacks below the avatar/pencil and counts become labelled rows." },
   { name: "PublicProfileView / ProfileYearHeading / ProfileYearMetrics", file: "Screens/People/PublicProfileView.swift, Screens/Profile/ProfileYearSummary.swift", notes: "Public profiles match the compact avatar/identity header and Shows/Followers/Following row. The shared current-year card and heat map use public, logged entries under the viewer’s RLS. Follow/Edit and More remain; owner-only Trips/Insights links are omitted. Day selection opens a public-only date sheet." },
   { name: "TripsList", file: "Screens/Trips/TripsList.swift", notes: "Dedicated inset-grouped destination from Profile, with a native back button and + toolbar action. Trips open their detail screens; creation uses a sheet. Loading, empty and error states stay inside the list." },
@@ -237,6 +238,7 @@ export const IOS_COMPONENTS = [
 
 /** iOS simulator screenshots (iPhone 17 Pro and SE, synthetic test data), in public/design-system/ios. */
 export const IOS_SCREENSHOTS = [
+  { file: "notifications.jpg", title: "Notifications", caption: "Dedicated activity destination reached from the bell beside Search. Native back navigation and a settings shortcut; empty state on iPhone SE.", width: 562, height: 1000 },
   { file: "public-profile-day.jpg", title: "Public activity date", caption: "Selecting a heat-map day opens a native sheet queried for public, logged shows on that date. Empty dates have a native empty state.", width: 460, height: 1000 },
   { file: "public-profile.jpg", title: "Public profile", caption: "Compact identity header and three counts, with the existing Follow control. Year metrics count only public logged shows; owner-only buttons are absent.", width: 460, height: 1000 },
   { file: "public-profile-year.jpg", title: "Public year summary", caption: "The same year heading, three metrics and heat map as Profile, backed by public-only aggregates. The diary follows directly.", width: 460, height: 1000 },

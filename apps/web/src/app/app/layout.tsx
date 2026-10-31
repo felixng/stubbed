@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { signOut } from "@/app/login/actions";
 import { AppSidebarLinks, AppSidebarNav } from "@/components/app/AppSidebar";
 import { AppTabBar, AppTabBarLinks } from "@/components/app/AppTabBar";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { HeaderSearch } from "@/components/app/HeaderSearch";
 import { Wordmark } from "@/components/ui/Wordmark";
 
@@ -33,11 +34,12 @@ export default function AppLayout({ children }: LayoutProps<"/app">) {
         <div className="relative mx-auto flex h-16 w-full max-w-[640px] items-center gap-2 px-4 sm:gap-3">
           <Wordmark size={30} href="/app" mark />
           <HeaderSearch />
+          <NotificationBell />
         </div>
       </header>
       <aside className="sticky top-0 z-20 hidden h-dvh w-64 flex-none flex-col gap-5 border-r border-separator py-5 pr-4 pl-[max(1rem,env(safe-area-inset-left))] md:flex">
         <Wordmark size={28} href="/app" className="px-2" mark />
-        <HeaderSearch wide />
+        <div className="flex items-center gap-2"><HeaderSearch wide /><NotificationBell /></div>
         <Suspense fallback={<AppSidebarLinks pathname="" />}>
           <AppSidebarNav />
         </Suspense>
