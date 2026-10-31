@@ -51,6 +51,7 @@ export default function SettingsPage() {
         <SettingsLink href="/app/settings/profile?from=settings">Edit profile</SettingsLink>
         <Suspense fallback={<p className="p-4 text-subheadline text-label-secondary">Loading…</p>}><PublicProfile /></Suspense>
       </Group>
+      <Group title="Notifications"><SettingsLink href="/app/settings/notifications">Notifications</SettingsLink></Group>
       <Group title="Privacy">
         <SettingsLink href="/app/settings/privacy">Profile privacy</SettingsLink>
         <SettingsLink href="/app/settings/blocked">Blocked accounts</SettingsLink>

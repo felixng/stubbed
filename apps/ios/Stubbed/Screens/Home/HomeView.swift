@@ -23,6 +23,9 @@ struct HomeView: View {
       .navigationTitle("Home")
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
+          NavigationLink(value: AppRouter.Route.notifications) { Image(systemName: "bell") }.accessibilityLabel("Notifications")
+        }
+        ToolbarItem(placement: .topBarTrailing) {
           Button("Search people", systemImage: "magnifyingglass") { searching = true }
         }
       }
