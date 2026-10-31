@@ -166,6 +166,7 @@ export const SHADOW_RULES = [
 ];
 
 export const COMPONENTS = [
+  { name: "PressMedia", swift: "web only", props: "none; owner-supplied media pending", notes: "The /press page stays light. Responsive surface cards use separator borders and labelled, non-interactive media placeholders. Each screenshot group includes horizontal, vertical and transparent slots. Only supplied, verified URLs become links; missing media never renders an empty image or download control." },
   { name: "Button", swift: "system `.borderedProminent` / `.bordered`", props: "variant primary | secondary | ghost | neutral; size md | sm", notes: "Capsule, 50px tall (sm 44px), headline weight. One `primary` per screen (`tint` fill, `on-tint` text, `shadow-btn`). `secondary` is `tint-fill` with `tint-text`; `ghost` is transparent with `tint-text`; `neutral` (surface, hairline border) is for third-party sign-in such as Google." },
   { name: "Chip", swift: "none: plain metadata text, a `Picker` or small `.bordered` buttons", props: "selected, onClick, children", notes: "Capsule, 28px tall, footnote medium, on `fill`. Selected inverts (`label` background, `background` text), never `tint`. With onClick it is a toggle button (aria-pressed)." },
   { name: "RatingStars", swift: "RatingStars", props: "value 0–5 in halves, size px", notes: "Five stars; filled in `star`, empty as a 1.5px `outline` stroke. Read-only; labelled \"Rated N out of 5\"." },

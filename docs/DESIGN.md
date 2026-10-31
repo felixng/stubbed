@@ -360,3 +360,12 @@ SF Symbols on iOS (`book`, `plus.circle`, `chart.bar`, `person` for the tabs). O
 - **Don't** put drop shadows on iOS, or port web layout patterns (floating action buttons, custom card styles) to the iOS app.
 - **Don't** set body text below Footnote (13px), or use `glow` behind text outside the poster fallback. Tab bar labels (Caption 2, 11px) are the only exception.
 - **Don't** write copy with emoji, exclamation marks or title case.
+
+
+### Press kit
+
+`/press` uses the existing always-light public header, footer, system type and Footlight Sweep semantic tokens. A readable story column sits beside the links on desktop and stacks below them on smaller screens. Inline 24px line icons replace the source document's emoji.
+
+`PressMedia` groups the app icon, four screenshot subjects (each horizontal, vertical and transparent) and walkthrough video. Unavailable assets are labelled, non-interactive placeholders, never broken previews or download buttons. Commented image, video and anchor examples identify the drop-in points. Missing beta, App Store and creator URLs remain honest text statuses; the website and shared support email are live links.
+
+Runtime screenshot gallery pending: local browser access is disabled in Work settings. Mobile, tablet and desktop captures must be added after visual review; no mockups or stale screenshots substitute for them.
