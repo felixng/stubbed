@@ -1,5 +1,5 @@
 begin;
-select plan(26);
+select plan(31);
 create function pg_temp.as_user(uid uuid) returns void language sql as $$
  select set_config('role','authenticated',true),set_config('request.jwt.claims',json_build_object('sub',uid,'role','authenticated')::text,true);
 $$;
@@ -17,7 +17,7 @@ select is((select count(*)::int from public.notifications),0,'no self notificati
 insert into public.entry_likes(entry_id,user_id) values('e1111111-0000-0000-0000-000000000001','a1111111-0000-0000-0000-000000000001');
 select is((select count(*)::int from public.notifications),1,'successful like creates inbox');
 select is((select count(*)::int from public.notification_outbox),1,'inbox and outbox created together');
-select public.intake_notification('b1111111-0000-0000-0000-000000000001','a1111111-0000-0000-0000-000000000001','like','like:e1111111-0000-0000-0000-000000000001:a1111111-0000-0000-0000-000000000001','e1111111-0000-0000-0000-000000000001');
+select public.intake_notification('b1111111-0000-0000-0000-000000000001','a1111111-0000-0000-0000-000000000001','like','like:e1111111-0000-0000-0000-000000000001:a1111111-0000-0000-0000-000000000001'||':'||(select notification_generation::text from public.entry_likes where entry_id='e1111111-0000-0000-0000-000000000001' and user_id='a1111111-0000-0000-0000-000000000001'),'e1111111-0000-0000-0000-000000000001');
 select is((select count(*)::int from public.notification_outbox),1,'duplicate intake does not enqueue again');
 insert into public.entry_likes(entry_id,user_id) values('e1111111-0000-0000-0000-000000000001','c1111111-0000-0000-0000-000000000001');
 select is((select count(*)::int from public.notifications),1,'likes grouped on exact entry');
@@ -67,7 +67,11 @@ select is((select push from public.notification_category_preferences where categ
 reset role;
 delete from public.entry_likes where entry_id='e1111111-0000-0000-0000-000000000001' and user_id='c1111111-0000-0000-0000-000000000001';
 insert into public.entry_likes(entry_id,user_id) values('e1111111-0000-0000-0000-000000000001','c1111111-0000-0000-0000-000000000001');
-select is((select count(*)::int from public.notification_events where source_key like 'like:%'),2,'unlike/re-like retains a single source event per actor');
+select is((select count(*)::int from public.notification_events where source_key like 'like:%'),3,'unlike/re-like gets a new source generation');
+select is((select count(*)::int from public.notification_outbox o join public.notifications n on n.id=o.notification_id where n.category='like'),2,'repeat-like push is limited independently of new inbox revision');
+select pg_temp.as_user('b1111111-0000-0000-0000-000000000001');
+select is(public.notification_unread_count(),1,'new like generation makes the inbox group unread');
+reset role;
 update public.profiles set is_private=true where id='c1111111-0000-0000-0000-000000000001';
 insert into public.follows(follower_id,followee_id) values('b1111111-0000-0000-0000-000000000001','c1111111-0000-0000-0000-000000000001');
 select pg_temp.as_user('c1111111-0000-0000-0000-000000000001');
@@ -79,5 +83,17 @@ select is((select count(*)::int from public.notification_inbox() where category=
 select pg_temp.as_user('b1111111-0000-0000-0000-000000000001');
 select is((select count(*)::int from public.notification_inbox() where category='follow_accepted'),1,'request acceptance notifies original requester');
 reset role;
+delete from public.follows where follower_id='b1111111-0000-0000-0000-000000000001' and followee_id='c1111111-0000-0000-0000-000000000001';
+insert into public.follows(follower_id,followee_id) values('b1111111-0000-0000-0000-000000000001','c1111111-0000-0000-0000-000000000001');
+select pg_temp.as_user('c1111111-0000-0000-0000-000000000001');
+select public.notification_read_all();
+reset role;
+delete from public.follows where follower_id='b1111111-0000-0000-0000-000000000001' and followee_id='c1111111-0000-0000-0000-000000000001';
+insert into public.follows(follower_id,followee_id) values('b1111111-0000-0000-0000-000000000001','c1111111-0000-0000-0000-000000000001');
+select pg_temp.as_user('c1111111-0000-0000-0000-000000000001');
+select is(public.notification_unread_count(),1,'a genuinely new request cycle is unread');
+select is((select count(*)::int from public.notification_inbox() where category='follow_request'),1,'old request generations cannot revive as duplicate rows');
+reset role;
+select is((select count(*)::int from public.notification_outbox o join public.notifications n on n.id=o.notification_id where n.category='follow_request'),1,'repeat request push uses separate 24-hour cooldown');
 select * from finish();
 rollback;

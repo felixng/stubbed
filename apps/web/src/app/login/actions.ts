@@ -1,6 +1,6 @@
 "use server";
 
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { importGoogleAvatar } from "@/lib/avatar";
@@ -160,6 +160,12 @@ export async function signInWithGoogleCode(code: string): Promise<{ error?: "not
 
 export async function signOut() {
   const supabase = await createClient();
+  const cookieStore = await cookies();
+  const identity = cookieStore.get("stubbed_push_installation")?.value.split(".");
+  if (identity?.length === 2 && identity.every(part => /^[0-9a-f-]{36}$/i.test(part))) {
+    await supabase.rpc("remove_push_installation", { installation: identity[0], secret: identity[1] });
+  }
+  cookieStore.delete("stubbed_push_installation");
   // This device only; the phone stays signed in if signing out on a laptop.
   await supabase.auth.signOut({ scope: "local" });
   redirect("/login");

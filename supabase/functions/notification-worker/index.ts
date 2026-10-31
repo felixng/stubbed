@@ -1,3 +1,6 @@
+// @ts-types="npm:@types/web-push@3.6.4"
+import webpush from "npm:web-push@3.6.7";
+import { createBrowserPushSender } from "../_shared/notifications/browser-push.ts";
 import { createAPNsSender } from "../_shared/notifications/apns.ts";
 import { dispatchBatch } from "../_shared/notifications/dispatch.ts";
 import type { DeliveryQueue, Lease, PreparedJob, SendResult } from "../_shared/notifications/contracts.ts";
@@ -26,10 +29,24 @@ Deno.serve(async request => {
       prepare: lease => rpc<PreparedJob | null>("prepare_notification_job", { job: lease.job_id, lease_token: lease.lease_id }),
       finish: (lease, result: SendResult) => rpc<void>("finish_notification_job", { job: lease.job_id, lease_token: lease.lease_id, result }),
     };
-    const native = Deno.env.get("APNS_PRIVATE_KEY") ? createAPNsSender({ teamId: required("APNS_TEAM_ID"), keyId: required("APNS_KEY_ID"), privateKey: required("APNS_PRIVATE_KEY"), topic: "app.getstubbed" }) : null;
-    const result = await dispatchBatch(queue, job => job.kind === "apns" && native
-      ? native.send({ token: job.token, environment: job.environment }, job.notification, new Date(job.expires_at))
-      : Promise.resolve("retryable"));
+    const nativeConfig = { teamId: Deno.env.get("APNS_TEAM_ID"), keyId: Deno.env.get("APNS_KEY_ID"), privateKey: Deno.env.get("APNS_PRIVATE_KEY") };
+    const native = nativeConfig.teamId && nativeConfig.keyId && nativeConfig.privateKey
+      ? createAPNsSender({ teamId: nativeConfig.teamId, keyId: nativeConfig.keyId, privateKey: nativeConfig.privateKey, topic: "app.getstubbed" }) : null;
+    const vapidPublic = Deno.env.get("VAPID_PUBLIC_KEY");
+    const vapidPrivate = Deno.env.get("VAPID_PRIVATE_KEY");
+    const browser = vapidPublic && vapidPrivate ? createBrowserPushSender((subscription, alert, ttl) => {
+      const details = webpush.generateRequestDetails(subscription, JSON.stringify(alert), {
+        TTL: ttl, urgency: "normal", topic: alert.id.replace(/-/g, "").slice(0,32),
+        vapidDetails: { subject: "mailto:support@getstubbed.app", publicKey: vapidPublic, privateKey: vapidPrivate },
+      });
+      if (!details.body) throw new Error("Payload encoding failed");
+      return { endpoint: details.endpoint, headers: Object.fromEntries(Object.entries(details.headers).map(([key,value]) => [key,String(value)])), body: new Uint8Array(details.body) };
+    }) : null;
+    const result = await dispatchBatch(queue, job => {
+      if (job.kind === "apns" && native) return native.send({ token: job.token, environment: job.environment }, job.notification, new Date(job.expires_at));
+      if (job.kind === "web" && browser && job.subscription) return browser.send(job.subscription, job.notification, new Date(job.expires_at));
+      return Promise.resolve("retryable");
+    });
     // Counts only: never log tokens, endpoints, actors, entry titles or bodies.
     return Response.json(result);
   } catch {

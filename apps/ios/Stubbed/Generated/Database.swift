@@ -275,30 +275,36 @@ internal enum PublicSchema {
   internal struct EntryLikesSelect: Codable, Hashable, Sendable {
     internal let createdAt: String
     internal let entryId: UUID
+    internal let notificationGeneration: UUID
     internal let userId: UUID
     internal enum CodingKeys: String, CodingKey {
       case createdAt = "created_at"
       case entryId = "entry_id"
+      case notificationGeneration = "notification_generation"
       case userId = "user_id"
     }
   }
   internal struct EntryLikesInsert: Codable, Hashable, Sendable {
     internal let createdAt: String?
     internal let entryId: UUID
+    internal let notificationGeneration: UUID?
     internal let userId: UUID?
     internal enum CodingKeys: String, CodingKey {
       case createdAt = "created_at"
       case entryId = "entry_id"
+      case notificationGeneration = "notification_generation"
       case userId = "user_id"
     }
   }
   internal struct EntryLikesUpdate: Codable, Hashable, Sendable {
     internal let createdAt: String?
     internal let entryId: UUID?
+    internal let notificationGeneration: UUID?
     internal let userId: UUID?
     internal enum CodingKeys: String, CodingKey {
       case createdAt = "created_at"
       case entryId = "entry_id"
+      case notificationGeneration = "notification_generation"
       case userId = "user_id"
     }
   }
@@ -348,11 +354,13 @@ internal enum PublicSchema {
     internal let createdAt: String
     internal let followeeId: UUID
     internal let followerId: UUID
+    internal let notificationGeneration: UUID
     internal let status: String
     internal enum CodingKeys: String, CodingKey {
       case createdAt = "created_at"
       case followeeId = "followee_id"
       case followerId = "follower_id"
+      case notificationGeneration = "notification_generation"
       case status = "status"
     }
   }
@@ -360,11 +368,13 @@ internal enum PublicSchema {
     internal let createdAt: String?
     internal let followeeId: UUID
     internal let followerId: UUID
+    internal let notificationGeneration: UUID?
     internal let status: String?
     internal enum CodingKeys: String, CodingKey {
       case createdAt = "created_at"
       case followeeId = "followee_id"
       case followerId = "follower_id"
+      case notificationGeneration = "notification_generation"
       case status = "status"
     }
   }
@@ -372,11 +382,13 @@ internal enum PublicSchema {
     internal let createdAt: String?
     internal let followeeId: UUID?
     internal let followerId: UUID?
+    internal let notificationGeneration: UUID?
     internal let status: String?
     internal enum CodingKeys: String, CodingKey {
       case createdAt = "created_at"
       case followeeId = "followee_id"
       case followerId = "follower_id"
+      case notificationGeneration = "notification_generation"
       case status = "status"
     }
   }
@@ -537,39 +549,57 @@ internal enum PublicSchema {
     }
   }
   internal struct NotificationOutboxSelect: Codable, Hashable, Sendable {
+    internal let actorId: UUID?
     internal let availableAt: String
     internal let expiresAt: String
     internal let notificationId: UUID
+    internal let queuedAt: String
     internal let revision: Int64
+    internal let sourceKey: String?
     internal enum CodingKeys: String, CodingKey {
+      case actorId = "actor_id"
       case availableAt = "available_at"
       case expiresAt = "expires_at"
       case notificationId = "notification_id"
+      case queuedAt = "queued_at"
       case revision = "revision"
+      case sourceKey = "source_key"
     }
   }
   internal struct NotificationOutboxInsert: Codable, Hashable, Sendable {
+    internal let actorId: UUID?
     internal let availableAt: String
     internal let expiresAt: String
     internal let notificationId: UUID
+    internal let queuedAt: String?
     internal let revision: Int64
+    internal let sourceKey: String?
     internal enum CodingKeys: String, CodingKey {
+      case actorId = "actor_id"
       case availableAt = "available_at"
       case expiresAt = "expires_at"
       case notificationId = "notification_id"
+      case queuedAt = "queued_at"
       case revision = "revision"
+      case sourceKey = "source_key"
     }
   }
   internal struct NotificationOutboxUpdate: Codable, Hashable, Sendable {
+    internal let actorId: UUID?
     internal let availableAt: String?
     internal let expiresAt: String?
     internal let notificationId: UUID?
+    internal let queuedAt: String?
     internal let revision: Int64?
+    internal let sourceKey: String?
     internal enum CodingKeys: String, CodingKey {
+      case actorId = "actor_id"
       case availableAt = "available_at"
       case expiresAt = "expires_at"
       case notificationId = "notification_id"
+      case queuedAt = "queued_at"
       case revision = "revision"
+      case sourceKey = "source_key"
     }
   }
   internal struct NotificationPolicySelect: Codable, Hashable, Sendable {
@@ -578,6 +608,7 @@ internal enum PublicSchema {
     internal let likeGroupWindow: String
     internal let likePushDelay: String
     internal let pushExpiry: String
+    internal let repeatPushCooldown: String
     internal let retryDelaysSeconds: [Int32]
     internal let singleton: Bool
     internal enum CodingKeys: String, CodingKey {
@@ -586,6 +617,7 @@ internal enum PublicSchema {
       case likeGroupWindow = "like_group_window"
       case likePushDelay = "like_push_delay"
       case pushExpiry = "push_expiry"
+      case repeatPushCooldown = "repeat_push_cooldown"
       case retryDelaysSeconds = "retry_delays_seconds"
       case singleton = "singleton"
     }
@@ -596,6 +628,7 @@ internal enum PublicSchema {
     internal let likeGroupWindow: String?
     internal let likePushDelay: String?
     internal let pushExpiry: String?
+    internal let repeatPushCooldown: String?
     internal let retryDelaysSeconds: [Int32]?
     internal let singleton: Bool?
     internal enum CodingKeys: String, CodingKey {
@@ -604,6 +637,7 @@ internal enum PublicSchema {
       case likeGroupWindow = "like_group_window"
       case likePushDelay = "like_push_delay"
       case pushExpiry = "push_expiry"
+      case repeatPushCooldown = "repeat_push_cooldown"
       case retryDelaysSeconds = "retry_delays_seconds"
       case singleton = "singleton"
     }
@@ -614,6 +648,7 @@ internal enum PublicSchema {
     internal let likeGroupWindow: String?
     internal let likePushDelay: String?
     internal let pushExpiry: String?
+    internal let repeatPushCooldown: String?
     internal let retryDelaysSeconds: [Int32]?
     internal let singleton: Bool?
     internal enum CodingKeys: String, CodingKey {
@@ -622,6 +657,7 @@ internal enum PublicSchema {
       case likeGroupWindow = "like_group_window"
       case likePushDelay = "like_push_delay"
       case pushExpiry = "push_expiry"
+      case repeatPushCooldown = "repeat_push_cooldown"
       case retryDelaysSeconds = "retry_delays_seconds"
       case singleton = "singleton"
     }

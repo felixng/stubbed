@@ -7,8 +7,10 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "Stubbed",
     short_name: "Stubbed",
     description: "Log, rate and share every show you see.",
+    id: "/app",
     start_url: "/app",
-    display: "browser",
+    scope: "/",
+    display: "standalone",
     background_color: "#f2f2f7",
     theme_color: "#f2f2f7",
     icons: [

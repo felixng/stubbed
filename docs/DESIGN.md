@@ -369,3 +369,9 @@ SF Symbols on iOS (`book`, `plus.circle`, `chart.bar`, `person` for the tabs). O
 `PressMedia` groups the app icon, four screenshot subjects (each horizontal, vertical and transparent) and walkthrough video. Unavailable assets are labelled, non-interactive placeholders, never broken previews or download buttons. Commented image, video and anchor examples identify the drop-in points. The missing beta invitation remains an honest text status, and App Store availability reads “Not published yet”. The website, shared support email and owner-supplied creator Instagram are live links.
 
 Runtime screenshot gallery pending: local browser access is disabled in Work settings. Mobile, tablet and desktop captures must be added after visual review; no mockups or stale screenshots substitute for them.
+
+### Notifications
+
+Home’s bell sits beside Search on mobile and desktop web, with an accessible shared unread count and a decorative unread dot. Notifications has back navigation, a settings shortcut, mark-all-read, and Today / Yesterday / This week / Earlier activity. Rows use the existing avatar, surface, separator, label and tint tokens; unread is communicated through weight and accessible text as well as a dot. Loading, empty, retry and pagination are explicit states. Native iOS uses inset-grouped List/Form sections and semantic colours.
+
+Notification settings distinguishes account preferences from this installation’s permission. Each implemented category has its own inbox/push control. Preview-off sample copy is generic. Optional quiet hours show times and a named time zone. iPhone browser-tab guidance explains Add to Home Screen → open its icon → Enable; Android explains browser permission and optional installation. Desktop offers the shared inbox and account mobile preferences, without a permission prompt. Web runtime screenshots remain outstanding because local browser control is disabled; do not substitute mockups for running captures.

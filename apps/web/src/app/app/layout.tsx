@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 
-import { signOut } from "@/app/login/actions";
+import { BrowserPushLifecycle } from "@/components/notifications/BrowserPushLifecycle";
+import { SignOutButton } from "@/components/notifications/SignOutButton";
 import { AppSidebarLinks, AppSidebarNav } from "@/components/app/AppSidebar";
 import { AppTabBar, AppTabBarLinks } from "@/components/app/AppTabBar";
 import { NotificationBell } from "@/components/notifications/NotificationBell";
@@ -30,6 +31,7 @@ export const viewport: Viewport = { viewportFit: "cover", themeColor: "#f2f2f7" 
 export default function AppLayout({ children }: LayoutProps<"/app">) {
   return (
     <div data-theme="light" className="isolate flex min-h-dvh flex-col bg-background md:flex-row">
+      <BrowserPushLifecycle />
       <header className="sticky top-0 z-20 border-b border-separator bg-background/90 pt-[env(safe-area-inset-top)] backdrop-blur md:hidden">
         <div className="relative mx-auto flex h-16 w-full max-w-[640px] items-center gap-2 px-4 sm:gap-3">
           <Wordmark size={30} href="/app" mark />
@@ -43,14 +45,7 @@ export default function AppLayout({ children }: LayoutProps<"/app">) {
         <Suspense fallback={<AppSidebarLinks pathname="" />}>
           <AppSidebarNav />
         </Suspense>
-        <form action={signOut} className="mt-auto">
-          <button
-            type="submit"
-            className="flex min-h-11 w-full cursor-pointer items-center rounded-pill px-3 text-body text-destructive hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-          >
-            Sign out
-          </button>
-        </form>
+        <div className="mt-auto"><SignOutButton className="flex min-h-11 w-full cursor-pointer items-center rounded-pill px-3 text-body text-destructive hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus" /></div>
       </aside>
       <main className="mx-auto w-full max-w-[640px] flex-1 px-4 py-5 md:py-8">{children}</main>
       <div className="sticky bottom-0 z-20 md:hidden">
