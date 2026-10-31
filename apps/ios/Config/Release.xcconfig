@@ -6,3 +6,5 @@
 SUPABASE_URL = https:/$()/tvjkuzyrqsikpmryqymy.supabase.co
 SUPABASE_PUBLISHABLE_KEY = sb_publishable_s-BfNjL4ZBaLymbA33uiEA_1Oy7-CJR
 WEB_URL = https:/$()/getstubbed.app
+
+APNS_ENVIRONMENT = production

@@ -21,6 +21,7 @@ final class AppRouter {
     case trips
     case settings
     case notifications
+    case openNotification(UUID, seenRevision: Int64? = nil)
     case followRequests
     case notificationSettings
     case editProfile
@@ -118,6 +119,14 @@ final class AppRouter {
     log = nil
     tripForm = nil
     if tab == .home { homePath.append(route) } else { profilePath.append(route) }
+  }
+
+  /// Replace a push-link resolver so Back never returns to a redirecting screen.
+  func replaceTop(with route: Route) {
+    var stack = path(for: tab)
+    if !stack.isEmpty { stack.removeLast() }
+    stack.append(route)
+    setPath(stack, for: tab)
   }
 
   /// Something was written or deleted: screens reload.

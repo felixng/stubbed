@@ -12,3 +12,5 @@ WEB_URL = http:/$()/127.0.0.1:3000
 // Optional, git-ignored: point Debug at another project (e.g. a real device
 // against hosted Supabase). See Secrets.example.xcconfig.
 #include? "Secrets.xcconfig"
+
+APNS_ENVIRONMENT = development

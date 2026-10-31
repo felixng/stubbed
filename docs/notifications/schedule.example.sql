@@ -1,0 +1,11 @@
+-- EXAMPLE ONLY. Do not execute without explicit deployment/schedule approval.
+-- Store notification_worker_url and notification_worker_secret in Vault first.
+-- Enable pg_cron/pg_net using the existing Supabase project; no new service.
+-- select cron.schedule('stubbed-notifications', '* * * * *', $$
+--   select net.http_post(
+--     url := (select decrypted_secret from vault.decrypted_secrets where name='notification_worker_url'),
+--     headers := jsonb_build_object('Content-Type','application/json',
+--       'x-notification-worker-secret',(select decrypted_secret from vault.decrypted_secrets where name='notification_worker_secret')),
+--     body := '{}'::jsonb
+--   );
+-- $$);

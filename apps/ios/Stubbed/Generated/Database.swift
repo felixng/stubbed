@@ -416,6 +416,84 @@ internal enum PublicSchema {
       case userId = "user_id"
     }
   }
+  internal struct NotificationDeliveriesSelect: Codable, Hashable, Sendable {
+    internal let attempts: Int32
+    internal let availableAt: String
+    internal let destinationId: UUID
+    internal let expiresAt: String
+    internal let id: UUID
+    internal let lease: UUID?
+    internal let leaseUntil: String?
+    internal let notificationId: UUID
+    internal let outcome: String?
+    internal let revision: Int64
+    internal let status: String
+    internal enum CodingKeys: String, CodingKey {
+      case attempts = "attempts"
+      case availableAt = "available_at"
+      case destinationId = "destination_id"
+      case expiresAt = "expires_at"
+      case id = "id"
+      case lease = "lease"
+      case leaseUntil = "lease_until"
+      case notificationId = "notification_id"
+      case outcome = "outcome"
+      case revision = "revision"
+      case status = "status"
+    }
+  }
+  internal struct NotificationDeliveriesInsert: Codable, Hashable, Sendable {
+    internal let attempts: Int32?
+    internal let availableAt: String
+    internal let destinationId: UUID
+    internal let expiresAt: String
+    internal let id: UUID?
+    internal let lease: UUID?
+    internal let leaseUntil: String?
+    internal let notificationId: UUID
+    internal let outcome: String?
+    internal let revision: Int64
+    internal let status: String?
+    internal enum CodingKeys: String, CodingKey {
+      case attempts = "attempts"
+      case availableAt = "available_at"
+      case destinationId = "destination_id"
+      case expiresAt = "expires_at"
+      case id = "id"
+      case lease = "lease"
+      case leaseUntil = "lease_until"
+      case notificationId = "notification_id"
+      case outcome = "outcome"
+      case revision = "revision"
+      case status = "status"
+    }
+  }
+  internal struct NotificationDeliveriesUpdate: Codable, Hashable, Sendable {
+    internal let attempts: Int32?
+    internal let availableAt: String?
+    internal let destinationId: UUID?
+    internal let expiresAt: String?
+    internal let id: UUID?
+    internal let lease: UUID?
+    internal let leaseUntil: String?
+    internal let notificationId: UUID?
+    internal let outcome: String?
+    internal let revision: Int64?
+    internal let status: String?
+    internal enum CodingKeys: String, CodingKey {
+      case attempts = "attempts"
+      case availableAt = "available_at"
+      case destinationId = "destination_id"
+      case expiresAt = "expires_at"
+      case id = "id"
+      case lease = "lease"
+      case leaseUntil = "lease_until"
+      case notificationId = "notification_id"
+      case outcome = "outcome"
+      case revision = "revision"
+      case status = "status"
+    }
+  }
   internal struct NotificationEventsSelect: Codable, Hashable, Sendable {
     internal let actorId: UUID
     internal let commentId: UUID?
@@ -726,6 +804,84 @@ internal enum PublicSchema {
       case id = "id"
       case isPrivate = "is_private"
       case link = "link"
+    }
+  }
+  internal struct PushDestinationsSelect: Codable, Hashable, Sendable {
+    internal let apnsEnvironment: String?
+    internal let createdAt: String
+    internal let id: UUID
+    internal let kind: String
+    internal let nativeToken: String?
+    internal let secretHash: String
+    internal let updatedAt: String
+    internal let userId: UUID
+    internal let webAuth: String?
+    internal let webEndpoint: String?
+    internal let webP256dh: String?
+    internal enum CodingKeys: String, CodingKey {
+      case apnsEnvironment = "apns_environment"
+      case createdAt = "created_at"
+      case id = "id"
+      case kind = "kind"
+      case nativeToken = "native_token"
+      case secretHash = "secret_hash"
+      case updatedAt = "updated_at"
+      case userId = "user_id"
+      case webAuth = "web_auth"
+      case webEndpoint = "web_endpoint"
+      case webP256dh = "web_p256dh"
+    }
+  }
+  internal struct PushDestinationsInsert: Codable, Hashable, Sendable {
+    internal let apnsEnvironment: String?
+    internal let createdAt: String?
+    internal let id: UUID
+    internal let kind: String
+    internal let nativeToken: String?
+    internal let secretHash: String
+    internal let updatedAt: String?
+    internal let userId: UUID
+    internal let webAuth: String?
+    internal let webEndpoint: String?
+    internal let webP256dh: String?
+    internal enum CodingKeys: String, CodingKey {
+      case apnsEnvironment = "apns_environment"
+      case createdAt = "created_at"
+      case id = "id"
+      case kind = "kind"
+      case nativeToken = "native_token"
+      case secretHash = "secret_hash"
+      case updatedAt = "updated_at"
+      case userId = "user_id"
+      case webAuth = "web_auth"
+      case webEndpoint = "web_endpoint"
+      case webP256dh = "web_p256dh"
+    }
+  }
+  internal struct PushDestinationsUpdate: Codable, Hashable, Sendable {
+    internal let apnsEnvironment: String?
+    internal let createdAt: String?
+    internal let id: UUID?
+    internal let kind: String?
+    internal let nativeToken: String?
+    internal let secretHash: String?
+    internal let updatedAt: String?
+    internal let userId: UUID?
+    internal let webAuth: String?
+    internal let webEndpoint: String?
+    internal let webP256dh: String?
+    internal enum CodingKeys: String, CodingKey {
+      case apnsEnvironment = "apns_environment"
+      case createdAt = "created_at"
+      case id = "id"
+      case kind = "kind"
+      case nativeToken = "native_token"
+      case secretHash = "secret_hash"
+      case updatedAt = "updated_at"
+      case userId = "user_id"
+      case webAuth = "web_auth"
+      case webEndpoint = "web_endpoint"
+      case webP256dh = "web_p256dh"
     }
   }
   internal struct ReportsSelect: Codable, Hashable, Sendable {

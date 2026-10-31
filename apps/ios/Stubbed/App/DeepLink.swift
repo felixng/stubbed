@@ -24,6 +24,9 @@ enum DeepLink {
     }
     parts = parts.filter { !$0.isEmpty }
     guard let first = parts.first else { return nil }
+    if parts == ["app", "notifications"] { return .notifications }
+    if parts == ["app", "profile", "requests"] { return .followRequests }
+    if parts.count == 4, Array(parts.prefix(3)) == ["app", "notifications", "open"], let id = UUID(uuidString: parts[3]) { return .openNotification(id) }
 
     if first.hasPrefix("@") {
       let handle = ProfileRules.normalizeHandle(first)
