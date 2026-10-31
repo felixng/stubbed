@@ -212,6 +212,7 @@ Contrast: `tint` takes white text at 4.6:1; `tint-text` reads at 5.7:1 on white 
 
 ### Secondary
 - **Applause Amber** (`star`): rating stars and award marks only. The icon's amber on dark; a deeper `#e07400` on light so the stars hold 3:1 on white.
+- **Warm lime progress** (iOS `Palette.progressText` / `Palette.progressFill`): IN PROGRESS on owner and public year summaries. A yellow-green hue derived by warming Sweep magenta’s complementary green toward Sweep amber. Light text/fill `#2d4d12` / `#bef28c` (7.46:1); dark `#bef28c` / `#263c17` (9.34:1). Native caption bold, 12pt horizontal and 4pt vertical capsule padding. Dynamic Type scales the label; accessibility sizes stack it below the year. This is a status treatment; interactive controls keep coral.
 
 ### Neutral
 - **Lobby Grey** (`background`): every screen; marketing pages stay on it. iOS `systemGroupedBackground`.

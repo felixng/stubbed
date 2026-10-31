@@ -14,9 +14,9 @@ enum Palette {
   static let tintFill = Color(light: 0xFFE4E1, dark: 0x3A1418)
   /// Text on `tint`.
   static let onTint = Color(light: 0xFFFFFF, dark: 0x000000)
-  /// Green status treatment for the current-year IN PROGRESS badge.
-  static let progressText = Color(light: 0x146C35, dark: 0x8AE4A5)
-  static let progressFill = Color(light: 0xE6F4EA, dark: 0x183D25)
+  /// Warm lime status: the magenta complement, warmed toward Sweep amber.
+  static let progressText = Color(light: 0x2D4D12, dark: 0xBEF28C)
+  static let progressFill = Color(light: 0xBEF28C, dark: 0x263C17)
   static let star = Color(light: 0xE07400, dark: 0xFFA040)
   /// The app icon's gradient, magenta to coral to amber: behind avatars and
   /// posters with no photo, an empty profile cover and your own avatar's

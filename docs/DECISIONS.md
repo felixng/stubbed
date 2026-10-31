@@ -622,3 +622,9 @@ Public iOS profiles share the compact identity/counts layout and year-summary pr
 ## 2026-10-30: Native Profile navigation rows and progress status
 
 Trips and Insights rely on the List's native minimum row height instead of adding a 44pt label inside native row padding. Align the system separator to the leading content edge so it matches the separator above the rows. Preserve system Dynamic Type and row hit targets. The shared IN PROGRESS chip uses contrasting green text/fill tokens. Remove the public-profile footer remark while preserving public-only queries and RLS. This follow-up changes presentation only.
+
+## 2026-10-31: Warm lime year status
+
+Give IN PROGRESS more presence on owner and public profiles with native caption bold (previously caption2 semibold) and 12pt horizontal capsule padding (previously 8pt). Keep 4pt vertical padding and the existing accessibility-size stacking. The badge remains a status label.
+
+Derive a warm lime around 91° hue by bringing Sweep magenta’s complementary green (about 152°) toward Sweep amber (about 30°). Light appearance uses #2D4D12 text on #BEF28C; dark uses #BEF28C on #263C17. The stronger lime fill complements the warm brand palette without adopting the reference app’s turquoise or conventional muted green. Text contrast is 7.46:1 in light appearance and 9.34:1 in dark appearance. Keep the pair scoped to progress status; the app’s interactive tint stays coral.
