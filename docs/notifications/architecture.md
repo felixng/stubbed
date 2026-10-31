@@ -10,7 +10,7 @@ Delivery jobs use leases, revision/destination uniqueness, bounded retries, expi
 
 ## Policy configuration
 
-Timing values must be named, documented and centrally enforced in Postgres, rather than independently hardcoded into either client. Proposed initial values discussed with owner: like grouping 24h; like push collection 5min; push expiry 24h; inbox retention 90d. Grouping combines inbox activity; collection delays likes to batch their push. Expiry drops stale queued delivery. Retention removes old history, not pending requests from the requests list. Quiet hours drop social delivery without a catch-up burst. Previews default off; comment bodies never leave the inbox destination.
+Timing values must be named, documented and centrally enforced in Postgres, rather than independently hardcoded into either client. Initial named values explained to owner (31 October): like grouping 24h; like push collection 5min; push expiry 24h; inbox retention 90d. Grouping combines inbox activity; collection delays likes to batch their push. Expiry drops stale queued delivery. Retention removes old history, not pending requests from the requests list. Quiet hours drop social delivery without a catch-up burst. Previews default off; comment bodies never leave the inbox destination.
 
 ## Review order and ownership
 

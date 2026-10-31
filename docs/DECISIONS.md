@@ -654,3 +654,9 @@ Build `/press` from the owner's press-kit document using existing public-page co
 ### Press kit owner clarification
 
 The app is not published on the App Store, so show “Not published yet” rather than suggesting an outstanding available URL. The owner supplied `https://www.instagram.com/hellofelix__/` as the creator profile; use the canonical profile URL without QR/tracking parameters. Beta invitation remains pending; the existing public web beta is accessible through `/signup`, but no TestFlight invitation has been supplied for the press CTA.
+
+### 2026-10-31 — Shared social notification policy and durable intake (#137, #241)
+
+Five social categories have independent inbox/push choices, default on. Account push defaults on, subject to each installation's OS/browser permission. Desktop gets the shared inbox only. Rules stay in Postgres; a successful social action, source-event deduplication, grouped inbox update and outbox insert share one transaction. Raw event/inbox tables are not exposed to clients; recipient RPCs recheck live sources, blocks and visibility for both text and counts. Category-off stops new inbox rows, preserving history.
+
+Timing is centralized in the service-owned `notification_policy` singleton, with named fields rather than client literals: 24-hour like groups, 5-minute like push collection, 24-hour push expiry and 90-day inbox retention. Values were explained to the owner; the owner requested easy configuration. Changing them requires a reviewed policy data migration. Push may reach both enabled native and web installations on the same phone (owner confirmed); there is no fingerprinting or automatic channel pairing. The existing Supabase Edge Function worker approach is approved subject to staying on Free; no schedule or hosted migration is enabled by these PRs. See `docs/notifications/architecture.md`.

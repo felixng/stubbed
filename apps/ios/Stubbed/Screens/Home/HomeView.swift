@@ -10,6 +10,7 @@ struct HomeView: View {
   @State private var items: [FeedItem] = []
   @State private var next: Feed.Cursor?
   @State private var searching = false
+  @State private var unread = 0
   @State private var state = LoadState.loading
   @State private var loadingMore = false
   @State private var moreFailed = false
@@ -23,7 +24,12 @@ struct HomeView: View {
       .navigationTitle("Home")
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
-          NavigationLink(value: AppRouter.Route.notifications) { Image(systemName: "bell") }.accessibilityLabel("Notifications")
+          NavigationLink(value: AppRouter.Route.notifications) {
+            Image(systemName: "bell").overlay(alignment: .topTrailing) {
+              if unread > 0 { Circle().fill(Palette.tintText).frame(width: 7, height: 7).offset(x: 3, y: -3) }
+            }
+          }.accessibilityLabel(unread > 0 ? "Notifications, \(unread) unread" : "Notifications")
+            .accessibilityIdentifier("notifications-bell")
         }
         ToolbarItem(placement: .topBarTrailing) {
           Button("Search people", systemImage: "magnifyingglass") { searching = true }
@@ -31,7 +37,13 @@ struct HomeView: View {
       }
       .sheet(isPresented: $searching) { PeopleSearchSheet() }
       // Logging a show starts the feed over from the top.
-      .task(id: router.dataVersion) { await load() }
+      .task(id: router.dataVersion) { await load(); unread = (try? await Notifications.unreadCount()) ?? 0 }
+      .task {
+        while !Task.isCancelled {
+          unread = (try? await Notifications.unreadCount()) ?? 0
+          do { try await Task.sleep(for: .seconds(30)) } catch { return }
+        }
+      }
   }
 
   @ViewBuilder private var content: some View {

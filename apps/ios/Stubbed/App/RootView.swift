@@ -58,6 +58,7 @@ struct RootView: View {
           case .trips: TripsList()
           case .settings: SettingsView()
           case .notifications: NotificationsView()
+          case .followRequests: NotificationRequestsView()
           case .notificationSettings: NotificationSettingsView()
           case .editProfile: EditProfileView()
           case .privacySettings: PrivacySettingsView()
