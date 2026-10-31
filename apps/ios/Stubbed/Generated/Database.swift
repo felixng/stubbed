@@ -12,6 +12,13 @@ internal enum PublicSchema {
     case planned = "planned"
     case logged = "logged"
   }
+  internal enum NotificationCategory: String, Codable, Hashable, Sendable {
+    case like = "like"
+    case comment = "comment"
+    case follower = "follower"
+    case followRequest = "follow_request"
+    case followAccepted = "follow_accepted"
+  }
   internal enum ShowType: String, Codable, Hashable, Sendable {
     case musical = "musical"
     case play = "play"
@@ -371,6 +378,288 @@ internal enum PublicSchema {
       case followeeId = "followee_id"
       case followerId = "follower_id"
       case status = "status"
+    }
+  }
+  internal struct NotificationCategoryPreferencesSelect: Codable, Hashable, Sendable {
+    internal let category: NotificationCategory
+    internal let inbox: Bool
+    internal let push: Bool
+    internal let userId: UUID
+    internal enum CodingKeys: String, CodingKey {
+      case category = "category"
+      case inbox = "inbox"
+      case push = "push"
+      case userId = "user_id"
+    }
+  }
+  internal struct NotificationCategoryPreferencesInsert: Codable, Hashable, Sendable {
+    internal let category: NotificationCategory
+    internal let inbox: Bool?
+    internal let push: Bool?
+    internal let userId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case category = "category"
+      case inbox = "inbox"
+      case push = "push"
+      case userId = "user_id"
+    }
+  }
+  internal struct NotificationCategoryPreferencesUpdate: Codable, Hashable, Sendable {
+    internal let category: NotificationCategory?
+    internal let inbox: Bool?
+    internal let push: Bool?
+    internal let userId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case category = "category"
+      case inbox = "inbox"
+      case push = "push"
+      case userId = "user_id"
+    }
+  }
+  internal struct NotificationEventsSelect: Codable, Hashable, Sendable {
+    internal let actorId: UUID
+    internal let commentId: UUID?
+    internal let createdAt: String
+    internal let notificationId: UUID
+    internal let sourceKey: String
+    internal enum CodingKeys: String, CodingKey {
+      case actorId = "actor_id"
+      case commentId = "comment_id"
+      case createdAt = "created_at"
+      case notificationId = "notification_id"
+      case sourceKey = "source_key"
+    }
+  }
+  internal struct NotificationEventsInsert: Codable, Hashable, Sendable {
+    internal let actorId: UUID
+    internal let commentId: UUID?
+    internal let createdAt: String?
+    internal let notificationId: UUID
+    internal let sourceKey: String
+    internal enum CodingKeys: String, CodingKey {
+      case actorId = "actor_id"
+      case commentId = "comment_id"
+      case createdAt = "created_at"
+      case notificationId = "notification_id"
+      case sourceKey = "source_key"
+    }
+  }
+  internal struct NotificationEventsUpdate: Codable, Hashable, Sendable {
+    internal let actorId: UUID?
+    internal let commentId: UUID?
+    internal let createdAt: String?
+    internal let notificationId: UUID?
+    internal let sourceKey: String?
+    internal enum CodingKeys: String, CodingKey {
+      case actorId = "actor_id"
+      case commentId = "comment_id"
+      case createdAt = "created_at"
+      case notificationId = "notification_id"
+      case sourceKey = "source_key"
+    }
+  }
+  internal struct NotificationOutboxSelect: Codable, Hashable, Sendable {
+    internal let availableAt: String
+    internal let expiresAt: String
+    internal let notificationId: UUID
+    internal let revision: Int64
+    internal enum CodingKeys: String, CodingKey {
+      case availableAt = "available_at"
+      case expiresAt = "expires_at"
+      case notificationId = "notification_id"
+      case revision = "revision"
+    }
+  }
+  internal struct NotificationOutboxInsert: Codable, Hashable, Sendable {
+    internal let availableAt: String
+    internal let expiresAt: String
+    internal let notificationId: UUID
+    internal let revision: Int64
+    internal enum CodingKeys: String, CodingKey {
+      case availableAt = "available_at"
+      case expiresAt = "expires_at"
+      case notificationId = "notification_id"
+      case revision = "revision"
+    }
+  }
+  internal struct NotificationOutboxUpdate: Codable, Hashable, Sendable {
+    internal let availableAt: String?
+    internal let expiresAt: String?
+    internal let notificationId: UUID?
+    internal let revision: Int64?
+    internal enum CodingKeys: String, CodingKey {
+      case availableAt = "available_at"
+      case expiresAt = "expires_at"
+      case notificationId = "notification_id"
+      case revision = "revision"
+    }
+  }
+  internal struct NotificationPolicySelect: Codable, Hashable, Sendable {
+    internal let inboxRetention: String
+    internal let leaseDuration: String
+    internal let likeGroupWindow: String
+    internal let likePushDelay: String
+    internal let pushExpiry: String
+    internal let retryDelaysSeconds: [Int32]
+    internal let singleton: Bool
+    internal enum CodingKeys: String, CodingKey {
+      case inboxRetention = "inbox_retention"
+      case leaseDuration = "lease_duration"
+      case likeGroupWindow = "like_group_window"
+      case likePushDelay = "like_push_delay"
+      case pushExpiry = "push_expiry"
+      case retryDelaysSeconds = "retry_delays_seconds"
+      case singleton = "singleton"
+    }
+  }
+  internal struct NotificationPolicyInsert: Codable, Hashable, Sendable {
+    internal let inboxRetention: String?
+    internal let leaseDuration: String?
+    internal let likeGroupWindow: String?
+    internal let likePushDelay: String?
+    internal let pushExpiry: String?
+    internal let retryDelaysSeconds: [Int32]?
+    internal let singleton: Bool?
+    internal enum CodingKeys: String, CodingKey {
+      case inboxRetention = "inbox_retention"
+      case leaseDuration = "lease_duration"
+      case likeGroupWindow = "like_group_window"
+      case likePushDelay = "like_push_delay"
+      case pushExpiry = "push_expiry"
+      case retryDelaysSeconds = "retry_delays_seconds"
+      case singleton = "singleton"
+    }
+  }
+  internal struct NotificationPolicyUpdate: Codable, Hashable, Sendable {
+    internal let inboxRetention: String?
+    internal let leaseDuration: String?
+    internal let likeGroupWindow: String?
+    internal let likePushDelay: String?
+    internal let pushExpiry: String?
+    internal let retryDelaysSeconds: [Int32]?
+    internal let singleton: Bool?
+    internal enum CodingKeys: String, CodingKey {
+      case inboxRetention = "inbox_retention"
+      case leaseDuration = "lease_duration"
+      case likeGroupWindow = "like_group_window"
+      case likePushDelay = "like_push_delay"
+      case pushExpiry = "push_expiry"
+      case retryDelaysSeconds = "retry_delays_seconds"
+      case singleton = "singleton"
+    }
+  }
+  internal struct NotificationPreferencesSelect: Codable, Hashable, Sendable {
+    internal let previews: Bool
+    internal let pushEnabled: Bool
+    internal let quietEnd: String?
+    internal let quietStart: String?
+    internal let timeZone: String
+    internal let userId: UUID
+    internal enum CodingKeys: String, CodingKey {
+      case previews = "previews"
+      case pushEnabled = "push_enabled"
+      case quietEnd = "quiet_end"
+      case quietStart = "quiet_start"
+      case timeZone = "time_zone"
+      case userId = "user_id"
+    }
+  }
+  internal struct NotificationPreferencesInsert: Codable, Hashable, Sendable {
+    internal let previews: Bool?
+    internal let pushEnabled: Bool?
+    internal let quietEnd: String?
+    internal let quietStart: String?
+    internal let timeZone: String?
+    internal let userId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case previews = "previews"
+      case pushEnabled = "push_enabled"
+      case quietEnd = "quiet_end"
+      case quietStart = "quiet_start"
+      case timeZone = "time_zone"
+      case userId = "user_id"
+    }
+  }
+  internal struct NotificationPreferencesUpdate: Codable, Hashable, Sendable {
+    internal let previews: Bool?
+    internal let pushEnabled: Bool?
+    internal let quietEnd: String?
+    internal let quietStart: String?
+    internal let timeZone: String?
+    internal let userId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case previews = "previews"
+      case pushEnabled = "push_enabled"
+      case quietEnd = "quiet_end"
+      case quietStart = "quiet_start"
+      case timeZone = "time_zone"
+      case userId = "user_id"
+    }
+  }
+  internal struct NotificationsSelect: Codable, Hashable, Sendable {
+    internal let category: NotificationCategory
+    internal let createdAt: String
+    internal let entryId: UUID?
+    internal let id: UUID
+    internal let inboxEnabled: Bool
+    internal let readRevision: Int64
+    internal let recipientId: UUID
+    internal let revision: Int64
+    internal let updatedAt: String
+    internal enum CodingKeys: String, CodingKey {
+      case category = "category"
+      case createdAt = "created_at"
+      case entryId = "entry_id"
+      case id = "id"
+      case inboxEnabled = "inbox_enabled"
+      case readRevision = "read_revision"
+      case recipientId = "recipient_id"
+      case revision = "revision"
+      case updatedAt = "updated_at"
+    }
+  }
+  internal struct NotificationsInsert: Codable, Hashable, Sendable {
+    internal let category: NotificationCategory
+    internal let createdAt: String?
+    internal let entryId: UUID?
+    internal let id: UUID?
+    internal let inboxEnabled: Bool
+    internal let readRevision: Int64?
+    internal let recipientId: UUID
+    internal let revision: Int64?
+    internal let updatedAt: String?
+    internal enum CodingKeys: String, CodingKey {
+      case category = "category"
+      case createdAt = "created_at"
+      case entryId = "entry_id"
+      case id = "id"
+      case inboxEnabled = "inbox_enabled"
+      case readRevision = "read_revision"
+      case recipientId = "recipient_id"
+      case revision = "revision"
+      case updatedAt = "updated_at"
+    }
+  }
+  internal struct NotificationsUpdate: Codable, Hashable, Sendable {
+    internal let category: NotificationCategory?
+    internal let createdAt: String?
+    internal let entryId: UUID?
+    internal let id: UUID?
+    internal let inboxEnabled: Bool?
+    internal let readRevision: Int64?
+    internal let recipientId: UUID?
+    internal let revision: Int64?
+    internal let updatedAt: String?
+    internal enum CodingKeys: String, CodingKey {
+      case category = "category"
+      case createdAt = "created_at"
+      case entryId = "entry_id"
+      case id = "id"
+      case inboxEnabled = "inbox_enabled"
+      case readRevision = "read_revision"
+      case recipientId = "recipient_id"
+      case revision = "revision"
+      case updatedAt = "updated_at"
     }
   }
   internal struct ProfilesSelect: Codable, Hashable, Sendable {

@@ -21,6 +21,7 @@ final class AppRouter {
     case trips
     case settings
     case notifications
+    case followRequests
     case notificationSettings
     case editProfile
     case privacySettings
