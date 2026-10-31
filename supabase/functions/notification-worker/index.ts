@@ -19,7 +19,7 @@ Deno.serve(async request => {
       const response = await fetch(`${url}/rest/v1/rpc/${name}`, { method: "POST", signal: AbortSignal.timeout(10000), headers: { apikey: serviceKey, authorization: `Bearer ${serviceKey}`, "content-type": "application/json" }, body: JSON.stringify(params) });
       if (!response.ok) throw new Error("Queue operation failed");
       const body = await response.text();
-      return body ? JSON.parse(body) : undefined;
+      return JSON.parse(body || "null");
     }
     const queue: DeliveryQueue = {
       claim: () => rpc<Lease[]>("claim_notification_jobs", { batch_size: 3 }),
