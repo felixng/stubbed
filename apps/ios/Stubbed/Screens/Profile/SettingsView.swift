@@ -1,238 +1,89 @@
+import PhotosUI
 import Supabase
 import SwiftUI
 
-/// Edit profile, like the web's /app/settings: photo, handle, name, bio,
-/// link and the private switch; then sign out, links to the web's pages,
-/// and account deletion.
+/// Account actions and preferences, separate from the profile card editor.
 struct SettingsView: View {
-  private enum Field { case handle, name, bio, link }
-
   @Environment(AppSession.self) private var session
   @Environment(AppRouter.self) private var router
-
-  @State private var loaded: Profile?
-  @State private var avatarURL: URL?
-  @State private var handle = ""
-  @State private var name = ""
-  @State private var bio = ""
-  @State private var link = ""
-  @State private var isPrivate = false
-  @State private var saving = false
-  @State private var status: (ok: Bool, text: String)?
+  @State private var profile: Loadable<Profile> = .loading
   @State private var deleting = false
-  @FocusState private var focus: Field?
+  @State private var importItems: [PhotosPickerItem] = []
 
   var body: some View {
-    Group {
-      if let profile = loaded, let userId = session.userId {
-        ScrollViewReader { proxy in
-          Form {
-            form(profile, userId: userId)
-            accountSection
-            deleteSection
-          }
-          .scrollDismissesKeyboard(.interactively)
-          // The result shows at the top, above the fields.
-          .onChange(of: status?.text) { _, text in
-            if text != nil { withAnimation { proxy.scrollTo("status", anchor: .top) } }
+    Form {
+      Section("Profile") {
+        NavigationLink(value: AppRouter.Route.editProfile) {
+          Label("Edit profile", systemImage: "pencil")
+        }
+        if let profile = profile.value {
+          NavigationLink(value: AppRouter.Route.profile(handle: profile.handle)) {
+            Label("View public profile", systemImage: "person.crop.circle")
           }
         }
-        .toolbar {
-          ToolbarItem(placement: .confirmationAction) {
-            if saving {
-              ProgressView()
-            } else {
-              Button("Save") { Task { await save(userId: userId) } }
-                .fontWeight(.semibold)
-                .disabled(handleProblem != nil)
+      }
+      Section("Privacy") {
+        NavigationLink(value: AppRouter.Route.privacySettings) {
+          Label("Profile privacy", systemImage: "lock")
+        }
+        NavigationLink(value: AppRouter.Route.blockedAccounts) {
+          Label("Blocked accounts", systemImage: "hand.raised")
+        }
+      }
+      Section("Your diary") {
+        PhotosPicker(
+          selection: $importItems, maxSelectionCount: PhotoImport.maxPhotos,
+          selectionBehavior: .ordered, matching: .images
+        ) {
+          Label("Import from photos", systemImage: "photo.stack")
+        }
+      }
+      Section("Help and information") {
+        Link(destination: URL(string: "mailto:support@getstubbed.app")!) {
+          Label("Contact us", systemImage: "envelope")
+        }
+        ForEach([("FAQ", "faq"), ("Privacy policy", "privacy"), ("Terms", "terms")], id: \.1) { title, path in
+          Link(destination: AppConfig.current.webURL.appendingPathComponent(path)) {
+            HStack {
+              Text(title)
+              Spacer()
+              Image(systemName: "arrow.up.right").font(.footnote.weight(.semibold))
             }
           }
         }
-      } else {
-        Form { PlaceholderRows(count: 4) }
+      }
+      Section("Account") {
+        Button("Sign out", systemImage: "rectangle.portrait.and.arrow.right", role: .destructive) {
+          Task { await session.signOut() }
+        }
+        Button("Delete account", systemImage: "trash", role: .destructive) { deleting = true }
+          .disabled(profile.value == nil)
+      }
+      if case .failed(let message) = profile {
+        Section {
+          Text(message).foregroundStyle(.secondary)
+          Button("Try again") { Task { await load() } }
+        }
       }
     }
-    .navigationTitle("Edit profile")
+    .tabBarClearance()
+    .navigationTitle("Settings")
     .navigationBarTitleDisplayMode(.inline)
-    .task { await load() }
+    .task(id: router.dataVersion) { await load() }
+    .onChange(of: importItems) { _, picked in
+      guard !picked.isEmpty else { return }
+      importItems = []
+      router.startImport(picked)
+    }
     .sheet(isPresented: $deleting) {
-      if let profile = loaded { DeleteAccountSheet(handle: profile.handle) }
+      if let profile = profile.value { DeleteAccountSheet(handle: profile.handle) }
     }
-  }
-
-  @ViewBuilder private func form(_ profile: Profile, userId: UUID) -> some View {
-    Section {
-      AvatarPicker(userId: userId, name: name.isEmpty ? handle : name, url: $avatarURL)
-        .buttonStyle(.borderless)
-        .listRowBackground(Color.clear)
-    }
-
-    if let status {
-      Section {
-        Label {
-          Text(status.text).foregroundStyle(status.ok ? Color.primary : Color.red)
-        } icon: {
-          Image(systemName: status.ok ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-            .foregroundStyle(status.ok ? Color.green : Color.red)
-        }
-      }
-      .id("status")
-    }
-
-    Section {
-      HStack(spacing: 2) {
-        Text(verbatim: "@").foregroundStyle(.secondary).accessibilityHidden(true)
-        TextField("Handle", text: $handle, prompt: Text(verbatim: "sillyelphaba"))
-          .textInputAutocapitalization(.never)
-          .autocorrectionDisabled()
-          .focused($focus, equals: .handle)
-          .accessibilityLabel("Handle")
-          .onChange(of: handle) { _, value in
-            let normalized = String(ProfileRules.normalizeHandle(value).prefix(20))
-            if normalized != value { handle = normalized }
-          }
-      }
-    } header: {
-      Text("Handle")
-    } footer: {
-      Text(handleProblem ?? "Your profile is at /@\(handle.isEmpty ? "handle" : handle).")
-        .foregroundStyle(handleProblem != nil ? Color.red : Color.secondary)
-    }
-
-    Section("Name") {
-      TextField("Name", text: $name, prompt: Text("Your name"))
-        .textContentType(.name)
-        .focused($focus, equals: .name)
-        .accessibilityLabel("Name")
-        .onChange(of: name) { _, v in if v.count > ProfileRules.nameMax { name = String(v.prefix(ProfileRules.nameMax)) } }
-    }
-
-    Section {
-      TextField("Bio", text: $bio, prompt: Text("Musicals, mostly. Always the front row."), axis: .vertical)
-        .lineLimit(3, reservesSpace: true)
-        .focused($focus, equals: .bio)
-        .accessibilityLabel("Bio")
-        .onChange(of: bio) { _, v in if v.count > ProfileRules.bioMax { bio = String(v.prefix(ProfileRules.bioMax)) } }
-    } header: {
-      HStack {
-        Text("Bio (optional)")
-        Spacer()
-        Text("\(bio.count)/\(ProfileRules.bioMax)").monospacedDigit()
-      }
-    }
-
-    Section("Link (optional)") {
-      TextField("Link", text: $link, prompt: Text(verbatim: "instagram.com/yourname"))
-        .keyboardType(.URL)
-        .textInputAutocapitalization(.never)
-        .autocorrectionDisabled()
-        .focused($focus, equals: .link)
-        .accessibilityLabel("Link")
-    }
-
-    Section {
-      Toggle("Private profile", isOn: $isPrivate)
-        .tint(Palette.tint)
-    } footer: {
-      VStack(alignment: .leading, spacing: Space.s) {
-        Text("Only you and followers you approve see your shows, trips and stats. Others see your handle, name, bio and link.")
-        if profile.isPrivate, !isPrivate {
-          Text("Going public approves any follow requests waiting for you.")
-        }
-      }
-    }
-  }
-
-  private var accountSection: some View {
-    Section {
-      NavigationLink(value: AppRouter.Route.blockedAccounts) {
-        Label("Blocked accounts", systemImage: "hand.raised")
-      }
-      // A published way to reach us (App Review 1.2), also used for reports.
-      Link(destination: URL(string: "mailto:support@getstubbed.app")!) {
-        HStack {
-          Label("Contact us", systemImage: "envelope").foregroundStyle(.primary)
-          Spacer()
-          Text(verbatim: "support@getstubbed.app").font(.subheadline).foregroundStyle(.secondary)
-        }
-      }
-      ForEach([("Privacy", "privacy"), ("Terms", "terms"), ("FAQ", "faq")], id: \.1) { title, path in
-        Link(destination: AppConfig.current.webURL.appendingPathComponent(path)) {
-          HStack {
-            Text(title).foregroundStyle(.primary)
-            Spacer()
-            Image(systemName: "arrow.up.right")
-              .font(.footnote.weight(.semibold))
-              .foregroundStyle(.tertiary)
-          }
-        }
-      }
-      Button("Sign out") { Task { await session.signOut() } }
-    }
-  }
-
-  private var deleteSection: some View {
-    Section {
-      Button("Delete account", role: .destructive) { deleting = true }
-    } footer: {
-      Text("Permanently delete your profile, diary, trips and photos. This can’t be undone.")
-    }
-  }
-
-  private var handleProblem: String? {
-    guard let loaded else { return nil }
-    if handle == loaded.handle { return nil }
-    return ProfileRules.handleProblem(handle)
   }
 
   private func load() async {
-    guard loaded == nil, let userId = session.userId, let profile = try? await Profiles.profile(userId) else { return }
-    loaded = profile
-    avatarURL = profile.avatarURL
-    handle = profile.handle
-    name = profile.displayName ?? ""
-    bio = profile.bio ?? ""
-    link = profile.link ?? ""
-    isPrivate = profile.isPrivate
-  }
-
-  private func save(userId: UUID) async {
-    status = nil
-    let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
-    let trimmedBio = bio.trimmingCharacters(in: .whitespacesAndNewlines)
-    let normalizedLink = ProfileRules.normalizeLink(link)
-    if !link.trimmingCharacters(in: .whitespaces).isEmpty, normalizedLink == nil {
-      return status = (false, "That doesn’t look like a web link.")
-    }
-    saving = true
-    defer { saving = false }
-    struct Update: Encodable {
-      let handle: String
-      let display_name: String?
-      let bio: String?
-      let link: String?
-      let is_private: Bool
-    }
-    do {
-      try await supabase.from("profiles")
-        .update(
-          Update(
-            handle: handle, display_name: trimmedName.isEmpty ? nil : trimmedName, bio: trimmedBio.isEmpty ? nil : trimmedBio,
-            link: normalizedLink, is_private: isPrivate)
-        )
-        .eq("id", value: userId).execute()
-      loaded = try? await Profiles.profile(userId)
-      status = (true, isPrivate ? "Saved. Your profile is private." : "Saved. Your profile is public.")
-      router.dataChanged()
-    } catch {
-      if ProfileRules.isTakenError(error) {
-        status = (false, "That handle is taken.")
-      } else if ProfileRules.isReservedError(error) {
-        status = (false, "That handle is reserved. Try another.")
-      } else {
-        status = (false, "Couldn’t save. Try again.")
-      }
-    }
+    guard let id = session.userId else { return }
+    do { profile = .loaded(try await Profiles.profile(id)) }
+    catch { profile = .failed("Couldn’t load your account. Try again.") }
   }
 }
 

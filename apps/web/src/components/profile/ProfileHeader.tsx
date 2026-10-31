@@ -21,7 +21,7 @@ function displayLink(link: string) {
 
 // One profile header for /@handle and the Profile tab: a cover of recent
 // photos, the avatar with the page's action beside it (Follow for visitors,
-// Edit profile and a menu for the owner), handle, name, bio, link, follow
+// the edit pencil for the owner), handle, name, bio, link, follow
 // counts and the stats. What it shows is decided by the caller, which reads
 // it through Postgres: visitors get public_profile_stats (public shows only,
 // or no stats on a private profile they can't see), the owner gets
@@ -50,7 +50,6 @@ export function ProfileHeader({
 
   return (
     <section aria-labelledby="profile-name" className="rounded-md border border-separator bg-surface shadow-sm">
-      {/* No overflow-hidden on the card, so the owner's menu can drop below it. */}
       {cover.length > 0 ? (
         <div className="flex h-24 gap-0.5 overflow-hidden rounded-t-md bg-fill sm:h-44">
           {cover.map((src, i) => (

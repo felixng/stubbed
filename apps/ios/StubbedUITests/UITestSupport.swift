@@ -16,13 +16,13 @@ extension XCTestCase {
   /// over from an earlier run.
   @MainActor
   func signOutIfNeeded(_ app: XCUIApplication) {
-    let profileTab = app.buttons["person.crop.circle"].firstMatch
+    let profileTab = tabButton("Profile", in: app)
     if profileTab.waitForExistence(timeout: 5) {
       profileTab.tap()
       // A previous test can leave the Profile navigation stack in Insights
       // or an entry. Switching tabs preserves that stack, so pop to its root.
       for _ in 0..<6 {
-        if app.buttons["Account"].waitForExistence(timeout: 1) { break }
+        if app.buttons["Settings"].waitForExistence(timeout: 1) { break }
         if app.navigationBars["Home"].exists {
           // A tab tap during launch can be ignored while the bar animates.
           profileTab.tap()
@@ -32,9 +32,9 @@ extension XCTestCase {
           back.tap()
         }
       }
-      app.buttons["Account"].tap()
-      app.buttons["Sign out"].tap()
-      // Menu presentation can finish after XCTest reports the app idle.
+      app.buttons["Settings"].tap()
+      scrollAndTap(app.buttons["Sign out"], in: app)
+      // Navigation presentation can finish after XCTest reports the app idle.
       for _ in 0..<3 {
         if app.textFields["Email"].waitForExistence(timeout: 2) { break }
         if app.buttons["Sign out"].exists { app.buttons["Sign out"].tap() }
@@ -179,10 +179,18 @@ extension XCTestCase {
 /// Taps a tab and waits for its screen. Straight after onboarding the tab
 /// bar can still be animating in and miss the first tap, so it tries twice.
 @MainActor
-func openTab(_ name: String, in app: XCUIApplication) {
+func tabButton(_ name: String, in app: XCUIApplication) -> XCUIElement {
   let symbol = ["Home": "house", "Log": "plus.circle.fill", "Profile": "person.crop.circle"][name] ?? name
+  // iOS can expose a non-hittable symbol element as well as the labelled
+  // tab. Prefer the actual tab control, including on the floating tab bar.
+  let candidates = [app.tabBars.buttons[name].firstMatch, app.buttons[name].firstMatch, app.buttons[symbol].firstMatch]
+  return candidates.first(where: { $0.exists && $0.isHittable }) ?? app.buttons[symbol].firstMatch
+}
+
+@MainActor
+func openTab(_ name: String, in app: XCUIApplication) {
   for _ in 0..<2 {
-    app.buttons[symbol].firstMatch.tap()
+    tabButton(name, in: app).tap()
     if app.navigationBars[name].waitForExistence(timeout: 3) { return }
   }
   XCTFail("The \(name) tab didn't open")

@@ -52,7 +52,7 @@ final class ModerationUITests: XCTestCase {
     // Settings → Blocked accounts lists them, with Unblock.
     app.navigationBars.buttons.element(boundBy: 0).tap()
     openTab("Profile", in: app)
-    app.buttons["Edit profile"].firstMatch.tap()
+    app.buttons["Settings"].tap()
     scrollAndTap(app.buttons["Blocked accounts"], in: app)
     let unblock = app.buttons["Unblock @ios_friend"]
     XCTAssertTrue(unblock.waitForExistence(timeout: 10))

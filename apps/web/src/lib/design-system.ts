@@ -183,7 +183,7 @@ export const ICON_RULES = [
 
 export const IOS_RULES = [
   "The iOS UI is native, not a copy of the web: same features, data and rules, designed as a premium native app (Apple Fitness, Health and Personal Best as references). The full guide is `docs/IOS_NATIVE_GUIDE.md`; the app's own rules are in `apps/ios/CLAUDE.md`.",
-  "**Structure.** A native `TabView` (Home, Log, Profile); Log is a tab that opens the log sheet. Each tab is a `NavigationStack`: large titles on the tab roots, inline titles on detail screens, actions in the navigation bar.",
+  "**Structure.** A native `TabView` (Home, Log, Profile); Log is a tab that opens the log sheet. Each tab is a `NavigationStack`: large titles on the tab roots, inline titles on detail screens, actions in the navigation bar. Profile editing is the explicit exception: a labelled pencil sits in the identity card; the Settings gear remains in the bar.",
   "**Lists are Lists.** List-like screens are `List(.insetGrouped)` on the grouped background, with system chevrons from `NavigationLink`, `.swipeActions` and `.contextMenu`. Bulk select is the system edit mode with bottom-bar actions. Detail and edit screens are a `Form`.",
   "**One custom container:** the feed post (`PostCard`), photo first like Instagram or Hevy: header, the photo at the card's full width (4:5), the show, stars and note, then counts and a trip tag on one row. The whole card is one tap target that scales to 98% when pressed.",
   "**Surfaces.** `Color(.secondarySystemGroupedBackground)` with 16pt continuous corners and a 1pt stroke at 6% of the label colour (`.groupedCard()`). No drop shadows anywhere.",
@@ -214,6 +214,7 @@ export const IOS_TOKENS = [
 
 /** The SwiftUI building blocks, in apps/ios/Stubbed. */
 export const IOS_COMPONENTS = [
+  { name: "Settings / Edit profile", file: "Screens/Profile/", notes: "Profile gear pushes a grouped Settings Form with profile, privacy, import, help and account sections. A borderless, labelled pencil in the identity card opens its focused editor; privacy saves independently. At accessibility text sizes, identity stacks below the avatar/pencil and counts become labelled rows." },
   { name: "PublicProfileView / ProfileYearHeading / ProfileYearMetrics", file: "Screens/People/PublicProfileView.swift, Screens/Profile/ProfileYearSummary.swift", notes: "Public profiles match the compact avatar/identity header and Shows/Followers/Following row. The shared current-year card and heat map use public, logged entries under the viewer’s RLS. Follow/Edit and More remain; owner-only Trips/Insights links are omitted. Day selection opens a public-only date sheet." },
   { name: "TripsList", file: "Screens/Trips/TripsList.swift", notes: "Dedicated inset-grouped destination from Profile, with a native back button and + toolbar action. Trips open their detail screens; creation uses a sheet. Loading, empty and error states stay inside the list." },
   { name: "ProfileInsightsSection / InsightsView", file: "Screens/Insights/", notes: "Profile shows the current year with an IN PROGRESS badge, three equal metrics (shows, live weekly streak, best weekly streak in the current year), and the heat map. The warm lime IN PROGRESS chip uses the progress status tokens, native caption bold and wider capsule padding on both owner and public profiles. The heading and metrics stack at accessibility text sizes. Trips precedes Insights beneath the grid, using native List row heights and system separators aligned to content leading; the diary remains visible. Insights opens a separate inset-grouped List." },
@@ -257,7 +258,8 @@ export const IOS_SCREENSHOTS = [
   { file: "share.jpg", title: "Share", caption: "The Share sheet: the card at full width, then the ways to send it.", width: 460, height: 1000 },
   { file: "log-form.jpg", title: "Log a show", caption: "A Form in a sheet: date with quick picks, rating, note, a segmented visibility picker.", width: 460, height: 1000 },
   { file: "comments.jpg", title: "Comments", caption: "Comments as List rows (swipe to delete) and the composer pinned above the tab bar.", width: 460, height: 1000 },
-  { file: "edit-profile.jpg", title: "Edit profile", caption: "Settings-style Form with section footers for help text and Save in the bar.", width: 460, height: 1000 },
+  { file: "settings.jpg", title: "Settings", caption: "Grouped profile, privacy, import, help and account actions, opened from the Profile gear.", width: 562, height: 1000 },
+  { file: "edit-profile.jpg", title: "Edit profile", caption: "Focused profile-card editor, opened from its pencil or Settings. Privacy and account controls stay in Settings.", width: 562, height: 1000 },
 ];
 
 function table(head: string[], rows: string[][]) {

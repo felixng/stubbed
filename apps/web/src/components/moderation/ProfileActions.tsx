@@ -13,7 +13,7 @@ const ITEM =
   "flex min-h-11 w-full cursor-pointer items-center px-4 text-left text-body hover:bg-fill focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus";
 
 // The "…" beside Follow on someone else's /@handle, for signed-in visitors:
-// Report, and Block or Unblock. Like OwnerProfileMenu, a <details> that
+// Report, and Block or Unblock. A <details> that
 // closes when an item is chosen.
 export function ProfileActions({ profileId, handle, blocked }: { profileId: string; handle: string; blocked: boolean }) {
   const menu = useRef<HTMLDetailsElement>(null);

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 
@@ -22,11 +21,8 @@ import { fieldClass } from "./log/Typeahead";
 const label = "text-subheadline font-medium text-label";
 const optional = <span className="font-normal text-label-secondary">(optional)</span>;
 
-// Photo, handle, name, bio, link and the private switch. The photo saves on
-// its own, as soon as it's picked. Everyone has a handle (set
-// at /welcome), so the public profile (/@handle) always exists; going private
-// hides its shows, trips and stats from everyone but approved followers. RLS limits the write
-// to the signed-in user's own row and enforces the privacy.
+// Edits the profile card only; privacy and account actions live in Settings.
+// The photo saves independently as soon as it is picked.
 export function ProfileForm({ userId, initial }: { userId: string; initial: OwnProfile }) {
   const id = useId();
   const router = useRouter();
@@ -34,7 +30,6 @@ export function ProfileForm({ userId, initial }: { userId: string; initial: OwnP
   const [displayName, setDisplayName] = useState(initial.display_name ?? "");
   const [bio, setBio] = useState(initial.bio ?? "");
   const [link, setLink] = useState(initial.link ?? "");
-  const [isPrivate, setIsPrivate] = useState(initial.is_private);
   const [saved, setSaved] = useState(initial.handle);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<{ ok: boolean; text: string } | null>(null);
@@ -57,7 +52,6 @@ export function ProfileForm({ userId, initial }: { userId: string; initial: OwnP
         display_name: displayName.trim() || null,
         bio: bio.trim() || null,
         link: url,
-        is_private: isPrivate,
       })
       .eq("id", userId);
     setSaving(false);
@@ -76,7 +70,7 @@ export function ProfileForm({ userId, initial }: { userId: string; initial: OwnP
     setLink(url ?? "");
     setSaved(h);
     shown();
-    setStatus({ ok: true, text: isPrivate ? "Saved. Your profile is private." : "Saved. Your profile is public." });
+    setStatus({ ok: true, text: "Saved." });
     router.refresh();
   }
 
@@ -157,26 +151,6 @@ export function ProfileForm({ userId, initial }: { userId: string; initial: OwnP
           onChange={(e) => setLink(e.target.value)}
         />
       </div>
-      <label
-        htmlFor={`${id}-private`}
-        className="flex cursor-pointer items-start justify-between gap-4 rounded-md border border-separator bg-surface px-4 py-3 shadow-sm"
-      >
-        <span className="flex flex-col gap-0.5">
-          <span className="text-body font-medium text-label">Private profile</span>
-          <span id={`${id}-private-hint`} className="text-footnote text-label-secondary">
-            Only you and followers you approve see your shows, trips and stats. Others see your handle, name, bio and link.
-          </span>
-        </span>
-        <input
-          id={`${id}-private`}
-          type="checkbox"
-          role="switch"
-          checked={isPrivate}
-          aria-describedby={`${id}-private-hint`}
-          onChange={(e) => setIsPrivate(e.target.checked)}
-          className="mt-1 size-5 shrink-0 accent-tint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-        />
-      </label>
       {status && (
         <p role={status.ok ? "status" : "alert"} className={`text-footnote ${status.ok ? "text-label" : "text-destructive"}`}>
           {status.text}
@@ -185,14 +159,6 @@ export function ProfileForm({ userId, initial }: { userId: string; initial: OwnP
       <Button type="submit" disabled={saving}>
         {saving ? "Saving…" : "Save"}
       </Button>
-      {saved && (
-        <Link
-          href={`/@${saved}`}
-          className="inline-flex min-h-[50px] items-center justify-center rounded-pill bg-tint-fill px-6 text-headline text-tint-text hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-        >
-          View profile
-        </Link>
-      )}
     </form>
   );
 }

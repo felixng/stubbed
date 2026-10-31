@@ -28,7 +28,7 @@ struct FollowButton: View {
       if viewer.isOwner {
         // A button through the router, not a NavigationLink: in a List row a
         // NavigationLink gets a chevron and takes over the row's taps.
-        Button("Edit profile") { router.open(.settings) }
+        Button("Edit profile") { router.open(.editProfile) }
           .buttonStyle(.bordered)
       } else {
         let status = viewer.status

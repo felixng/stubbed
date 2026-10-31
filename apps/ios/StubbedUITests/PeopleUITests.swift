@@ -69,7 +69,7 @@ final class PeopleUITests: XCTestCase {
   func testOwnPublicProfileEditOpensSettings() throws {
     let app = try home()
     openTab("Profile", in: app)
-    app.buttons["Account"].tap()
+    app.buttons["Settings"].tap()
     app.buttons["View public profile"].tap()
     XCTAssertTrue(app.descendants(matching: .any).matching(NSPredicate(format: "label CONTAINS %@", "instagram.com/ios_test")).firstMatch
       .waitForExistence(timeout: 10))

@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 
 import { signOut } from "@/app/login/actions";
-import { AccountMenu } from "@/components/app/AccountMenu";
 import { AppSidebarLinks, AppSidebarNav } from "@/components/app/AppSidebar";
 import { AppTabBar, AppTabBarLinks } from "@/components/app/AppTabBar";
 import { HeaderSearch } from "@/components/app/HeaderSearch";
@@ -34,7 +33,6 @@ export default function AppLayout({ children }: LayoutProps<"/app">) {
         <div className="relative mx-auto flex h-16 w-full max-w-[640px] items-center gap-2 px-4 sm:gap-3">
           <Wordmark size={30} href="/app" mark />
           <HeaderSearch />
-          <AccountMenu />
         </div>
       </header>
       <aside className="sticky top-0 z-20 hidden h-dvh w-64 flex-none flex-col gap-5 border-r border-separator py-5 pr-4 pl-[max(1rem,env(safe-area-inset-left))] md:flex">

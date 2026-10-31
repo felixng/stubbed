@@ -55,8 +55,8 @@ final class ImportCalloutUITests: XCTestCase {
     XCTAssertTrue(app.navigationBars["Import from photos"].waitForExistence(timeout: 20), app.debugDescription)
     app.navigationBars.buttons["Cancel"].tap()
 
-    // …and in the Account menu.
-    app.navigationBars.buttons["Account"].tap()
+    // …and in Settings.
+    app.navigationBars.buttons["Settings"].tap()
     app.buttons["Import from photos"].firstMatch.tap()
     pickPhoto(app, takenInNewYork: "2026-09-14 19:31")
     app.buttons["Add"].firstMatch.tap()
