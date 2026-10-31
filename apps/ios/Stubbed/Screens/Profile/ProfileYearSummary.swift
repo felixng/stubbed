@@ -12,8 +12,8 @@ struct ProfileYearHeading: View {
     layout {
       Text(String(year)).font(.title3.bold())
       Text("IN PROGRESS")
-        .font(.caption2.weight(.semibold))
-        .padding(.horizontal, Space.s)
+        .font(.caption.weight(.bold))
+        .padding(.horizontal, Space.m)
         .padding(.vertical, Space.xs)
         .foregroundStyle(Palette.progressText)
         .background(Palette.progressFill, in: .capsule)
