@@ -4,6 +4,7 @@ import { useActionState, useId, useRef, useState } from "react";
 
 import { deleteAccount, type DeleteAccountState } from "@/app/app/profile/actions";
 import { Button } from "@/components/ui/Button";
+import { disableBrowserPush } from "@/lib/browser-push";
 import { normalizeHandle } from "@/lib/profile-handle";
 import { fieldClass } from "./log/Typeahead";
 
@@ -14,7 +15,10 @@ export function DeleteAccountButton({ handle, asRow = false }: { handle: string;
   const id = useId();
   const dialog = useRef<HTMLDialogElement>(null);
   const [typed, setTyped] = useState("");
-  const [state, dispatch, pending] = useActionState<DeleteAccountState, FormData>(deleteAccount, {});
+  const [state, dispatch, pending] = useActionState<DeleteAccountState, FormData>(async (previous, form) => {
+    if (normalizeHandle(String(form.get("confirm") ?? "")) === handle.toLowerCase()) await disableBrowserPush().catch(() => {});
+    return deleteAccount(previous, form);
+  }, {});
   const matches = normalizeHandle(typed) === handle.toLowerCase();
 
   function close() {

@@ -40,6 +40,10 @@ jobs:
       # Only Postgres is needed: applies the migrations, then runs the pgTAP tests.
       - run: supabase db start
       - run: supabase test db
+      - name: Verify concurrent notification read snapshot
+        run: bash supabase/scripts/test-notification-read-snapshot.sh
+        env:
+          NOTIFICATION_TEST_CONTAINER: supabase_db_stubbed
       - run: apps/ios/scripts/dev types
       - name: Check generated Swift types
         run: |

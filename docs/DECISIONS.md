@@ -667,7 +667,20 @@ Use the existing Supabase Edge Runtime with a secret-authenticated, manually dep
 
 Device permission is separate from the account push preference. Native authorization is contextual and denied/revoked states never re-prompt. Returning to the foreground reconciles permission; sign-out/account switching rotates an installation identity and queues old cleanup durably. A separate random revocation secret permits deletion after auth expiry without exposing inbox data. Foreground native push refreshes shared activity without a duplicate system banner. Push-link resolution replaces its temporary route, avoiding Back returning to a redirect loop. Production device delivery and signing capability verification remain acceptance work; local tests do not prove APNs delivery.
 
+
 ### 2026-10-31 — Native notification routing and accessibility
 
 Inbox rows use native NavigationLink chevrons and a typed resolver route carrying the observed revision. Resolution replaces the temporary route and marks only that observed activity read. At accessibility text sizes, avatars and unread state stack above full-width copy. Simulator regression tests verify row navigation, Back, interactive settings and the largest accessibility text size.
 
+### 2026-10-31 — Mobile browser push without a store wrapper (#243)
+
+Use standards-based Web Push with the approved pinned `web-push` library only at the Edge Function composition boundary. The application/SQL policy does not depend on it. The manifest has stable `/app` identity/start URL, root scope and standalone display. Explicit mobile eligibility includes iPhone/iPad Home Screen apps and supported Android browsers; capability alone does not make a desktop eligible. iPhone tabs explain installation; Android explains browser permission and optional installation.
+
+Browser subscription registration is authenticated, private and tied to a random installation/revocation secret. Cleanup survives sign-out, permission loss and expiry; an old endpoint's expiry cannot delete its replacement. VAPID public/private ownership and deliberate key rotation are documented. The service worker displays/clicks notifications without caching authenticated pages. It verifies the current account before optional previews, otherwise falls back to generic text. Browser-required visible receipt, without an extra in-app banner, remains a draft foreground default pending owner confirmation; native APNs suppression and browser user-visible delivery are deliberately different contracts. Real iPhone Home Screen/Android delivery and runtime web screenshots remain outstanding; mocks/builds are not evidence of completion.
+
+
+### 2026-10-31 — Repeat actions and concurrent mark-all reads
+
+Owner confirmed a configurable 24-hour repeat-push cooldown, separate from inbox retention. Like/follow source rows receive immutable server-owned UUID generations. Reprocessing the same generation is a duplicate; a genuinely new request cycle becomes unread/actionable. Repeat like/relationship pushes are limited by actor/category/entry using queued-intent timestamps; distinct comments remain independent. Dispatch follows the latest queued intent, so a later inbox-only cooldown revision does not silently cancel an earlier legitimate queued alert.
+
+Mark-all-read materializes the exact recipient row/revision snapshot in one statement. A numeric global cutoff alone could consume a late-committing activity revision. A synchronized two-transaction regression test covers that race and runs in the existing database CI job. Integration corrections live in the final migration, maintaining a single ordered migration sequence; the four draft PRs are reviewed as a dependent stack and must not be shipped independently before integration acceptance.

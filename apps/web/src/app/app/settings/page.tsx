@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { signOut } from "@/app/login/actions";
+import { SignOutButton } from "@/components/notifications/SignOutButton";
 import { DeleteAccountButton } from "@/components/app/DeleteAccountButton";
 import { BackLink } from "@/components/ui/BackLink";
 import { getOwnProfile } from "@/lib/supabase/data";
@@ -66,9 +66,7 @@ export default function SettingsPage() {
         <SettingsLink href="/terms" external>Terms</SettingsLink>
       </Group>
       <Group title="Account">
-        <form action={signOut}>
-          <button type="submit" className={`${row} w-full cursor-pointer text-destructive`}>Sign out</button>
-        </form>
+        <SignOutButton className={`${row} w-full cursor-pointer text-destructive`} />
         <Suspense fallback={<p className="p-4 text-subheadline text-label-secondary">Loading…</p>}><DeleteAccount /></Suspense>
       </Group>
     </div>

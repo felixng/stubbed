@@ -1,5 +1,5 @@
 begin;
-select plan(25);
+select plan(27);
 create function pg_temp.as_user(uid uuid) returns void language sql as $$ select set_config('role','authenticated',true),set_config('request.jwt.claims',json_build_object('sub',uid,'role','authenticated')::text,true); $$;
 insert into auth.users(id,email) values('a2222222-0000-0000-0000-000000000001','push-a@example.com'),('b2222222-0000-0000-0000-000000000001','push-b@example.com');
 update public.profiles set handle='push_a' where id='a2222222-0000-0000-0000-000000000001';
@@ -26,6 +26,13 @@ truncate leases; insert into leases select * from public.claim_notification_jobs
 select public.finish_notification_job(job_id,lease_id,'accepted') from leases;
 select is((select status from public.notification_deliveries),'accepted','provider acceptance recorded without delivery claim');
 select is((select count(*)::int from public.claim_notification_jobs()),0,'accepted job not enqueued again');
+select set_config('test.notification_id',(select id::text from public.notifications),true);
+select pg_temp.as_user('a2222222-0000-0000-0000-000000000001');
+select is(public.notification_open(current_setting('test.notification_id')::uuid),'/app/notifications','another account cannot resolve a push destination');
+select pg_temp.as_user('b2222222-0000-0000-0000-000000000001');
+select is(public.notification_open(current_setting('test.notification_id')::uuid),'/@push_a','recipient push resolver opens the same profile destination');
+reset role;
+update public.notifications set read_revision=0;
 -- Recover an abandoned final attempt without an unbounded retry loop.
 update public.notification_deliveries set status='leased',attempts=6,lease_until=now()-interval '1 second';
 select public.claim_notification_jobs();

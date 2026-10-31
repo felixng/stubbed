@@ -2,7 +2,7 @@
 
 Scope: five social categories, shared inbox/read state, native iOS and mobile Web Push. Desktop has an inbox only. Reminders, recaps and email are deferred. The settings/profile split landed in #227; this work builds on it.
 
-Postgres owns event intake, eligibility/privacy, grouping, preferences and inbox persistence. Social action triggers enqueue delivery work in the same transaction as inbox creation. Only successful actions become events. Separate source keys prevent replay and unlike/re-like or follow/unfollow spam. Reads and counts recheck live source records, visibility and blocks; stale activity cannot survive through cached notification copy.
+Postgres owns event intake, eligibility/privacy, grouping, preferences and inbox persistence. Social action triggers enqueue delivery work in the same transaction as inbox creation. Only successful actions become events. Immutable source-generation keys prevent replay. A separate, owner-confirmed 24-hour repeat-push cooldown prevents unlike/re-like or follow/unfollow alert spam without hiding new actionable request cycles. Reads and counts recheck live source records, visibility and blocks; stale activity cannot survive through cached notification copy.
 
 The notification application worker consumes a small queue interface and channel-specific send interfaces. Composition injects APNs and Web Push adapters. Adapters return accepted, retryable, invalid destination or permanent failure; accepted is not proof of device delivery. No provider SDK decides product policy. Native and web registrations are different destination shapes.
 
