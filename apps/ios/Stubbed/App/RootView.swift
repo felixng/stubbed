@@ -67,7 +67,7 @@ struct RootView: View {
           case .trips: TripsList()
           case .settings: SettingsView()
           case .notifications: NotificationsView()
-          case .openNotification(let id): OpenNotificationView(id: id)
+          case .openNotification(let id, let seenRevision): OpenNotificationView(id: id, seenRevision: seenRevision)
           case .followRequests: NotificationRequestsView()
           case .notificationSettings: NotificationSettingsView()
           case .editProfile: EditProfileView()

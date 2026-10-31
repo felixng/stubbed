@@ -161,7 +161,7 @@ end $$;
 
 -- Push links resolve only under live recipient eligibility. Deleted/inaccessible
 -- activity opens the neutral inbox instead. Sign-in redirects retain this URL.
-create function public.notification_open(notification_id uuid) returns text
+create function public.notification_open(notification_id uuid, seen_revision bigint default null) returns text
 language plpgsql security definer set search_path='' as $$
 declare n public.notifications; actor_handle text; destination text;
 begin
@@ -170,15 +170,15 @@ begin
  select p.handle into actor_handle from public.notification_events ev join public.profiles p on p.id=ev.actor_id
  where ev.notification_id=n.id and public.notification_event_visible(ev,n) order by ev.created_at desc limit 1;
  if actor_handle is null then return '/app/notifications'; end if;
- update public.notifications set read_revision=greatest(read_revision,least(revision,n.revision)) where id=n.id;
+ update public.notifications set read_revision=greatest(read_revision,least(revision,n.revision,coalesce(seen_revision,n.revision))) where id=n.id;
  return case when n.category='follow_request' then '/app/profile/requests'
  when n.entry_id is not null then '/e/'||n.entry_id||case when n.category='comment' then '#comments' else '' end
  else '/@'||actor_handle end;
 end $$;
 revoke all on function public.claim_notification_jobs(integer),public.prepare_notification_job(uuid,uuid),public.finish_notification_job(uuid,uuid,text) from public,anon,authenticated;
 grant execute on function public.claim_notification_jobs(integer),public.prepare_notification_job(uuid,uuid),public.finish_notification_job(uuid,uuid,text) to service_role;
-revoke all on function public.notification_open(uuid) from public,anon;
-grant execute on function public.notification_open(uuid) to authenticated;
+revoke all on function public.notification_open(uuid,bigint) from public,anon;
+grant execute on function public.notification_open(uuid,bigint) to authenticated;
 
 create function public.notification_set_general(setting text, value jsonb) returns void
 language plpgsql security definer set search_path='' as $$

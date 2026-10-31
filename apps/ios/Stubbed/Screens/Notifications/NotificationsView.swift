@@ -2,6 +2,7 @@ import SwiftUI
 
 struct NotificationsView: View {
   @Environment(AppRouter.self) private var router
+  @Environment(\.dynamicTypeSize) private var typeSize
   @State private var items: [NotificationItem] = []
   @State private var loaded = false
   @State private var failed = false
@@ -25,19 +26,24 @@ struct NotificationsView: View {
         if !rows.isEmpty {
           Section(group) {
             ForEach(rows) { item in
-              Button { Task { await open(item) } } label: {
-                HStack(alignment: .top, spacing: Space.m) {
-                  Avatar(name: item.display_name ?? item.handle, url: item.avatar_url.flatMap(URL.init(string:)), size: 40)
-                  VStack(alignment: .leading, spacing: Space.xs) {
-                    Text(item.text).font(.body.weight(item.unread ? .semibold : .regular)).foregroundStyle(Color.primary)
-                    Label { Text(item.updated_at, style: .relative) } icon: { Image(systemName: item.category.symbol) }
-                      .font(.caption).foregroundStyle(.secondary)
+              NavigationLink(value: AppRouter.Route.openNotification(item.id, seenRevision: item.revision)) {
+                if typeSize.isAccessibilitySize {
+                  VStack(alignment: .leading, spacing: Space.m) {
+                    HStack {
+                      Avatar(name: item.display_name ?? item.handle, url: item.avatar_url.flatMap(URL.init(string:)), size: 40)
+                      if item.unread { Text("Unread").font(.caption).foregroundStyle(Palette.tintText) }
+                    }
+                    activityText(item)
                   }
-                  Spacer(minLength: 0)
-                  if item.unread { Image(systemName: "circle.fill").font(.caption2).foregroundStyle(Palette.tintText).accessibilityLabel("Unread") }
-                  Image(systemName: "chevron.right").font(.footnote).foregroundStyle(.tertiary)
+                } else {
+                  HStack(alignment: .top, spacing: Space.m) {
+                    Avatar(name: item.display_name ?? item.handle, url: item.avatar_url.flatMap(URL.init(string:)), size: 40)
+                    activityText(item)
+                    if item.unread { Circle().fill(Palette.tintText).frame(width: 7, height: 7).padding(.top, 6).accessibilityHidden(true) }
+                  }
                 }
-              }.buttonStyle(.plain).disabled(busy)
+              }.disabled(busy)
+                .accessibilityValue(item.unread ? "Unread" : "Read")
             }
           }
         }
@@ -65,6 +71,13 @@ struct NotificationsView: View {
       }
     }
   }
+  private func activityText(_ item: NotificationItem) -> some View {
+    VStack(alignment: .leading, spacing: Space.xs) {
+      Text(item.text).font(.body.weight(item.unread ? .semibold : .regular)).foregroundStyle(Color.primary)
+      Label { Text(item.updated_at, style: .relative) } icon: { Image(systemName: item.category.symbol) }
+        .font(.caption).foregroundStyle(.secondary)
+    }.frame(maxWidth: .infinity, alignment: .leading)
+  }
   private func load() async {
     do { items = try await Notifications.page(); more = items.count == 30; loaded = true; failed = false }
     catch { failed = true }
@@ -77,11 +90,6 @@ struct NotificationsView: View {
       let seen = Set(items.map(\.id)); items += next.filter { !seen.contains($0.id) }
       more = next.count == 30; failed = false
     } catch { failed = true }
-  }
-  private func open(_ item: NotificationItem) async {
-    busy = true; defer { busy = false }
-    do { try await Notifications.read(item); router.dataChanged(); router.open(item.route) }
-    catch { failed = true }
   }
   private func readAll() async {
     busy = true; defer { busy = false }

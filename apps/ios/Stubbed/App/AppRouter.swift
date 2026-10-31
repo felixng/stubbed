@@ -21,7 +21,7 @@ final class AppRouter {
     case trips
     case settings
     case notifications
-    case openNotification(UUID)
+    case openNotification(UUID, seenRevision: Int64? = nil)
     case followRequests
     case notificationSettings
     case editProfile
