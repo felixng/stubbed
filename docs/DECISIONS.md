@@ -9,7 +9,7 @@ A short log of choices made and why, mostly about how things are built. Newest a
 | 1 | Confirm architecture in `docs/ARCHITECTURE.md` (Next.js on Vercel Hobby + Supabase Free) | Now | Proposed 2026-10-12 |
 | 6 | Badges: app-defined only, or user/group-defined too? | When badges are scheduled | Idea; see the brief's "Ideas to explore" |
 | 7 | Discord: channel webhook vs. Discord login vs. server/bot integration | When Discord is scheduled | Idea; tied to groups |
-| 8 | Monetisation: charge at all? Which features (extra photos, import credits, long-range insights), subscription vs. one-off, prices | Before any paid feature | Ideas only; see [Stubbed: Monetisation Ideas](https://docs.google.com/document/d/1LJanHT3SpBYSQB7SiRVaeX-1PFZTPQ-cBLXlSC50KAM/edit) (Google Doc) |
+| 8 | Exact Free/Pro stats boundary, commercial terms, existing-user treatment and provider configuration | Before paid-stats implementation/live sales | Paid advanced stats are agreed; #258 resolves the contract under #219. See [Stubbed: Monetisation Ideas](https://docs.google.com/document/d/1LJanHT3SpBYSQB7SiRVaeX-1PFZTPQ-cBLXlSC50KAM/edit). |
 
 ## Log
 
@@ -700,3 +700,14 @@ The owner found /press (#246) didn't follow the reference (getpersonalbest.com/p
 - **The stats screenshot** is captured past the streaks: the sample diary has no current streak, and "0 weeks" reads badly in press.
 - **No empty slots:** the video placeholder is gone until a walkthrough exists. The App Store line says "coming soon" (#247) and the beta button asks for a TestFlight invite by email (#236).
 - **Size:** about 10 MB of images and a 5 MB zip in git. Acceptable for now; move them to a CDN if the kit grows.
+
+
+## 2026-11-01: Plan Pro upgrades around existing advanced stats (#219)
+
+Owner direction: implement provider integration so users can upgrade to “Pro” (placeholder name) and unlock advanced stats, with Profile as the first upgrade placement and contextual prompts at the locked feature. The owner clarified: “i.e. we are hiding some existing stats from free users”. This replaces the infrastructure-only epic criterion that every existing feature stays free; it does not require inventing new metrics.
+
+#219 is now the overall delivery epic: #258 settles the offer/provider/access contract; #259 verifies provider state into shared membership and enforces stats access; #260 and #261 deliver the iOS and web upgrade journeys; #262 verifies lifecycle/recovery and prepares rollout. Billing, internal membership, benefit definitions and authoritative access remain separate layers. RevenueCat + Stripe is preferred; the exact web engine is still a #258 decision. Both platforms use the same Supabase identity.
+
+The precise Free/Pro stats matrix, pricing/periods, trial policy and any existing-user/founder treatment are unresolved. Keeping the Profile summary free and making detailed Insights paid is a proposal, not an approved limit. Logging, diary/raw data access, standard share cards and getting one's data out remain free. Preserve entries/photos on downgrade. Account for Profile and share-card consumers before gating the currently shared `own_insights` response.
+
+Reuse delivered iOS stats/shared counting (#131). #226 remains the web presentation work under #165; #261 integrates purchase/access rather than duplicating it. Video, extra photos, badge/icon changes and About upsells are later work. Keep sandbox testing independent of public gates; this planning change activates no sales or hosted database mutations. Product wording is synchronised in the Drive brief and monetisation doc.
