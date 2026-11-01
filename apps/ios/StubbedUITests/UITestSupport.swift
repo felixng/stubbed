@@ -161,6 +161,31 @@ extension XCTestCase {
     element.tap()
   }
 
+  /// Keep coordinate gestures inside the content viewport. On older iOS,
+  /// isHittable can be true while a control's centre is under system chrome.
+  @MainActor
+  func revealControl(_ element: XCUIElement, in app: XCUIApplication) {
+    let list = app.collectionViews.firstMatch
+    for _ in 0..<24 {
+      if !element.exists {
+        let from = list.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.75))
+        from.press(forDuration: 0.05, thenDragTo: list.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.55)),
+          withVelocity: .slow, thenHoldForDuration: 0.3)
+        continue
+      }
+      let top = app.navigationBars.firstMatch.frame.maxY + 16
+      let bottom = app.tabBars.firstMatch.exists ? app.tabBars.firstMatch.frame.minY - 16 : app.frame.maxY - 24
+      let frame = element.frame
+      if frame.minY >= top, frame.maxY <= bottom { return }
+      let delta = (top + bottom) / 2 - frame.midY
+      let limit = app.frame.height * 0.3
+      let from = list.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5))
+      from.press(forDuration: 0.05, thenDragTo: from.withOffset(CGVector(dx: 0, dy: min(limit, max(-limit, delta)))),
+        withVelocity: .slow, thenHoldForDuration: 0.3)
+    }
+    XCTAssertTrue(element.isHittable)
+  }
+
   /// Waits for the Home tab after sign-in, saving a screenshot if it never
   /// shows.
   @MainActor

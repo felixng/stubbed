@@ -12,13 +12,13 @@ final class PolishUITests: XCTestCase {
     scrollAndTap(button(app, startingWith: "Hamilton"), in: app)
     app.buttons["Edit"].firstMatch.tap()
     let rating = app.otherElements["Rating"]
-    for _ in 0..<5 where !rating.exists || !rating.isHittable { app.collectionViews.firstMatch.swipeUp() }
+    revealControl(rating, in: app)
     XCTAssertEqual(rating.value as? String, "4.5 stars")
     let origin = rating.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0.5))
       .withOffset(CGVector(dx: 75, dy: 0))
     origin.press(forDuration: 0.05, thenDragTo: origin.withOffset(CGVector(dx: 0, dy: -120)))
     XCTAssertEqual(rating.value as? String, "4.5 stars", "Scrolling from the stars must not change the rating")
-    for _ in 0..<4 where !rating.isHittable { app.collectionViews.firstMatch.swipeDown() }
+    revealControl(rating, in: app)
     let point = rating.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0.5))
       .withOffset(CGVector(dx: 20 + 81, dy: 0))
     point.tap()
@@ -48,10 +48,8 @@ final class PolishUITests: XCTestCase {
     try app.performAccessibilityAudit(for: [.elementDetection, .sufficientElementDescription])
     openTab("Profile", in: app)
     let approve = app.buttons["Approve @ios_fan"]
-    for _ in 0..<10 where !approve.exists || !approve.isHittable { app.collectionViews.firstMatch.swipeUp() }
+    revealControl(approve, in: app)
     let decline = app.buttons["Decline @ios_fan"]
-    let tabBarTop = app.buttons["Log"].frame.minY
-    for _ in 0..<4 where approve.frame.maxY > tabBarTop - 8 { app.collectionViews.firstMatch.swipeUp() }
     XCTAssertTrue(approve.isHittable)
     XCTAssertTrue(decline.isHittable)
     XCTAssertLessThanOrEqual(decline.frame.maxX, app.frame.maxX)
@@ -61,7 +59,7 @@ final class PolishUITests: XCTestCase {
     snapshot("log-start-accessibility")
     app.buttons["No photo? Fill in by hand"].tap()
     let rating = app.otherElements["Rating"]
-    for _ in 0..<8 where !rating.exists || !rating.isHittable { app.collectionViews.firstMatch.swipeUp() }
+    revealControl(rating, in: app)
     XCTAssertTrue(rating.isHittable)
     XCTAssertEqual(rating.value as? String, "No rating")
     snapshot("rating-accessibility")
