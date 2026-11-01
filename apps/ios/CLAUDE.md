@@ -21,6 +21,8 @@ The app no longer mirrors the web app's UI. Data, features and rules stay the sa
 
 Run from `apps/ios`. Every command is headless, so it works from a remote session on the Mac.
 
+**Simulator cleanup:** Record which simulators are booted before starting. Once tests, screenshots and inspection finish, shut down simulators booted for the task with `xcrun simctl shutdown <UDID>`, including after failures or cancellation. Verify with `xcrun simctl list devices booted`. Preserve previously running simulators unless the user requests otherwise; avoid `shutdown all`.
+
 | Command | What it does |
 |---|---|
 | `scripts/dev build` | Build for the Simulator. Prints errors, our warnings and the verdict; full log in `build/logs/build.log`. |

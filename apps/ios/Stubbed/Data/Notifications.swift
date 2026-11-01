@@ -58,7 +58,6 @@ struct NotificationItem: Decodable, Identifiable, Sendable {
 
 struct NotificationChoice: Decodable, Sendable {
   let category: NotificationCategory
-  var inbox: Bool
   var push: Bool
 }
 
@@ -79,11 +78,11 @@ enum Notifications {
     try await supabase.rpc("notification_read_all").execute()
   }
   static func choices() async throws -> [NotificationChoice] {
-    let rows: [NotificationChoice] = try await supabase.from("notification_category_preferences").select("category,inbox,push").execute().value
-    return NotificationCategory.allCases.map { category in rows.first { $0.category == category } ?? NotificationChoice(category: category, inbox: true, push: true) }
+    let rows: [NotificationChoice] = try await supabase.from("notification_category_preferences").select("category,push").execute().value
+    return NotificationCategory.allCases.map { category in rows.first { $0.category == category } ?? NotificationChoice(category: category, push: true) }
   }
-  static func set(_ category: NotificationCategory, channel: String, enabled: Bool) async throws {
-    struct Change: Encodable { let kind: NotificationCategory; let channel: String; let enabled: Bool }
-    try await supabase.rpc("notification_set_category", params: Change(kind: category, channel: channel, enabled: enabled)).execute()
+  static func set(_ category: NotificationCategory, enabled: Bool) async throws {
+    struct Change: Encodable { let kind: NotificationCategory; let enabled: Bool }
+    try await supabase.rpc("notification_set_category", params: Change(kind: category, enabled: enabled)).execute()
   }
 }

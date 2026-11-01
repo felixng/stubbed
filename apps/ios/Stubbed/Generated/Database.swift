@@ -394,36 +394,30 @@ internal enum PublicSchema {
   }
   internal struct NotificationCategoryPreferencesSelect: Codable, Hashable, Sendable {
     internal let category: NotificationCategory
-    internal let inbox: Bool
     internal let push: Bool
     internal let userId: UUID
     internal enum CodingKeys: String, CodingKey {
       case category = "category"
-      case inbox = "inbox"
       case push = "push"
       case userId = "user_id"
     }
   }
   internal struct NotificationCategoryPreferencesInsert: Codable, Hashable, Sendable {
     internal let category: NotificationCategory
-    internal let inbox: Bool?
     internal let push: Bool?
     internal let userId: UUID?
     internal enum CodingKeys: String, CodingKey {
       case category = "category"
-      case inbox = "inbox"
       case push = "push"
       case userId = "user_id"
     }
   }
   internal struct NotificationCategoryPreferencesUpdate: Codable, Hashable, Sendable {
     internal let category: NotificationCategory?
-    internal let inbox: Bool?
     internal let push: Bool?
     internal let userId: UUID?
     internal enum CodingKeys: String, CodingKey {
       case category = "category"
-      case inbox = "inbox"
       case push = "push"
       case userId = "user_id"
     }
@@ -662,60 +656,11 @@ internal enum PublicSchema {
       case singleton = "singleton"
     }
   }
-  internal struct NotificationPreferencesSelect: Codable, Hashable, Sendable {
-    internal let previews: Bool
-    internal let pushEnabled: Bool
-    internal let quietEnd: String?
-    internal let quietStart: String?
-    internal let timeZone: String
-    internal let userId: UUID
-    internal enum CodingKeys: String, CodingKey {
-      case previews = "previews"
-      case pushEnabled = "push_enabled"
-      case quietEnd = "quiet_end"
-      case quietStart = "quiet_start"
-      case timeZone = "time_zone"
-      case userId = "user_id"
-    }
-  }
-  internal struct NotificationPreferencesInsert: Codable, Hashable, Sendable {
-    internal let previews: Bool?
-    internal let pushEnabled: Bool?
-    internal let quietEnd: String?
-    internal let quietStart: String?
-    internal let timeZone: String?
-    internal let userId: UUID?
-    internal enum CodingKeys: String, CodingKey {
-      case previews = "previews"
-      case pushEnabled = "push_enabled"
-      case quietEnd = "quiet_end"
-      case quietStart = "quiet_start"
-      case timeZone = "time_zone"
-      case userId = "user_id"
-    }
-  }
-  internal struct NotificationPreferencesUpdate: Codable, Hashable, Sendable {
-    internal let previews: Bool?
-    internal let pushEnabled: Bool?
-    internal let quietEnd: String?
-    internal let quietStart: String?
-    internal let timeZone: String?
-    internal let userId: UUID?
-    internal enum CodingKeys: String, CodingKey {
-      case previews = "previews"
-      case pushEnabled = "push_enabled"
-      case quietEnd = "quiet_end"
-      case quietStart = "quiet_start"
-      case timeZone = "time_zone"
-      case userId = "user_id"
-    }
-  }
   internal struct NotificationsSelect: Codable, Hashable, Sendable {
     internal let category: NotificationCategory
     internal let createdAt: String
     internal let entryId: UUID?
     internal let id: UUID
-    internal let inboxEnabled: Bool
     internal let readRevision: Int64
     internal let recipientId: UUID
     internal let revision: Int64
@@ -725,7 +670,6 @@ internal enum PublicSchema {
       case createdAt = "created_at"
       case entryId = "entry_id"
       case id = "id"
-      case inboxEnabled = "inbox_enabled"
       case readRevision = "read_revision"
       case recipientId = "recipient_id"
       case revision = "revision"
@@ -737,7 +681,6 @@ internal enum PublicSchema {
     internal let createdAt: String?
     internal let entryId: UUID?
     internal let id: UUID?
-    internal let inboxEnabled: Bool
     internal let readRevision: Int64?
     internal let recipientId: UUID
     internal let revision: Int64?
@@ -747,7 +690,6 @@ internal enum PublicSchema {
       case createdAt = "created_at"
       case entryId = "entry_id"
       case id = "id"
-      case inboxEnabled = "inbox_enabled"
       case readRevision = "read_revision"
       case recipientId = "recipient_id"
       case revision = "revision"
@@ -759,7 +701,6 @@ internal enum PublicSchema {
     internal let createdAt: String?
     internal let entryId: UUID?
     internal let id: UUID?
-    internal let inboxEnabled: Bool?
     internal let readRevision: Int64?
     internal let recipientId: UUID?
     internal let revision: Int64?
@@ -769,7 +710,6 @@ internal enum PublicSchema {
       case createdAt = "created_at"
       case entryId = "entry_id"
       case id = "id"
-      case inboxEnabled = "inbox_enabled"
       case readRevision = "read_revision"
       case recipientId = "recipient_id"
       case revision = "revision"

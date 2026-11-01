@@ -1,0 +1,14 @@
+begin;
+select plan(8);
+select hasnt_table('public','notification_preferences','general notification preferences removed');
+select hasnt_column('public','notification_category_preferences','inbox','inbox opt-out removed');
+select hasnt_column('public','notifications','inbox_enabled','inbox suppression snapshot removed');
+select ok(to_regprocedure('public.notification_set_general(text,jsonb)') is null,'general preference writer removed');
+select ok(to_regprocedure('public.validate_notification_timezone()') is null,'unused timezone validation removed');
+select ok(to_regprocedure('public.notification_set_category(public.notification_category,text,boolean)') is null,'channel-based writer removed');
+set local role anon;
+select throws_ok($$select public.notification_set_category('like',false)$$,'42501',null,'anonymous callers cannot set push categories');
+reset role;
+select ok(has_function_privilege('authenticated','public.notification_set_category(public.notification_category,boolean)','execute'),'authenticated clients retain push-category writer');
+select * from finish();
+rollback;

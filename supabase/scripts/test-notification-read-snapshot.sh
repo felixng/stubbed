@@ -18,12 +18,12 @@ cleanup() {
   rm -f "$log_file"
 }
 trap cleanup EXIT
+created_user=1
 sql <<SQL
 insert into auth.users(id,email) values('$test_user','snapshot-$test_user@example.test');
-insert into public.notifications(id,recipient_id,category,inbox_enabled,revision) values
- ('$first_row','$test_user','follower',true,1),('$second_row','$test_user','follower',true,100);
+insert into public.notifications(id,recipient_id,category,revision) values
+ ('$first_row','$test_user','follower',1),('$second_row','$test_user','follower',100);
 SQL
-created_user=1
 # Hold the first row after changing its revision. The later visible row's
 # higher revision proves that a global numeric cutoff alone is insufficient.
 docker exec "$container" psql -qAt -U postgres -v ON_ERROR_STOP=1 \
