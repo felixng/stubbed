@@ -64,13 +64,16 @@ export async function getShareCard(id: string) {
   const found = await getOwnEntry(id);
   if (!found) return null;
   const { supabase, userId } = await ownerContext();
-  const [{ data: stats }, { data: profile }, reactions] = await Promise.all([
+  const [{ data: stats, error: statsError }, { data: profile }, reactions] = await Promise.all([
     supabase
       .rpc("entry_card_stats", { entry_id: id })
       .maybeSingle<{ show_of_year: number; venue_visit: number; times_seen: number }>(),
     supabase.from("profiles").select("handle, is_private").eq("id", userId!).maybeSingle(),
     getReactions(supabase, [id]),
   ]);
+  if (found.entry.status === "logged" && (statsError || !stats)) {
+    throw new Error("Couldn’t load sharing counts");
+  }
   return {
     ...found,
     handle: (profile?.handle as string | null) ?? null,

@@ -152,6 +152,9 @@ export default function ProfilePage({ searchParams }: PageProps<"/app/profile">)
       <Suspense fallback={loading}>
         <Header />
       </Suspense>
+      <Link href="/app/insights/share" className="inline-flex min-h-11 items-center justify-between rounded-md bg-surface px-4 py-3 text-headline text-tint-text focus-visible:outline-2 focus-visible:outline-focus">
+        Share theatre stats <span aria-hidden="true">›</span>
+      </Link>
       <Suspense fallback={loading}>
         <Body searchParams={searchParams} />
       </Suspense>

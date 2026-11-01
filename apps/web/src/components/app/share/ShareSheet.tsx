@@ -1,571 +1,194 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
-
+import { useEffect, useEffectEvent, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/Button";
-
 import { track } from "@/lib/analytics";
-import { CARD_DESIGNS, CARD_DOMAIN, CORAL, halfStep, renderCard, SECONDARY, showsRatingByDefault, STAR, type CardData } from "@/lib/share-card";
-import { isLightTripCard, renderTripCard, TRIP_CARD_DESIGNS, type TripCardData } from "@/lib/share-card-trip";
+import { availableEntryDesigns, cardBackground, renderCard, CARD_DOMAIN, type CardData, type CardDesign, type ShareBackground, type ShareInk } from "@/lib/share-card";
+import { availableInsightDesigns, renderInsightCard, type InsightCardData } from "@/lib/share-card-insights";
+import { renderTripCard, TRIP_CARD_DESIGNS, type TripCardData } from "@/lib/share-card-trip";
 import { createClient } from "@/lib/supabase/client";
 
-// Stubbed's Instagram account, tagged in the caption and the copied text.
-const INSTAGRAM = CARD_DOMAIN;
-
-// The transparency checkerboard, deliberately outside the palette: neutral
-// greys, as in Photos and image editors, so it reads as "nothing here" and
-// doesn't tint what a clear card shows. Dark behind the clear card (its text
-// is white), light in the Transparent toggle's swatch.
-const CHECKER_DARK = "bg-[repeating-conic-gradient(#5b5b5f_0%_25%,#47474a_0%_50%)] bg-[length:28px_28px]";
-const CHECKER_LIGHT = "bg-[repeating-conic-gradient(#ffffff_0%_25%,#c7c7cc_0%_50%)] bg-[length:8px_8px]";
-
 type Rendered = { file: File; url: string };
-// `clear`: the same card without its background (entry cards only).
-// `stories`: `photo` with square corners, for the Stories button, since
-// Instagram turns transparent corners black. `clear` goes as it is.
-type Variants = { photo: Rendered; stories: Rendered; clear: Rendered | null };
-// Entry cards are drawn with the rating and without, so the Rating toggle
-// swaps them at once; `hidden` is null when there's no rating to hide.
-type Drawn = { shown: Variants[]; hidden: Variants[] | null };
-
-// What's being shared: one entry, or a trip recap (#16) with one photo URL
-// per show, in the same order as `data.shows`.
+type DrawnCard = { design: CardDesign; variants: Record<string, Rendered>; story?: Rendered };
 export type ShareSubject =
   | { kind: "entry"; data: CardData; photoUrl: string | null }
-  | { kind: "trip"; data: TripCardData; photoUrls: (string | null)[] };
+  | { kind: "trip"; data: TripCardData; photoUrls: (string | null)[] }
+  | { kind: "insights"; data: InsightCardData };
+const backgrounds: ShareBackground[] = ["solid", "gradient", "transparent"];
+const keys = ["solid", "gradient", "transparent-light", "transparent-dark"];
+const checker = "bg-[repeating-conic-gradient(#bbb_0%_25%,#888_0%_50%)] bg-[length:20px_20px]";
+const pill = "min-h-11 rounded-pill px-4 py-2 text-subheadline font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:opacity-50";
 
-// Hevy-style share screen: swipe between card designs, optionally hide the
-// rating or drop the background (entry cards), then send the card in view to
-// an Instagram story (the one primary action) or, under More, the share
-// sheet, the camera roll,
-// the clipboard or the public link. Every card is drawn on the device, with and
-// without its background, before any button is tapped, so the share sheet
-// opens straight from the tap (iOS needs that). `publicHref` is the public
-// page (/e/[id] or /t/[id]) when there is one, for Copy link; null when
-// the entry or trip is private.
-export function ShareSheet({
-  subject,
-  slug,
-  publicHref = null,
-}: {
-  subject: ShareSubject;
-  slug: string;
-  publicHref?: string | null;
-}) {
-  const designs = subject.kind === "entry" ? CARD_DESIGNS : TRIP_CARD_DESIGNS;
-  const [drawn, setDrawn] = useState<Drawn | null>(null);
-  const [failed, setFailed] = useState(false);
-  const [active, setActive] = useState(0);
-  const [transparent, setTransparent] = useState(false);
-  const rating = subject.kind === "entry" ? subject.data.rating : null;
-  const [showRating, setShowRating] = useState(() => showsRatingByDefault(rating));
+export function ShareSheet({ subject, slug, publicHref = null }: { subject: ShareSubject; slug: string; publicHref?: string | null }) {
+  const [drawn, setDrawn] = useState<{ subject: ShareSubject; cards: DrawnCard[] } | null>(null);
+  const [error, setError] = useState<ShareSubject | null>(null);
+  const [active, setActive] = useState<string | null>(null);
+  const [background, setBackground] = useState<ShareBackground>("solid");
+  const [ink, setInk] = useState<ShareInk>("light");
   const [notice, setNotice] = useState<string | null>(null);
-  const [moreOpen, setMoreOpen] = useState(false);
-  const scroller = useRef<HTMLDivElement>(null);
-  const moreButton = useRef<HTMLButtonElement>(null);
+  const [more, setMore] = useState(false);
   const moreId = useId();
+  const moreButton = useRef<HTMLButtonElement>(null);
+  const scroller = useRef<HTMLDivElement>(null);
+  const resources = useRef(new Set<string>());
+  const cards = drawn?.subject === subject ? drawn.cards : null;
+  const current = cards?.find(c => c.design.id === active) ?? cards?.[0];
+  const key = current?.design.background ? background === "transparent" ? `transparent-${ink}` : background : "photo";
+  const card = current?.variants[key];
+  const storyCard = current?.story ?? card;
+  const storiesShare = useSyncExternalStore(noSubscribe, sharesFiles, () => true);
 
   useEffect(() => {
     let cancelled = false;
-    const urls: string[] = [];
-    const make = (blob: Blob, name: string): Rendered => {
+    const pending: string[] = [];
+    const make = (blob: Blob, name: string) => {
+      const file = new File([blob], name, { type: "image/png" });
       const url = URL.createObjectURL(blob);
-      urls.push(url);
-      return { url, file: new File([blob], name, { type: "image/png" }) };
+      pending.push(url);
+      return { file, url };
     };
     (async () => {
-      const out: Variants[] = [];
-      let hidden: Variants[] | null = null;
-      if (subject.kind === "entry") {
-        const photo = subject.photoUrl ? await loadPhoto(subject.photoUrl) : null;
-        const draw = async (showRating: boolean) => {
-          const set: Variants[] = [];
-          for (const design of CARD_DESIGNS) {
-            const name = `stubbed-${slug}-${design.id}${showRating ? "" : "-no-rating"}`;
-            const opts = { showRating };
-            set.push({
-              photo: make(await renderCard(design.id, subject.data, photo, opts), `${name}.png`),
-              stories: make(await renderCard(design.id, subject.data, photo, { ...opts, square: true }), `${name}-story.png`),
-              clear: make(await renderCard(design.id, subject.data, null, { ...opts, transparent: true }), `${name}-clear.png`),
-            });
-          }
-          return set;
-        };
-        out.push(...(await draw(true)));
-        if (subject.data.rating != null) hidden = await draw(false);
-        if (photo) URL.revokeObjectURL(photo.src);
-      } else {
-        const photos = await Promise.all(subject.photoUrls.map((u) => (u ? loadPhoto(u) : null)));
+      const result: DrawnCard[] = [];
+      if (subject.kind === "trip") {
+        const photos = await Promise.all(subject.photoUrls.map(loadPhoto));
         for (const design of TRIP_CARD_DESIGNS) {
           const name = `stubbed-${slug}-${design.id}`;
-          out.push({
-            photo: make(await renderTripCard(design.id, subject.data, photos), `${name}.png`),
-            stories: make(await renderTripCard(design.id, subject.data, photos, { square: true }), `${name}-story.png`),
-            clear: null,
-          });
+          const photo = make(await renderTripCard(design.id, subject.data, photos), `${name}.png`);
+          const story = make(await renderTripCard(design.id, subject.data, photos, { square: true }), `${name}-story.png`);
+          result.push({ design, variants: { photo }, story });
         }
-        photos.forEach((p) => p && URL.revokeObjectURL(p.src));
+      } else {
+        const photo = subject.kind === "entry" ? await loadPhoto(subject.photoUrl) : null;
+        const designs = subject.kind === "entry" ? availableEntryDesigns(subject.data, photo != null) : availableInsightDesigns(subject.data);
+        for (const design of designs) {
+          const variants: Record<string, Rendered> = {};
+          for (const variant of design.background ? keys : ["photo"]) {
+            const bg: ShareBackground = variant.startsWith("transparent") ? "transparent" : variant === "gradient" ? "gradient" : "solid";
+            const textInk: ShareInk = variant.endsWith("dark") ? "dark" : "light";
+            const options = { background: bg, ink: textInk };
+            const blob = subject.kind === "entry" ? await renderCard(design.id, subject.data, photo, options) : await renderInsightCard(design.id, subject.data, options);
+            variants[variant] = make(blob, `stubbed-${slug}-${design.id}-${variant}.png`);
+          }
+          result.push({ design, variants });
+        }
       }
-      if (!cancelled) setDrawn({ shown: out, hidden });
-    })().catch((err) => {
-      console.error("Drawing the share cards failed", err);
-      if (!cancelled) setFailed(true);
+      if (cancelled) { pending.forEach(URL.revokeObjectURL); return; }
+      pending.forEach(url => resources.current.add(url));
+      setDrawn({ subject, cards: result });
+    })().catch(err => {
+      pending.forEach(URL.revokeObjectURL);
+      if (!cancelled) { console.error("Drawing sharing cards failed", err); setError(subject); }
     });
-    return () => {
-      cancelled = true;
-      urls.forEach((u) => URL.revokeObjectURL(u));
-      // This also runs when the page is hidden (cacheComponents); the cards
-      // are drawn again when it's shown, so don't keep the freed ones.
-      setDrawn(null);
-      setFailed(false);
-      setNotice(null);
-    };
+    // Next hides cached pages rather than unmounting them. The displayed
+    // URLs must remain valid on return; cancelled, unpublished URLs can go.
+    return () => { cancelled = true; };
   }, [subject, slug]);
 
-  const cards = drawn ? (!showRating && drawn.hidden) || drawn.shown : null;
-  const variants = cards?.[active];
-  const clear = transparent ? variants?.clear : null;
-  const card = clear || variants?.photo;
-  const storyCard = clear || variants?.stories;
-  const canShareFiles =
-    typeof navigator !== "undefined" && card ? Boolean(navigator.canShare?.({ files: [card.file] })) : false;
-  // Known before the cards are drawn, so the button's label doesn't change
-  // under the finger: on desktop, and wherever files can't be shared, the
-  // Stories button downloads the image instead, and says so up front.
-  const storiesShares = useSyncExternalStore(noSubscribe, browserSharesFiles, () => true);
-  const text =
-    subject.kind === "entry"
-      ? `${subject.data.venue ? `${subject.data.title} at ${subject.data.venue}` : subject.data.title}. Logged on Stubbed ${INSTAGRAM}`
-      : `${subject.data.name}: ${plural(subject.data.shows.length, "show")}${subject.data.place ? ` in ${subject.data.place}` : ""}. Logged on Stubbed ${INSTAGRAM}`;
-  const title = subject.kind === "entry" ? subject.data.title : subject.data.name;
+  useEffect(() => {
+    if (!drawn) return;
+    const live = new Set(drawn.cards.flatMap(c => [...Object.values(c.variants), ...(c.story ? [c.story] : [])].map(v => v.url)));
+    for (const url of resources.current) {
+      if (!live.has(url)) { URL.revokeObjectURL(url); resources.current.delete(url); }
+    }
+  }, [drawn]);
 
-  function closeMore() {
-    setMoreOpen(false);
-    moreButton.current?.focus();
-  }
+  const alignSelection = useEffectEvent(() => {
+    const element = scroller.current?.querySelector<HTMLElement>(`[data-design="${current?.design.id}"]`);
+    if (element && scroller.current) scroller.current.scrollLeft = element.offsetLeft;
+  });
+  useLayoutEffect(() => { alignSelection(); }, [cards]);
 
-  // An action from the More list closes the list first, so the page is back
-  // to the card and Stories when the share sheet or the notice appears, and
-  // a return to the page doesn't find the list still open.
-  function run(action: () => void) {
-    closeMore();
-    action();
-  }
-
-  function goTo(i: number) {
-    const el = scroller.current?.children[i] as HTMLElement | undefined;
-    el?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-  }
-
-  // One full-width card per page, so the page index is the card index.
-  function onScroll() {
-    const el = scroller.current;
-    if (!el) return;
-    const i = Math.round(el.scrollLeft / el.clientWidth);
-    setActive(Math.max(0, Math.min(designs.length - 1, i)));
-  }
-
-  // Which button was used, on which design: the share loop's main signal.
+  const text = subject.kind === "entry" ? `${subject.data.title}${subject.data.venue ? ` at ${subject.data.venue}` : ""}. Tracked on Stubbed ${CARD_DOMAIN}`
+    : subject.kind === "trip" ? `${subject.data.name}: ${subject.data.shows.length} shows. Tracked on Stubbed ${CARD_DOMAIN}` : "";
+  const title = subject.kind === "entry" ? subject.data.title : subject.kind === "trip" ? subject.data.name : "My theatre stats";
   function record(action: "stories" | "more" | "download" | "copy_text" | "copy_link") {
-    void track(createClient(), "card_shared", {
-      action,
-      design: designs[active].id,
-      transparent: transparent && subject.kind === "entry",
-      rating: subject.kind === "entry" && rating != null && showRating,
-    });
+    if (!current) return;
+    void track(createClient(), "card_shared", { action, design: current.design.id,
+      background: cardBackground(current.design, background), transparent: Boolean(current.design.background && background === "transparent"),
+      rating: subject.kind === "entry" && current.design.id === "name" });
   }
-
-  function saveImage(image: Rendered) {
-    const a = document.createElement("a");
-    a.href = image.url;
-    a.download = image.file.name;
-    a.click();
+  function save(image: Rendered) {
+    const link = document.createElement("a"); link.href = image.url; link.download = image.file.name; link.click();
   }
-
-  function download() {
-    if (!card) return;
-    saveImage(card);
-    record("download");
-  }
-
   async function share(withText: boolean) {
     const image = withText ? card : storyCard;
     if (!image) return;
     setNotice(null);
-    if (!canShareFiles) {
-      saveImage(image);
-      record(withText ? "more" : "stories");
-      setNotice(withText ? "Image saved." : "Image saved. Add it to your story from Instagram.");
-      return;
+    if (!navigator.canShare?.({ files: [image.file] })) {
+      save(image); record(withText ? "more" : "stories"); setNotice("Image saved."); return;
     }
-    // Image only for stories: Instagram's share sheet entry drops the
-    // image when text comes with it.
     try {
-      await navigator.share(withText ? { files: [image.file], text } : { files: [image.file] });
+      await navigator.share(withText && text ? { files: [image.file], text } : { files: [image.file] });
       record(withText ? "more" : "stories");
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
-      console.error("Sharing failed", err);
       setNotice("Couldn’t open sharing. Download the image instead.");
     }
   }
-
-  async function copyText() {
-    try {
-      await navigator.clipboard.writeText(text);
-      record("copy_text");
-      setNotice("Text copied.");
-    } catch {
-      setNotice("Couldn’t copy the text.");
-    }
+  async function copy(value: string, action: "copy_text" | "copy_link") {
+    try { await navigator.clipboard.writeText(value); record(action); setNotice(action === "copy_link" ? "Link copied." : "Text copied."); }
+    catch { setNotice("Couldn’t copy. Try again."); }
   }
-
-  // Like Hevy's "Workout link": the public page, whose preview is the card.
-  async function copyLink() {
-    if (!publicHref) return;
-    try {
-      await navigator.clipboard.writeText(new URL(publicHref, window.location.origin).href);
-      record("copy_link");
-      setNotice("Link copied.");
-    } catch {
-      setNotice("Couldn’t copy the link.");
-    }
+  function goTo(id: string) {
+    const node = scroller.current?.querySelector<HTMLElement>(`[data-design="${id}"]`);
+    if (node) scroller.current?.scrollTo({ left: node.offsetLeft, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
+    setActive(id);
   }
-
+  function onScroll() {
+    const node = scroller.current;
+    if (!node?.children.length) return;
+    const closest = Array.from(node.children).reduce((a, b) => Math.abs((a as HTMLElement).offsetLeft - node.scrollLeft) < Math.abs((b as HTMLElement).offsetLeft - node.scrollLeft) ? a : b) as HTMLElement;
+    if (closest.dataset.design) setActive(closest.dataset.design);
+  }
+  const pick = (selected: boolean) => `${pill} ${selected ? "bg-label text-background" : "bg-fill text-label"}`;
   return (
     <section aria-label="Share" className="flex flex-col gap-4">
-      <div
-        ref={scroller}
-        onScroll={onScroll}
-        tabIndex={0}
-        role="region"
-        aria-roledescription="carousel"
-        aria-label="Card designs"
-        className="flex snap-x snap-mandatory gap-4 overflow-x-auto [scrollbar-width:none] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus [&::-webkit-scrollbar]:hidden"
-      >
-        {designs.map((design, i) => {
-          const rendered = cards?.[i];
-          const clear = transparent && Boolean(rendered?.clear);
-          const shown = rendered && ((clear && rendered.clear) || rendered.photo);
-          return (
-            <div
-              key={design.id}
-              role="group"
-              aria-roledescription="slide"
-              aria-label={`${i + 1} of ${designs.length}: ${design.name}`}
-              className={`@container relative aspect-square w-full shrink-0 snap-center overflow-hidden rounded-[6%] ${clear ? CHECKER_DARK : ""}`}
-            >
-              {/* Until the card is drawn, a stand-in from the data on hand on
-                  the card's own ground, so the sheet is never blank. It stays
-                  under the drawn card, which fades in over it; not under a
-                  card without a background, whose clear parts would show it. */}
-              {!clear && (
-                <CardPlaceholder subject={subject} design={design.id} failed={failed} drawn={Boolean(shown)} showRating={showRating} />
-              )}
-              {shown && (
-                // eslint-disable-next-line @next/next/no-img-element -- local PNG drawn on the device
-                <img
-                  src={shown.url}
-                  alt={`Share card, ${design.name.toLowerCase()}${clear ? ", no background" : ""}: ${title}`}
-                  className="absolute inset-0 size-full motion-safe:animate-[card-in_240ms_ease-out]"
-                />
-              )}
-            </div>
-          );
-        })}
+      {cards?.length ? <>
+        <div ref={scroller} onScroll={onScroll} role="region" aria-roledescription="carousel" aria-label="Card designs"
+          className="relative flex snap-x snap-mandatory gap-4 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {cards.map((item, i) => {
+            const clear = Boolean(item.design.background && background === "transparent");
+            const variant = item.design.background ? clear ? `transparent-${ink}` : background : "photo";
+            return <div key={item.design.id} data-design={item.design.id} role="group" aria-label={`${i + 1} of ${cards.length}: ${item.design.name}`}
+              className={`relative aspect-square w-full shrink-0 snap-center overflow-hidden rounded-[6%] ${clear ? checker : ""}`}>
+              {/* eslint-disable-next-line @next/next/no-img-element -- locally drawn PNG */}
+              <img src={item.variants[variant].url} alt={`Share card, ${item.design.name.toLowerCase()}${clear ? ", no background" : ""}: ${title}`} className="size-full" />
+            </div>;
+          })}
+        </div>
+        <div className="flex flex-wrap justify-center gap-1" aria-label="Choose a card">
+          {cards.map(item => <button key={item.design.id} type="button" onClick={() => goTo(item.design.id)} aria-current={current?.design.id === item.design.id}
+            className={pick(current?.design.id === item.design.id)}>{item.design.name}</button>)}
+        </div>
+      </> : <div className="flex aspect-square items-center justify-center rounded-md bg-fill text-label-secondary" role="status">
+        {error === subject ? "Couldn’t draw cards. Reload to try again." : cards ? "No shows to share for this period." : "Preparing share cards…"}
+      </div>}
+      {current?.design.background && <>
+        <fieldset className="flex flex-wrap justify-center gap-2"><legend className="mb-2 text-center text-footnote text-label-secondary">Background</legend>
+          {backgrounds.map(value => <button key={value} type="button" aria-pressed={background === value} onClick={() => setBackground(value)} className={pick(background === value)}>{value[0].toUpperCase() + value.slice(1)}</button>)}
+        </fieldset>
+        {background === "transparent" && <fieldset className="flex justify-center gap-2"><legend className="mb-2 text-center text-footnote text-label-secondary">Text colour</legend>
+          {(["light", "dark"] as ShareInk[]).map(value => <button key={value} type="button" aria-pressed={ink === value} onClick={() => setInk(value)} className={pick(ink === value)}>{value === "light" ? "Light" : "Dark"}</button>)}
+        </fieldset>}
+      </>}
+      <Button disabled={!storyCard} onClick={() => share(false)} className="w-full">{storiesShare ? "Share to Stories" : "Download for Stories"}</Button>
+      <div className="flex justify-center">
+        <button ref={moreButton} type="button" aria-expanded={more} aria-controls={moreId} onClick={() => setMore(v => !v)} className={pick(false)}>More</button>
       </div>
-
-      {/* 44px targets around 8px dots, like a page control; the row overlaps
-          the gap above it so the dots don't sit far from the card. */}
-      <div className="-my-2.5 flex justify-center">
-        {designs.map((design, i) => (
-          <button
-            key={design.id}
-            type="button"
-            onClick={() => goTo(i)}
-            aria-label={`Show card ${i + 1}, ${design.name}`}
-            aria-current={i === active}
-            className="flex size-11 cursor-pointer items-center justify-center rounded-pill focus-visible:outline-2 focus-visible:outline-offset-[-6px] focus-visible:outline-focus"
-          >
-            <span className={`block size-2 rounded-pill ${i === active ? "bg-label" : "bg-outline/40"}`} />
-          </button>
-        ))}
-      </div>
-
-      <Button onClick={() => share(false)} disabled={!storyCard} className="w-full">
-        {storiesShares ? (
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.8">
-            <rect x="3.5" y="3.5" width="17" height="17" rx="5" />
-            <circle cx="12" cy="12" r="4" />
-            <circle cx="17.3" cy="6.7" r="0.9" fill="currentColor" stroke="none" />
-          </svg>
-        ) : (
-          <svg
-            viewBox="0 0 24 24"
-            width="22"
-            height="22"
-            aria-hidden="true"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M12 3.5V15M7.5 10.5 12 15l4.5-4.5M5 19.5h14" />
-          </svg>
-        )}
-        {storiesShares ? "Share to Stories" : "Download for Stories"}
-      </Button>
-
-      <div className="flex justify-center gap-3">
-        {subject.kind === "entry" && (
-          <button
-            type="button"
-            onClick={() => setTransparent((t) => !t)}
-            disabled={!cards}
-            aria-pressed={transparent}
-            className={`${PILL} ${transparent ? "bg-label text-background" : "bg-fill text-label"}`}
-          >
-            <span
-              aria-hidden="true"
-              className={`size-4 rounded-pill border border-outline ${CHECKER_LIGHT}`}
-            />
-            Transparent
-          </button>
-        )}
-        {rating != null && (
-          <button
-            type="button"
-            onClick={() => setShowRating((r) => !r)}
-            disabled={!cards}
-            aria-pressed={showRating}
-            className={`${PILL} ${showRating ? "bg-label text-background" : "bg-fill text-label"}`}
-          >
-            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="currentColor">
-              <path d="M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z" />
-            </svg>
-            Rating
-          </button>
-        )}
-        <button
-          ref={moreButton}
-          type="button"
-          onClick={() => setMoreOpen((o) => !o)}
-          aria-expanded={moreOpen}
-          aria-controls={moreId}
-          className={`${PILL} bg-fill text-label`}
-        >
-          More
-          <svg
-            viewBox="0 0 24 24"
-            width="16"
-            height="16"
-            aria-hidden="true"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className={`transition-transform motion-reduce:transition-none ${moreOpen ? "rotate-180" : ""}`}
-          >
-            <path d="m6 9 6 6 6-6" />
-          </svg>
-        </button>
-      </div>
-
-      {/* The other ways to send the card, one tap away so Stories stays the
-          one obvious action. */}
-      {moreOpen && (
-        <ul
-          id={moreId}
-          aria-label="More ways to share"
-          onKeyDown={(e) => {
-            if (e.key === "Escape") closeMore();
-          }}
-          className="flex flex-col rounded-md border border-separator bg-surface shadow-sm"
-        >
-          <MoreItem label="Share…" onClick={() => run(() => share(true))} disabled={!card}>
-            <path d="M12 15V3.5M7.5 8 12 3.5 16.5 8M6 11.5H5v9h14v-9h-1" />
-          </MoreItem>
-          <MoreItem label="Download image" onClick={() => run(download)} disabled={!card}>
-            <path d="M12 3.5V15M7.5 10.5 12 15l4.5-4.5M5 19.5h14" />
-          </MoreItem>
-          <MoreItem label="Copy text" onClick={() => run(copyText)} disabled={false}>
-            <rect x="8.5" y="8.5" width="11" height="11" rx="2.5" />
-            <path d="M15.5 8.5V6a1.5 1.5 0 0 0-1.5-1.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5" />
-          </MoreItem>
-          {publicHref && (
-            <MoreItem label="Copy link" onClick={() => run(copyLink)} disabled={false}>
-              <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />
-            </MoreItem>
-          )}
-        </ul>
-      )}
-
-      <p className="text-center text-footnote text-label-secondary">
-        Tag <span className="font-semibold text-label">{INSTAGRAM}</span> in your story.
-      </p>
-
-      <p role="status" className="min-h-5 text-center text-footnote text-label-secondary">
-        {notice}
-      </p>
+      {more && <div id={moreId} className="grid grid-cols-2 gap-2" onKeyDown={event => { if (event.key === "Escape") { setMore(false); moreButton.current?.focus(); } }}>
+        <Button variant="secondary" disabled={!card} onClick={() => { setMore(false); void share(true); }}>Share…</Button>
+        <Button variant="secondary" disabled={!card} onClick={() => { if (card) { save(card); record("download"); setNotice("Image saved."); } setMore(false); }}>Download image</Button>
+        {text && <Button variant="secondary" onClick={() => { void copy(text, "copy_text"); setMore(false); }}>Copy text</Button>}
+        {publicHref && subject.kind !== "insights" && <Button variant="secondary" onClick={() => { void copy(new URL(publicHref, location.origin).href, "copy_link"); setMore(false); }}>Copy link</Button>}
+      </div>}
+      <p className="text-center text-footnote text-label-secondary">Tag <span className="font-semibold text-label">{CARD_DOMAIN}</span> in your story.</p>
+      <p role="status" className="min-h-5 text-center text-footnote text-label-secondary">{notice}</p>
     </section>
   );
 }
-
-const plural = (n: number, one: string) => `${n} ${one}${n === 1 ? "" : "s"}`;
-
-// Whether this browser can hand a PNG to the share sheet (phones, mostly).
-// An empty probe file is enough: canShare checks the type, not the contents.
-// It doesn't change while the page is open.
-let sharesFiles: boolean | undefined;
-function browserSharesFiles() {
-  sharesFiles ??= Boolean(navigator.canShare?.({ files: [new File([], "card.png", { type: "image/png" })] }));
-  return sharesFiles;
-}
-const noSubscribe = () => () => {};
-
-// The stand-in shown while a card is drawn: the design's ground (the entry
-// cards' no-photo ground with its coral glow, or the trip design's dark or
-// light ground), the title, the place and date, and the stars. Sized in card
-// units (1cqw = 5.4 of the designs' 540 units), so it scales with the card.
-function CardPlaceholder({
-  subject,
-  design,
-  failed,
-  drawn,
-  showRating,
-}: {
-  subject: ShareSubject;
-  design: string;
-  failed: boolean;
-  drawn: boolean;
-  showRating: boolean;
-}) {
-  const light = subject.kind === "trip" && isLightTripCard(design);
-  const title = subject.kind === "entry" ? subject.data.title : subject.data.name;
-  // Entry cards show no venue or date line, so neither does their stand-in.
-  const meta = subject.kind === "entry" ? "" : [subject.data.place, subject.data.dates].filter(Boolean).join(" · ");
-  const rating = subject.kind === "entry" ? (showRating ? subject.data.rating : null) : subject.data.average;
-  return (
-    <div
-      aria-hidden={drawn}
-      className="absolute inset-0 flex flex-col justify-end gap-[2cqw] p-[5.2cqw]"
-      style={{
-        background: light
-          ? "#F2F2F7"
-          : "radial-gradient(circle at 70% 25%, rgba(255, 90, 90, 0.35), rgba(255, 90, 90, 0) 80%), #1C1C1E",
-        color: light ? "#1C1C1E" : "#FFFFFF",
-        // The light cards' separator edge, so the card reads on the light page.
-        boxShadow: light ? "inset 0 0 0 1px #E0E0E5" : undefined,
-        borderRadius: "inherit",
-      }}
-    >
-      <p className="line-clamp-2 font-display text-[6.7cqw] leading-[1.1] font-bold">{title}</p>
-      {meta && (
-        <p className="truncate text-[2.6cqw]" style={{ color: light ? "#6C6C70" : SECONDARY }}>
-          {meta}
-        </p>
-      )}
-      {rating != null && <PlaceholderStars value={halfStep(rating)} light={light} />}
-      <p role="status" className="mt-[2cqw] min-h-[1lh] text-[2.6cqw] font-medium" style={{ color: light ? "#C4234A" : CORAL }}>
-        {drawn ? "" : failed ? "Couldn’t draw this card." : "Drawing the card…"}
-      </p>
-    </div>
-  );
-}
-
-// The card's stars in half steps: amber (its dark value on the dark ground,
-// as the drawn cards use), empty stars in the card's outline grey.
-function PlaceholderStars({ value, light }: { value: number; light: boolean }) {
-  const id = useId();
-  const fill = light ? "#E07400" : STAR;
-  const empty = light ? "#8E8E93" : "#7C7C82";
-  return (
-    <span className="flex gap-[0.55cqw]">
-      {[0, 1, 2, 3, 4].map((i) => {
-        const part = Math.max(0, Math.min(1, value - i));
-        return (
-          <svg key={i} viewBox="0 0 24 24" className="size-[4.1cqw]">
-            <defs>
-              <clipPath id={`${id}-${i}`}>
-                <rect x="-2" y="-2" width={24 * part + 2} height="28" />
-              </clipPath>
-            </defs>
-            <path d={STAR_PATH} fill="none" stroke={empty} strokeWidth="1.5" strokeLinejoin="round" />
-            {part > 0 && (
-              <path
-                d={STAR_PATH}
-                fill={fill}
-                stroke={fill}
-                strokeWidth="1.5"
-                strokeLinejoin="round"
-                clipPath={`url(#${id}-${i})`}
-              />
-            )}
-          </svg>
-        );
-      })}
-    </span>
-  );
-}
-const STAR_PATH = "M12 2.5l2.9 6.1 6.6.8-4.9 4.6 1.3 6.6L12 17.3 6.1 20.6l1.3-6.6L2.5 9.4l6.6-.8z";
-
-// Transparent and More: quiet capsules under the one coral button.
-const PILL =
-  "inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-pill px-4 text-subheadline font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:cursor-wait disabled:opacity-40";
-
-function MoreItem({
-  label,
-  onClick,
-  disabled,
-  children,
-}: {
-  label: string;
-  onClick: () => void;
-  disabled: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <li className="border-separator not-last:border-b">
-      <button
-        type="button"
-        onClick={onClick}
-        disabled={disabled}
-        className="flex min-h-11 w-full cursor-pointer items-center gap-3 px-4 text-left text-body text-label hover:bg-fill focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus disabled:cursor-wait disabled:opacity-40"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          width="22"
-          height="22"
-          aria-hidden="true"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          className="shrink-0 text-label-secondary"
-        >
-          {children}
-        </svg>
-        {label}
-      </button>
-    </li>
-  );
-}
-
-// The photo is fetched into a blob first, so drawing it never taints the
-// canvas. No photo, or it fails: the cards use their plain background.
-async function loadPhoto(url: string) {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const src = URL.createObjectURL(await res.blob());
-    const img = new Image();
-    img.src = src;
-    await img.decode();
-    return img;
-  } catch {
-    return null;
-  }
+function noSubscribe() { return () => {}; }
+function sharesFiles() { return Boolean(navigator.canShare?.({ files: [new File([], "card.png", { type: "image/png" })] })); }
+function loadPhoto(url: string | null): Promise<HTMLImageElement | null> {
+  if (!url) return Promise.resolve(null);
+  return new Promise(resolve => { const image = new Image(); image.crossOrigin = "anonymous"; image.onload = () => resolve(image); image.onerror = () => resolve(null); image.src = url; });
 }
