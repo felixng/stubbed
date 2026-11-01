@@ -704,3 +704,9 @@ The owner found /press (#246) didn't follow the reference (getpersonalbest.com/p
 ## 2026-11-01: Sharing controls follow the selected card (#124)
 
 Remove the rating toggle and low-rating auto-hide. Data + Photo and Rating + Photo have separate content and eligibility; an unrated or photo-less entry never fabricates a rating card. Background cards alone own solid, gradient and transparent variants, including light/dark transparent ink. A selected background never affects a photo preview or any export action. Stable design IDs replace positional selection, actions use a native three-column grid, and drawing shows a card-shaped placeholder. This introduces the full Data background as the control/rendering foundation; Encore and Show number follow in #140.
+
+## 2026-11-01: Entry sharing set and count illustrations (#140)
+
+The entry set is Data + Photo, Rating + Photo, full Data, Encore and Show number. Photo designs require a usable photo; Rating + Photo also requires a saved rating. Encore appears only on repeat visits. The two count illustrations use a large seal with ribbon details inside the square, with no awarded-badge state or invented thresholds. All attendance numbers retain entry_card_stats' historical semantics. Missing venues remove a metric rather than duplicating times seen. Optional Compact Data remains deferred.
+
+Entry destinations are keyed by entry ID. The repeat-visit UI test exposed NavigationStack reusing the prior entry's loaded cards and share-offer state when a save replaced a same-show destination. A newly logged visit must load its own counts and offer its own share screen.
