@@ -71,6 +71,11 @@ struct ShareCarousel: View {
   let text: String
   var link: URL?
   @Environment(\.sharePreviewSize) private var previewSize
+  @Environment(\.shareScreenHeight) private var screenHeight
+  /// The background sheet's height: the swatches, plus the text colours on
+  /// a transparent card. Kept short so the whole card shows above it.
+  @ScaledMetric(relativeTo: .body) private var pickerHeight: CGFloat = 190
+  @ScaledMetric(relativeTo: .body) private var pickerHeightWithInk: CGFloat = 300
   @State private var active: String?
   @State private var appearance = ShareAppearance.standard
   @State private var pickingBackground = false
@@ -80,6 +85,15 @@ struct ShareCarousel: View {
     let id = UUID()
     let items: [Any]
     let action: String
+  }
+  private var currentPickerHeight: CGFloat {
+    appearance.background == .transparent ? pickerHeightWithInk : pickerHeight
+  }
+  /// While the background sheet is up, the card shrinks to fit above it, so
+  /// each choice shows on the whole card.
+  private var shownPreviewSize: CGFloat {
+    guard pickingBackground, screenHeight > 0 else { return previewSize }
+    return min(previewSize, max(160, screenHeight - currentPickerHeight - Space.xxl))
   }
   private var current: RenderedCard? { cards?.first(where: { $0.id == active }) ?? cards?.first }
   private var currentAsset: ShareAsset? { current?.asset(for: appearance) }
@@ -99,7 +113,8 @@ struct ShareCarousel: View {
             }.accessibilityLabel(failed ? "Couldn’t draw cards" : "Preparing share cards").tag("loading")
         }
       }.tabViewStyle(.page(indexDisplayMode: .never)).aspectRatio(1, contentMode: .fit)
-        .frame(maxWidth: previewSize).accessibilityLabel("Card designs")
+        .frame(maxWidth: shownPreviewSize).accessibilityLabel("Card designs")
+        .animation(.smooth, value: shownPreviewSize)
       HStack(spacing: 8) {
         ForEach(cards ?? []) { card in
           Circle().fill(card.id == current?.id ? AnyShapeStyle(Palette.tint) : AnyShapeStyle(.quaternary)).frame(width: 7, height: 7)
@@ -108,6 +123,8 @@ struct ShareCarousel: View {
       (Text("Share your \(subjectName) · Tag ") + Text(stubbedInstagram).fontWeight(.semibold))
         .font(.callout)
         .foregroundStyle(.primary)
+        .opacity(pickingBackground ? 0 : 1)
+        .animation(.smooth, value: pickingBackground)
 
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(alignment: .top, spacing: Space.m) {
@@ -168,6 +185,10 @@ struct ShareCarousel: View {
         .padding(.horizontal, Space.l)
       }
       .padding(.horizontal, -Space.l)
+      // Hidden under the background sheet, like the tag line above: it floats
+      // with a margin and would otherwise show the row's ends beside it.
+      .opacity(pickingBackground ? 0 : 1)
+      .animation(.smooth, value: pickingBackground)
 
       Text(notice ?? " ")
         .font(.footnote)
@@ -177,10 +198,12 @@ struct ShareCarousel: View {
     .onChange(of: notice) { _, value in if let value { AccessibilityNotification.Announcement(value).post() } }
     .sheet(isPresented: $pickingBackground) {
       BackgroundPicker(appearance: $appearance)
-        .presentationDetents([.medium])
+        .presentationDetents([.height(currentPickerHeight)])
         .presentationDragIndicator(.visible)
+        // Solid, so the action row underneath doesn't show through.
+        .presentationBackground(Color(.systemBackground))
         // Keep the card above undimmed, so each choice shows on it at once.
-        .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+        .presentationBackgroundInteraction(.enabled)
     }
     .sheet(item: $sharing) { payload in
       ActivityView(items: payload.items) { completed in
@@ -191,7 +214,8 @@ struct ShareCarousel: View {
   }
   private func cardImage(_ card: RenderedCard, index: Int) -> some View {
     ZStack {
-      if card.isTransparent(appearance) { Checkerboard() }
+      // Light checks behind dark text, so it reads while you choose.
+      if card.isTransparent(appearance) { Checkerboard(light: appearance.ink == .dark) }
       Image(uiImage: card.asset(for: appearance).image).resizable().scaledToFit()
         .accessibilityLabel("Share card \(index + 1) of \(cards?.count ?? 0), \(card.name.lowercased())\(card.isTransparent(appearance) ? ", no background" : "")")
     }.clipShape(.rect(cornerRadius: 20))
@@ -272,7 +296,6 @@ struct ShareCarousel: View {
   }
 }
 
-/// The grey checks that mean "no background".
 /// Hevy-style picker for a data card's background, opened from the
 /// Background action. Text colour only appears for a transparent card, since
 /// every other ground sets its own.
@@ -281,9 +304,20 @@ private struct BackgroundPicker: View {
   @Environment(\.dismiss) private var dismiss
 
   var body: some View {
-    NavigationStack {
+    VStack(spacing: Space.l) {
+      // A plain header, not a navigation bar, to keep the sheet short.
+      Text("Pick a background")
+        .font(.headline)
+        .frame(maxWidth: .infinity)
+        .overlay(alignment: .trailing) {
+          Button("Done") { dismiss() }
+            .fontWeight(.semibold)
+            .accessibilityIdentifier("background-picker-done")
+        }
+        .padding(.horizontal, Space.l)
+        .padding(.top, Space.xl)
       ScrollView {
-        VStack(spacing: Space.xxl) {
+        VStack(spacing: Space.l) {
           HStack(alignment: .top, spacing: Space.m) {
             ForEach(ShareBackground.allCases) { option in
               swatch(option.name, selected: appearance.background == option) {
@@ -300,7 +334,7 @@ private struct BackgroundPicker: View {
                 ForEach(ShareInk.allCases) { ink in
                   swatch(ink.name, selected: appearance.ink == ink) {
                     ZStack {
-                      Checkerboard()
+                      Checkerboard(light: ink == .dark)
                       Text("Aa").font(.headline).foregroundStyle(ink.color)
                     }
                     .clipShape(Circle())
@@ -320,11 +354,7 @@ private struct BackgroundPicker: View {
         .frame(maxWidth: .infinity)
         .animation(.default, value: appearance.background)
       }
-      .navigationTitle("Pick a background")
-      .navigationBarTitleDisplayMode(.inline)
-      .toolbar {
-        ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
-      }
+      .scrollBounceBehavior(.basedOnSize)
     }
   }
 
@@ -350,16 +380,20 @@ private struct BackgroundPicker: View {
   }
 }
 
+/// The grey checks that mean "no background".
 struct Checkerboard: View {
+  /// Light greys, behind dark text (the web's light checks).
+  var light = false
+
   var body: some View {
     Canvas { context, size in
       let cell: CGFloat = 14
-      context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(white: 0.28)))
+      context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(Color(white: light ? 1 : 0.28)))
       for row in 0..<Int(size.height / cell + 1) {
         for col in 0..<Int(size.width / cell + 1) where (row + col).isMultiple(of: 2) {
           context.fill(
             Path(CGRect(x: CGFloat(col) * cell, y: CGFloat(row) * cell, width: cell, height: cell)),
-            with: .color(Color(white: 0.36)))
+            with: .color(Color(white: light ? 0.84 : 0.36)))
         }
       }
     }
@@ -400,6 +434,7 @@ struct ShareScreen<Content: View>: View {
         ScrollView {
           content
             .environment(\.sharePreviewSize, max(180, geometry.size.height - controlsHeight))
+            .environment(\.shareScreenHeight, geometry.size.height)
             .padding(.horizontal, Space.l)
             .padding(.top, Space.s)
             .padding(.bottom, Space.xl)
@@ -419,10 +454,20 @@ private struct SharePreviewSizeKey: EnvironmentKey {
   static let defaultValue: CGFloat = 540
 }
 
+private struct ShareScreenHeightKey: EnvironmentKey {
+  static let defaultValue: CGFloat = 0
+}
+
 extension EnvironmentValues {
   var sharePreviewSize: CGFloat {
     get { self[SharePreviewSizeKey.self] }
     set { self[SharePreviewSizeKey.self] = newValue }
+  }
+  /// The Share screen's height below its bar, for fitting the card above
+  /// the background sheet.
+  var shareScreenHeight: CGFloat {
+    get { self[ShareScreenHeightKey.self] }
+    set { self[ShareScreenHeightKey.self] = newValue }
   }
 }
 
