@@ -19,7 +19,7 @@ struct RootView: View {
       Color.clear
         .tabItem { Label("Log", systemImage: "plus.circle.fill") }
         .tag(AppRouter.Tab.log)
-        .accessibilityHint("Track a show")
+        .accessibilityHint("Log a show")
       tab(path: $router.profilePath) { ProfileView() }
         .tabItem { Label("Profile", systemImage: "person.crop.circle") }
         .tag(AppRouter.Tab.profile)

@@ -198,7 +198,7 @@ struct LoadingText: View {
     RatingStars(value: 3.5)
     Avatar(name: "felix", url: nil, size: 48)
     Poster(title: "Operation Mincemeat", width: 48, height: 64)
-    EmptyState(title: "Nothing here yet") { Text("Track a show and it appears here.") }
+    EmptyState(title: "Nothing here yet") { Text("Log a show and it appears here.") }
     PlaceholderRows()
   }
 }

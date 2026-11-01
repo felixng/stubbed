@@ -55,7 +55,7 @@ struct PublicEntryView: View {
       .listStyle(.insetGrouped)
       .tabBarClearance()
     }
-    .navigationTitle(state.value??.entry.show.title ?? "")
+    .navigationTitle("Show")
     .navigationBarTitleDisplayMode(.inline)
     // The comment box stays at the bottom, above the tab bar.
     .safeAreaInset(edge: .bottom) {

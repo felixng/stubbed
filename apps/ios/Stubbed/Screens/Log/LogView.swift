@@ -13,6 +13,7 @@ struct LogView: View {
   @Environment(AppSession.self) private var session
   @Environment(AppRouter.self) private var router
   @Environment(\.dismiss) private var dismiss
+  @Environment(\.dynamicTypeSize) private var typeSize
 
   @State private var context = Entries.FormContext()
   @State private var loaded = false
@@ -160,62 +161,48 @@ struct LogView: View {
 
   private var title: String {
     if let importing { return "Show \(importing.number) of \(importing.total)" }
-    return editing == nil ? "Track a show" : "Edit"
+    return editing == nil ? "Log a show" : "Edit"
   }
 
-  /// "Start with a photo": the curtain, the stage, the Playbill or a ticket.
+  /// Start with a photo, or use the secondary import/manual actions.
   private var start: some View {
-    VStack(spacing: Space.l) {
-      PhotosPicker(selection: $photoItem, matching: .images) {
+    ScrollView {
+      VStack(spacing: Space.l) {
         VStack(spacing: Space.m) {
           Image(systemName: "camera.fill")
             .font(.largeTitle)
-            .foregroundStyle(Palette.tintText)
-            .frame(width: 72, height: 72)
-            .background(Palette.tintFill, in: .circle)
-          Text("Start with a photo")
-            .font(.title3.bold())
-            .foregroundStyle(.primary)
+            .foregroundStyle(.secondary)
+          Text("Start with a photo").font(.title3.bold())
           Text("The curtain, the stage, the Playbill or your ticket. We’ll fill in what we can.")
             .font(.subheadline)
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
-            .frame(maxWidth: 280)
-          Text("Choose photo")
-            .font(.headline)
-            .foregroundStyle(Palette.onTint)
-            .padding(.horizontal, Space.xxl)
-            .frame(minHeight: 50)
-            .background(Palette.tint, in: .capsule)
-            .padding(.top, Space.s)
+          PhotosPicker(selection: $photoItem, matching: .images) {
+            Label("Choose photo", systemImage: "photo")
+          }
+          .buttonStyle(.borderedProminent)
+          .controlSize(.large)
+          .accessibilityLabel("Start with a photo")
         }
-        .padding(.horizontal, Space.xxl)
-        .padding(.vertical, Space.xxl)
+        .padding(Space.l)
         .frame(maxWidth: .infinity)
-      }
-      .buttonStyle(.plain)
-      .groupedCard()
-      .accessibilityLabel("Start with a photo")
-      .accessibilityHint("The curtain, the stage, the Playbill or your ticket.")
+        .groupedCard()
 
-      // Several photos at once: grouped by show, each logged in turn.
-      PhotosPicker(
-        selection: $importItems, maxSelectionCount: PhotoImport.maxPhotos, selectionBehavior: .ordered,
-        matching: .images
-      ) {
-        Label("Import from photos", systemImage: "photo.stack")
-          .font(.subheadline.weight(.semibold))
+        PhotosPicker(
+          selection: $importItems, maxSelectionCount: PhotoImport.maxPhotos, selectionBehavior: .ordered,
+          matching: .images
+        ) {
+          Label("Import from photos", systemImage: "photo.stack")
+        }
+        .buttonStyle(.bordered)
+        .controlSize(.large)
+        .accessibilityHint("Pick photos from several shows and log each show in turn.")
+
+        Button("No photo? Fill in by hand") { started = true }
           .frame(minHeight: Space.touch)
       }
-      .accessibilityHint("Pick photos from several shows and log each show in turn.")
-
-      Button("No photo? Fill in by hand") { started = true }
-        .font(.subheadline.weight(.semibold))
-        .frame(minHeight: Space.touch)
-      Spacer()
+      .padding(Space.l)
     }
-    .padding(Space.l)
-    .frame(maxWidth: .infinity, maxHeight: .infinity)
     .background(Color(.systemGroupedBackground))
   }
 
@@ -388,7 +375,10 @@ struct LogView: View {
     Section {
       DatePicker("Date", selection: Binding(get: { Day.date(date) }, set: { setDate(Day.string($0)) }), displayedComponents: .date)
       // One-tap shortcuts for logging straight after a show.
-      HStack(spacing: Space.s) {
+      let layout = typeSize.isAccessibilitySize
+        ? AnyLayout(VStackLayout(alignment: .leading, spacing: Space.s))
+        : AnyLayout(HStackLayout(spacing: Space.s))
+      layout {
         quickDate("Today", today)
         quickDate("Yesterday", Day.today(offset: -1))
       }
@@ -398,9 +388,9 @@ struct LogView: View {
 
   @ViewBuilder private func quickDate(_ title: String, _ day: String) -> some View {
     if date == day {
-      Button(title) { setDate(day) }.buttonStyle(.borderedProminent).accessibilityAddTraits(.isSelected)
+      Button { setDate(day) } label: { Text(title).fixedSize() }.buttonStyle(.borderedProminent).accessibilityAddTraits(.isSelected)
     } else {
-      Button(title) { setDate(day) }.buttonStyle(.bordered)
+      Button { setDate(day) } label: { Text(title).fixedSize() }.buttonStyle(.bordered)
     }
   }
 

@@ -99,9 +99,9 @@ struct HomeView: View {
         ContentUnavailableView {
           Label("Nothing here yet", systemImage: "theatermasks")
         } description: {
-          Text("Shows you track appear here, along with shows from people you follow. Find them with the search button.")
+          Text("Shows you log appear here, along with shows from people you follow. Find them with the search button.")
         } actions: {
-          Button("Track a show") { router.startLog() }
+          Button("Log a show") { router.startLog() }
             .buttonStyle(.borderedProminent)
         }
         .padding(.vertical, Space.xxl)

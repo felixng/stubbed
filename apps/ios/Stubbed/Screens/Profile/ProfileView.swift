@@ -280,16 +280,12 @@ struct ProfileView: View {
         if !upcoming.isEmpty {
           SwiftUI.Section("Upcoming") {
             ForEach(upcoming) { row($0, photos: data.photos) }
-            if !selecting {
-              Button("Plan a trip", systemImage: "plus") { router.newTrip() }
-            }
           }
         }
       } else {
-        SwiftUI.Section("Upcoming") {
-          ForEach(upcoming) { row($0, photos: data.photos) }
-          if !selecting {
-            Button("Plan a trip", systemImage: "plus") { router.newTrip() }
+        if !upcoming.isEmpty {
+          SwiftUI.Section("Upcoming") {
+            ForEach(upcoming) { row($0, photos: data.photos) }
           }
         }
         SwiftUI.Section {

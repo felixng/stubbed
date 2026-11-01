@@ -29,7 +29,7 @@ struct ImportCallout: View {
         .buttonStyle(.borderedProminent)
         .accessibilityHint("Pick photos from several shows and log each show in turn.")
         Button { router.startLog() } label: {
-          Text("Track a show").frame(maxWidth: .infinity)
+          Text("Log a show").frame(maxWidth: .infinity)
         }
         .buttonStyle(.bordered)
       }
