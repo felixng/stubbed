@@ -15,18 +15,22 @@ struct EntryCardData: Hashable, Sendable {
 }
 
 enum EntryCardDesign: String, CaseIterable, Identifiable, Sendable {
-  case stats, name, data
+  case stats, name, data, encore
+  case number = "show-number"
   var id: String { rawValue }
   var name: String {
     switch self {
     case .stats: "Data + Photo"
     case .name: "Rating + Photo"
     case .data: "Data"
+    case .encore: "Encore"
+    case .number: "Show number"
     }
   }
   var isPhoto: Bool { self == .stats || self == .name }
   static func available(photo: Bool, rating: Double?, timesSeen: Int) -> [Self] {
-    (photo ? [.stats] + (rating != nil ? [.name] : []) : []) + [.data]
+    (photo ? [.stats] + (rating != nil ? [.name] : []) : [])
+      + [.data] + (timesSeen > 1 ? [.encore] : []) + [.number]
   }
 }
 
@@ -95,6 +99,18 @@ struct EntryCardView: View {
             }.padding(.bottom, 20)
           }
           Spacer(minLength: 12)
+        } else if !design.isPhoto {
+          Text(design == .encore ? "Encore" : "My theatre year")
+            .font(.system(size: 22, weight: .medium))
+          Spacer(minLength: 0)
+          CardBadge(value: design == .encore ? "\(data.timesSeen)x" : ordinal(data.showOfYear))
+            .frame(maxWidth: .infinity)
+          Text(verbatim: design == .encore ? "\(ordinal(data.timesSeen)) time seeing this show" : "Show of \(data.year)")
+            .font(.system(size: 20, weight: .medium)).lineLimit(1).minimumScaleFactor(0.7)
+          Spacer(minLength: 0)
+          CardTitle(text: data.title, size: 30, lineHeight: 34, width: 484, ink: ink)
+            .padding(.bottom, 12)
+          Spacer(minLength: 0)
         } else { Spacer() }
         if design.isPhoto {
           CardTitle(text: data.title, size: design == .stats ? 28 : 36, lineHeight: 40, width: 484, ink: ink).padding(.bottom, 12)
@@ -105,6 +121,32 @@ struct EntryCardView: View {
         CardFooter(handle: data.handle, ink: ink)
       }.foregroundStyle(ink).padding(28).cardTextShadow(design.isPhoto)
     }.frame(width: Self.size, height: Self.size).environment(\.colorScheme, .dark)
+  }
+}
+
+/// A count illustration, not an awarded achievement. The square canvas
+/// and footer remain the same as every other sharing design.
+struct CardBadge: View {
+  let value: String
+  var body: some View {
+    ZStack {
+      HStack(spacing: 42) {
+        ribbon.rotationEffect(.degrees(12))
+        ribbon.rotationEffect(.degrees(-12))
+      }.offset(y: 66)
+      Image(systemName: "seal.fill").resizable().scaledToFit()
+        .foregroundStyle(CardInk.star).frame(width: 180, height: 180).offset(y: -10)
+      Circle().stroke(Color.black.opacity(0.18), lineWidth: 2)
+        .frame(width: 132, height: 132).offset(y: -10)
+      Text(value).font(.system(size: 48, weight: .heavy)).tracking(-1.5)
+        .foregroundStyle(Color(white: 0.12)).lineLimit(1).minimumScaleFactor(0.45)
+        .frame(width: 132).offset(y: -10)
+    }.frame(width: 220, height: 200)
+  }
+  private var ribbon: some View {
+    UnevenRoundedRectangle(topLeadingRadius: 3, bottomLeadingRadius: 1,
+      bottomTrailingRadius: 1, topTrailingRadius: 3)
+      .fill(CardInk.coral).frame(width: 36, height: 60)
   }
 }
 struct CardFooter: View {

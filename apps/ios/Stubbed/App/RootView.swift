@@ -62,7 +62,7 @@ struct RootView: View {
       content()
         .navigationDestination(for: AppRouter.Route.self) { route in
           switch route {
-          case .entry(let id, let notice): EntryView(id: id, notice: notice)
+          case .entry(let id, let notice): EntryView(id: id, notice: notice).id(id)
           case .trip(let id, let addFailed): TripView(id: id, addFailed: addFailed)
           case .trips: TripsList()
           case .settings: SettingsView()
