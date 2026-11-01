@@ -1,153 +1,114 @@
-"use client";
-
-import { useId, useRef, useState } from "react";
-
 import { Container } from "@/components/landing/Container";
 import { Phone, type Shot } from "@/components/landing/Screens";
 
-// "How it works": four banners, and the phone beside them follows the one
-// that is open. The screenshots come from the iOS app (Screens.tsx).
-const FEATURES: { title: string; body: string; shot: Shot; alt: string }[] = [
+// The four central callouts (#238), sharing first: big alternating rows,
+// each with the part of the app it describes. The screenshots come from
+// the iOS app (Screens.tsx); there's no screenshot of Upcoming yet, so
+// "Plan ahead" shows the list drawn in HTML, as the app lays it out.
+const FEATURES: { eyebrow: string; title: string; body: string; shot?: Shot; alt?: string }[] = [
   {
-    title: "Log every show",
-    body: "Every show you see, in one place: the venue, the date, your half-star rating and your thoughts about the show.",
-    shot: "log",
-    alt: "Logging The Lost Boys: a photo from the show, the show, the Palace Theatre, the date and four and a half stars",
-  },
-  {
+    eyebrow: "Made to share",
     title: "Share with your friends",
-    body: "Turn any show into a card for your Stories, with the show, your rating and your handle.",
+    body: "Turn any show into a card for your Stories, with your photo, the show, your stats and your handle. Pick a design and post it in a tap.",
     shot: "share",
-    alt: "A share card for The Lost Boys: the photo, four and a half stars, the 8th show of 2026 and the handle @sillyelphaba",
+    alt: "A share card for The Lost Boys: the photo, four and a half stars and the handle @sillyelphaba",
   },
   {
-    title: "See your history",
-    body: "Every show you’ve seen in one diary. Bring past shows in from ticket emails and photos.",
-    shot: "history",
-    alt: "A diary of shows seen, newest first, each with a photo, its theatre, date and star rating",
+    eyebrow: "Your diary",
+    title: "Track your visits",
+    body: "Every show you see in one place: the theatre, the date, your half-star rating and a note. Start from a photo and Stubbed fills in what it can.",
+    shot: "log",
+    alt: "Logging The Lost Boys: a photo from the show, the Palace Theatre, the date and four and a half stars",
   },
   {
-    title: "Plan ahead",
-    body: "Group a trip or a festival’s shows together and keep track of what you want to see next.",
+    eyebrow: "The bigger picture",
+    title: "Trips and stats",
+    body: "Group a weekend away or a festival’s shows into a trip, and see your year in theatre: how many shows, which theatres, your streaks.",
     shot: "plan",
-    alt: "A trip called Birthday weekend: 2 shows at 2 venues over 2 nights, Cabaret and Groundhog Day",
+    alt: "A trip called Birthday weekend: 2 shows at 2 venues, Cabaret and Groundhog Day",
+  },
+  {
+    eyebrow: "What’s next",
+    title: "Plan ahead",
+    body: "Add the shows you’ve booked with their date. They wait under Upcoming, and become part of your diary once you’ve been.",
   },
 ];
 
 export function Features() {
-  const [active, setActive] = useState(0);
-  const tabs = useRef<(HTMLButtonElement | null)[]>([]);
-  const id = useId();
-
-  // Arrow keys move between banners, as in any tab list.
-  function onKeyDown(event: React.KeyboardEvent, index: number) {
-    const last = FEATURES.length - 1;
-    const next =
-      event.key === "ArrowDown" || event.key === "ArrowRight"
-        ? index === last ? 0 : index + 1
-        : event.key === "ArrowUp" || event.key === "ArrowLeft"
-          ? index === 0 ? last : index - 1
-          : event.key === "Home"
-            ? 0
-            : event.key === "End"
-              ? last
-              : null;
-    if (next === null) return;
-    event.preventDefault();
-    setActive(next);
-    tabs.current[next]?.focus();
-  }
-
   return (
-    <section id="features" aria-labelledby="features-heading" className="scroll-mt-8 pt-6 pb-16 sm:pb-20">
-      <Container className="flex flex-col gap-6">
-        <h2 id="features-heading" className="font-display text-title text-label">
-          How it works
-        </h2>
-        <div className="flex flex-col gap-8 lg:flex-row-reverse lg:items-center lg:gap-16">
+    <section id="features" aria-label="Features" className="scroll-mt-8 pb-12 sm:pb-16">
+      <Container className="flex flex-col gap-20 sm:gap-28">
+        {FEATURES.map((feature, index) => (
           <div
-            role="tabpanel"
-            id={`${id}-panel`}
-            aria-labelledby={`${id}-tab-${active}`}
-            className="relative mx-auto aspect-[4/5] w-full max-w-[420px] overflow-hidden rounded-lg border border-separator bg-glow shadow-sm lg:mx-0 lg:flex-[1_1_420px]"
+            key={feature.title}
+            className={`flex flex-col items-center gap-10 lg:gap-20 ${index % 2 ? "lg:flex-row-reverse" : "lg:flex-row"}`}
           >
-            {/* All four stay mounted, so switching is an instant cross-fade.
-                The phone sits at the top and runs off the bottom edge. */}
-            {FEATURES.map(({ shot, alt, title }, index) => (
-              <div
-                key={title}
-                aria-hidden={index !== active}
-                className={`absolute inset-0 flex justify-center pt-8 transition-opacity duration-300 motion-reduce:transition-none sm:pt-10 ${
-                  index === active ? "opacity-100" : "opacity-0"
-                }`}
-              >
-                <Phone
-                  shot={shot}
-                  label={alt}
-                  sizes="(min-width: 640px) 290px, 68vw"
-                  className="h-fit w-[69%]"
-                />
-              </div>
-            ))}
+            <div className="flex max-w-[520px] flex-col gap-4 lg:flex-[1_1_480px]">
+              <p className="text-subheadline font-semibold text-tint-text">{feature.eyebrow}</p>
+              <h2 className="font-display text-[clamp(36px,5vw,56px)] leading-[1.04] font-extrabold tracking-[-0.03em] text-balance text-label">
+                {feature.title}
+              </h2>
+              <p className="text-[19px] leading-[1.45] text-pretty text-label-secondary">{feature.body}</p>
+            </div>
+            <Visual feature={feature} />
           </div>
-
-          <div
-            role="tablist"
-            aria-orientation="vertical"
-            aria-labelledby="features-heading"
-            className="flex flex-col gap-3 lg:flex-[1_1_520px]"
-          >
-            {FEATURES.map((feature, index) => {
-              const selected = index === active;
-              return (
-                <button
-                  key={feature.title}
-                  ref={(el) => {
-                    tabs.current[index] = el;
-                  }}
-                  type="button"
-                  role="tab"
-                  id={`${id}-tab-${index}`}
-                  aria-selected={selected}
-                  aria-controls={`${id}-panel`}
-                  tabIndex={selected ? 0 : -1}
-                  onClick={() => setActive(index)}
-                  onKeyDown={(event) => onKeyDown(event, index)}
-                  className={`flex w-full cursor-pointer gap-4 rounded-lg border p-5 text-left transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus sm:p-6 ${
-                    selected
-                      ? "border-separator bg-surface shadow-sm"
-                      : "border-transparent hover:bg-fill"
-                  }`}
-                >
-                  <span
-                    aria-hidden="true"
-                    className={`flex size-9 shrink-0 items-center justify-center rounded-pill text-headline tabular-nums ${
-                      selected ? "bg-label text-background" : "bg-fill text-label-secondary"
-                    }`}
-                  >
-                    {index + 1}
-                  </span>
-                  <span className="flex min-w-0 flex-col">
-                    <span className="font-display text-[20px] leading-9 font-bold text-label">
-                      {feature.title}
-                    </span>
-                    {/* Kept in the page when closed so search engines read it. */}
-                    <span
-                      className={`grid transition-[grid-template-rows] duration-300 motion-reduce:transition-none ${
-                        selected ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
-                      }`}
-                    >
-                      <span className="overflow-hidden text-body leading-6 text-pretty text-label-secondary">
-                        <span className="block pt-1">{feature.body}</span>
-                      </span>
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        ))}
       </Container>
     </section>
+  );
+}
+
+// A white panel with the sweep glowing behind the phone, which sits at the
+// top and runs off the bottom edge.
+function Visual({ feature }: { feature: (typeof FEATURES)[number] }) {
+  return (
+    <div className="relative aspect-[4/5] w-full max-w-[460px] overflow-hidden rounded-[32px] border border-separator bg-surface lg:flex-[1_1_460px]">
+      <div
+        aria-hidden="true"
+        className="absolute top-[14%] left-1/2 h-[90%] w-[62%] -translate-x-1/2 rounded-[40%] bg-sweep opacity-50 blur-[56px]"
+      />
+      <div className={`absolute inset-0 flex justify-center ${feature.shot ? "pt-10 sm:pt-12" : "items-center"}`}>
+        {feature.shot ? (
+          <Phone shot={feature.shot} label={feature.alt ?? ""} sizes="(min-width: 640px) 300px, 66vw" className="relative h-fit w-[66%]" />
+        ) : (
+          <UpcomingList />
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Upcoming, as the app's diary shows it: an inset grouped list of booked
+// shows, each with its poster initials, theatre and date.
+const UPCOMING = [
+  { title: "Hadestown", initials: "H", where: "Lyric Theatre", date: "Fri 20 Nov" },
+  { title: "Operation Mincemeat", initials: "OM", where: "Fortune Theatre", date: "Sat 5 Dec" },
+  { title: "Les Misérables", initials: "LM", where: "Sondheim Theatre", date: "Thu 7 Jan" },
+];
+
+function UpcomingList() {
+  return (
+    <figure className="relative flex w-[84%] flex-col gap-2 text-left">
+      <figcaption className="px-4 text-footnote font-semibold text-label-secondary">Upcoming</figcaption>
+      <ul className="flex flex-col rounded-[22px] bg-background p-1.5 shadow-sm ring-1 ring-separator">
+        {UPCOMING.map((show, i) => (
+          <li key={show.title} className={`flex items-center gap-3 px-3 py-3 ${i ? "border-t border-separator" : ""}`}>
+            <span
+              aria-hidden="true"
+              className="flex h-14 w-11 shrink-0 items-center justify-center rounded-[8px] bg-sweep font-display text-subheadline font-bold text-white"
+            >
+              {show.initials}
+            </span>
+            <span className="flex min-w-0 flex-col">
+              <span className="truncate text-headline text-label">{show.title}</span>
+              <span className="truncate text-footnote text-label-secondary">
+                {show.where} · {show.date}
+              </span>
+              <span className="text-footnote font-semibold text-tint-text">Going</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+    </figure>
   );
 }
