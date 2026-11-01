@@ -4,7 +4,7 @@ import SwiftUI
 /// the photo at the card's full width, then the show (title, venue and
 /// stars together) and the note, and one footer row with the like and
 /// comment counts on the left and its trip on the right. Without a photo
-/// it's a text post. The whole card opens the show; the avatar, counts and trip
+/// it's a text post with an initials poster. The whole card opens the show; the avatar, counts and trip
 /// pills are their own targets. Used by the feed, profiles and trips.
 struct PostCard: View {
   let entry: Entry
@@ -122,16 +122,21 @@ struct PostCard: View {
   /// Title, where and stars together, then the note.
   private var show: some View {
     VStack(alignment: .leading, spacing: Space.xs) {
-      VStack(alignment: .leading, spacing: 2) {
-        Text(entry.show.title)
-          .font(.headline)
-          .foregroundStyle(.primary)
-        Text([entry.whereText, inTrip != nil ? date : nil].compactMap { $0 }.joined(separator: " · "))
-          .font(.subheadline)
-          .foregroundStyle(.secondary)
-      }
-      if let rating = entry.rating {
-        RatingStars(value: rating, size: 15).padding(.vertical, 2)
+      HStack(alignment: .top, spacing: Space.m) {
+        if photo == nil { Poster(title: entry.show.title, width: 48, height: 64) }
+        VStack(alignment: .leading, spacing: Space.xs) {
+          VStack(alignment: .leading, spacing: 2) {
+            Text(entry.show.title)
+              .font(photo == nil ? .title3.bold() : .headline)
+              .foregroundStyle(.primary)
+            Text([entry.whereText, inTrip != nil ? date : nil].compactMap { $0 }.joined(separator: " · "))
+              .font(.subheadline)
+              .foregroundStyle(.secondary)
+          }
+          if let rating = entry.rating {
+            RatingStars(value: rating, size: 15).padding(.vertical, 2)
+          }
+        }
       }
       if let note = entry.note {
         Text(note)
