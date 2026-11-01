@@ -26,7 +26,10 @@ final class ImportCalloutUITests: XCTestCase {
     app.navigationBars.buttons["Cancel"].tap()
 
     openTab("Profile", in: app)
-    XCTAssertTrue(app.staticTexts[heading].waitForExistence(timeout: 15), app.debugDescription)
+    // Profile's native List creates the callout below its year summary.
+    for _ in 0..<8 where !app.staticTexts[heading].exists { app.collectionViews.firstMatch.swipeUp() }
+    XCTAssertTrue(app.staticTexts[heading].waitForExistence(timeout: 10), app.debugDescription)
+    for _ in 0..<4 where !app.buttons["Log a show"].exists { app.collectionViews.firstMatch.swipeUp() }
     XCTAssertTrue(app.buttons["Log a show"].exists)
     snapshot("callout-profile")
   }
