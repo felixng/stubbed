@@ -1,15 +1,10 @@
 import SwiftUI
 import UIKit
 
-/// What an entry's share card shows. The counts come from
-/// `entry_card_stats` in Postgres, so they match the web's cards.
 struct EntryCardData: Hashable, Sendable {
   var title: String
-  /// Venue name, for the "Nth visit" stat; nil without a venue.
   var venue: String?
-  /// "Belasco Theatre, New York", or "" with no venue.
   var whereText: String
-  /// "3 Oct 2026"
   var date: String
   var year: Int
   var rating: Double?
@@ -19,34 +14,23 @@ struct EntryCardData: Hashable, Sendable {
   var handle: String?
 }
 
-/// The entry card designs, in the web's order (apps/web/src/lib/share-card.ts):
-/// stats across the top, or the name alone (owner, 2026-10-29). Both keep the
-/// middle of the photo clear, and either can hide the rating.
 enum EntryCardDesign: String, CaseIterable, Identifiable, Sendable {
-  case stats
-  case name
-
+  case stats, name, data
   var id: String { rawValue }
-
   var name: String {
     switch self {
-    case .stats: "Stats"
-    case .name: "Name only"
+    case .stats: "Data + Photo"
+    case .name: "Rating + Photo"
+    case .data: "Data"
     }
   }
-
-  /// Off by default for 2 stars or below, and when there's no rating (the
-  /// web's `showsRatingByDefault`).
-  static func showsRating(_ rating: Double?) -> Bool { (rating ?? 0) > 2 }
+  var isPhoto: Bool { self == .stats || self == .name }
+  static func available(photo: Bool, rating: Double?, timesSeen: Int) -> [Self] {
+    (photo ? [.stats] + (rating != nil ? [.name] : []) : []) + [.data]
+  }
 }
 
-/// Stubbed's Instagram handle (the web's `CARD_DOMAIN`): the share screen
-/// asks you to tag it, and trip cards show it under the wordmark. Entry
-/// cards leave it off (owner, 2026-10-29).
 let cardDomain = "@getstubbed.app"
-
-/// Fixed colours from the card designs: cards are always dark, whatever the
-/// app's theme.
 enum CardInk {
   static let coral = Color(red: 1, green: 90 / 255, blue: 90 / 255)
   static let star = Color(red: 1, green: 160 / 255, blue: 64 / 255)
@@ -55,11 +39,8 @@ enum CardInk {
   static let ground = Color(red: 28 / 255, green: 28 / 255, blue: 30 / 255)
   static let rule = Color(red: 56 / 255, green: 56 / 255, blue: 58 / 255)
 }
-
-/// 1st, 2nd, 3rd, 4th … 11th, 12th, 13th, 21st.
 func ordinal(_ n: Int) -> String {
-  let rem100 = n % 100
-  if (11...13).contains(rem100) { return "\(n)th" }
+  if (11...13).contains(n % 100) { return "\(n)th" }
   switch n % 10 {
   case 1: return "\(n)st"
   case 2: return "\(n)nd"
@@ -68,134 +49,76 @@ func ordinal(_ n: Int) -> String {
   }
 }
 
-/// One entry card, laid out in the designs' 540pt square. Render it with
-/// `ShareCards.render` for the 1080px image. `transparent` drops the photo
-/// and shading (text only, with shadows), for laying over your own story.
-/// Pass `data` with `rating` nil to hide the rating.
 struct EntryCardView: View {
   let design: EntryCardDesign
   let data: EntryCardData
   let photo: UIImage?
-  var transparent = false
-
+  var appearance: ShareAppearance = .standard
   static let size: CGFloat = 540
-  private let side: CGFloat = 28
-
+  private var ink: Color { design.isPhoto ? .white : appearance.foreground }
+  private var metrics: [(String, String)] {
+    var result = [("Show of \(data.year)", ordinal(data.showOfYear))]
+    if let venue = data.venue { result.append((venue, "\(ordinal(data.venueVisit)) visit")) }
+    result.append(("Times seen", String(data.timesSeen)))
+    return result
+  }
   var body: some View {
-    ZStack(alignment: .topLeading) {
-      if !transparent { background }
-      VStack(alignment: .leading, spacing: 0) {
-        if design == .stats { stats }
-        Spacer(minLength: 0)
-        if design == .stats {
-          CardTitle(text: data.title, size: 26, lineHeight: 30, width: Self.size - side * 2, maxLines: 1)
-            .padding(.bottom, 10)
-        } else {
-          CardTitle(text: data.title, size: 36, lineHeight: 40, width: Self.size - side * 2)
-            .padding(.bottom, 12)
-          if let rating = data.rating {
-            CardStars(value: rating, size: 24, gap: 3, outline: .white.opacity(0.75))
-              .padding(.bottom, 12)
-          }
-        }
-        footer
-      }
-      .padding(.horizontal, side)
-      .padding(.bottom, 26)
-      .cardTextShadow(true)
-    }
-    .frame(width: Self.size, height: Self.size)
-    .clipShape(.rect(cornerRadius: transparent ? 0 : 32))
-    .environment(\.colorScheme, .dark)
-  }
-
-  /// Shade only where there's text: a band at the top behind the stats, and
-  /// the bottom quarter behind the name and logo.
-  private var background: some View {
     ZStack {
-      CardBackground(photo: photo, focusY: 0.4)
-      VStack(spacing: 0) {
-        if design == .stats {
-          LinearGradient(colors: [.black.opacity(0.55), .black.opacity(0)], startPoint: .top, endPoint: .bottom)
-            .frame(height: 150)
+      if design.isPhoto {
+        CardBackground(photo: photo, focusY: 0.4)
+        VStack {
+          if design == .stats {
+            LinearGradient(colors: [.black.opacity(0.6), .clear], startPoint: .top, endPoint: .bottom).frame(height: 150)
+          }
+          Spacer()
+          LinearGradient(colors: [.clear, .black.opacity(0.8)], startPoint: .top, endPoint: .bottom).frame(height: 180)
         }
-        Spacer(minLength: 0)
-        LinearGradient(colors: [.black.opacity(0), .black.opacity(0.75)], startPoint: .top, endPoint: .bottom)
-          .frame(height: Self.size - 360)
-      }
-    }
-  }
-
-  /// Show of the year, the venue visit (or times seen with no venue), then
-  /// the rating, or times seen when it's hidden.
-  private var stats: some View {
-    var columns: [(label: String, value: String?, color: Color)] = [
-      ("Show of \(String(data.year))", ordinal(data.showOfYear), CardInk.coral)
-    ]
-    if let venue = data.venue {
-      columns.append((venue, "\(ordinal(data.venueVisit)) visit", .white))
-    } else {
-      columns.append(("Seen", "\(ordinal(data.timesSeen)) time", .white))
-    }
-    if data.rating != nil {
-      columns.append(("Rating", nil, .white))
-    } else if data.venue != nil {
-      columns.append(("Seen", "\(ordinal(data.timesSeen)) time", .white))
-    }
-    return HStack(spacing: 0) {
-      ForEach(Array(columns.enumerated()), id: \.offset) { _, column in
-        VStack(spacing: 4) {
-          Text(column.label)
-            .font(.system(size: 20, weight: .medium))
-            .tracking(-0.2)
-            .foregroundStyle(CardInk.softWhite)
-            .lineLimit(1)
-            .frame(height: 26)
-          if let value = column.value {
-            Text(value)
-              .font(.system(size: 30, weight: .bold))
-              .tracking(0.2)
-              .foregroundStyle(column.color)
-              .lineLimit(1)
-              .minimumScaleFactor(0.7)
-              .frame(height: 36)
-          } else if let rating = data.rating {
-            CardStars(value: rating, size: 24, gap: 3, outline: .white.opacity(0.75))
-              .frame(height: 36)
+      } else { ShareCardSurface(appearance: appearance) }
+      VStack(alignment: .leading, spacing: 0) {
+        if design == .stats {
+          HStack(alignment: .top, spacing: 12) {
+            ForEach(Array(metrics.enumerated()), id: \.offset) { _, item in
+              VStack(spacing: 6) {
+                Text(item.0).font(.system(size: 17, weight: .medium)).lineLimit(2).frame(height: 42)
+                Text(item.1).font(.system(size: 28, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7)
+              }.frame(maxWidth: .infinity)
+            }
+          }
+          Spacer()
+        } else if design == .data {
+          CardTitle(text: data.title, size: 38, lineHeight: 42, width: 484, ink: ink)
+          Spacer(minLength: 20)
+          ForEach(Array(metrics.enumerated()), id: \.offset) { _, item in
+            VStack(alignment: .leading, spacing: 3) {
+              Text(item.0).font(.system(size: 18, weight: .medium)).lineLimit(2)
+              Text(item.1).font(.system(size: 42, weight: .bold)).lineLimit(1).minimumScaleFactor(0.65)
+            }.padding(.bottom, 20)
+          }
+          Spacer(minLength: 12)
+        } else { Spacer() }
+        if design.isPhoto {
+          CardTitle(text: data.title, size: design == .stats ? 28 : 36, lineHeight: 40, width: 484, ink: ink).padding(.bottom, 12)
+          if design == .name, let rating = data.rating {
+            CardStars(value: rating, size: 30, gap: 4, outline: .white.opacity(0.75)).padding(.bottom, 16)
           }
         }
-        .padding(.horizontal, 6)
-        .frame(maxWidth: .infinity)
-      }
-    }
-    .padding(.horizontal, 20 - side)
-    .padding(.top, 30)
+        CardFooter(handle: data.handle, ink: ink)
+      }.foregroundStyle(ink).padding(28).cardTextShadow(design.isPhoto)
+    }.frame(width: Self.size, height: Self.size).environment(\.colorScheme, .dark)
   }
-
-  /// The logo (ticket mark and wordmark), and the @handle on the right.
-  private var footer: some View {
-    HStack(alignment: .center) {
-      HStack(spacing: 36 * 0.28) {
-        Image("BrandMark")
-          .resizable()
-          .scaledToFit()
-          .frame(height: 36 * 1.05)
-        Text(verbatim: "stubbed")
-          .font(.system(size: 36, weight: .heavy))
-          .tracking(-0.045 * 36)
-          .foregroundStyle(.white)
+}
+struct CardFooter: View {
+  let handle: String?
+  var ink: Color = .white
+  var body: some View {
+    HStack(spacing: 12) {
+      HStack(spacing: 8) {
+        Image("BrandMark").resizable().scaledToFit().frame(height: 30)
+        Text("stubbed").font(.system(size: 30, weight: .heavy)).tracking(-1.35)
       }
       Spacer(minLength: 12)
-      if let handle = data.handle {
-        Text(verbatim: "@\(handle)")
-          .font(.system(size: 24, weight: .medium))
-          .tracking(-0.3)
-          .foregroundStyle(.white)
-          .lineLimit(1)
-          .frame(maxWidth: 200, alignment: .trailing)
-      }
-    }
-    .frame(height: 44)
+      if let handle { Text(verbatim: "@\(handle)").font(.system(size: 20, weight: .medium)).lineLimit(1).minimumScaleFactor(0.6) }
+    }.foregroundStyle(ink).frame(height: 40)
   }
 }
 
@@ -235,6 +158,7 @@ struct CardTitle: View {
   let lineHeight: CGFloat
   let width: CGFloat
   var maxLines = 2
+  var ink: Color = .white
 
   var body: some View {
     let fitted = Self.fit(text, size: size, width: width, maxLines: maxLines)
@@ -242,7 +166,7 @@ struct CardTitle: View {
       .font(.system(size: fitted, weight: .bold))
       .tracking(fitted * 0.01)
       .lineSpacing(lineHeight / size * fitted - fitted * 1.2)
-      .foregroundStyle(.white)
+      .foregroundStyle(ink)
       .lineLimit(maxLines)
       .truncationMode(.tail)
       .frame(width: width, alignment: .leading)

@@ -700,3 +700,7 @@ The owner found /press (#246) didn't follow the reference (getpersonalbest.com/p
 - **The stats screenshot** is captured past the streaks: the sample diary has no current streak, and "0 weeks" reads badly in press.
 - **No empty slots:** the video placeholder is gone until a walkthrough exists. The App Store line says "coming soon" (#247) and the beta button asks for a TestFlight invite by email (#236).
 - **Size:** about 10 MB of images and a 5 MB zip in git. Acceptable for now; move them to a CDN if the kit grows.
+
+## 2026-11-01: Sharing controls follow the selected card (#124)
+
+Remove the rating toggle and low-rating auto-hide. Data + Photo and Rating + Photo have separate content and eligibility; an unrated or photo-less entry never fabricates a rating card. Background cards alone own solid, gradient and transparent variants, including light/dark transparent ink. A selected background never affects a photo preview or any export action. Stable design IDs replace positional selection, actions use a native three-column grid, and drawing shows a card-shaped placeholder. This introduces the full Data background as the control/rendering foundation; Encore and Show number follow in #140.

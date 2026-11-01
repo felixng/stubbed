@@ -3,303 +3,178 @@ import Supabase
 import SwiftUI
 import UIKit
 
-/// Stubbed's Instagram account, tagged in the caption and the copied text.
 let stubbedInstagram = cardDomain
-
-/// A drawn card: the image with its background and, for entry cards, the
-/// same card without it (text only, for laying over your own story photo).
+typealias ShareAsset = (file: URL, image: UIImage)
 struct RenderedCard: Identifiable {
   let id: String
   let name: String
   let file: URL
   let image: UIImage
-  var clear: (file: URL, image: UIImage)?
+  var backgrounds: [ShareAppearance: ShareAsset] = [:]
+  var showsRating = false
+  var supportsBackground: Bool { !backgrounds.isEmpty }
+  func asset(for appearance: ShareAppearance) -> ShareAsset {
+    let key = ShareAppearance(background: appearance.background, ink: appearance.background == .transparent ? appearance.ink : .light)
+    return backgrounds[key] ?? (file, image)
+  }
+  func isTransparent(_ appearance: ShareAppearance) -> Bool { supportsBackground && appearance.background == .transparent }
 }
-
 enum ShareCards {
-  /// Draws a 540pt card view as a 1080px PNG in the temporary folder, named
-  /// like the web's downloads ("stubbed-hamilton-square.png").
-  @MainActor
-  static func render<V: View>(_ view: V, name: String) throws -> (file: URL, image: UIImage) {
+  @MainActor static func render<V: View>(_ view: V, name: String) throws -> ShareAsset {
     let renderer = ImageRenderer(content: view)
     renderer.scale = 2
     renderer.isOpaque = false
     guard let image = renderer.uiImage, let png = image.pngData() else { throw Photo.Failure.unreadable }
-    let file = FileManager.default.temporaryDirectory.appendingPathComponent("\(name).png")
+    // Two visits to the same show may stay open in different navigation
+    // screens. Their exported files must not overwrite one another.
+    let directory = FileManager.default.temporaryDirectory.appendingPathComponent("share-\(UUID().uuidString)")
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    let file = directory.appendingPathComponent("\(name).png")
     try png.write(to: file, options: .atomic)
     return (file, image)
   }
-
-  /// "operation-mincemeat"
   static func slug(_ title: String) -> String {
     let parts = title.lowercased().split { !($0.isASCII && ($0.isLetter || $0.isNumber)) }
     return parts.isEmpty ? "show" : parts.joined(separator: "-")
   }
-
-  /// Draws every entry design, with and without its background.
-  /// `showRating: false` draws them with the rating left off.
-  @MainActor
-  static func entryCards(_ data: EntryCardData, photo: UIImage?, showRating: Bool = true) throws -> [RenderedCard] {
-    let slug = slug(data.title)
-    var data = data
-    if !showRating { data.rating = nil }
-    return try EntryCardDesign.allCases.map { design in
-      let name = "stubbed-\(slug)-\(design.id)\(showRating ? "" : "-no-rating")"
+  @MainActor static func entryCards(_ data: EntryCardData, photo: UIImage?) throws -> [RenderedCard] {
+    try EntryCardDesign.available(photo: photo != nil, rating: data.rating, timesSeen: data.timesSeen).map { design in
+      let name = "stubbed-\(slug(data.title))-\(design.id)"
       let full = try render(EntryCardView(design: design, data: data, photo: photo), name: name)
-      let clear = try render(EntryCardView(design: design, data: data, photo: nil, transparent: true), name: "\(name)-clear")
-      return RenderedCard(id: design.id, name: design.name, file: full.file, image: full.image, clear: clear)
+      var variants: [ShareAppearance: ShareAsset] = [:]
+      if !design.isPhoto {
+        for appearance in ShareAppearance.variants {
+          variants[appearance] = try render(EntryCardView(design: design, data: data, photo: nil, appearance: appearance), name: "\(name)-\(appearance.key)")
+        }
+      }
+      return RenderedCard(id: design.id, name: design.name, file: full.file, image: full.image, backgrounds: variants, showsRating: design == .name)
     }
   }
-
-  /// The numbers on an entry's cards, from Postgres so they match the web.
   struct Stats: Decodable, Sendable {
     let show_of_year: Int
     let venue_visit: Int
     let times_seen: Int
   }
-
   static func stats(_ entryId: UUID) async throws -> Stats {
     try await supabase.rpc("entry_card_stats", params: ["entry_id": entryId]).single().execute().value
   }
-
-  /// Downloads a photo for drawing; nil if there isn't one or it fails.
   static func image(_ url: URL?) async -> UIImage? {
     guard let url, let (data, _) = try? await URLSession.shared.data(from: url) else { return nil }
     return UIImage(data: data)
   }
 }
-
-/// Hevy-style share screen, like the web's ShareSheet: swipe between card
-/// designs, optionally drop the background (entry cards), then send the card
-/// in view to an Instagram story, the share sheet or Photos.
 struct ShareCarousel: View {
-  enum Subject { case show, trip }
-
+  enum Subject { case show, trip, insights }
   let subject: Subject
-  /// nil while the cards are drawn.
   let cards: [RenderedCard]?
   var failed = false
-  /// The caption for "More" and "Copy text".
   let text: String
-  /// The public page, for the Link button; nil when private.
   var link: URL?
-  /// Entry cards only: the rating, and the same cards drawn without it, for
-  /// the Rating toggle. Both nil when there's no rating.
-  var rating: Double?
-  var ratingHidden: [RenderedCard]?
-
-  @State private var active = 0
-  @State private var transparent = false
-  /// The toggle's choice; until it's tapped, a low rating starts hidden.
-  @State private var ratingChoice: Bool?
+  @Environment(\.sharePreviewSize) private var previewSize
+  @Environment(\.dynamicTypeSize) private var typeSize
+  @State private var active: String?
+  @State private var appearance = ShareAppearance.standard
   @State private var notice: String?
   @State private var sharing: SharePayload?
-
   private struct SharePayload: Identifiable {
     let id = UUID()
     let items: [Any]
     let action: String
   }
-
-  private var showRating: Bool { ratingChoice ?? EntryCardDesign.showsRating(rating) }
-  /// The cards on screen: without the rating when it's toggled off.
-  private var visible: [RenderedCard]? { (showRating ? nil : ratingHidden) ?? cards }
-  private var current: RenderedCard? { visible?[safe: active] }
-  private var currentFile: URL? {
-    guard let current else { return nil }
-    return transparent ? current.clear?.file ?? current.file : current.file
+  private var current: RenderedCard? { cards?.first(where: { $0.id == active }) ?? cards?.first }
+  private var currentAsset: ShareAsset? { current?.asset(for: appearance) }
+  private var selection: Binding<String> {
+    Binding(get: { current?.id ?? "loading" }, set: { active = $0 })
   }
-
   var body: some View {
-    VStack(spacing: Space.l) {
-      TabView(selection: $active) {
-        ForEach(Array(shown.enumerated()), id: \.offset) { index, card in
-          cardImage(card, index: index)
-            .padding(.horizontal, 2)
-            .tag(index)
+    VStack(spacing: Space.m) {
+      TabView(selection: selection) {
+        if let cards, !cards.isEmpty {
+          ForEach(Array(cards.enumerated()), id: \.element.id) { index, card in cardImage(card, index: index).tag(card.id) }
+        } else {
+          RoundedRectangle(cornerRadius: 20).fill(Color(.tertiarySystemFill))
+            .overlay {
+              if failed { Text("Couldn’t draw this card.").font(.subheadline).foregroundStyle(.secondary) }
+              else { Image(systemName: "ticket").font(.largeTitle).foregroundStyle(.quaternary).redacted(reason: .placeholder) }
+            }.accessibilityLabel(failed ? "Couldn’t draw cards" : "Preparing share cards").tag("loading")
+        }
+      }.tabViewStyle(.page(indexDisplayMode: .never)).aspectRatio(1, contentMode: .fit)
+        .frame(maxWidth: previewSize).accessibilityLabel("Card designs")
+      HStack(spacing: 8) {
+        ForEach(cards ?? []) { card in
+          Circle().fill(card.id == current?.id ? AnyShapeStyle(Palette.tint) : AnyShapeStyle(.quaternary)).frame(width: 7, height: 7)
+        }
+      }.accessibilityHidden(true)
+      if current?.supportsBackground == true {
+        Picker("Background", selection: $appearance.background) {
+          ForEach(ShareBackground.allCases) { option in Text(option.name).tag(option) }
+        }.pickerStyle(.segmented).accessibilityIdentifier("share-background")
+        if appearance.background == .transparent {
+          Picker("Text colour", selection: $appearance.ink) {
+            ForEach(ShareInk.allCases) { option in Text(option.name).tag(option) }
+          }.pickerStyle(.segmented).accessibilityIdentifier("share-ink")
         }
       }
-      .tabViewStyle(.page(indexDisplayMode: .never))
-      .aspectRatio(1, contentMode: .fit)
-      .accessibilityLabel("Card designs")
-
-      HStack(spacing: Space.s) {
-        ForEach(0..<shown.count, id: \.self) { i in
-          Circle()
-            .fill(i == active ? AnyShapeStyle(Palette.tint) : AnyShapeStyle(.quaternary))
-            .frame(width: 8, height: 8)
-        }
-      }
-      .accessibilityHidden(true)
-
-      (Text("Share your \(subject == .show ? "show" : "trip") · Tag ") + Text(stubbedInstagram).fontWeight(.semibold))
-        .font(.callout)
-        .foregroundStyle(.primary)
-
-      ScrollView(.horizontal, showsIndicators: false) {
-        HStack(alignment: .top, spacing: Space.m) {
-          if subject == .show {
-            action("Background", selected: !transparent) {
-              ZStack {
-                if transparent { Checkerboard() } else { Color.primary }
-                Image(systemName: "line.diagonal")
-                  .font(.title2.weight(.medium))
-                  .foregroundStyle(Color(.systemBackground))
-              }
-            } perform: {
-              transparent.toggle()
-            }
-            .disabled(cards == nil)
-            if rating != nil, ratingHidden != nil {
-              action("Rating", selected: showRating) {
-                ZStack {
-                  if showRating { Color.primary } else { Color(.secondarySystemGroupedBackground) }
-                  Image(systemName: showRating ? "star.fill" : "star.slash")
-                    .font(.title3.weight(.medium))
-                    .foregroundStyle(showRating ? Color(.systemBackground) : Palette.tintText)
-                }
-              } perform: {
-                ratingChoice = !showRating
-              }
-              .disabled(cards == nil)
-              .accessibilityLabel(showRating ? "Rating shown" : "Rating hidden")
-            }
-            Divider().frame(height: 48).padding(.top, 4)
-          }
-          action("Stories") {
-            ZStack {
-              RadialGradient(
-                colors: [
-                  Color(red: 0.99, green: 0.96, blue: 0.59), Color(red: 0.99, green: 0.35, blue: 0.29),
-                  Color(red: 0.84, green: 0.14, blue: 0.62), Color(red: 0.16, green: 0.35, blue: 0.92),
-                ], center: UnitPoint(x: 0.3, y: 1.07), startRadius: 0, endRadius: 70)
-              Image(systemName: "camera")
-                .font(.title2.weight(.medium))
-                .foregroundStyle(.white)
-            }
-          } perform: {
-            Task { await shareToStories() }
-          }
-          .disabled(cards == nil)
-          action("More", systemImage: "square.and.arrow.up") { share(withText: true) }
-            .disabled(cards == nil)
-          action("Download", systemImage: "arrow.down.to.line") { Task { await download() } }
-            .disabled(cards == nil)
+      Text("Tag \(stubbedInstagram)").font(.footnote).foregroundStyle(.secondary)
+      LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: typeSize.isAccessibilitySize ? 2 : 3), spacing: Space.m) {
+        action("Stories", systemImage: "camera") { Task { await shareToStories() } }.disabled(current == nil)
+        action("More", systemImage: "square.and.arrow.up") { share(withText: true) }.disabled(current == nil)
+        action("Download", systemImage: "arrow.down.to.line") { Task { await download() } }.disabled(current == nil)
+        if !text.isEmpty {
           action("Copy text", systemImage: "doc.on.doc") {
             UIPasteboard.general.string = text
             record("copy_text")
             notice = "Text copied."
           }
-          if let link {
-            action("Link", systemImage: "link") {
-              UIPasteboard.general.url = link
-              record("copy_link")
-              notice = "Link copied."
-            }
+        }
+        if let link {
+          action("Link", systemImage: "link") {
+            UIPasteboard.general.url = link
+            record("copy_link")
+            notice = "Link copied."
           }
         }
-        .padding(.horizontal, Space.l)
       }
-      .padding(.horizontal, -Space.l)
-
-      Text(notice ?? " ")
-        .font(.footnote)
-        .foregroundStyle(.secondary)
-        .accessibilityHidden(notice == nil)
+      if let notice { Text(notice).font(.footnote).foregroundStyle(.secondary) }
     }
-    .onChange(of: notice) { _, value in
-      if let value { AccessibilityNotification.Announcement(value).post() }
-    }
+    .onChange(of: notice) { _, value in if let value { AccessibilityNotification.Announcement(value).post() } }
     .sheet(item: $sharing) { payload in
       ActivityView(items: payload.items) { completed in
         sharing = nil
         if completed { record(payload.action) }
-      }
-      .presentationDetents([.medium, .large])
+      }.presentationDetents([.medium, .large])
     }
   }
-
-  /// The drawn cards, or empty slots while they're drawn.
-  private var shown: [RenderedCard?] {
-    visible.map { $0.map(Optional.some) } ?? Array(repeating: nil, count: subject == .show ? EntryCardDesign.allCases.count : 4)
-  }
-
-  @ViewBuilder private func cardImage(_ card: RenderedCard?, index: Int) -> some View {
-    let clear = transparent && card?.clear != nil
+  private func cardImage(_ card: RenderedCard, index: Int) -> some View {
     ZStack {
-      if clear { Checkerboard() }
-      if let card {
-        Image(uiImage: clear ? card.clear!.image : card.image)
-          .resizable()
-          .scaledToFit()
-          .accessibilityLabel("Share card \(index + 1) of \(visible?.count ?? 0), \(card.name.lowercased())\(clear ? ", no background" : "")")
-      } else {
-        Color(.tertiarySystemFill).overlay {
-          Text(failed ? "Couldn’t draw this card." : "Drawing…")
-            .font(.subheadline)
-            .foregroundStyle(.secondary)
-        }
-      }
-    }
-    .clipShape(.rect(cornerRadius: 20, style: .continuous))
+      if card.isTransparent(appearance) { Checkerboard() }
+      Image(uiImage: card.asset(for: appearance).image).resizable().scaledToFit()
+        .accessibilityLabel("Share card \(index + 1) of \(cards?.count ?? 0), \(card.name.lowercased())\(card.isTransparent(appearance) ? ", no background" : "")")
+    }.clipShape(.rect(cornerRadius: 20))
   }
-
-  private func action<Icon: View>(
-    _ label: String, selected: Bool? = nil, @ViewBuilder icon: () -> Icon, perform: @escaping () -> Void
-  ) -> some View {
+  private func action(_ label: String, systemImage: String, perform: @escaping () -> Void) -> some View {
     Button(action: perform) {
       VStack(spacing: 6) {
-        icon()
-          .frame(width: 56, height: 56)
-          .clipShape(Circle())
-        Text(label)
-          .font(.footnote)
-          .foregroundStyle(.primary)
-          .lineLimit(1)
-          .fixedSize()
-      }
-      .frame(minWidth: 72)
-    }
-    .buttonStyle(.plain)
-    .accessibilityAddTraits(selected == true ? .isSelected : [])
+        Image(systemName: systemImage).font(.title3).frame(height: 28)
+        Text(label).font(.footnote).lineLimit(2)
+      }.frame(maxWidth: .infinity, minHeight: 56)
+    }.buttonStyle(.bordered)
   }
-
-  private func action(_ label: String, systemImage: String, perform: @escaping () -> Void) -> some View {
-    action(label) {
-      ZStack {
-        Color(.secondarySystemGroupedBackground)
-        Image(systemName: systemImage)
-          .font(.title3.weight(.medium))
-          .foregroundStyle(Palette.tintText)
-      }
-    } perform: {
-      perform()
-    }
-  }
-
-  /// Straight to Instagram's story composer when it's installed and set up;
-  /// otherwise the share sheet with only the image (Instagram's entry there
-  /// drops the image when text comes with it).
   private func shareToStories() async {
-    guard let current else { return }
-    let clear = transparent ? current.clear?.image : nil
-    if await InstagramStories.share(clear ?? current.image, transparent: clear != nil) {
+    guard let current, let asset = currentAsset else { return }
+    if await InstagramStories.share(asset.image, transparent: current.isTransparent(appearance)) {
       notice = nil
       record("stories")
-    } else {
-      share(withText: false)
-    }
+    } else { share(withText: false) }
   }
-
   private func share(withText: Bool) {
-    guard let file = currentFile else { return }
+    guard let asset = currentAsset else { return }
     notice = nil
-    sharing = SharePayload(items: withText ? [file, text] : [file], action: withText ? "more" : "stories")
+    let items: [Any] = withText && !text.isEmpty ? [asset.file, text] : [asset.file]
+    sharing = SharePayload(items: items, action: withText ? "more" : "stories")
   }
-
   private func download() async {
-    guard let file = currentFile else { return }
-    notice = nil
+    guard let file = currentAsset?.file else { return }
     let status = await PHPhotoLibrary.requestAuthorization(for: .addOnly)
     guard status == .authorized || status == .limited else {
       notice = "Allow Stubbed to add photos in Settings to save the card."
@@ -311,20 +186,15 @@ struct ShareCarousel: View {
       }
       record("download")
       notice = "Saved to Photos."
-    } catch {
-      notice = "Couldn’t save the image."
-    }
+    } catch { notice = "Couldn’t save the image." }
   }
-
   private func record(_ action: String) {
-    let designs = visible?.map(\.id) ?? []
-    Analytics.track(
-      .cardShared,
-      [
-        "action": .string(action), "design": .string(designs[safe: active] ?? ""),
-        "transparent": .bool(transparent && subject == .show), "platform": .string("ios"),
-        "rating": .bool(subject == .show && rating != nil && showRating),
-      ])
+    guard let current else { return }
+    Analytics.track(.cardShared, [
+      "action": .string(action), "design": .string(current.id),
+      "background": .string(current.supportsBackground ? appearance.background.rawValue : "photo"),
+      "transparent": .bool(current.isTransparent(appearance)), "platform": .string("ios"), "rating": .bool(current.showsRating),
+    ])
   }
 }
 
@@ -371,14 +241,18 @@ struct ShareScreen<Content: View>: View {
   @ViewBuilder var content: Content
 
   @Environment(\.dismiss) private var dismiss
+  @ScaledMetric(relativeTo: .body) private var controlsHeight: CGFloat = 350
 
   var body: some View {
     NavigationStack {
-      ScrollView {
-        content
-          .padding(.horizontal, Space.l)
-          .padding(.top, Space.s)
-          .padding(.bottom, Space.xl)
+      GeometryReader { geometry in
+        ScrollView {
+          content
+            .environment(\.sharePreviewSize, max(180, geometry.size.height - controlsHeight))
+            .padding(.horizontal, Space.l)
+            .padding(.top, Space.s)
+            .padding(.bottom, Space.xl)
+        }
       }
       .background(Color(.systemGroupedBackground))
       .navigationTitle(title)
@@ -387,6 +261,17 @@ struct ShareScreen<Content: View>: View {
         ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
       }
     }
+  }
+}
+
+private struct SharePreviewSizeKey: EnvironmentKey {
+  static let defaultValue: CGFloat = 540
+}
+
+extension EnvironmentValues {
+  var sharePreviewSize: CGFloat {
+    get { self[SharePreviewSizeKey.self] }
+    set { self[SharePreviewSizeKey.self] = newValue }
   }
 }
 
