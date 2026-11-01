@@ -49,8 +49,12 @@ final class PolishUITests: XCTestCase {
     openTab("Profile", in: app)
     let approve = app.buttons["Approve @ios_fan"]
     for _ in 0..<10 where !approve.exists || !approve.isHittable { app.collectionViews.firstMatch.swipeUp() }
+    let decline = app.buttons["Decline @ios_fan"]
+    let tabBarTop = app.buttons["Log"].frame.minY
+    for _ in 0..<4 where approve.frame.maxY > tabBarTop - 8 { app.collectionViews.firstMatch.swipeUp() }
     XCTAssertTrue(approve.isHittable)
-    XCTAssertTrue(app.buttons["Decline @ios_fan"].isHittable)
+    XCTAssertTrue(decline.isHittable)
+    XCTAssertLessThanOrEqual(decline.frame.maxX, app.frame.maxX)
     snapshot("follow-request-accessibility")
     app.buttons["Log"].tap()
     XCTAssertTrue(app.navigationBars["Log a show"].waitForExistence(timeout: 10))
