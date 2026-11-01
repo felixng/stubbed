@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = { themeColor: "#fff9f6" };
 
 // Laid out like getpersonalbest.com/press (the owner's reference): one
-// reading column, then the screenshots and media at full width.
+// 720px column for everything, screenshots and media included.
 const features = [
   ["Track your visits", "Every show you see, in one place: the venue, the date, your half-star rating, and your thoughts about the show.", "M4 4h16v16H4zM8 4v16M4 9h16"],
   ["Share with your friends", "Generate beautiful Instagram share cards of your theatre trips to share with your network.", "M12 16V3m-4 4 4-4 4 4M5 12v8h14v-8"],
@@ -40,7 +40,7 @@ export default function PressPage() {
       </header>
       <main id="press-content">
         <Container className="pb-16 sm:pb-24">
-          <div className="mx-auto max-w-2xl space-y-14 pt-6 sm:space-y-16 sm:pt-10">
+          <div className="mx-auto max-w-[720px] space-y-14 pt-6 sm:space-y-16 sm:pt-10">
             <div>
               <Image src="/press/app-icon.png" alt="The Stubbed app icon" width={1024} height={1024} sizes="88px" preload className="mb-8 h-20 w-20 rounded-[22%] shadow-sm ring-1 ring-black/5 sm:h-[88px] sm:w-[88px]" />
               <h1 className="font-display text-[clamp(44px,7vw,76px)] leading-[1.02] font-extrabold tracking-[-0.03em] text-balance text-label">Stubbed Press Kit</h1>
@@ -95,7 +95,7 @@ export default function PressPage() {
             </section>
           </div>
 
-          <div className="mx-auto mt-16 max-w-5xl space-y-16 sm:mt-20 sm:space-y-20">
+          <div className="mx-auto mt-16 max-w-[720px] space-y-16 sm:mt-20 sm:space-y-20">
             <PressScreenshots />
             <PressMedia />
           </div>

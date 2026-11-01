@@ -67,11 +67,11 @@ export function PressScreenshots() {
     <section id="screenshots" aria-labelledby="screenshots-heading" className="scroll-mt-8">
       <h2 id="screenshots-heading" className={pressHeading}>Screenshots</h2>
       <p className="mt-3 max-w-2xl leading-relaxed text-label-secondary">From the iPhone app, at full resolution. Each comes as the original screenshot and in a phone frame on a transparent background.</p>
-      <ul className="mt-8 grid grid-cols-2 gap-x-5 gap-y-10 sm:grid-cols-3 sm:gap-x-8">
+      <ul className="mt-8 grid grid-cols-2 gap-x-3 gap-y-10 sm:grid-cols-3">
         {screens.map((screen) => (
           <li key={screen.name} className="min-w-0">
             <div className="rounded-[18%/8.3%] bg-[#1c1c1e] p-[2.6%] shadow-lg ring-1 ring-black/10">
-              <Image src={screen.raw} alt={`Stubbed on iPhone: ${screen.name.toLowerCase()}`} width={SHOT.width} height={SHOT.height} sizes="(min-width: 640px) 300px, 45vw" className="h-auto w-full rounded-[15.5%/7.1%] bg-background" />
+              <Image src={screen.raw} alt={`Stubbed on iPhone: ${screen.name.toLowerCase()}`} width={SHOT.width} height={SHOT.height} sizes="(min-width: 640px) 232px, 45vw" className="h-auto w-full rounded-[15.5%/7.1%] bg-background" />
             </div>
             <p className="mt-4 text-headline text-label">{screen.name}</p>
             <div className="flex flex-wrap gap-x-4">
@@ -108,13 +108,13 @@ export function PressMedia() {
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
               <div className="flex aspect-[2/1] items-center justify-center rounded-xl bg-surface p-8 ring-1 ring-separator">
-                <Image src="/press/stubbed-logo.png" alt="The Stubbed logo: the ticket mark and the stubbed wordmark" width={2141} height={500} sizes="(min-width: 640px) 400px, 80vw" className="h-auto w-full max-w-sm" />
+                <Image src="/press/stubbed-logo.png" alt="The Stubbed logo: the ticket mark and the stubbed wordmark" width={2141} height={500} sizes="(min-width: 640px) 300px, 80vw" className="h-auto w-full max-w-sm" />
               </div>
               <Download href="/press/stubbed-logo.png">PNG, for light backgrounds</Download>
             </div>
             <div>
               <div className="flex aspect-[2/1] items-center justify-center rounded-xl bg-[#1c1c1e] p-8">
-                <Image src="/press/stubbed-logo-white.png" alt="The Stubbed logo with a white wordmark, on a dark background" width={2141} height={500} sizes="(min-width: 640px) 400px, 80vw" className="h-auto w-full max-w-sm" />
+                <Image src="/press/stubbed-logo-white.png" alt="The Stubbed logo with a white wordmark, on a dark background" width={2141} height={500} sizes="(min-width: 640px) 300px, 80vw" className="h-auto w-full max-w-sm" />
               </div>
               <Download href="/press/stubbed-logo-white.png">PNG, for dark backgrounds</Download>
             </div>
@@ -158,7 +158,7 @@ export function PressMedia() {
         <ul className="mt-5 grid gap-x-6 gap-y-8 sm:grid-cols-2">
           {landscapes.map((image) => (
             <li key={image.name} className="min-w-0">
-              <Image src={image.src} alt={`Stubbed: ${image.name.toLowerCase()}, landscape image`} width={1920} height={1080} sizes="(min-width: 640px) 480px, 100vw" className="h-auto w-full rounded-xl ring-1 ring-separator" />
+              <Image src={image.src} alt={`Stubbed: ${image.name.toLowerCase()}, landscape image`} width={1920} height={1080} sizes="(min-width: 640px) 354px, 100vw" className="h-auto w-full rounded-xl ring-1 ring-separator" />
               <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4">
                 <p className="text-subheadline text-label">{image.name}</p>
                 <Download href={image.src}>JPG</Download>
