@@ -73,6 +73,7 @@ struct ShareCarousel: View {
   @Environment(\.sharePreviewSize) private var previewSize
   @State private var active: String?
   @State private var appearance = ShareAppearance.standard
+  @State private var pickingBackground = false
   @State private var notice: String?
   @State private var sharing: SharePayload?
   private struct SharePayload: Identifiable {
@@ -104,22 +105,32 @@ struct ShareCarousel: View {
           Circle().fill(card.id == current?.id ? AnyShapeStyle(Palette.tint) : AnyShapeStyle(.quaternary)).frame(width: 7, height: 7)
         }
       }.accessibilityHidden(true)
-      if current?.supportsBackground == true {
-        Picker("Background", selection: $appearance.background) {
-          ForEach(ShareBackground.allCases) { option in Text(option.name).tag(option) }
-        }.pickerStyle(.segmented).accessibilityIdentifier("share-background")
-        if appearance.background == .transparent {
-          Picker("Text colour", selection: $appearance.ink) {
-            ForEach(ShareInk.allCases) { option in Text(option.name).tag(option) }
-          }.pickerStyle(.segmented).accessibilityIdentifier("share-ink")
-        }
-      }
       (Text("Share your \(subjectName) · Tag ") + Text(stubbedInstagram).fontWeight(.semibold))
         .font(.callout)
         .foregroundStyle(.primary)
 
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(alignment: .top, spacing: Space.m) {
+          if subject == .show {
+            // Always shown on entry shares; photo cards have no background
+            // to change, so it's dimmed there.
+            let canPick = current?.supportsBackground == true
+            let shown = canPick ? appearance.background : .dark
+            action("Background") {
+              ZStack {
+                ShareBackgroundSwatch(background: shown)
+                Image(systemName: "line.diagonal")
+                  .font(.title2.weight(.medium))
+                  .foregroundStyle(shown == .dark || shown == .gradient ? Color.white : Color(white: 0.08))
+              }
+            } perform: {
+              pickingBackground = true
+            }
+            .disabled(!canPick)
+            .opacity(canPick ? 1 : 0.4)
+            .accessibilityValue(canPick ? appearance.background.name : "Not available for photo cards")
+            Divider().frame(height: 48).padding(.top, 4)
+          }
           action("Stories") {
             ZStack {
               RadialGradient(
@@ -164,6 +175,13 @@ struct ShareCarousel: View {
         .accessibilityHidden(notice == nil)
     }
     .onChange(of: notice) { _, value in if let value { AccessibilityNotification.Announcement(value).post() } }
+    .sheet(isPresented: $pickingBackground) {
+      BackgroundPicker(appearance: $appearance)
+        .presentationDetents([.medium])
+        .presentationDragIndicator(.visible)
+        // Keep the card above undimmed, so each choice shows on it at once.
+        .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+    }
     .sheet(item: $sharing) { payload in
       ActivityView(items: payload.items) { completed in
         sharing = nil
@@ -255,6 +273,83 @@ struct ShareCarousel: View {
 }
 
 /// The grey checks that mean "no background".
+/// Hevy-style picker for a data card's background, opened from the
+/// Background action. Text colour only appears for a transparent card, since
+/// every other ground sets its own.
+private struct BackgroundPicker: View {
+  @Binding var appearance: ShareAppearance
+  @Environment(\.dismiss) private var dismiss
+
+  var body: some View {
+    NavigationStack {
+      ScrollView {
+        VStack(spacing: Space.xxl) {
+          HStack(alignment: .top, spacing: Space.m) {
+            ForEach(ShareBackground.allCases) { option in
+              swatch(option.name, selected: appearance.background == option) {
+                ShareBackgroundSwatch(background: option)
+              } perform: {
+                appearance.background = option
+              }
+            }
+          }
+          if appearance.background == .transparent {
+            VStack(spacing: Space.m) {
+              Text("Text colour").font(.subheadline).foregroundStyle(.secondary)
+              HStack(alignment: .top, spacing: Space.xxl) {
+                ForEach(ShareInk.allCases) { ink in
+                  swatch(ink.name, selected: appearance.ink == ink) {
+                    ZStack {
+                      Checkerboard()
+                      Text("Aa").font(.headline).foregroundStyle(ink.color)
+                    }
+                    .clipShape(Circle())
+                    .overlay(Circle().strokeBorder(Color.primary.opacity(0.12), lineWidth: 1))
+                  } perform: {
+                    appearance.ink = ink
+                  }
+                  .accessibilityLabel("\(ink.name) text")
+                }
+              }
+            }
+            .transition(.opacity)
+          }
+        }
+        .padding(.horizontal, Space.l)
+        .padding(.vertical, Space.s)
+        .frame(maxWidth: .infinity)
+        .animation(.default, value: appearance.background)
+      }
+      .navigationTitle("Pick a background")
+      .navigationBarTitleDisplayMode(.inline)
+      .toolbar {
+        ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
+      }
+    }
+  }
+
+  private func swatch<Fill: View>(
+    _ label: String, selected: Bool, @ViewBuilder fill: () -> Fill, perform: @escaping () -> Void
+  ) -> some View {
+    Button(action: perform) {
+      VStack(spacing: 6) {
+        fill()
+          .frame(width: 56, height: 56)
+          .padding(4)
+          .overlay(Circle().strokeBorder(selected ? Palette.tint : .clear, lineWidth: 3))
+        Text(label)
+          .font(.footnote)
+          .foregroundStyle(selected ? .primary : .secondary)
+          .lineLimit(1)
+          .fixedSize()
+      }
+      .frame(minWidth: 72)
+    }
+    .buttonStyle(.plain)
+    .accessibilityAddTraits(selected ? .isSelected : [])
+  }
+}
+
 struct Checkerboard: View {
   var body: some View {
     Canvas { context, size in
