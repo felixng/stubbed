@@ -729,3 +729,7 @@ Posts without a photo use the existing 48×64 Poster beside the show title, venu
 
 ### 2026-11-01: The autopilot is removed
 Owner: "kill the autopilot, it doesn't work well." Reverses the 2026-10-28 autopilot. `scripts/autopilot/` is deleted and the working agreement is gone from `CLAUDE.md`; nothing polls the board any more. The `epic` skill stays for when the owner asks to "build epic #N" in a session, without the board-column moves. The board's "Ready for Claude" and "In review" columns no longer trigger anything.
+
+## 2026-11-01: Share actions back to the round icon row
+
+The owner preferred the earlier share actions over #263's three-column `.bordered` grid, so the actions are the round 56pt icons in a horizontally scrolling row again (Instagram-gradient Stories, then More, Download, Copy text, Link), with the "Share your show · Tag @…" caption and a reserved notice line. The Background and Text colour pickers from #263 stay, and the rating toggle stays removed. The Share screen is an exception to the "`.bordered` buttons, never a custom style" rule, like the share cards themselves.
