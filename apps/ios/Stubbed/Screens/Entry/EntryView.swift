@@ -35,7 +35,7 @@ struct EntryView: View {
       }
     }
     .background(Color(.systemGroupedBackground))
-    .navigationTitle(state.value?.show.title ?? "")
+    .navigationTitle("Show")
     .navigationBarTitleDisplayMode(.inline)
     .toolbar {
       if let entry = state.value {
@@ -109,7 +109,7 @@ struct EntryView: View {
         }
         if entry.planned {
           Label(
-            "You’re going on \(Day.formatWeekday(entry.date)). Once you’ve been, track it with your rating and share it.",
+            "You’re going on \(Day.formatWeekday(entry.date)). Once you’ve been, log it with your rating and share it.",
             systemImage: "calendar"
           )
           .font(.subheadline)

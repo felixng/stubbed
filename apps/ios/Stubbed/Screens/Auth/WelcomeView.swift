@@ -24,44 +24,34 @@ struct WelcomeView: View {
   @FocusState private var focus: Field?
 
   var body: some View {
-    ScrollViewReader { proxy in
-    ScrollView {
-      VStack(spacing: Space.xxxl) {
-        VStack(spacing: Space.m) {
-          Wordmark(size: 36, mark: true)
-          Text("Set up your profile")
-            .font(.title2.bold())
-            .foregroundStyle(.primary)
+    NavigationStack {
+      Form {
+        Section {
+          Text("Set up your profile").font(.headline)
           Text("Your handle goes on your share cards and profile link.")
             .font(.subheadline)
             .foregroundStyle(.secondary)
-            .multilineTextAlignment(.center)
         }
-        .padding(.top, 48)
-
         if loaded, let userId = session.userId {
-          form(userId: userId)
+          fields(userId: userId)
         } else {
-          LoadingText().frame(maxWidth: .infinity, alignment: .center)
+          PlaceholderRows(count: 4)
         }
-
-        Button("Sign out") { Task { await session.signOut() } }
-          .font(.subheadline)
-          .foregroundStyle(.secondary)
       }
-      .frame(maxWidth: 420)
-      .padding(.horizontal, Space.l)
-      .padding(.bottom, Space.xxxl)
-      .frame(maxWidth: .infinity)
-    }
-    .scrollDismissesKeyboard(.interactively)
-    .background(Color(.systemGroupedBackground))
-    // Keeps the focused field and its message (e.g. "That handle is taken")
-    // above the keyboard.
-    .onChange(of: focus) { _, field in
-      guard let field else { return }
-      withAnimation { proxy.scrollTo(field, anchor: .center) }
-    }
+      .scrollDismissesKeyboard(.interactively)
+      .navigationTitle("Welcome")
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) {
+          Button("Sign out") { Task { await session.signOut() } }
+        }
+        ToolbarItem(placement: .confirmationAction) {
+          Button(saving ? "Saving…" : "Continue") {
+            if let userId = session.userId { Task { await save(userId: userId) } }
+          }
+          .disabled(!loaded || saving || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            || ProfileRules.handleProblem(handle) != nil || availability == .taken || availability == .reserved)
+        }
+      }
     }
     .task { await load() }
     .task(id: handle) { await checkHandle() }
@@ -70,82 +60,72 @@ struct WelcomeView: View {
     }
   }
 
-  private func form(userId: UUID) -> some View {
-    VStack(alignment: .leading, spacing: Space.xl) {
+  @ViewBuilder private func fields(userId: UUID) -> some View {
+    Section {
       AvatarPicker(userId: userId, name: name.isEmpty ? handle : name, url: $avatarURL)
-
-      FormField(label: "Name", message: errors[.name], isError: true) {
-        TextField("Name", text: $name, prompt: Text("Your name"))
-          .textContentType(.name)
-          .focused($focus, equals: .name)
-          .submitLabel(.next)
-          .onSubmit { focus = .handle }
-          .onChange(of: name) { _, value in
-            if value.count > ProfileRules.nameMax { name = String(value.prefix(ProfileRules.nameMax)) }
-          }
-          .fieldStyle()
-      }
-      .id(Field.name)
-
-      FormField(label: "Handle", message: handleMessage, isError: handleIsError) {
-        HStack(spacing: 2) {
-          Text(verbatim: "@").foregroundStyle(.secondary).accessibilityHidden(true)
-          TextField("Handle", text: $handle, prompt: Text(verbatim: "yourname"))
-            .textContentType(.username)
-            .textInputAutocapitalization(.never)
-            .autocorrectionDisabled()
-            .focused($focus, equals: .handle)
-            .submitLabel(.next)
-            .onSubmit { focus = .bio }
-            .onChange(of: handle) { _, value in
-              let normalized = String(ProfileRules.normalizeHandle(value).prefix(20))
-              if normalized != value { handle = normalized }
-            }
+        .buttonStyle(.borderless)
+        .listRowBackground(Color.clear)
+    }
+    Section {
+      TextField("Name", text: $name, prompt: Text("Your name"))
+        .textContentType(.name)
+        .accessibilityLabel("Name")
+        .focused($focus, equals: .name)
+        .submitLabel(.next)
+        .onSubmit { focus = .handle }
+        .onChange(of: name) { _, value in
+          if value.count > ProfileRules.nameMax { name = String(value.prefix(ProfileRules.nameMax)) }
         }
-        .fieldStyle()
-      }
-      .id(Field.handle)
-
-      FormField(
-        label: "Bio", optional: true, counter: "\(bio.count)/\(ProfileRules.bioMax)",
-        message: errors[.bio], isError: true
-      ) {
-        TextField("Bio", text: $bio, prompt: Text("Musicals, mostly. Always the front row."), axis: .vertical)
-          .lineLimit(3, reservesSpace: true)
-          .focused($focus, equals: .bio)
-          .onChange(of: bio) { _, value in
-            if value.count > ProfileRules.bioMax { bio = String(value.prefix(ProfileRules.bioMax)) }
-          }
-          .padding(.vertical, Space.m)
-          .fieldStyle()
-      }
-      .id(Field.bio)
-
-      FormField(label: "Link", optional: true, message: errors[.link], isError: true) {
-        TextField("Link", text: $link, prompt: Text(verbatim: "instagram.com/yourname"))
-          .keyboardType(.URL)
-          .textContentType(.URL)
+    } header: { Text("Name") } footer: {
+      if let message = errors[.name] { Text(message).foregroundStyle(.red) }
+    }
+    Section {
+      HStack(spacing: 2) {
+        Text(verbatim: "@").foregroundStyle(.secondary).accessibilityHidden(true)
+        TextField("Handle", text: $handle, prompt: Text(verbatim: "yourname"))
+          .textContentType(.username)
           .textInputAutocapitalization(.never)
           .autocorrectionDisabled()
-          .focused($focus, equals: .link)
-          .submitLabel(.go)
-          .onSubmit { Task { await save(userId: userId) } }
-          .fieldStyle()
+          .accessibilityLabel("Handle")
+          .focused($focus, equals: .handle)
+          .submitLabel(.next)
+          .onSubmit { focus = .bio }
+          .onChange(of: handle) { _, value in
+            let normalized = String(ProfileRules.normalizeHandle(value).prefix(20))
+            if normalized != value { handle = normalized }
+          }
       }
-      .id(Field.link)
-
-      if let formError {
-        Text(formError)
-          .font(.footnote)
-          .foregroundStyle(.red)
-      }
-
-      Button { Task { await save(userId: userId) } } label: {
-        Text(saving ? "Saving…" : "Continue").frame(maxWidth: .infinity)
-      }
-        .buttonStyle(.borderedProminent)
-        .controlSize(.large)
-        .disabled(saving || ProfileRules.handleProblem(handle) != nil && !handle.isEmpty || availability == .taken || availability == .reserved)
+    } header: { Text("Handle") } footer: {
+      Text(handleMessage).foregroundStyle(handleIsError ? Color.red : Color.secondary)
+    }
+    Section {
+      TextField("Bio", text: $bio, prompt: Text("Musicals, mostly. Always the front row."), axis: .vertical)
+        .lineLimit(3, reservesSpace: true)
+        .accessibilityLabel("Bio")
+        .focused($focus, equals: .bio)
+        .onChange(of: bio) { _, value in
+          if value.count > ProfileRules.bioMax { bio = String(value.prefix(ProfileRules.bioMax)) }
+        }
+    } header: {
+      Text("Bio (optional)")
+    } footer: {
+      Text("\(bio.count)/\(ProfileRules.bioMax)")
+    }
+    Section {
+      TextField("Link", text: $link, prompt: Text(verbatim: "instagram.com/yourname"))
+        .keyboardType(.URL)
+        .textContentType(.URL)
+        .textInputAutocapitalization(.never)
+        .autocorrectionDisabled()
+        .accessibilityLabel("Link")
+        .focused($focus, equals: .link)
+        .submitLabel(.go)
+        .onSubmit { Task { await save(userId: userId) } }
+    } header: { Text("Link (optional)") } footer: {
+      if let message = errors[.link] { Text(message).foregroundStyle(.red) }
+    }
+    if let formError {
+      Section { Text(formError).foregroundStyle(.red) }
     }
   }
 

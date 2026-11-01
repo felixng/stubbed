@@ -77,7 +77,7 @@ struct PublicProfileView: View {
               .listRowBackground(Color.clear)
           } else if page.entries.isEmpty {
             EmptyState(title: "No public shows yet", systemImage: "theatermasks") {
-              Text("When @\(page.profile.handle) tracks a public show, it’ll appear here.")
+              Text("When @\(page.profile.handle) logs a public show, it’ll appear here.")
             }
             .listRowBackground(Color.clear)
           } else {

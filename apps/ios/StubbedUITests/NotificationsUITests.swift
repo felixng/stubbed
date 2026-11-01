@@ -18,7 +18,7 @@ final class NotificationsUITests: XCTestCase {
     let comment = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "commented on your")).firstMatch
     XCTAssertTrue(comment.waitForExistence(timeout: 10))
     comment.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4)).tap()
-    XCTAssertTrue(app.navigationBars["Hamilton"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.navigationBars["Show"].waitForExistence(timeout: 10))
     app.navigationBars.buttons.element(boundBy: 0).tap()
     XCTAssertTrue(app.navigationBars["Notifications"].waitForExistence(timeout: 10))
     app.buttons["Notification actions"].tap()

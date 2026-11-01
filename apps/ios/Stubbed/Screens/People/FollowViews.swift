@@ -195,7 +195,7 @@ struct FollowRequests: View {
     ForEach(people) { person in
       // Through the router: this sits in Profile's List(selection:), where a
       // NavigationLink pushes the profile twice.
-      PersonRow(person: person, onOpen: { router.open(.profile(handle: $0.handle)) }, chevron: true) {
+      PersonRow(person: person, onOpen: { router.open(.profile(handle: $0.handle)) }) {
         HStack(spacing: Space.s) {
           Button("Approve") { Task { await answer(person, approve: true) } }
             .buttonStyle(.borderedProminent)

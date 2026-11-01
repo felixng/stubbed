@@ -11,7 +11,7 @@ final class LogUITests: XCTestCase {
     try signIn(app)
     XCTAssertTrue(onHome(app))
     app.buttons["Log"].tap()
-    XCTAssertTrue(app.navigationBars["Track a show"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.navigationBars["Log a show"].waitForExistence(timeout: 10))
     XCTAssertTrue(app.buttons["Start with a photo"].exists)
     snapshot("log-start")
     app.buttons["No photo? Fill in by hand"].tap()

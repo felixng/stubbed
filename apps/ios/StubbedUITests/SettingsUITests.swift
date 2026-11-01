@@ -10,12 +10,10 @@ final class SettingsUITests: XCTestCase {
     try signIn(app, newUser: newUser)
     if newUser {
       XCTAssertTrue(app.staticTexts["Set up your profile"].waitForExistence(timeout: 15))
-      tap(app.textFields["Name"])
-      app.textFields["Name"].typeText("Leaving Soon")
-      tap(app.textFields["Handle"])
+      scrollAndTap(app.textFields["Name"], in: app)
+      app.textFields["Name"].typeText("Leaving Soon\n")
       app.textFields["Handle"].typeText("ios_new")
       XCTAssertTrue(app.staticTexts["@ios_new is yours."].waitForExistence(timeout: 10))
-      app.scrollViews.firstMatch.swipeUp()
       app.buttons["Continue"].tap()
     }
     XCTAssertTrue(onHome(app))
@@ -70,15 +68,17 @@ final class SettingsUITests: XCTestCase {
     app.buttons["Profile privacy"].tap()
     let row = app.switches.matching(NSPredicate(format: "label BEGINSWITH %@", "Private profile")).firstMatch
     XCTAssertTrue(row.waitForExistence(timeout: 10))
-    app.collectionViews.firstMatch.swipeUp()
-    row.tap()
+    XCTAssertEqual(row.value as? String, "0")
+    row.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
     expectation(for: NSPredicate(format: "value == %@", "1"), evaluatedWith: row)
     waitForExpectations(timeout: 10)
     scrollAndTap(app.buttons["Save"], in: app)
     XCTAssertTrue(app.staticTexts["Saved. Your profile is private."].waitForExistence(timeout: 10))
     snapshot("settings-private")
 
-    row.tap()
+    row.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
+    expectation(for: NSPredicate(format: "value == %@", "0"), evaluatedWith: row)
+    waitForExpectations(timeout: 10)
     scrollAndTap(app.buttons["Save"], in: app)
     XCTAssertTrue(app.staticTexts["Saved. Your profile is public."].waitForExistence(timeout: 10))
   }

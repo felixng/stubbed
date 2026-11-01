@@ -13,11 +13,11 @@ final class WelcomeUITests: XCTestCase {
 
     XCTAssertTrue(app.staticTexts["Set up your profile"].waitForExistence(timeout: 15))
     let name = app.textFields["Name"]
-    tap(name)
+    scrollAndTap(name, in: app)
     name.typeText("iOS Test")
 
     let handle = app.textFields["Handle"]
-    tap(handle)
+    scrollAndTap(handle, in: app)
     handle.typeText("Admin")
     XCTAssertTrue(app.staticTexts["That handle is reserved. Try another."].waitForExistence(timeout: 10))
     snapshot("welcome-reserved")
@@ -26,8 +26,7 @@ final class WelcomeUITests: XCTestCase {
     XCTAssertTrue(app.staticTexts["@ios_new is yours."].waitForExistence(timeout: 10))
     snapshot("welcome-available")
 
-    // The keyboard covers Continue: scroll it into view, as a person would.
-    app.scrollViews.firstMatch.swipeUp()
+    // Continue stays reachable in the native navigation bar above the keyboard.
     app.buttons["Continue"].tap()
     XCTAssertTrue(app.buttons["Profile"].waitForExistence(timeout: 15))
   }

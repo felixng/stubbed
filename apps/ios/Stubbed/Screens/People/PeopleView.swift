@@ -72,37 +72,62 @@ struct PersonRow<Trailing: View>: View {
   /// that still push a screen.
   var chevron = false
   @ViewBuilder var trailing: Trailing
+  @Environment(\.dynamicTypeSize) private var typeSize
 
   var body: some View {
     if let onOpen {
-      Button { onOpen(person) } label: {
-        HStack(spacing: Space.m) {
-          label
-          if chevron {
-            Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
-          }
+      // Keep profile navigation and response controls as sibling targets.
+      if typeSize.isAccessibilitySize {
+        VStack(alignment: .leading, spacing: Space.m) {
+          profileButton(onOpen)
+          trailing
         }
-        .contentShape(Rectangle())
+      } else {
+        HStack(spacing: Space.m) {
+          profileButton(onOpen)
+          trailing
+        }
       }
-      .foregroundStyle(.primary)
     } else {
       NavigationLink(value: AppRouter.Route.profile(handle: person.handle)) { label }
     }
   }
 
-  private var label: some View {
+  private func profileButton(_ onOpen: @escaping (Person) -> Void) -> some View {
+    Button { onOpen(person) } label: {
       HStack(spacing: Space.m) {
-        Avatar(name: person.name, url: person.avatarURL, size: 40)
-        VStack(alignment: .leading, spacing: 0) {
-          Text(verbatim: "@\(person.handle)")
-            .font(.subheadline.weight(.semibold))
-            .lineLimit(1)
-          if let name = person.displayName, !name.isEmpty {
-            Text(name).font(.footnote).foregroundStyle(.secondary).lineLimit(1)
-          }
-        }
+        identity
         Spacer(minLength: 0)
-        trailing
+        if chevron {
+          Image(systemName: "chevron.right").font(.footnote.weight(.semibold)).foregroundStyle(.tertiary)
+        }
       }
+      .contentShape(Rectangle())
+    }
+    .buttonStyle(.borderless)
+    .foregroundStyle(.primary)
+  }
+
+  private var label: some View {
+    HStack(spacing: Space.m) {
+      identity
+      Spacer(minLength: 0)
+      trailing
+    }
+  }
+
+  private var identity: some View {
+    HStack(spacing: Space.m) {
+      Avatar(name: person.name, url: person.avatarURL, size: 40)
+      VStack(alignment: .leading, spacing: 0) {
+        Text(verbatim: "@\(person.handle)")
+          .font(.subheadline.weight(.semibold))
+          .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
+        if let name = person.displayName, !name.isEmpty {
+          Text(name).font(.footnote).foregroundStyle(.secondary)
+            .lineLimit(typeSize.isAccessibilitySize ? nil : 1)
+        }
+      }
+    }
   }
 }

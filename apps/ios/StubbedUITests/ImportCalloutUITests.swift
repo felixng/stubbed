@@ -26,8 +26,11 @@ final class ImportCalloutUITests: XCTestCase {
     app.navigationBars.buttons["Cancel"].tap()
 
     openTab("Profile", in: app)
-    XCTAssertTrue(app.staticTexts[heading].waitForExistence(timeout: 15), app.debugDescription)
-    XCTAssertTrue(app.buttons["Track a show"].exists)
+    // Profile's native List creates the callout below its year summary.
+    for _ in 0..<8 where !app.staticTexts[heading].exists { app.collectionViews.firstMatch.swipeUp() }
+    XCTAssertTrue(app.staticTexts[heading].waitForExistence(timeout: 10), app.debugDescription)
+    for _ in 0..<4 where !app.buttons["Log a show"].exists { app.collectionViews.firstMatch.swipeUp() }
+    XCTAssertTrue(app.buttons["Log a show"].exists)
     snapshot("callout-profile")
   }
 
@@ -70,13 +73,12 @@ final class ImportCalloutUITests: XCTestCase {
   private func finishOnboardingIfNeeded(_ app: XCUIApplication) {
     guard app.staticTexts["Set up your profile"].waitForExistence(timeout: 15) else { return }
     let name = app.textFields["Name"]
-    tap(name)
+    scrollAndTap(name, in: app)
     name.typeText("iOS New")
     let handle = app.textFields["Handle"]
-    tap(handle)
+    scrollAndTap(handle, in: app)
     handle.typeText("ios_new")
     XCTAssertTrue(app.staticTexts["@ios_new is yours."].waitForExistence(timeout: 10))
-    app.scrollViews.firstMatch.swipeUp()
     app.buttons["Continue"].tap()
     XCTAssertTrue(app.buttons["Profile"].waitForExistence(timeout: 15))
   }

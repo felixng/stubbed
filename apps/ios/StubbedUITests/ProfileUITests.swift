@@ -46,9 +46,7 @@ final class ProfileUITests: XCTestCase {
     }
     snapshot(accessibility ? "profile-year-accessibility" : "profile-year-overview")
     let trips = app.buttons["profile-trips"]
-    for _ in 0..<8 where !trips.exists || !trips.isHittable {
-      app.collectionViews.firstMatch.swipeUp()
-    }
+    revealControl(trips, in: app)
     XCTAssertTrue(trips.waitForExistence(timeout: 5))
     XCTAssertFalse(app.segmentedControls["profile-sections"].exists)
     snapshot(accessibility ? "profile-year-accessibility-links" : "profile-year-summary")
@@ -80,8 +78,9 @@ final class ProfileUITests: XCTestCase {
     XCTAssertTrue(app.staticTexts["@ios_test"].waitForExistence(timeout: 10))
     XCTAssertTrue(app.staticTexts["iOS Test"].exists)
     // The owner activity summary now precedes the diary.
-    for _ in 0..<4 where !app.staticTexts["Upcoming"].exists { app.collectionViews.firstMatch.swipeUp() }
-    XCTAssertTrue(app.staticTexts["Upcoming"].waitForExistence(timeout: 10))
+    let upcoming = app.staticTexts.matching(NSPredicate(format: "label ==[c] %@", "Upcoming")).firstMatch
+    for _ in 0..<4 where !upcoming.exists { app.collectionViews.firstMatch.swipeUp() }
+    XCTAssertTrue(upcoming.waitForExistence(timeout: 10))
     snapshot("profile")
     // The diary is a List: rows below the fold are built as they scroll in.
     let hadestown = button(app, startingWith: "Hadestown")

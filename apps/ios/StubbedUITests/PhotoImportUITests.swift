@@ -23,7 +23,9 @@ final class PhotoImportUITests: XCTestCase {
     pickPhoto(app, takenInNewYork: "2026-09-14 19:31")  // import-stage.jpg
     pickPhoto(app, takenInNewYork: "2026-08-21 14:05")  // import-ticket.jpg
     snapshot("import-picker")
-    app.buttons["Add"].firstMatch.tap()
+    let add = app.buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "Add", "Done")).firstMatch
+    XCTAssertTrue(add.waitForExistence(timeout: 5), app.debugDescription)
+    add.tap()
 
     XCTAssertTrue(app.staticTexts["3 shows"].waitForExistence(timeout: 20), app.debugDescription)
     XCTAssertTrue(app.staticTexts["Fri 21 Aug 2026"].exists)
