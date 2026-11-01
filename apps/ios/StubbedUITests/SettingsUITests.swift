@@ -10,12 +10,10 @@ final class SettingsUITests: XCTestCase {
     try signIn(app, newUser: newUser)
     if newUser {
       XCTAssertTrue(app.staticTexts["Set up your profile"].waitForExistence(timeout: 15))
-      tap(app.textFields["Name"])
-      app.textFields["Name"].typeText("Leaving Soon")
-      tap(app.textFields["Handle"])
+      scrollAndTap(app.textFields["Name"], in: app)
+      app.textFields["Name"].typeText("Leaving Soon\n")
       app.textFields["Handle"].typeText("ios_new")
       XCTAssertTrue(app.staticTexts["@ios_new is yours."].waitForExistence(timeout: 10))
-      app.scrollViews.firstMatch.swipeUp()
       app.buttons["Continue"].tap()
     }
     XCTAssertTrue(onHome(app))
