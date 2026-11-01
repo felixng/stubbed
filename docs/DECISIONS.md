@@ -740,3 +740,6 @@ Following Hevy, a data card's background is chosen from a sheet opened by a Back
 - **Four grounds:** Dark (the old Solid; raw value still `solid` so analytics stay comparable), Light (white, new), Gradient and Transparent. Light draws dark text.
 - **Text colour only for Transparent.** Its Light/Dark swatches appear in the sheet only then; every other ground sets its own ink, and a leftover choice is ignored when exporting.
 - The sheet is a `.medium` detent with background interaction enabled, so the card above stays undimmed and updates as you pick.
+
+### 2026-11-01: The background sheet keeps the whole card in view
+Follow-up to #295, from testing it on iPhone 17e. The sheet is now sized to its contents (a plain header instead of a navigation bar; taller only when Transparent adds Text colour), and while it's up the card shrinks to fit above it, so every choice shows on the whole card, small phones included. The sheet has a solid background, and the action row and tag line fade out beneath it, since iOS 26's floating sheet showed their ends beside it. With Transparent and Dark text, the preview's checkerboard turns light so the text reads; exports are unchanged.
