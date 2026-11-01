@@ -263,7 +263,7 @@ export const IOS_SCREENSHOTS = [
   { file: "comments-drawer.jpg", title: "Comments drawer", caption: "A post's comments as a pull-up drawer over the feed, the composer pinned to the bottom.", width: 460, height: 1000 },
   { file: "profile.jpg", title: "Profile", caption: "Settings gear above the identity card, its edit pencil inside, then follow requests and the current-year summary. iPhone SE.", width: 562, height: 1000 },
   { file: "diary.jpg", title: "Diary rows", caption: "EntryRow in Upcoming and Seen sections; swipe or long press to edit or delete.", width: 460, height: 1000 },
-  { file: "entry.jpg", title: "A show", caption: "A Form: the show first, then Share, then likes, trips and privacy, then Delete.", width: 460, height: 1000 },
+  { file: "entry.jpg", title: "A show", caption: "A Form: the attached photo at 4:5, then show details, Share, likes, trips and privacy. Without a photo, Add a photo opens Edit.", width: 460, height: 1000 },
   { file: "share.jpg", title: "Share", caption: "The Share sheet: the card at full width, then the ways to send it.", width: 460, height: 1000 },
   { file: "log-form.jpg", title: "Log a show", caption: "A Form in a sheet: date with quick picks, rating, note, a segmented visibility picker.", width: 460, height: 1000 },
   { file: "comments.jpg", title: "Comments", caption: "Comments as List rows (swipe to delete) and the composer pinned above the tab bar.", width: 460, height: 1000 },

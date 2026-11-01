@@ -1,8 +1,7 @@
 import SwiftUI
 
-/// One of your entries, like the web's /app/entries/[id]. The share cards go
-/// at the top (#69); below them, what the cards don't show: type, note,
-/// trips and visibility. Edit opens the log form; Delete asks first.
+/// One of your entries, with its photo, show details and sharing actions.
+/// Edit opens the log form; Delete asks first.
 struct EntryView: View {
   let id: UUID
   var notice: AppRouter.Notice?
@@ -72,6 +71,19 @@ struct EntryView: View {
   /// then Delete on its own.
   private func form(_ entry: Entry) -> some View {
     Form {
+      if let photo {
+        Section {
+          Color.clear
+            .aspectRatio(4 / 5, contentMode: .fit)
+            .overlay { RemoteImage(url: photo) }
+            .clipped()
+            .accessibilityElement()
+            .accessibilityLabel("Photo from \(entry.show.title)")
+            .accessibilityIdentifier("entry-photo")
+        }
+        .listRowInsets(EdgeInsets())
+      }
+
       if let notice {
         Section { banner(notice, planned: entry.planned) }
       }
@@ -101,6 +113,12 @@ struct EntryView: View {
             systemImage: "calendar"
           )
           .font(.subheadline)
+        }
+      }
+
+      if entry.photoPath == nil {
+        Section {
+          Button("Add a photo", systemImage: "photo.badge.plus") { router.edit(entry) }
         }
       }
 
