@@ -733,3 +733,10 @@ Owner: "kill the autopilot, it doesn't work well." Reverses the 2026-10-28 autop
 ## 2026-11-01: Share actions back to the round icon row
 
 The owner preferred the earlier share actions over #263's three-column `.bordered` grid, so the actions are the round 56pt icons in a horizontally scrolling row again (Instagram-gradient Stories, then More, Download, Copy text, Link), with the "Share your show · Tag @…" caption and a reserved notice line. The Background and Text colour pickers from #263 stay, and the rating toggle stays removed. The Share screen is an exception to the "`.bordered` buttons, never a custom style" rule, like the share cards themselves.
+
+## 2026-11-01: Background picker sheet, four grounds
+
+Following Hevy, a data card's background is chosen from a sheet opened by a Background action at the start of the action row, replacing the segmented pickers on the page. The action is always there on entry shares, showing the current ground, and is dimmed on photo cards, which have none.
+- **Four grounds:** Dark (the old Solid; raw value still `solid` so analytics stay comparable), Light (white, new), Gradient and Transparent. Light draws dark text.
+- **Text colour only for Transparent.** Its Light/Dark swatches appear in the sheet only then; every other ground sets its own ink, and a leftover choice is ignored when exporting.
+- The sheet is a `.medium` detent with background interaction enabled, so the card above stays undimmed and updates as you pick.

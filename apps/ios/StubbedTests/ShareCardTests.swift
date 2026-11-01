@@ -29,6 +29,19 @@ struct ShareCardTests {
     #expect(alpha(clear.image) == 0)
     #expect(alpha(background.image) == 255)
     #expect(background.asset(for: .init(background: .transparent, ink: .dark)).file != clear.file)
+    // Light is its own export, opaque, and ignores a text colour left over
+    // from transparent.
+    let light = background.asset(for: .init(background: .light))
+    #expect(light.file != background.file)
+    #expect(alpha(light.image) == 255)
+    #expect(background.asset(for: .init(background: .light, ink: .dark)).file == light.file)
+  }
+
+  @Test func onlyTransparentLetsTextColourChange() {
+    #expect(ShareAppearance(background: .light).foreground == ShareInk.dark.color)
+    #expect(ShareAppearance(background: .light, ink: .light).foreground == ShareInk.dark.color)
+    #expect(ShareAppearance(background: .dark, ink: .dark).foreground == ShareInk.light.color)
+    #expect(ShareAppearance(background: .transparent, ink: .dark).foreground == ShareInk.dark.color)
   }
 
   @Test func missingInputsDoNotFabricatePhotoCards() {
