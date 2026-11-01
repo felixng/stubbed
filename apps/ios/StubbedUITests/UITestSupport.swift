@@ -114,6 +114,14 @@ extension XCTestCase {
     let cell = app.images.matching(NSPredicate(
       format: "label CONTAINS %@ AND label CONTAINS %@ AND label CONTAINS %@", parts[0], parts[1], parts[2])).firstMatch
     XCTAssertTrue(cell.waitForExistence(timeout: 15), app.debugDescription)
+    // The library can retain fixtures from earlier runs. Bring the cell's
+    // centre above the picker's bottom toolbar before using a coordinate tap.
+    for _ in 0..<8 {
+      let centre = cell.frame.midY
+      if centre > 150, centre < app.frame.maxY - 110 { break }
+      if centre >= app.frame.maxY - 110 { app.collectionViews.firstMatch.swipeUp() }
+      else { app.collectionViews.firstMatch.swipeDown() }
+    }
     cell.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
   }
 

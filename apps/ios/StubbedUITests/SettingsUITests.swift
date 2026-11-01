@@ -68,8 +68,8 @@ final class SettingsUITests: XCTestCase {
     app.buttons["Profile privacy"].tap()
     let row = app.switches.matching(NSPredicate(format: "label BEGINSWITH %@", "Private profile")).firstMatch
     XCTAssertTrue(row.waitForExistence(timeout: 10))
-    app.collectionViews.firstMatch.swipeUp()
-    row.tap()
+    XCTAssertEqual(row.value as? String, "0")
+    row.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
     expectation(for: NSPredicate(format: "value == %@", "1"), evaluatedWith: row)
     waitForExpectations(timeout: 10)
     scrollAndTap(app.buttons["Save"], in: app)
