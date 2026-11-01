@@ -80,13 +80,15 @@ final class PeopleUITests: XCTestCase {
   @MainActor
   func testApproveARequestAndSeeFollowers() throws {
     let app = try home()
-    app.buttons["Profile"].tap()
+    openTab("Profile", in: app)
+    for _ in 0..<8 where !app.staticTexts["1 follow request"].exists { app.collectionViews.firstMatch.swipeUp() }
     XCTAssertTrue(app.staticTexts["1 follow request"].waitForExistence(timeout: 10))
     snapshot("follow-request")
-    app.buttons["Approve @ios_fan"].tap()
+    scrollAndTap(app.buttons["Approve @ios_fan"], in: app)
     XCTAssertFalse(app.staticTexts["1 follow request"].waitForExistence(timeout: 5) && app.staticTexts["1 follow request"].isHittable)
 
     let followers = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Followers")).firstMatch
+    for _ in 0..<8 where !followers.exists || !followers.isHittable { app.collectionViews.firstMatch.swipeDown() }
     XCTAssertTrue(followers.waitForExistence(timeout: 10))
     followers.tap()
     XCTAssertTrue(app.navigationBars["Followers"].waitForExistence(timeout: 10))
