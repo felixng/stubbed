@@ -9,8 +9,8 @@ import { Phone } from "@/components/landing/Screens";
 export function Hero() {
   return (
     // Clipped sideways only, so the glow fades out instead of ending in a line.
-    <section className="overflow-x-clip pt-8 pb-16 sm:pt-14 sm:pb-24">
-      <Container className="flex flex-col items-center gap-12 text-center sm:gap-14">
+    <section className="overflow-x-clip pt-8 pb-20 sm:pt-14 sm:pb-28">
+      <Container className="flex flex-col items-center gap-14 text-center sm:gap-16">
         <div className="flex max-w-[820px] flex-col items-center gap-6">
           <h1 className="font-display text-[clamp(48px,9vw,96px)] leading-[0.98] font-extrabold tracking-[-0.035em] text-balance text-label">
             Your theatre life, shared.
@@ -41,35 +41,32 @@ export function Hero() {
           </div>
         </div>
 
-        {/* Three straight phones, tops aligned and cropped by the fade at the
-            bottom, so no unfinished screen edge shows. The side phones sit
-            lower and smaller, and drop out on phones. */}
-        <div className="relative w-full max-w-[1040px]">
+        {/* Three phones: logging and sharing either side of the Home feed.
+            The side phones sit lower and smaller, and drop out on phones. */}
+        <div className="relative flex w-full max-w-[1040px] items-start justify-center">
           <div
             aria-hidden="true"
-            className="absolute top-[4%] left-1/2 h-[80%] w-[min(64vw,340px)] -translate-x-1/2 rounded-[40%] bg-sweep opacity-60 blur-[64px]"
+            className="absolute top-[8%] left-1/2 h-[80%] w-[min(64vw,340px)] -translate-x-1/2 rounded-[40%] bg-sweep opacity-60 blur-[64px]"
           />
-          <div className="relative flex h-[clamp(430px,50vw,640px)] items-start justify-center gap-[3%] overflow-hidden [mask-image:linear-gradient(to_bottom,black_72%,transparent)]">
-            <Phone
-              shot="log"
-              label="Logging The Lost Boys: a photo from the show, the Palace Theatre, the date and four and a half stars"
-              sizes="(min-width: 640px) 250px, 0px"
-              className="mt-[7%] hidden w-[min(26vw,270px)] sm:block"
-            />
-            <Phone
-              shot="hero"
-              label="Stubbed on an iPhone: the Home feed, with @sillyelphaba’s photo from The Lost Boys at the Palace Theatre"
-              sizes="(min-width: 640px) 320px, 72vw"
-              preload
-              className="z-10 w-[min(72vw,330px)]"
-            />
-            <Phone
-              shot="share"
-              label="A share card for The Lost Boys: the photo, four and a half stars and the handle @sillyelphaba"
-              sizes="(min-width: 640px) 250px, 0px"
-              className="mt-[7%] hidden w-[min(26vw,270px)] sm:block"
-            />
-          </div>
+          <Phone
+            shot="log"
+            label="Logging The Lost Boys: a photo from the show, the Palace Theatre, the date and four and a half stars"
+            sizes="(min-width: 640px) 250px, 0px"
+            className="relative mt-[12%] hidden w-[min(26vw,270px)] translate-x-[8%] -rotate-3 sm:block"
+          />
+          <Phone
+            shot="hero"
+            label="Stubbed on an iPhone: the Home feed, with @sillyelphaba’s photo from The Lost Boys at the Palace Theatre"
+            sizes="(min-width: 640px) 320px, 72vw"
+            preload
+            className="relative z-10 w-[min(72vw,330px)]"
+          />
+          <Phone
+            shot="share"
+            label="A share card for The Lost Boys: the photo, four and a half stars and the handle @sillyelphaba"
+            sizes="(min-width: 640px) 250px, 0px"
+            className="relative mt-[12%] hidden w-[min(26vw,270px)] -translate-x-[8%] rotate-3 sm:block"
+          />
         </div>
       </Container>
     </section>
