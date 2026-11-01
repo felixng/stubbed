@@ -11,6 +11,7 @@ struct NotificationsView: View {
 
   var body: some View {
     List {
+      NotificationPermissionCallout()
       if !loaded && !failed { PlaceholderRows() }
       if failed {
         Section {
@@ -100,7 +101,7 @@ struct NotificationsView: View {
 
 struct NotificationSettingsView: View {
   var body: some View {
-    Form { NativePushSettings(); NotificationCategorySection(channel: "inbox") }
+    Form { NotificationPermissionCallout(); NotificationCategorySection() }
       .navigationTitle("Notification settings")
       .navigationBarTitleDisplayMode(.inline)
       .tabBarClearance()
@@ -108,7 +109,6 @@ struct NotificationSettingsView: View {
 }
 
 struct NotificationCategorySection: View {
-  let channel: String
   @State private var choices: [NotificationChoice] = []
   @State private var loaded = false
   @State private var failed = false
@@ -117,11 +117,11 @@ struct NotificationCategorySection: View {
     Section {
       if !loaded && !failed { ProgressView("Loading preferences…") }
       ForEach(choices, id: \.category) { choice in
-        Toggle(choice.category.label, isOn: Binding(get: { channel == "inbox" ? choice.inbox : choice.push }, set: { value in Task { await save(choice.category, value) } })).disabled(busy)
+        Toggle(choice.category.label, isOn: Binding(get: { choice.push }, set: { value in Task { await save(choice.category, value) } })).disabled(busy)
       }
       if failed { Text("Couldn’t update preferences. Your previous choices are unchanged.").foregroundStyle(.red); Button("Try again") { Task { await load() } } }
-    } header: { Text(channel == "inbox" ? "In-app" : "Push categories") }
-      footer: { Text(channel == "inbox" ? "Choose what appears in your shared inbox. Existing history stays." : "Your choices stay saved when push is switched off.") }
+    } header: { Text("Push notifications") }
+      footer: { Text("Choose which activity sends a push notification. All activity still appears in your inbox.") }
       .task { await load() }
   }
   private func load() async {
@@ -130,9 +130,9 @@ struct NotificationCategorySection: View {
   private func save(_ category: NotificationCategory, _ value: Bool) async {
     busy = true; defer { busy = false }
     do {
-      try await Notifications.set(category, channel: channel, enabled: value)
+      try await Notifications.set(category, enabled: value)
       if let index = choices.firstIndex(where: { $0.category == category }) {
-        if channel == "inbox" { choices[index].inbox = value } else { choices[index].push = value }
+        choices[index].push = value
       }
       failed = false
     } catch { failed = true }

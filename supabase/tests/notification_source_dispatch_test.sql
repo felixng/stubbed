@@ -24,15 +24,14 @@ insert into public.entry_likes(entry_id,user_id) values('e4444444-0000-0000-0000
 select is((select count(*)::int from public.notification_outbox),1,'repeat generation gets no second push intent');
 select is((select count(*)::int from public.claim_notification_jobs()),0,'a re-like cannot revive a removed source generation for push');
 insert into public.entry_likes(entry_id,user_id) values('e4444444-0000-0000-0000-000000000002','a4444444-0000-0000-0000-000000000001');
-insert into public.notification_preferences(user_id,previews,quiet_start,quiet_end,time_zone)
-values('b4444444-0000-0000-0000-000000000001',true,(now() at time zone 'UTC'-interval '1 minute')::time,(now() at time zone 'UTC'+interval '1 minute')::time,'UTC');
+insert into public.notification_category_preferences(user_id,category,push) values('b4444444-0000-0000-0000-000000000001','like',false);
 insert into public.entry_likes(entry_id,user_id) values('e4444444-0000-0000-0000-000000000002','c4444444-0000-0000-0000-000000000001');
-update public.notification_preferences set quiet_start=null,quiet_end=null;
+update public.notification_category_preferences set push=true;
 create temp table source_leases as select * from public.claim_notification_jobs();
 select is((select count(*)::int from source_leases),1,'inbox-only activity does not erase an earlier live push intent');
-select is((select public.prepare_notification_job(job_id,lease_id)->'notification'->>'body' from source_leases),'@source_a liked your Dispatch show diary entry','quiet-hour actor is excluded from the push preview and count');
+select is((select public.prepare_notification_job(job_id,lease_id)->'notification'->>'body' from source_leases),'@source_a liked your Dispatch show diary entry','push-disabled actor is excluded from the push preview and count');
 delete from public.entry_likes where entry_id='e4444444-0000-0000-0000-000000000002' and user_id='a4444444-0000-0000-0000-000000000001';
-select is((select public.prepare_notification_job(job_id,lease_id) from source_leases),null::jsonb,'quiet-hour actor cannot supply eligibility after the queued actor unlikes');
+select is((select public.prepare_notification_job(job_id,lease_id) from source_leases),null::jsonb,'push-disabled actor cannot supply eligibility after the queued actor unlikes');
 select is((select status from public.notification_deliveries),'cancelled','withdrawn queued source is explicitly cancelled');
 insert into public.entry_likes(entry_id,user_id) values('e4444444-0000-0000-0000-000000000003','a4444444-0000-0000-0000-000000000001');
 create temp table first_batch as select * from public.claim_notification_jobs();

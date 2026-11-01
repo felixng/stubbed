@@ -4,7 +4,7 @@ import UserNotifications
 @testable import Stubbed
 
 struct PushPermissionTests {
-  @Test func systemPermissionIsSeparateFromPreference() {
+  @Test func systemPermissionMapsToAuthorizationState() {
     #expect(PushPermission.from(.notDetermined) == .needed)
     #expect(PushPermission.from(.denied) == .blocked)
     #expect(PushPermission.from(.authorized) == .allowed)

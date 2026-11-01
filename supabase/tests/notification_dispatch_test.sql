@@ -1,5 +1,5 @@
 begin;
-select plan(27);
+select plan(25);
 create function pg_temp.as_user(uid uuid) returns void language sql as $$ select set_config('role','authenticated',true),set_config('request.jwt.claims',json_build_object('sub',uid,'role','authenticated')::text,true); $$;
 insert into auth.users(id,email) values('a2222222-0000-0000-0000-000000000001','push-a@example.com'),('b2222222-0000-0000-0000-000000000001','push-b@example.com');
 update public.profiles set handle='push_a' where id='a2222222-0000-0000-0000-000000000001';
@@ -16,7 +16,7 @@ update public.push_destinations set created_at=now()-interval '1 minute',updated
 create temp table leases as select * from public.claim_notification_jobs();
 select is((select count(*)::int from leases),1,'outbox fans out once to eligible destination');
 select is((select count(*)::int from public.claim_notification_jobs()),0,'active lease prevents duplicate claim');
-select is((select public.prepare_notification_job(job_id,lease_id)->'notification'->>'body' from leases),'You have new activity on Stubbed.','outside preview defaults generic');
+select is((select public.prepare_notification_job(job_id,lease_id)->'notification'->>'body' from leases),'@push_a started following you','push always includes eligible actor/action preview');
 select is((select public.prepare_notification_job(job_id,gen_random_uuid()) from leases),null::jsonb,'wrong lease cannot prepare');
 select public.finish_notification_job(job_id,lease_id,'retryable') from leases;
 select is((select status from public.notification_deliveries),'pending','retry owner persists pending state');
@@ -47,8 +47,6 @@ select pg_temp.as_user('b2222222-0000-0000-0000-000000000001');
 select public.register_native_push('12222222-0000-0000-0000-000000000001','22222222-0000-0000-0000-000000000001',repeat('a',64),'sandbox');
 reset role;
 select pg_temp.as_user('b2222222-0000-0000-0000-000000000001');
-select lives_ok($$select public.notification_set_general('quiet_hours',jsonb_build_object('start','22:00','end','08:00','time_zone','Europe/London'))$$,'overnight quiet hours accepted');
-select lives_ok($$select public.notification_set_general('quiet_hours',null)$$,'quiet hours can be disabled');
 select public.notification_read_all();
 reset role;
 select is((select public.notification_push_eligible(n) from public.notifications n),false,'read activity is ineligible for delivery');
@@ -63,11 +61,8 @@ reset role;
 select is((select count(*)::int from public.push_destinations),0,'logout cleanup removes destination');
 select is((select count(*)::int from public.notification_deliveries),0,'destination cleanup removes queued deliveries');
 delete from public.blocks;
--- Quiet hours are tested relative to the transaction's fixed current time.
-insert into public.notification_preferences(user_id,quiet_start,quiet_end,time_zone)
-values('a2222222-0000-0000-0000-000000000001',(now() at time zone 'UTC'-interval '1 minute')::time,(now() at time zone 'UTC'+interval '1 minute')::time,'UTC');
 insert into public.follows(follower_id,followee_id) values('b2222222-0000-0000-0000-000000000001','a2222222-0000-0000-0000-000000000001');
-select is((select count(*)::int from public.notification_outbox o join public.notifications n on n.id=o.notification_id where n.recipient_id='a2222222-0000-0000-0000-000000000001'),0,'quiet-hour intake cannot emerge later as a burst');
-select is((select count(*)::int from public.notifications where recipient_id='a2222222-0000-0000-0000-000000000001'),1,'quiet hours preserve immediate inbox activity');
+select is((select count(*)::int from public.notification_outbox o join public.notifications n on n.id=o.notification_id where n.recipient_id='a2222222-0000-0000-0000-000000000001'),1,'social intake has no app-managed quiet-hour suppression');
+select is((select count(*)::int from public.notifications where recipient_id='a2222222-0000-0000-0000-000000000001'),1,'social activity always appears in inbox');
 select * from finish();
 rollback;

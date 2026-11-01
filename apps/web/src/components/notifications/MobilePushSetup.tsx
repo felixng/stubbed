@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { browserPushEligibility, browserPushIdentity, browserPushPermission, rememberBrowserPushRefusal, publicVapidKey, disableBrowserPush, reconcileBrowserPush, registerBrowserSubscription } from "@/lib/browser-push";
+import { browserPushEligibility, browserPushIdentity, browserPushPermission, rememberBrowserPushRefusal, publicVapidKey, reconcileBrowserPush, registerBrowserSubscription } from "@/lib/browser-push";
 import { canRegisterMobilePush, requestMobilePermission, type MobilePushEligibility } from "@/lib/mobile-push";
 
 export function MobilePushSetup() {
@@ -49,22 +49,14 @@ export function MobilePushSetup() {
     } catch { setFailed(true); }
     finally { setBusy(false); }
   }
-  async function disable() {
-    setBusy(true); setFailed(false);
-    try { await disableBrowserPush(); setEnabled(false); } catch { setFailed(true); }
-    finally { setBusy(false); }
-  }
-  return <section className="flex flex-col gap-3 rounded-md border border-separator bg-surface p-4" aria-label="This browser">
-    <h2 className="text-headline text-label">This browser</h2>
-    {!platform && <p>Checking notification support…</p>}
-    {platform === "desktop" && <p className="text-body text-label-secondary">Your shared inbox is available here. Push notifications are available on mobile; desktop does not request notification permission.</p>}
+  if (!platform || platform === "desktop" || platform === "unsupported" || (enabled && permission === "granted" && !failed)) return null;
+  return <section className="flex flex-col gap-3 rounded-md border border-separator bg-surface p-4" aria-label="Enable notifications">
+    <h2 className="text-headline text-label">Keep up with your activity</h2>
     {platform === "install_ios" && <p className="text-body text-label-secondary">On iOS/iPadOS 16.4 or later: open your browser’s Share menu, choose Add to Home Screen, then open Stubbed from its icon. Return here and tap Enable notifications. No App Store app is needed.</p>}
-    {platform === "unsupported" && <p className="text-body text-label-secondary">Push is unavailable in this browser. Your inbox still works. Use a supported Android browser or an iPhone Home Screen web app on iOS 16.4 or later.</p>}
     {platform && canRegisterMobilePush(platform) && <>
-      <p className="text-body text-label">{permission === "denied" ? "Blocked" : enabled ? "Allowed" : permission === "granted" ? "Not enabled" : "Permission needed"}</p>
+      <p className="text-body text-label-secondary">Get a heads-up about likes, comments and follow activity.</p>
       {platform === "android" && <p className="text-subheadline text-label-secondary">Enable alerts in this browser. You can also add Stubbed to your Home Screen from the browser menu for quick access; no store app or installation is required for supported Android site push.</p>}
       {permission === "denied" ? <p className="text-body text-label-secondary">Change notification permission in browser or system settings. Stubbed won’t prompt again after refusal.</p>
-        : enabled ? <button onClick={disable} disabled={busy} className="min-h-11 text-tint-text underline">Turn off notifications in this browser</button>
         : publicKey ? <button onClick={enable} disabled={busy || !worker} className="min-h-11 rounded-pill bg-tint-text px-4 py-2 text-white disabled:opacity-50">{busy ? "Enabling…" : "Enable notifications"}</button>
         : <p className="text-subheadline text-label-secondary">Push setup isn’t available yet. Your inbox still works.</p>}
     </>}
