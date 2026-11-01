@@ -59,7 +59,7 @@ export function Features() {
   }
 
   return (
-    <section aria-labelledby="features-heading" className="pt-6 pb-16 sm:pb-20">
+    <section id="features" aria-labelledby="features-heading" className="scroll-mt-8 pt-6 pb-16 sm:pb-20">
       <Container className="flex flex-col gap-6">
         <h2 id="features-heading" className="font-display text-title text-label">
           How it works
