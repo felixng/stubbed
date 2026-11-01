@@ -9,6 +9,7 @@ struct InsightsView: View {
   @State private var stats: InsightStats?
   @State private var years: [Int] = [InsightStats.currentYear]
   @State private var error: String?
+  @State private var sharing = false
 
   var body: some View {
     List {
@@ -42,6 +43,18 @@ struct InsightsView: View {
     .tabBarClearance()
     .navigationTitle("Insights")
     .navigationBarTitleDisplayMode(.large)
+    .toolbar {
+      ToolbarItem(placement: .primaryAction) {
+        if let stats {
+          Button("Share", systemImage: "square.and.arrow.up") { sharing = true }
+            .disabled(InsightCardDesign.available(stats, year: year).isEmpty)
+            .accessibilityIdentifier("insights-share")
+        }
+      }
+    }
+    .sheet(isPresented: $sharing) {
+      if let stats { InsightShareSheet(stats: stats, year: year) }
+    }
     .task(id: "\(year ?? 0)-\(router.dataVersion)") { await load() }
     .refreshable { await load() }
   }

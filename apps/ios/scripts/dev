@@ -208,7 +208,7 @@ case "$cmd" in
     : >"$BUILD_DIR/logs/ui-all.log"
     for class in $classes; do
       test_users >/dev/null
-      if [[ "$class" == InsightsUITests* ]]; then
+      if [[ "$class" == InsightsUITests* || "$class" == InsightShareUITests* ]]; then
         docker exec -i supabase_db_stubbed psql -q -U postgres -d postgres -v ON_ERROR_STOP=1 \
           <"$IOS_DIR/scripts/insights-seed.sql" >/dev/null
       fi
