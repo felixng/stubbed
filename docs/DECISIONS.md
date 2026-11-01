@@ -726,3 +726,6 @@ The entry Form leads with the existing signed photo at 4:5, with no row insets s
 
 ### 2026-11-01: Give text-only feed posts an initials poster (#127)
 Posts without a photo use the existing 48×64 Poster beside the show title, venue and stars. Their title uses bold title3 to lead the smaller handle, while notes retain the full card width. Photo posts retain their full-width 4:5 image and headline title. This brings the feed into line with the existing iOS design rule and diary/trip poster treatment.
+
+### 2026-11-01: The autopilot is removed
+Owner: "kill the autopilot, it doesn't work well." Reverses the 2026-10-28 autopilot. `scripts/autopilot/` is deleted and the working agreement is gone from `CLAUDE.md`; nothing polls the board any more. The `epic` skill stays for when the owner asks to "build epic #N" in a session, without the board-column moves. The board's "Ready for Claude" and "In review" columns no longer trigger anything.

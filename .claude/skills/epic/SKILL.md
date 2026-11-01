@@ -1,15 +1,13 @@
 ---
 name: epic
-description: Build a whole Stubbed epic end to end, one pull request per sub-issue, merging each when green, then publishing a TestFlight build. Used by the autopilot (scripts/autopilot/run.sh) when the owner drags an epic to "Ready for Claude" on the roadmap board; also when the owner asks to "build epic #N".
+description: Build a whole Stubbed epic end to end, one pull request per sub-issue, merging each when green, then publishing a TestFlight build. Use when the owner asks to "build epic #N".
 ---
 
 # Build an epic
 
-The owner moved this epic to "Ready for Claude", which means: build every ready sub-issue, merge each when green, and ship. The owner authorised all of this (2026-10-28), including merging to `main` (which deploys the web app to production through Vercel), applying migrations to the hosted database, and uploading to TestFlight.
+The owner asked you to build this epic, which means: build every ready sub-issue, merge each when green, and ship. The owner authorised all of this (2026-10-28), including merging to `main` (which deploys the web app to production through Vercel), applying migrations to the hosted database, and uploading to TestFlight.
 
-You're usually running unattended. Nobody can answer questions, so never wait for input: when something needs the owner, record it and move on, as below.
-
-Move the epic between board columns with `scripts/autopilot/status.sh <number> "<column>"`.
+Don't stop to ask mid-run: when something needs the owner, record it and move on, as below.
 
 ## 1. Read the epic
 
@@ -18,7 +16,7 @@ Move the epic between board columns with `scripts/autopilot/status.sh <number> "
 
 ## 2. For each sub-issue, in order
 
-**Skip it, and note why, when** it's labelled `needs-decision` or `inbox`, it isn't labelled `ready`, or the part you'd build needs the owner's hands (`needs-human`: accounts, signing for a new target, Meta or Apple setup). Comment on the issue: "Skipped by the autopilot: <reason>." Then carry on with the next one.
+**Skip it, and note why, when** it's labelled `needs-decision` or `inbox`, it isn't labelled `ready`, or the part you'd build needs the owner's hands (`needs-human`: accounts, signing for a new target, Meta or Apple setup). Comment on the issue: "Skipped while building the epic: <reason>." Then carry on with the next one.
 
 **Otherwise build it** following the `next` skill (`.claude/skills/next/SKILL.md`), sections "Build" 1–5. First check for an earlier, interrupted run: if a branch for this issue already exists on GitHub (`git ls-remote --heads origin "issue-<number>-*"`), check it out, merge the latest `origin/main` into it, and carry on from there instead of starting again. Otherwise branch from the latest `origin/main`. Commit and push as you go, so an interruption loses little. Then follow the CLAUDE.md files, run the repo's checks (web, database, and `apps/ios/scripts/dev build` and `test` whenever `apps/ios` changes), and open a pull request whose body starts `Closes #<number>`. If the issue is too big for one pull request, split it into sub-issues of this epic, in order, and build the first.
 
@@ -35,13 +33,13 @@ When every buildable sub-issue is merged and any merged pull request in this run
 
 ## 4. Finish
 
-- **Done:** every sub-issue is closed. Move the epic to Done (`status.sh <epic> "Done"`) and close it.
-- **In review:** anything is left: skipped issues, a stopped run, a held migration. Move the epic to "In review".
+- **Done:** every sub-issue is closed. Close the epic.
+- **Not done:** anything is left: skipped issues, a stopped run, a held migration. Leave the epic open.
 
 Either way, comment one summary on the epic:
 
 ```
-Autopilot run, <date>
+Epic run, <date>
 Merged: #<pr> (closes #<issue>) …
 TestFlight: uploaded build <number> / not needed / failed: <why>
 Needs you: #<issue>: <what and why> …
@@ -51,6 +49,6 @@ Needs you: #<issue>: <what and why> …
 
 - Push to `main` directly, force-push, or rewrite history.
 - Run `supabase db reset` or anything else against the hosted database except `supabase db push`.
-- Change `scripts/autopilot/`, `.claude/skills/epic/`, `.github/workflows/` or secrets as part of a run. If one of those needs changing, say so in the summary.
+- Change `.claude/skills/epic/`, `.github/workflows/` or secrets as part of a run. If one of those needs changing, say so in the summary.
 - Merge a pull request with failing checks, or one you didn't open in this run.
 - Start work outside this epic.
