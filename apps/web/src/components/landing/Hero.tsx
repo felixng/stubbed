@@ -9,10 +9,10 @@ import { Phone } from "@/components/landing/Screens";
 export function Hero() {
   return (
     // Clipped sideways only, so the glow fades out instead of ending in a line.
-    <section className="overflow-x-clip pt-10 pb-20 sm:pt-16 sm:pb-28">
+    <section className="overflow-x-clip pt-8 pb-20 sm:pt-14 sm:pb-28">
       <Container className="flex flex-col items-center gap-14 text-center sm:gap-16">
         <div className="flex max-w-[820px] flex-col items-center gap-6">
-          <h1 className="font-display text-[clamp(48px,9vw,104px)] leading-[0.98] font-extrabold tracking-[-0.035em] text-balance text-label">
+          <h1 className="font-display text-[clamp(48px,9vw,96px)] leading-[0.98] font-extrabold tracking-[-0.035em] text-balance text-label">
             Your theatre life, shared.
           </h1>
           <p className="max-w-[560px] text-[clamp(19px,2.2vw,23px)] leading-[1.4] text-pretty text-label-secondary">
