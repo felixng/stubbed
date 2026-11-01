@@ -7,14 +7,14 @@ import { Container } from "@/components/landing/Container";
 // on the reference site, with the ticket mark above the heading.
 export function FinalCta() {
   return (
-    <section aria-labelledby="final-cta-heading" className="pb-16 sm:pb-24">
+    <section aria-labelledby="final-cta-heading" className="pb-20 sm:pb-28">
       <Container>
-        <div className="relative flex flex-col items-center gap-6 overflow-hidden rounded-[32px] bg-surface px-6 py-14 text-center ring-1 ring-separator sm:py-20">
+        <div className="relative flex flex-col items-center gap-6 overflow-hidden rounded-[40px] bg-surface px-6 py-16 text-center ring-1 ring-separator sm:py-24">
           <div
             aria-hidden="true"
             className="absolute -bottom-1/3 left-1/2 h-2/3 w-[min(90%,620px)] -translate-x-1/2 rounded-full bg-sweep opacity-25 blur-[80px]"
           />
-          <Image src="/brand/stubbed-mark.svg" alt="" width={110} height={90} unoptimized className="relative h-auto w-[80px] sm:w-[96px]" />
+          <Image src="/brand/stubbed-mark.svg" alt="" width={110} height={90} unoptimized className="relative h-auto w-[92px] sm:w-[110px]" />
           <h2
             id="final-cta-heading"
             className="relative font-display text-[clamp(40px,7vw,80px)] leading-[1] font-extrabold tracking-[-0.035em] text-balance text-label"
