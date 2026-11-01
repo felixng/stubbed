@@ -24,15 +24,15 @@ struct HomeView: View {
       .navigationTitle("Home")
       .toolbar {
         ToolbarItem(placement: .topBarTrailing) {
+          Button("Search people", systemImage: "magnifyingglass") { searching = true }
+        }
+        ToolbarItem(placement: .topBarTrailing) {
           NavigationLink(value: AppRouter.Route.notifications) {
             Image(systemName: "bell").overlay(alignment: .topTrailing) {
               if unread > 0 { Circle().fill(Palette.tintText).frame(width: 7, height: 7).offset(x: 3, y: -3) }
             }
           }.accessibilityLabel(unread > 0 ? "Notifications, \(unread) unread" : "Notifications")
             .accessibilityIdentifier("notifications-bell")
-        }
-        ToolbarItem(placement: .topBarTrailing) {
-          Button("Search people", systemImage: "magnifyingglass") { searching = true }
         }
       }
       .sheet(isPresented: $searching) { PeopleSearchSheet() }
