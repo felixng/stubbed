@@ -18,18 +18,30 @@ export type CardData = {
   handle: string | null;
 };
 
-export type CardDesign = { id: string; name: string };
+export type CardDesign = { id: string; name: string; photo?: boolean; background?: boolean };
 
-// Two designs (owner, 2026-10-29): stats across the top, or the name alone.
-// Both keep the middle of the photo clear, Hevy-style, and either can hide
-// the rating (`showRating`), for a low score or a card that tags the cast.
+export type ShareBackground = "solid" | "gradient" | "transparent";
+export type ShareInk = "light" | "dark";
 export const CARD_DESIGNS: CardDesign[] = [
-  { id: "stats", name: "Stats" },
-  { id: "name", name: "Name only" },
+  { id: "stats", name: "Data + Photo", photo: true },
+  { id: "name", name: "Rating + Photo", photo: true },
+  { id: "data", name: "Data", background: true },
+  { id: "encore", name: "Encore", background: true },
+  { id: "show-number", name: "Show number", background: true },
 ];
-
-// Off by default for 2 stars or below, and when there's no rating.
-export const showsRatingByDefault = (rating: number | null) => rating != null && rating > 2;
+export function availableEntryDesigns(data: CardData, photo: boolean) {
+  return CARD_DESIGNS.filter(d => (!d.photo || photo) && (d.id !== "name" || data.rating != null) && (d.id !== "encore" || data.timesSeen > 1));
+}
+export function cardBackground(design: CardDesign, chosen: ShareBackground) {
+  return design.background ? chosen : "photo";
+}
+export function entryMetrics(data: CardData) {
+  return [
+    { label: `Show of ${data.year}`, value: ordinal(data.showOfYear) },
+    ...(data.venue ? [{ label: data.venue, value: `${ordinal(data.venueVisit)} visit` }] : []),
+    { label: "Times seen", value: String(data.timesSeen) },
+  ];
+}
 
 export const CARD_SIZE = 1080;
 const U = 540; // design units
@@ -45,8 +57,6 @@ export const SECONDARY = "#AEAEB2";
 // cards show it under the wordmark. Entry cards leave it off (owner,
 // 2026-10-29).
 export const CARD_DOMAIN = "@getstubbed.app";
-const SOFT_WHITE = "rgba(255, 255, 255, 0.9)";
-const SIDE = 28;
 // The ticket mark beside the wordmark (public/brand/stubbed-mark.svg).
 const MARK_SRC = "/brand/stubbed-mark.svg";
 const MARK_RATIO = 770 / 627;
@@ -81,108 +91,136 @@ function loadMark() {
   return markImage;
 }
 
-export async function renderCard(
-  design: CardDesign["id"],
-  data: CardData,
-  photo: HTMLImageElement | null,
-  { transparent = false, square = false, showRating = true } = {},
-) {
+export async function renderSquare(draw: (ctx: Ctx, mark: HTMLImageElement | null) => void): Promise<Blob> {
   const canvas = document.createElement("canvas");
   canvas.width = canvas.height = CARD_SIZE;
   const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas isn’t available");
-  ctx.scale(SCALE, SCALE);
+  if (!ctx) throw new Error("Couldn’t draw the card");
   const mark = await loadMark();
-  const d = showRating ? data : { ...data, rating: null };
-  if (!transparent) drawBackground(ctx, photo, !square, design === "stats");
-  textShadow(ctx);
-  if (design === "stats") drawStats(ctx, d);
-  const footerTop = drawFooter(ctx, d, mark);
-  if (design === "stats") {
-    drawTitle(ctx, d.title, SIDE, footerTop - 10, U - SIDE * 2, 26, 30, 1);
-  } else {
-    let bottom = footerTop - 12;
-    if (d.rating != null) {
-      drawStars(ctx, d.rating, SIDE, bottom - 24, 24, 3, "rgba(255, 255, 255, 0.75)");
-      bottom -= 24 + 12;
-    }
-    drawTitle(ctx, d.title, SIDE, bottom, U - SIDE * 2, 36, 40, 2);
-  }
-  return new Promise<Blob>((resolve, reject) =>
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Couldn’t make the image"))), "image/png"),
-  );
+  ctx.scale(SCALE, SCALE);
+  draw(ctx, mark);
+  return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("Couldn’t make the image")), "image/png"));
 }
-
-// The photo, with shade only at the edges that carry text: a band at the
-// top behind the stats, and the bottom quarter behind the name and logo.
-function drawBackground(ctx: Ctx, photo: HTMLImageElement | null, round: boolean, top: boolean) {
-  clipRounded(ctx, round ? 32 : 0);
-  drawPhoto(ctx, photo, 0.4);
-  if (top) {
-    verticalGradient(ctx, 0, 150, [
-      [0, "rgba(0, 0, 0, 0.55)"],
-      [1, "rgba(0, 0, 0, 0)"],
-    ]);
+export function drawShareSurface(ctx: Ctx, background: ShareBackground) {
+  if (background === "transparent") return;
+  if (background === "solid") ctx.fillStyle = "#1C1C1E";
+  else {
+    const gradient = ctx.createLinearGradient(0, 0, 540, 540);
+    gradient.addColorStop(0, "rgb(99,10,59)");
+    gradient.addColorStop(0.5, "rgb(122,23,41)");
+    gradient.addColorStop(1, "#1C1C1E");
+    ctx.fillStyle = gradient;
   }
-  verticalGradient(ctx, 360, U, [
-    [0, "rgba(0, 0, 0, 0)"],
-    [1, "rgba(0, 0, 0, 0.75)"],
-  ]);
+  ctx.fillRect(0, 0, 540, 540);
 }
-
-// Up to three columns: show of the year, the venue visit (or times seen
-// with no venue), then the rating, or times seen when it's hidden.
-function drawStats(ctx: Ctx, d: CardData) {
-  const stats: { label: string; value: string | number; color?: string }[] = [
-    { label: `Show of ${d.year}`, value: ordinal(d.showOfYear), color: CORAL },
-    d.venue ? { label: d.venue, value: `${ordinal(d.venueVisit)} visit` } : { label: "Seen", value: `${ordinal(d.timesSeen)} time` },
-  ];
-  if (d.rating != null) stats.push({ label: "Rating", value: d.rating });
-  else if (d.venue) stats.push({ label: "Seen", value: `${ordinal(d.timesSeen)} time` });
-  const side = 20;
-  const colWidth = (U - side * 2) / stats.length;
-  stats.forEach((s, i) => {
-    const cx = side + colWidth * i + colWidth / 2;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    setFont(ctx, 500, 20, TEXT, -0.2);
-    ctx.fillStyle = SOFT_WHITE;
-    ctx.fillText(fit(ctx, s.label, colWidth - 12), cx, 30 + 13);
-    if (typeof s.value === "number") {
-      const w = 5 * 24 + 4 * 3;
-      drawStars(ctx, s.value, cx - w / 2, 30 + 26 + 8, 24, 3, "rgba(255, 255, 255, 0.75)");
-    } else {
-      setFont(ctx, 700, 30, DISPLAY, 0.2);
-      ctx.fillStyle = s.color ?? "#FFFFFF";
-      ctx.fillText(fit(ctx, s.value, colWidth - 12), cx, 30 + 26 + 4 + 18);
-    }
-  });
-  ctx.textAlign = "left";
+export function shareForeground(background: ShareBackground, ink: ShareInk) {
+  return background === "transparent" && ink === "dark" ? "#141414" : "#FFFFFF";
 }
-
-// The logo (ticket mark and wordmark), and the @handle on the right.
-// Returns the footer's top edge.
-function drawFooter(ctx: Ctx, d: CardData, mark: HTMLImageElement | null) {
-  const logoMid = U - 26 - 22;
-  const size = 36;
-  let x = SIDE;
-  if (mark) {
-    const h = size * 1.05;
-    ctx.drawImage(mark, x, logoMid - h / 2, h * MARK_RATIO, h);
-    x += h * MARK_RATIO + size * 0.28;
-  }
+export function drawShareFooter(ctx: Ctx, handle: string | null, ink: string, mark: HTMLImageElement | null) {
+  if (mark) ctx.drawImage(mark, 28, 477, 30 * MARK_RATIO, 30);
+  setFont(ctx, 800, 30, DISPLAY, -1.35);
+  ctx.fillStyle = ink;
   ctx.textBaseline = "middle";
-  setFont(ctx, 800, size, DISPLAY, -0.045 * size);
-  ctx.fillStyle = "#FFFFFF";
-  ctx.fillText("stubbed", x, logoMid);
-  if (d.handle) {
-    setFont(ctx, 500, 24, TEXT, -0.3);
-    ctx.fillStyle = "#FFFFFF";
+  ctx.textAlign = "left";
+  ctx.fillText("stubbed", 28 + 30 * MARK_RATIO + 8, 492);
+  if (handle) {
     ctx.textAlign = "right";
-    ctx.fillText(fit(ctx, `@${d.handle}`, 200), U - SIDE, logoMid);
+    setFont(ctx, 500, 20, TEXT, -0.2);
+    ctx.fillText(fit(ctx, `@${handle}`, 240), 512, 492);
     ctx.textAlign = "left";
   }
-  return logoMid - 22;
+}
+export function drawTopTitle(ctx: Ctx, title: string, y: number, ink: string, size = 38) {
+  let lines: string[] = [], font = size;
+  for (; font >= size * 0.7; font -= 2) {
+    setFont(ctx, 700, font, DISPLAY, font * 0.01);
+    lines = wrap(ctx, title, 484);
+    if (lines.length <= 2) break;
+  }
+  if (lines.length > 2) lines = [lines[0], fit(ctx, lines.slice(1).join(" "), 484)];
+  const lineHeight = font * 1.12;
+  ctx.textBaseline = "top";
+  ctx.textAlign = "left";
+  ctx.fillStyle = ink;
+  lines.forEach((line, i) => ctx.fillText(fit(ctx, line, 484), 28, y + i * lineHeight));
+  return lines.length * lineHeight;
+}
+function drawBadge(ctx: Ctx, value: string, cy: number) {
+  ctx.save();
+  for (const sign of [-1, 1]) {
+    ctx.save();
+    ctx.translate(270 + sign * 39, cy + 76);
+    ctx.rotate(sign * -12 * Math.PI / 180);
+    ctx.fillStyle = CORAL;
+    ctx.fillRect(-18, -30, 36, 60);
+    ctx.restore();
+  }
+  ctx.beginPath();
+  for (let i = 0; i < 128; i++) {
+    const angle = i * Math.PI / 64 - Math.PI / 2, radius = 85 + 6 * Math.cos(8 * angle);
+    const x = 270 + Math.cos(angle) * radius, y = cy + Math.sin(angle) * radius;
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath(); ctx.fillStyle = STAR; ctx.fill();
+  ctx.beginPath(); ctx.arc(270, cy, 66, 0, 2 * Math.PI);
+  ctx.strokeStyle = "rgba(0,0,0,0.18)"; ctx.lineWidth = 2; ctx.stroke();
+  setFont(ctx, 800, 48, DISPLAY, -1.5);
+  ctx.fillStyle = "#1F1F1F"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  ctx.fillText(fit(ctx, value, 132), 270, cy);
+  ctx.restore();
+}
+export async function renderCard(
+  designId: string, data: CardData, photo: HTMLImageElement | null,
+  { background = "solid", ink = "light" }: { background?: ShareBackground; ink?: ShareInk; square?: boolean } = {},
+) {
+  const design = CARD_DESIGNS.find(d => d.id === designId);
+  if (!design || !availableEntryDesigns(data, photo != null).some(d => d.id === designId)) throw new Error("This card needs a photo, rating or repeat visit");
+  return renderSquare((ctx, mark) => {
+    const color = design.photo ? "#FFFFFF" : shareForeground(background, ink);
+    const metrics = entryMetrics(data);
+    if (design.photo) {
+      drawPhoto(ctx, photo, 0.4);
+      if (designId === "stats") verticalGradient(ctx, 0, 150, [[0, "rgba(0,0,0,0.6)"], [1, "rgba(0,0,0,0)"]]);
+      verticalGradient(ctx, 360, 540, [[0, "rgba(0,0,0,0)"], [1, "rgba(0,0,0,0.8)"]]);
+      textShadow(ctx);
+      if (designId === "stats") {
+        const col = 484 / metrics.length;
+        metrics.forEach((m, i) => {
+          ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillStyle = color;
+          setFont(ctx, 500, 17, TEXT, -0.2);
+          const labels = wrap(ctx, m.label, col - 12).slice(0, 2);
+          labels.forEach((line, j) => ctx.fillText(fit(ctx, line, col - 12), 28 + col * (i + 0.5), 28 + j * 21));
+          setFont(ctx, 700, 28, DISPLAY, 0);
+          ctx.fillText(fit(ctx, m.value, col - 12), 28 + col * (i + 0.5), 76);
+        });
+        drawTitle(ctx, data.title, 28, 460, 484, 28, 40, 2);
+      } else {
+        drawTitle(ctx, data.title, 28, 414, 484, 36, 40, 2);
+        drawStars(ctx, data.rating!, 28, 426, 30, 4, "rgba(255,255,255,0.75)");
+      }
+    } else {
+      drawShareSurface(ctx, background);
+      if (designId === "data") {
+        const titleH = drawTopTitle(ctx, data.title, 28, color);
+        const start = Math.max(138, 28 + titleH + 20);
+        metrics.forEach((m, i) => {
+          const y = start + i * ((452 - start) / metrics.length);
+          ctx.fillStyle = color; ctx.textAlign = "left"; ctx.textBaseline = "top";
+          setFont(ctx, 500, 18, TEXT, 0); ctx.fillText(fit(ctx, m.label, 484), 28, y);
+          setFont(ctx, 700, 42, DISPLAY, 0); ctx.fillText(fit(ctx, m.value, 484), 28, y + 26);
+        });
+      } else {
+        ctx.fillStyle = color; ctx.textBaseline = "top"; ctx.textAlign = "left";
+        setFont(ctx, 500, 22, TEXT, 0); ctx.fillText(designId === "encore" ? "Encore" : "My theatre year", 28, 28);
+        drawBadge(ctx, designId === "encore" ? `${data.timesSeen}x` : ordinal(data.showOfYear), 196);
+        ctx.fillStyle = color; ctx.textBaseline = "top"; ctx.textAlign = "left";
+        setFont(ctx, 500, 20, TEXT, 0);
+        ctx.fillText(fit(ctx, designId === "encore" ? `${ordinal(data.timesSeen)} time seeing this show` : `Show of ${data.year}`, 484), 28, 310);
+        drawTopTitle(ctx, data.title, 386, color, 30);
+      }
+    }
+    drawShareFooter(ctx, data.handle, color, mark);
+  });
 }
 
 // --- helpers ---------------------------------------------------------------
@@ -198,17 +236,6 @@ export function setFont(ctx: Ctx, weight: number, size: number, family: string, 
   ctx.font = `${weight} ${size}px ${family}`;
   // Safari 17+, Chrome 99+; older browsers just skip the tracking.
   if ("letterSpacing" in ctx) ctx.letterSpacing = `${tracking}px`;
-}
-
-function clipRounded(ctx: Ctx, r: number) {
-  ctx.beginPath();
-  ctx.moveTo(r, 0);
-  ctx.arcTo(U, 0, U, U, r);
-  ctx.arcTo(U, U, 0, U, r);
-  ctx.arcTo(0, U, 0, 0, r);
-  ctx.arcTo(0, 0, U, 0, r);
-  ctx.closePath();
-  ctx.clip();
 }
 
 // object-fit: cover, with object-position x centred and y at `focusY`.
@@ -280,6 +307,7 @@ function drawTitle(
   size: number,
   lineHeight: number,
   maxLines: 1 | 2,
+  ink = "#FFFFFF",
 ) {
   let lines: string[] = [];
   let s = size;
@@ -292,11 +320,11 @@ function drawTitle(
   if (lines.length > maxLines) {
     lines = maxLines === 1 ? [fit(ctx, title, maxWidth)] : [lines[0], fit(ctx, lines.slice(1).join(" "), maxWidth)];
   }
-  ctx.fillStyle = "#FFFFFF";
+  ctx.fillStyle = ink;
   ctx.textBaseline = "middle";
   ctx.textAlign = "left";
   lines.forEach((line, i) => {
-    ctx.fillText(line, x, bottom - lh * (lines.length - i) + lh / 2);
+    ctx.fillText(fit(ctx, line, maxWidth), x, bottom - lh * (lines.length - i) + lh / 2);
   });
 }
 
