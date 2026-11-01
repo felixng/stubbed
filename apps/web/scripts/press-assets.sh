@@ -8,6 +8,7 @@
 #
 # Outputs (public/press/):
 #   app-icon.png, app-icon-dark.png, app-icon-tinted.png   1024×1024
+#   stubbed-logo.png, stubbed-logo-white.png                horizontal logo, transparent (light / dark backgrounds)
 #   stats.jpg                                               raw stats screenshot
 #   <screen>-framed.png                                     phone frame, transparent
 #   <group>-landscape.jpg                                   1920×1080, brand background
@@ -35,6 +36,21 @@ icons="$IOS_DIR/Stubbed/Assets.xcassets/AppIcon.appiconset"
 cp "$icons/AppIcon.png" "$OUT/app-icon.png"
 cp "$icons/AppIcon-Dark.png" "$OUT/app-icon-dark.png"
 cp "$icons/AppIcon-Tinted.png" "$OUT/app-icon-tinted.png"
+
+# The horizontal logo: the mark before the wordmark, in the same proportions
+# as components/ui/Wordmark.tsx (mark 1.05× the type size, 0.28em gap,
+# weight 800, -0.045em tracking). One in label for light backgrounds, one in
+# white for dark ones. PNG only: the wordmark is live type, not outlines.
+for variant in "logo|#1f1210" "logo-white|#ffffff"; do
+  IFS='|' read -r name colour <<<"$variant"
+  cat >"$TMP/logo.html" <<EOF
+<!doctype html><html><body style="margin:0;background:transparent">
+<div id="render" style="display:inline-flex;align-items:center;gap:0.28em;padding:40px;font:800 400px/1 -apple-system,'SF Pro Display',system-ui,sans-serif;letter-spacing:-0.045em;color:$colour">
+<img src="$WEB_DIR/public/brand/stubbed-mark.svg" style="height:420px;width:516px">stubbed</div>
+</body></html>
+EOF
+  node "$WEB_DIR/scripts/render-png.mjs" "$TMP/logo.html" "$OUT/stubbed-$name.png"
+done
 
 # The stats screenshot, captured by MarketingUITests.testCaptureInsights.
 if [ -f "$IOS_DIR/build/marketing/stats.png" ]; then
@@ -98,8 +114,9 @@ landscape stats "Your theatre life, in numbers." "An activity calendar, year by 
 
 # One zip with everything, including the raw screenshots.
 rm -f "$OUT/stubbed-press-kit.zip"
-mkdir -p "$TMP/kit/screenshots"
+mkdir -p "$TMP/kit/screenshots" "$TMP/kit/logo"
 cp "$OUT"/app-icon*.png "$OUT"/*-landscape.jpg "$OUT"/*-framed.png "$OUT/share-card.jpg" "$TMP/kit/"
+cp "$OUT"/stubbed-logo*.png "$WEB_DIR"/public/brand/stubbed-mark{,-outline}.{svg,png} "$TMP/kit/logo/"
 cp "$LANDING"/{hero,log,share,history,plan}.jpg "$OUT/stats.jpg" "$TMP/kit/screenshots/"
 (cd "$TMP/kit" && zip -qr "$OUT/stubbed-press-kit.zip" .)
 

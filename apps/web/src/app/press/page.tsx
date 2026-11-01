@@ -4,9 +4,8 @@ import Image from "next/image";
 import { Container } from "@/components/landing/Container";
 import { Footer } from "@/components/landing/Footer";
 import { SiteMenu } from "@/components/landing/SiteMenu";
-import { PressMedia, PressScreenshots } from "@/components/press/PressMedia";
+import { PressMedia, PressScreenshots, pressHeading } from "@/components/press/PressMedia";
 import { Wordmark } from "@/components/ui/Wordmark";
-import { LEGAL } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Stubbed Press Kit",
@@ -25,12 +24,8 @@ const features = [
   ["Trips and stats", "Group your shows into specific trips and see stats across your theatre life.", "M5 20v-7m7 7V4m7 16V9"],
   ["Plan ahead", "Keep track of upcoming shows you're excited to see.", "M4 5h16v15H4zM8 3v4m8-4v4M4 10h16"],
 ];
-const facts = [
-  ["Made by", "Felix Ng"],
-  ["Based in", "London"],
-  ["Platforms", "iPhone and the web"],
-  ["Price", "Free"],
-];
+// Press enquiries go to Felix directly (owner, 2026-11-01); the legal pages keep support@.
+const PRESS_EMAIL = "felix@getstubbed.app";
 const link = "rounded-sm text-tint-text underline underline-offset-4 hover:text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
 
 export default function PressPage() {
@@ -48,46 +43,38 @@ export default function PressPage() {
           <div className="mx-auto max-w-2xl space-y-14 pt-6 sm:space-y-16 sm:pt-10">
             <div>
               <Image src="/press/app-icon.png" alt="The Stubbed app icon" width={1024} height={1024} sizes="88px" preload className="mb-8 h-20 w-20 rounded-[22%] shadow-sm ring-1 ring-black/5 sm:h-[88px] sm:w-[88px]" />
-              <h1 className="font-display text-4xl font-bold tracking-tight text-balance text-label sm:text-6xl">Stubbed Press Kit</h1>
+              <h1 className="font-display text-[clamp(44px,7vw,76px)] leading-[1.02] font-extrabold tracking-[-0.03em] text-balance text-label">Stubbed Press Kit</h1>
               <p className="mt-5 text-lg leading-relaxed text-label-secondary">You&apos;re encouraged to use anything you find here in stories, reviews, blogs, videos, or any coverage about Stubbed.</p>
 
-              <section aria-labelledby="try-it" className="mt-10 rounded-2xl bg-label p-6 text-background sm:p-8">
-                <h2 id="try-it" className="font-display text-title-2">Try it out</h2>
-                <p className="mt-3 leading-relaxed opacity-85">Stubbed is free on the web: make an account and log your first show in a minute. The iPhone app is in beta on TestFlight.</p>
+              <section aria-labelledby="try-it" className="mt-10 rounded-2xl bg-surface p-6 ring-1 ring-separator sm:p-8">
+                <h2 id="try-it" className="font-display text-title font-extrabold text-label">Try it out</h2>
+                <p className="mt-3 leading-relaxed text-label-secondary">Stubbed is free on the web: make an account and log your first show in a minute. The iPhone app is in beta on TestFlight.</p>
                 {/* TODO(#236): when a public TestFlight link exists, add it here as a second button. */}
                 <div className="mt-6 flex flex-wrap items-center gap-3">
-                  <a href="/signup" className="inline-flex min-h-11 items-center rounded-full bg-tint px-5 font-semibold text-on-tint hover:bg-tint-pressed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-background">Sign up free</a>
-                  <a href={`mailto:${LEGAL.email}?subject=TestFlight%20invite`} className="inline-flex min-h-11 items-center rounded-full px-5 font-semibold ring-1 ring-background/40 hover:ring-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-background">Ask for a TestFlight invite</a>
+                  <a href="/signup" className="inline-flex min-h-11 items-center rounded-full bg-tint px-5 font-semibold text-on-tint hover:bg-tint-pressed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Sign up free</a>
+                  <a href={`mailto:${PRESS_EMAIL}?subject=TestFlight%20invite`} className="inline-flex min-h-11 items-center rounded-full px-5 font-semibold text-label ring-1 ring-separator hover:ring-outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">Ask for a TestFlight invite</a>
                 </div>
               </section>
             </div>
 
             <section aria-labelledby="press-links">
-              <h2 id="press-links" className="font-display text-title text-label">Links</h2>
+              <h2 id="press-links" className={pressHeading}>Links</h2>
               <ul className="mt-4 list-disc space-y-2 pl-5 marker:text-label-secondary">
                 <li><a href="https://getstubbed.app/" className={link}>Stubbed on the web</a></li>
-                <li><a href={`mailto:${LEGAL.email}`} className={link}>{LEGAL.email}</a></li>
+                <li><a href={`mailto:${PRESS_EMAIL}`} className={link}>{PRESS_EMAIL}</a></li>
                 <li><a href="https://www.instagram.com/hellofelix__/" className={link}>Felix on Instagram</a></li>
                 {/* TODO(#247): replace with the live App Store link at launch. */}
                 <li className="text-label-secondary">Stubbed on the App Store: coming soon</li>
               </ul>
-              <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-4 rounded-2xl bg-surface p-5 ring-1 ring-separator sm:grid-cols-4">
-                {facts.map(([term, value]) => (
-                  <div key={term}>
-                    <dt className="text-footnote font-semibold uppercase tracking-wider text-label-secondary">{term}</dt>
-                    <dd className="mt-1 text-subheadline text-label">{value}</dd>
-                  </div>
-                ))}
-              </dl>
             </section>
 
             <section aria-labelledby="what-is-stubbed">
-              <h2 id="what-is-stubbed" className="font-display text-title text-label">What is Stubbed?</h2>
+              <h2 id="what-is-stubbed" className={pressHeading}>What is Stubbed?</h2>
               <p className="mt-4 leading-relaxed">Stubbed is a theatre diary app to track, rate, and share the shows you&apos;ve seen. It&apos;s designed specifically for theatre-goers to log their plays, musicals, and operas, rate them, and share their experiences with the people who get it.</p>
               <ul className="mt-8 space-y-6">
                 {features.map(([title, description, path]) => (
                   <li key={title}>
-                    <h3 className="flex items-center gap-2.5 text-headline text-label">
+                    <h3 className="flex items-center gap-2.5 font-display text-[20px] leading-7 font-bold text-label">
                       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className="shrink-0 text-tint-text"><path d={path} /></svg>
                       {title}
                     </h3>
@@ -98,13 +85,13 @@ export default function PressPage() {
             </section>
 
             <section aria-labelledby="the-story">
-              <h2 id="the-story" className="font-display text-title text-label">What&apos;s the story behind it?</h2>
+              <h2 id="the-story" className={pressHeading}>What&apos;s the story behind it?</h2>
               <p className="mt-4 leading-relaxed">I&apos;m Felix Ng, an indie developer and engineering manager based in London. Theatre is a massive part of my life—in 2022, I served as an Olivier Awards panellist and saw over 100 stage productions in a single year. I wanted a dedicated, beautifully designed place to log my theatre visits, track my stats, and share my thoughts with fellow theatre lovers without relying on generic note apps or spreadsheets. So, I built Stubbed. It’s a labour of love for the theatre community, built independently in London.</p>
             </section>
 
             <section aria-labelledby="enquiries">
-              <h2 id="enquiries" className="font-display text-title text-label">Questions and enquiries</h2>
-              <p className="mt-4 leading-relaxed">I&apos;m available to any journalists, bloggers, podcasters, or theatre creators wishing to discuss Stubbed, London theatre, or indie iOS app development. Get in touch via <a href={`mailto:${LEGAL.email}`} className={link}>email</a> to schedule something.</p>
+              <h2 id="enquiries" className={pressHeading}>Questions and enquiries</h2>
+              <p className="mt-4 leading-relaxed">I&apos;m available to any journalists, bloggers, podcasters, or theatre creators wishing to discuss Stubbed, London theatre, or indie iOS app development. Get in touch via <a href={`mailto:${PRESS_EMAIL}`} className={link}>email</a> to schedule something.</p>
             </section>
           </div>
 
