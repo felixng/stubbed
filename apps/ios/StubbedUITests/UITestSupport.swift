@@ -118,9 +118,11 @@ extension XCTestCase {
     // centre above the picker's bottom toolbar before using a coordinate tap.
     for _ in 0..<8 {
       let centre = cell.frame.midY
-      if centre > 150, centre < app.frame.maxY - 110 { break }
-      if centre >= app.frame.maxY - 110 { app.collectionViews.firstMatch.swipeUp() }
-      else { app.collectionViews.firstMatch.swipeDown() }
+      if centre > 200, centre < app.frame.maxY - 110 { break }
+      let lower = app.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.75))
+      let upper = app.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.45))
+      if centre >= app.frame.maxY - 110 { lower.press(forDuration: 0.05, thenDragTo: upper) }
+      else { upper.press(forDuration: 0.05, thenDragTo: lower) }
     }
     cell.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
   }

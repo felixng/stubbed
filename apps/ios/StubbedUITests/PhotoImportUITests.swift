@@ -23,7 +23,7 @@ final class PhotoImportUITests: XCTestCase {
     pickPhoto(app, takenInNewYork: "2026-09-14 19:31")  // import-stage.jpg
     pickPhoto(app, takenInNewYork: "2026-08-21 14:05")  // import-ticket.jpg
     snapshot("import-picker")
-    let add = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Add")).firstMatch
+    let add = app.buttons.matching(NSPredicate(format: "identifier == %@ OR label == %@", "Add", "Done")).firstMatch
     XCTAssertTrue(add.waitForExistence(timeout: 5), app.debugDescription)
     add.tap()
 

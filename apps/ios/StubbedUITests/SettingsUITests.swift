@@ -76,7 +76,9 @@ final class SettingsUITests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Saved. Your profile is private."].waitForExistence(timeout: 10))
     snapshot("settings-private")
 
-    row.tap()
+    row.coordinate(withNormalizedOffset: CGVector(dx: 0.93, dy: 0.5)).tap()
+    expectation(for: NSPredicate(format: "value == %@", "0"), evaluatedWith: row)
+    waitForExpectations(timeout: 10)
     scrollAndTap(app.buttons["Save"], in: app)
     XCTAssertTrue(app.staticTexts["Saved. Your profile is public."].waitForExistence(timeout: 10))
   }
