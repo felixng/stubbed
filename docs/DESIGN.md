@@ -248,7 +248,7 @@ Contrast: `tint` takes white text at 4.6:1; `tint-text` reads at 5.7:1 on white 
 - **Callout** (16/21px), **Subheadline** (15/20px): supporting lines, such as `venue · date` under a show title.
 - **Footnote** (13/18px), **Caption** (12/16px): metadata and chips. Body text never goes below Footnote.
 - **Caption 2** (500, 11/13px): tab bar labels only, the one stated exception to the Footnote floor. It matches the iOS tab bar and sits at the 11px platform minimum.
-- **Marketing sizes** sit outside the iOS styles: the landing hero headline (`clamp(44px, 7vw, 76px)`, extra bold) and feature card titles (20px).
+- **Marketing sizes** sit outside the iOS styles: the landing hero headline (`clamp(44px, 7vw, 76px)`, extra bold), section headlines on long marketing pages such as /press (`clamp(32px, 5vw, 48px)`, extra bold, tracking -0.03em; marketing pages only, never in the web app under /app or on iOS) and feature card titles (20px).
 
 On the web these are Tailwind font sizes that carry line height, weight and tracking: `text-large-title`, `text-title`, `text-title-2`, `text-headline`, `text-body` (default), `text-callout`, `text-subheadline`, `text-footnote`, `text-caption`, `text-caption-2` (tab labels only). On iOS, use Dynamic Type text styles only; no fixed point sizes in screens.
 

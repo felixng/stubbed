@@ -7,6 +7,28 @@ import XCTest
 final class MarketingUITests: XCTestCase {
   override func setUp() { continueAfterFailure = false }
 
+  /// The press kit's stats picture (apps/web/public/press/), from the same
+  /// diary. Insights show no photos, so this one doesn't depend on them.
+  @MainActor
+  func testCaptureInsights() throws {
+    let app = launchApp()
+    signOutIfNeeded(app)
+    try signIn(app)
+    XCTAssertTrue(onHome(app))
+    openTab("Profile", in: app)
+    XCTAssertTrue(app.staticTexts["@sillyelphaba"].waitForExistence(timeout: 10))
+    let insights = app.buttons["profile-insights"]
+    for _ in 0..<6 where !insights.isHittable { app.collectionViews.firstMatch.swipeUp(velocity: .slow) }
+    insights.tap()
+    XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 10))
+    sleep(3)
+    // Past the streaks (a sample diary has no current streak) to the
+    // activity calendar and the charts.
+    app.collectionViews.firstMatch.swipeUp(velocity: .slow)
+    sleep(2)
+    snapshot("stats")
+  }
+
   @MainActor
   func testCaptureLandingScreens() throws {
     let app = launchApp()

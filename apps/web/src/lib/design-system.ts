@@ -129,7 +129,7 @@ export const TYPE_RULES = [
   "Titles (Large Title, Title, Title 2) use SF Pro Display, bold.",
   "Never set body text below Footnote (13px). Tab bar labels (Caption 2, 11px) are the only exception.",
   "Web app page headings use Title, not Large Title, so they don't outweigh the header wordmark. iOS keeps native Large Titles.",
-  "Marketing only: the landing hero headline is clamp(44px, 7vw, 76px), extra bold; feature card titles are 20px.",
+  "Marketing only: the landing hero headline is clamp(44px, 7vw, 76px), extra bold; section headlines on long marketing pages (/press, never the web app or iOS) are clamp(32px, 5vw, 48px), extra bold; feature card titles are 20px.",
 ];
 
 export const SPACING = [
