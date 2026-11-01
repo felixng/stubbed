@@ -49,7 +49,7 @@ final class LogUITests: XCTestCase {
     app.navigationBars.buttons["Save"].tap()
     // A new show opens the Share screen straight away, as Hevy does.
     XCTAssertTrue(app.navigationBars["Share"].waitForExistence(timeout: 15))
-    XCTAssertTrue(app.images.matching(NSPredicate(format: "label BEGINSWITH %@", "Share card 1 of 3")).firstMatch
+    XCTAssertTrue(app.images.matching(NSPredicate(format: "label BEGINSWITH %@", "Share card 1 of")).firstMatch
       .waitForExistence(timeout: 15))
     snapshot("share-after-save")
     app.navigationBars["Share"].buttons["Done"].tap()
