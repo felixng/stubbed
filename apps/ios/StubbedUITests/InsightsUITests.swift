@@ -59,6 +59,7 @@ final class InsightsUITests: XCTestCase {
     snapshot("insights-profile")
     insights.tap()
     XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 10))
+    reveal(app.otherElements["activity-heatmap"], in: app)
     XCTAssertTrue(app.otherElements["activity-heatmap"].waitForExistence(timeout: 10))
     snapshot("insights-activity")
     // Capture overlapping pages instead of trying to infer chart positions
