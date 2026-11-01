@@ -723,3 +723,6 @@ An owner-only Profile link opens `/app/insights/share` with a period selector an
 
 ### 2026-11-01: Show the attached photo on an owner's entry (#126)
 The entry Form leads with the existing signed photo at 4:5, with no row insets so the system grouped section supplies its corners. Entries without an attachment offer a quiet Add a photo row that opens the existing editor. The display reuses the private-bucket signed URL already loaded for sharing; it adds no storage or privacy paths.
+
+### 2026-11-01: Give text-only feed posts an initials poster (#127)
+Posts without a photo use the existing 48×64 Poster beside the show title, venue and stars. Their title uses bold title3 to lead the smaller handle, while notes retain the full card width. Photo posts retain their full-width 4:5 image and headline title. This brings the feed into line with the existing iOS design rule and diary/trip poster treatment.
