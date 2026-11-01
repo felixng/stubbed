@@ -87,7 +87,7 @@ function UpcomingList() {
     <div
       role="img"
       aria-label="Upcoming in Stubbed: Hadestown, Operation Mincemeat and Les Misérables, each marked Going"
-      className="relative h-fit w-[66%] rounded-[18%/8.3%] bg-[#1c1c1e] p-[2.6%] shadow-lg ring-1 ring-black/10"
+      className="relative h-fit w-[66%] rounded-[16.9%/7.75%] bg-[#1c1c1e] p-[1.2%] shadow-lg"
     >
       <div aria-hidden="true" className="flex aspect-[1206/2622] flex-col gap-3 overflow-hidden rounded-[15.5%/7.1%] bg-background px-[5%] pt-[24%] text-left">
         <p className="font-display text-[clamp(22px,2.6vw,28px)] leading-none font-bold tracking-[-0.02em] text-label">Upcoming</p>

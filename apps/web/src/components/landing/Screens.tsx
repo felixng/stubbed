@@ -10,7 +10,7 @@ export type Shot = "hero" | "log" | "share" | "history" | "plan";
 const WIDTH = 1206;
 const HEIGHT = 2622;
 
-// A phone: a near-black bezel around the screenshot, with the screen's own
+// A phone: a thin near-black bezel around the screenshot, with the screen's own
 // rounded corners. `className` sets its width; the height follows.
 export function Phone({
   shot,
@@ -27,7 +27,7 @@ export function Phone({
 }) {
   return (
     <div
-      className={`rounded-[18%/8.3%] bg-[#1c1c1e] p-[2.6%] shadow-lg ring-1 ring-black/10 ${className}`}
+      className={`rounded-[16.9%/7.75%] bg-[#1c1c1e] p-[1.2%] shadow-lg ${className}`}
     >
       <Image
         src={`/landing/${shot}.jpg`}
