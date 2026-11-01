@@ -21,7 +21,7 @@ The one exception is [`PRODUCT.md`](PRODUCT.md): a lean distillation of the brie
 ## Working agreements
 
 - **Product name: Stubbed.** Use it in UI copy, the landing page and share-card wordmarks. Brand and voice live in the brief.
-- **Paid stats are planned under #219.** The owner has authorised planning and provider integration for Pro upgrades (placeholder name), including gating some existing advanced stats and Profile upgrade prompts. Resolve the Free/Pro boundary and commercial terms in #258 before implementation; keep provider-independent membership and authoritative access checks separate. Live sales activation and hosted database changes require their own deliberate rollout.
+- **Paid stats are planned under #219.** The owner has authorised planning and provider integration for Pro upgrades (placeholder name), including gating some existing advanced stats and Profile upgrade prompts. Profile and current-year Insights stay free except Show mix; Show mix in all periods, previous-year and All time stats require Pro. Resolve commercial/provider terms in #258 before implementation; keep provider-independent membership and authoritative access checks separate. Live sales activation and hosted database changes require their own deliberate rollout.
 - **Public copy never mentions launch cities or regions**, or asks users where they go to the theatre. The product covers any theatre, anywhere.
 - **Privacy:** every read and write path respects visibility and private profiles, with database tests around the privacy rules. Strip EXIF/GPS from any stored or served image.
 - **Rules live in Postgres** (constraints, RLS, SQL functions), so the web and iOS apps can't drift.
