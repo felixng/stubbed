@@ -71,7 +71,6 @@ struct ShareCarousel: View {
   let text: String
   var link: URL?
   @Environment(\.sharePreviewSize) private var previewSize
-  @Environment(\.dynamicTypeSize) private var typeSize
   @State private var active: String?
   @State private var appearance = ShareAppearance.standard
   @State private var notice: String?
@@ -115,27 +114,54 @@ struct ShareCarousel: View {
           }.pickerStyle(.segmented).accessibilityIdentifier("share-ink")
         }
       }
-      Text("Tag \(stubbedInstagram)").font(.footnote).foregroundStyle(.secondary)
-      LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: typeSize.isAccessibilitySize ? 2 : 3), spacing: Space.m) {
-        action("Stories", systemImage: "camera") { Task { await shareToStories() } }.disabled(current == nil)
-        action("More", systemImage: "square.and.arrow.up") { share(withText: true) }.disabled(current == nil)
-        action("Download", systemImage: "arrow.down.to.line") { Task { await download() } }.disabled(current == nil)
-        if !text.isEmpty {
-          action("Copy text", systemImage: "doc.on.doc") {
-            UIPasteboard.general.string = text
-            record("copy_text")
-            notice = "Text copied."
+      (Text("Share your \(subjectName) · Tag ") + Text(stubbedInstagram).fontWeight(.semibold))
+        .font(.callout)
+        .foregroundStyle(.primary)
+
+      ScrollView(.horizontal, showsIndicators: false) {
+        HStack(alignment: .top, spacing: Space.m) {
+          action("Stories") {
+            ZStack {
+              RadialGradient(
+                colors: [
+                  Color(red: 0.99, green: 0.96, blue: 0.59), Color(red: 0.99, green: 0.35, blue: 0.29),
+                  Color(red: 0.84, green: 0.14, blue: 0.62), Color(red: 0.16, green: 0.35, blue: 0.92),
+                ], center: UnitPoint(x: 0.3, y: 1.07), startRadius: 0, endRadius: 70)
+              Image(systemName: "camera")
+                .font(.title2.weight(.medium))
+                .foregroundStyle(.white)
+            }
+          } perform: {
+            Task { await shareToStories() }
+          }
+          .disabled(current == nil)
+          action("More", systemImage: "square.and.arrow.up") { share(withText: true) }
+            .disabled(current == nil)
+          action("Download", systemImage: "arrow.down.to.line") { Task { await download() } }
+            .disabled(current == nil)
+          if !text.isEmpty {
+            action("Copy text", systemImage: "doc.on.doc") {
+              UIPasteboard.general.string = text
+              record("copy_text")
+              notice = "Text copied."
+            }
+          }
+          if let link {
+            action("Link", systemImage: "link") {
+              UIPasteboard.general.url = link
+              record("copy_link")
+              notice = "Link copied."
+            }
           }
         }
-        if let link {
-          action("Link", systemImage: "link") {
-            UIPasteboard.general.url = link
-            record("copy_link")
-            notice = "Link copied."
-          }
-        }
+        .padding(.horizontal, Space.l)
       }
-      if let notice { Text(notice).font(.footnote).foregroundStyle(.secondary) }
+      .padding(.horizontal, -Space.l)
+
+      Text(notice ?? " ")
+        .font(.footnote)
+        .foregroundStyle(.secondary)
+        .accessibilityHidden(notice == nil)
     }
     .onChange(of: notice) { _, value in if let value { AccessibilityNotification.Announcement(value).post() } }
     .sheet(item: $sharing) { payload in
@@ -152,13 +178,43 @@ struct ShareCarousel: View {
         .accessibilityLabel("Share card \(index + 1) of \(cards?.count ?? 0), \(card.name.lowercased())\(card.isTransparent(appearance) ? ", no background" : "")")
     }.clipShape(.rect(cornerRadius: 20))
   }
-  private func action(_ label: String, systemImage: String, perform: @escaping () -> Void) -> some View {
+  private var subjectName: String {
+    switch subject {
+    case .show: "show"
+    case .trip: "trip"
+    case .insights: "stats"
+    }
+  }
+  /// A round icon over its label, in a horizontally scrolling row.
+  private func action<Icon: View>(
+    _ label: String, @ViewBuilder icon: () -> Icon, perform: @escaping () -> Void
+  ) -> some View {
     Button(action: perform) {
       VStack(spacing: 6) {
-        Image(systemName: systemImage).font(.title3).frame(height: 28)
-        Text(label).font(.footnote).lineLimit(2)
-      }.frame(maxWidth: .infinity, minHeight: 56)
-    }.buttonStyle(.bordered)
+        icon()
+          .frame(width: 56, height: 56)
+          .clipShape(Circle())
+        Text(label)
+          .font(.footnote)
+          .foregroundStyle(.primary)
+          .lineLimit(1)
+          .fixedSize()
+      }
+      .frame(minWidth: 72)
+    }
+    .buttonStyle(.plain)
+  }
+  private func action(_ label: String, systemImage: String, perform: @escaping () -> Void) -> some View {
+    action(label) {
+      ZStack {
+        Color(.secondarySystemGroupedBackground)
+        Image(systemName: systemImage)
+          .font(.title3.weight(.medium))
+          .foregroundStyle(Palette.tintText)
+      }
+    } perform: {
+      perform()
+    }
   }
   private func shareToStories() async {
     guard let current, let asset = currentAsset else { return }
