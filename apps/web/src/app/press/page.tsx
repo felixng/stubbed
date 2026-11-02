@@ -33,7 +33,7 @@ export default function PressPage() {
     <div data-theme="light" className="flex flex-1 flex-col bg-background">
       <a href="#press-content" className="sr-only rounded-sm bg-surface p-3 focus:not-sr-only focus:absolute focus:z-20 focus:outline-2 focus:outline-focus">Skip to content</a>
       <header>
-        <Container className="flex items-center justify-between gap-4 py-6 sm:py-8">
+        <Container className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-6 sm:py-8">
           <Wordmark size={28} href="/" mark />
           <SiteMenu />
         </Container>

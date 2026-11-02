@@ -1,29 +1,51 @@
-// Plain-language "what is it" copy for /about. Search engines and AI
-// assistants quote sentences like these when someone asks for a theatre diary
-// app, so keep them literal. No launch cities or regions (CLAUDE.md, section 5).
+import Link from "next/link";
+
+import { buttonClass } from "@/components/ui/Button";
+import { LEGAL } from "@/lib/legal";
+
 export function About() {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-8">
       <p className="text-body text-label-secondary">
-        Stubbed is a theatre diary app. You log the plays, musicals, operas,
-        dance, comedy and stand-up you see, rate each one in half stars and add a line or
-        two on what you thought. Over time it becomes a record of every visit
-        to the theatre: what you saw, where, when and how much you loved
-        it.
+        Stubbed is a theatre diary. Log the shows you see, add a rating, note or
+        photo, group visits into trips and share cards with friends. Any theatre,
+        anywhere.
       </p>
-      <p className="text-body text-label-secondary">
-        It is built for theatre regulars: people who see a few shows a year and
-        people who see a few a week. Add a show from your phone right after the
-        curtain call. Start with a photo from the show and Stubbed
-        fills in the date, finds the theatre you were at and suggests the show.
-        Group shows into trips, like a week of theatre on holiday or a festival
-        run, then share a good-looking card of any show or trip to Instagram.
-      </p>
-      <p className="text-body text-label-secondary">
-        Stubbed works for any theatre, anywhere. If a show or venue isn’t
-        listed yet, you add it as you go. It is in public beta, free to join,
-        and getting better every week.
-      </p>
+      <section aria-labelledby="why-i-built-this" className="flex flex-col gap-4 text-body text-label-secondary">
+        <h2 id="why-i-built-this" className="font-display text-title-2 text-label">Why I built this</h2>
+        <p>
+          Hi, I’m Felix. I’m an independent developer based in London, and I go
+          to the theatre a lot.
+        </p>
+        <p>
+          For years, I looked for a straightforward way to track what I saw —
+          something like Letterboxd, but built specifically for theatre.
+          Everything out there was either clunky, abandoned, full of ads, or
+          trying to sell me tickets.
+        </p>
+        <p>
+          I wanted a quiet, fast tool to log productions, save programme photos,
+          and look back at past shows. So I built Stubbed.
+        </p>
+        <p>
+          There’s no VC funding, no growth hacking, and no ads. Stubbed is just
+          software built to do one job well. Your photos have location metadata
+          stripped on-device before uploading. CSV export is planned; it isn’t
+          available yet.
+        </p>
+      </section>
+      <section aria-labelledby="get-in-touch" className="flex flex-col gap-3 border-t border-separator pt-6">
+        <h2 id="get-in-touch" className="font-display text-title-2 text-label">Built with your feedback</h2>
+        <p className="text-body text-label-secondary">
+          Stubbed is in public beta. If something gets in the way of logging a
+          show, or you have an idea, email{" "}
+          <a href={`mailto:${LEGAL.email}`} className="rounded-sm text-tint-text underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">{LEGAL.email}</a>.
+        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <Link href="/signup" className={buttonClass()}>Sign up free</Link>
+          <Link href="/faq" className={buttonClass("ghost")}>Read the FAQ and guides</Link>
+        </div>
+      </section>
     </div>
   );
 }

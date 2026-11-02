@@ -1,4 +1,4 @@
-import { FAQS } from "@/components/landing/Faq";
+import { FAQS, faqAnswerText } from "@/lib/faq";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
 
 // /llms.txt: a plain-text summary for AI assistants (llmstxt.org). Built
@@ -16,13 +16,14 @@ export function GET() {
     "",
     "## Questions",
     "",
-    ...FAQS.map((faq) => `- **${faq.question}** ${faq.answer}`),
+    ...FAQS.map((faq) => `- **${faq.question}** ${faqAnswerText(faq)}${faq.link ? ` (${new URL(faq.link.href, SITE_URL).href})` : ""}`),
     "",
     "## Links",
     "",
     `- [Home page](${SITE_URL.href})`,
     `- [Sign up](${new URL("/signup", SITE_URL).href})`,
-    `- [Questions](${new URL("/faq", SITE_URL).href})`,
+    `- [About](${new URL("/about", SITE_URL).href})`,
+    `- [FAQ and guides](${new URL("/faq", SITE_URL).href})`,
     "",
   ].join("\n");
 
