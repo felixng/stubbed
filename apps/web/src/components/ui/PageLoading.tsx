@@ -4,9 +4,10 @@ import { Wordmark } from "./Wordmark";
 export function PageLoading() {
   return (
     <div
+      data-theme="light"
       role="status"
       aria-label="Loading page"
-      className="flex min-h-[70svh] flex-1 flex-col items-center justify-center gap-6 px-6 py-12"
+      className="flex min-h-dvh flex-1 flex-col items-center justify-center gap-6 bg-background px-6 py-12"
     >
       <div aria-hidden="true"><Wordmark size={32} mark /></div>
       <div className="flex items-center gap-3 text-subheadline text-label-secondary" aria-hidden="true">
