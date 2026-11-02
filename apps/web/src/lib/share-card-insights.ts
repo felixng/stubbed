@@ -1,5 +1,5 @@
 import {
-  type CardDesign, type Ctx, type ShareBackground, type ShareInk,
+  availableEntryDesigns, type CardData, type CardDesign, type Ctx, type ShareBackground, type ShareInk,
   DISPLAY, TEXT, drawShareFooter, drawShareSurface, fit, renderSquare, setFont, shareForeground,
 } from "@/lib/share-card";
 
@@ -21,10 +21,16 @@ export const INSIGHT_CARD_DESIGNS: CardDesign[] = [
   { id: "year-in-theatre", name: "Year in theatre", background: true },
   { id: "show-mix", name: "Show mix", background: true },
 ];
-export function availableInsightDesigns(data: InsightCardData, currentYear = new Date().getFullYear()) {
+export function availableInsightDesigns(data: InsightCardData, currentYear = new Date().getFullYear(), includingEmpty = false) {
   return INSIGHT_CARD_DESIGNS.filter(design => design.id === "weekly-streak"
-    ? (data.year == null || data.year === currentYear) && data.stats.streaks.current_weekly > 0
-    : data.stats.total > 0 && (design.id !== "year-in-theatre" || data.year != null));
+    ? (data.year == null || data.year === currentYear) && (data.stats.streaks.current_weekly > 0 || includingEmpty)
+    : (data.stats.total > 0 || includingEmpty) && (design.id !== "year-in-theatre" || data.year != null));
+}
+export function availableShowDesigns(data: CardData, photo: boolean, insights: InsightCardData) {
+  return [...availableEntryDesigns(data, photo), ...availableInsightDesigns(insights, new Date().getFullYear(), true)];
+}
+export function isInsightDesign(id: string) {
+  return INSIGHT_CARD_DESIGNS.some(design => design.id === id);
 }
 export function monthlyShareCounts(data: InsightCardData) {
   return Array.from({ length: 12 }, (_, i) => data.stats.months.find(m => m.month === `${data.year}-${String(i + 1).padStart(2, "0")}`)?.count ?? 0);
@@ -62,8 +68,8 @@ function radar(ctx: Ctx, data: InsightCardData, ink: string) {
   ctx.textAlign = "left";
 }
 export async function renderInsightCard(id: string, data: InsightCardData,
-  { background = "solid", ink = "light" }: { background?: ShareBackground; ink?: ShareInk } = {}) {
-  if (!availableInsightDesigns(data).some(d => d.id === id)) throw new Error("There are no shows to share for this card");
+  { background = "solid", ink = "light", includingEmpty = false }: { background?: ShareBackground; ink?: ShareInk; includingEmpty?: boolean } = {}) {
+  if (!availableInsightDesigns(data, new Date().getFullYear(), includingEmpty).some(d => d.id === id)) throw new Error("There are no shows to share for this card");
   return renderSquare((ctx, mark) => {
     drawShareSurface(ctx, background);
     const color = shareForeground(background, ink);
@@ -73,7 +79,7 @@ export async function renderInsightCard(id: string, data: InsightCardData,
       text(ctx, "Current weekly streak", 28, 28, 24);
       text(ctx, String(streak), 28, 116, 112, 800);
       text(ctx, streak === 1 ? "Week" : "Weeks", 28, 245, 32, 700);
-      text(ctx, "A show every week", 28, 296, 22);
+      text(ctx, streak === 0 ? "No current streak" : "A show every week", 28, 296, 22);
       for (let i = 0; i < Math.min(12, streak); i++) ctx.fillRect(28 + i * 36, 352, 28, 10);
       if (streak > 12) text(ctx, "Most recent 12 weeks", 28, 380, 15, 400);
     } else if (id === "year-in-theatre") {

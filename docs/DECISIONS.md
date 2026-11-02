@@ -746,3 +746,9 @@ Following Hevy, a data card's background is chosen from a sheet opened by a Back
 
 ### 2026-11-01: The background sheet keeps the whole card in view
 Follow-up to #295, from testing it on iPhone 17e. The sheet is now sized to its contents (a plain header instead of a navigation bar; taller only when Transparent adds Text colour), and while it's up the card shrinks to fit above it, so every choice shows on the whole card, small phones included. The sheet has a solid background, and the action row and tag line fade out beneath it, since iOS 26's floating sheet showed their ends beside it. With Transparent and Dark text, the preview's checkerboard turns light so the text reads; exports are unchanged.
+
+## 2026-11-01: All sharing layouts in the show carousel (#297)
+
+The owner expected the eight layouts in one place after sharing a show. Entry sharing now appends the three existing current-year Insights cards, using the owner’s current stats even when the selected entry is historical. Entry ordinals retain their original date-based context. Aggregate cards carry explicit current-year/live labels and never inherit a show caption or public entry link; returning to an entry card restores its actions. Aggregate filenames contain the stats design and period, without an entry title. The standalone Insights period selector remains.
+
+The count badge is available from the first visit: “First visit” at 1×, “Encore” from 2× onward, per the owner’s follow-up. Its stable design ID stays `encore`. Photo and rating prerequisites remain real requirements. To keep all three stats templates available from an older show even when this year has no visits, show truthful zero totals/charts and “No current streak”; the standalone empty Insights view keeps its existing empty state. No counts or achievements are invented. The current native round action row, background sheet and Light option are preserved.

@@ -11,6 +11,7 @@ struct RenderedCard: Identifiable {
   let file: URL
   let image: UIImage
   var backgrounds: [ShareAppearance: ShareAsset] = [:]
+  var isInsights = false
   var showsRating = false
   var supportsBackground: Bool { !backgrounds.isEmpty }
   func asset(for appearance: ShareAppearance) -> ShareAsset {
@@ -39,7 +40,8 @@ enum ShareCards {
   }
   @MainActor static func entryCards(_ data: EntryCardData, photo: UIImage?) throws -> [RenderedCard] {
     try EntryCardDesign.available(photo: photo != nil, rating: data.rating, timesSeen: data.timesSeen).map { design in
-      let name = "stubbed-\(slug(data.title))-\(design.id)"
+      let exportID = design == .encore && data.timesSeen == 1 ? "first-visit" : design.id
+      let name = "stubbed-\(slug(data.title))-\(exportID)"
       let full = try render(EntryCardView(design: design, data: data, photo: photo), name: name)
       var variants: [ShareAppearance: ShareAsset] = [:]
       if !design.isPhoto {
@@ -47,7 +49,7 @@ enum ShareCards {
           variants[appearance] = try render(EntryCardView(design: design, data: data, photo: nil, appearance: appearance), name: "\(name)-\(appearance.key)")
         }
       }
-      return RenderedCard(id: design.id, name: design.name, file: full.file, image: full.image, backgrounds: variants, showsRating: design == .name)
+      return RenderedCard(id: design.id, name: design == .encore && data.timesSeen == 1 ? "First visit" : design.name, file: full.file, image: full.image, backgrounds: variants, showsRating: design == .name)
     }
   }
   struct Stats: Decodable, Sendable {
@@ -96,6 +98,8 @@ struct ShareCarousel: View {
     return min(previewSize, max(160, screenHeight - currentPickerHeight - Space.xxl))
   }
   private var current: RenderedCard? { cards?.first(where: { $0.id == active }) ?? cards?.first }
+  private var currentText: String { current?.isInsights == true ? "" : text }
+  private var currentLink: URL? { current?.isInsights == true ? nil : link }
   private var currentAsset: ShareAsset? { current?.asset(for: appearance) }
   private var selection: Binding<String> {
     Binding(get: { current?.id ?? "loading" }, set: { active = $0 })
@@ -128,8 +132,8 @@ struct ShareCarousel: View {
 
       ScrollView(.horizontal, showsIndicators: false) {
         HStack(alignment: .top, spacing: Space.m) {
-          if subject == .show {
-            // Always shown on entry shares; photo cards have no background
+          if subject != .trip {
+            // Available for show and stats cards; photo cards have no background
             // to change, so it's dimmed there.
             let canPick = current?.supportsBackground == true
             let shown = canPick ? appearance.background : .dark
@@ -167,14 +171,14 @@ struct ShareCarousel: View {
             .disabled(current == nil)
           action("Download", systemImage: "arrow.down.to.line") { Task { await download() } }
             .disabled(current == nil)
-          if !text.isEmpty {
+          if !currentText.isEmpty {
             action("Copy text", systemImage: "doc.on.doc") {
-              UIPasteboard.general.string = text
+              UIPasteboard.general.string = currentText
               record("copy_text")
               notice = "Text copied."
             }
           }
-          if let link {
+          if let link = currentLink {
             action("Link", systemImage: "link") {
               UIPasteboard.general.url = link
               record("copy_link")
@@ -221,7 +225,7 @@ struct ShareCarousel: View {
     }.clipShape(.rect(cornerRadius: 20))
   }
   private var subjectName: String {
-    switch subject {
+    switch current?.isInsights == true ? .insights : subject {
     case .show: "show"
     case .trip: "trip"
     case .insights: "stats"
@@ -268,7 +272,7 @@ struct ShareCarousel: View {
   private func share(withText: Bool) {
     guard let asset = currentAsset else { return }
     notice = nil
-    let items: [Any] = withText && !text.isEmpty ? [asset.file, text] : [asset.file]
+    let items: [Any] = withText && !currentText.isEmpty ? [asset.file, currentText] : [asset.file]
     sharing = SharePayload(items: items, action: withText ? "more" : "stories")
   }
   private func download() async {

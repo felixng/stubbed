@@ -30,7 +30,7 @@ export const CARD_DESIGNS: CardDesign[] = [
   { id: "show-number", name: "Show number", background: true },
 ];
 export function availableEntryDesigns(data: CardData, photo: boolean) {
-  return CARD_DESIGNS.filter(d => (!d.photo || photo) && (d.id !== "name" || data.rating != null) && (d.id !== "encore" || data.timesSeen > 1));
+  return CARD_DESIGNS.filter(d => (!d.photo || photo) && (d.id !== "name" || data.rating != null)).map(d => d.id === "encore" && data.timesSeen === 1 ? { ...d, name: "First visit" } : d);
 }
 export function cardBackground(design: CardDesign, chosen: ShareBackground) {
   return design.background ? chosen : "photo";
@@ -174,7 +174,7 @@ export async function renderCard(
   { background = "solid", ink = "light" }: { background?: ShareBackground; ink?: ShareInk; square?: boolean } = {},
 ) {
   const design = CARD_DESIGNS.find(d => d.id === designId);
-  if (!design || !availableEntryDesigns(data, photo != null).some(d => d.id === designId)) throw new Error("This card needs a photo, rating or repeat visit");
+  if (!design || !availableEntryDesigns(data, photo != null).some(d => d.id === designId)) throw new Error("This card needs a photo or rating");
   return renderSquare((ctx, mark) => {
     const color = design.photo ? "#FFFFFF" : shareForeground(background, ink);
     const metrics = entryMetrics(data);
@@ -211,7 +211,7 @@ export async function renderCard(
         });
       } else {
         ctx.fillStyle = color; ctx.textBaseline = "top"; ctx.textAlign = "left";
-        setFont(ctx, 500, 22, TEXT, 0); ctx.fillText(designId === "encore" ? "Encore" : "My theatre year", 28, 28);
+        setFont(ctx, 500, 22, TEXT, 0); ctx.fillText(designId === "encore" ? (data.timesSeen === 1 ? "First visit" : "Encore") : "My theatre year", 28, 28);
         drawBadge(ctx, designId === "encore" ? `${data.timesSeen}x` : ordinal(data.showOfYear), 196);
         ctx.fillStyle = color; ctx.textBaseline = "top"; ctx.textAlign = "left";
         setFont(ctx, 500, 20, TEXT, 0);

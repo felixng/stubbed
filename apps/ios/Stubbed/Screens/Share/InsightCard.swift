@@ -1,5 +1,6 @@
 import Supabase
 import SwiftUI
+import UIKit
 
 enum InsightCardDesign: String, CaseIterable, Identifiable {
   case weekly = "weekly-streak"
@@ -13,10 +14,10 @@ enum InsightCardDesign: String, CaseIterable, Identifiable {
     case .mix: "Show mix"
     }
   }
-  static func available(_ stats: InsightStats, year: Int?, currentYear: Int = InsightStats.currentYear) -> [Self] {
+  static func available(_ stats: InsightStats, year: Int?, currentYear: Int = InsightStats.currentYear, includingEmpty: Bool = false) -> [Self] {
     var result: [Self] = []
-    if (year == nil || year == currentYear), stats.streaks.current_weekly > 0 { result.append(.weekly) }
-    if stats.total > 0 {
+    if (year == nil || year == currentYear), (stats.streaks.current_weekly > 0 || includingEmpty) { result.append(.weekly) }
+    if stats.total > 0 || includingEmpty {
       if year != nil { result.append(.year) }
       result.append(.mix)
     }
@@ -61,7 +62,7 @@ struct InsightCardView: View {
       Text(String(data.stats.streaks.current_weekly)).font(.system(size: 112, weight: .heavy))
         .tracking(-4).lineLimit(1).minimumScaleFactor(0.45)
       Text(data.stats.streaks.current_weekly == 1 ? "Week" : "Weeks").font(.system(size: 32, weight: .bold))
-      Text("A show every week").font(.system(size: 22, weight: .medium))
+      Text(data.stats.streaks.current_weekly == 0 ? "No current streak" : "A show every week").font(.system(size: 22, weight: .medium))
       HStack(spacing: 8) {
         ForEach(0..<min(12, data.stats.streaks.current_weekly), id: \.self) { _ in
           RoundedRectangle(cornerRadius: 3).fill(ink).frame(width: 28, height: 10)
@@ -182,15 +183,18 @@ struct ShareRadar: View {
 }
 
 extension ShareCards {
-  @MainActor static func insightsCards(_ data: InsightCardData) throws -> [RenderedCard] {
-    try InsightCardDesign.available(data.stats, year: data.year, currentYear: data.currentYear).map { design in
+  @MainActor static func showCards(_ data: EntryCardData, photo: UIImage?, insights: InsightCardData) throws -> [RenderedCard] {
+    try entryCards(data, photo: photo) + insightsCards(insights, includingEmpty: true)
+  }
+  @MainActor static func insightsCards(_ data: InsightCardData, includingEmpty: Bool = false) throws -> [RenderedCard] {
+    try InsightCardDesign.available(data.stats, year: data.year, currentYear: data.currentYear, includingEmpty: includingEmpty).map { design in
       let name = "stubbed-\(design.id)-\(data.year.map(String.init) ?? "all-time")"
       var variants: [ShareAppearance: ShareAsset] = [:]
       for appearance in ShareAppearance.variants {
         variants[appearance] = try render(InsightCardView(design: design, data: data, appearance: appearance), name: "\(name)-\(appearance.key)")
       }
       let full = variants[.standard]!
-      return RenderedCard(id: design.id, name: design.name, file: full.file, image: full.image, backgrounds: variants)
+      return RenderedCard(id: design.id, name: design.name, file: full.file, image: full.image, backgrounds: variants, isInsights: true)
     }
   }
 }
