@@ -155,3 +155,15 @@ period, grouped by catalogue show ID, sorted by visits descending then title and
 ID. Equal counts share a competition rank (1, 1, 3). The optional `selected_show`
 UUID narrows the visit drill-down while preserving the other filters. Existing
 callers can omit it. Tests: `tests/repeat_show_insights_test.sql`.
+
+## Merging duplicates
+
+`scripts/merge.mjs` (Node 24+, psql, `SUPABASE_DB_URL`) folds a duplicate show or venue into the one to keep. Entries, trip links and likes follow; the duplicate is deleted in the same transaction.
+
+```sh
+node supabase/scripts/merge.mjs                                  # list likely duplicates
+node supabase/scripts/merge.mjs --venues FROM INTO               # dry run: rolled back, counts printed
+node supabase/scripts/merge.mjs --venues FROM INTO --apply       # do it
+node supabase/scripts/merge.mjs --shows FROM INTO [--force] [--apply]   # --force merges across types
+```
+
