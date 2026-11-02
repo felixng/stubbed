@@ -1,51 +1,68 @@
 import { Container } from "@/components/landing/Container";
 
-// The minor callouts (#239): smaller than the four features and laid out
-// differently, as a row of compact cards. Our own claims only: the
-// reference site's privacy and indie lines are not Stubbed's.
+// "Built for theatre lovers" (#239, from the landing copy audit): smaller
+// features in a balanced 2×2 grid of rounded cards, after the four big ones.
+// Each line describes something the app does today.
 const CALLOUTS: { title: string; body: string; icon: React.ReactNode }[] = [
   {
-    title: "Made by a theatre nerd, for theatre nerds",
-    body: "Stubbed is built by Felix, who once saw more than 100 shows in a year and served on an Olivier Awards panel. It’s the diary he wanted.",
+    title: "Quick logging",
+    body: "Search for the show and the theatre, pick the date, and you’re done. Start from a photo and Stubbed fills in what it can.",
     icon: (
-      // Theatre masks.
-      <path d="M4 5.5c2.7-1.3 5.3-1.3 8 0v5a4 4 0 0 1-8 0v-5ZM6.5 9h.01M9.5 9h.01M6.8 11.5a2 2 0 0 0 2.4 0M12 8c2.7-1.3 5.3-1.3 8 0v5a4 4 0 0 1-8 0M14.5 11.5h.01M17.5 11.5h.01M14.8 15a2 2 0 0 1 2.4 0" />
-    ),
-  },
-  {
-    title: "Ad free",
-    body: "No ads in your diary, your feed or the cards you share. Just your shows.",
-    icon: (
-      // A circle with a line through it.
+      // A plus in a circle.
       <>
         <circle cx="12" cy="12" r="8.5" />
-        <path d="m6 6 12 12" />
+        <path d="M12 8v8M8 12h8" />
       </>
     ),
   },
   {
-    title: "Small and independent",
-    body: "One person makes Stubbed, not a company. Ideas and bug reports go straight to the person who builds it, and shape what comes next.",
+    title: "Notes that are yours",
+    body: "Add a note to any show: who you went with, where you sat, who stole the show.",
     icon: (
-      // A ticket.
-      <path d="M4 7.5A1.5 1.5 0 0 1 5.5 6h13A1.5 1.5 0 0 1 20 7.5V10a2 2 0 0 0 0 4v2.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 16.5V14a2 2 0 0 0 0-4V7.5ZM14 6v12" />
+      // A pencil.
+      <path d="M4.5 19.5 5.5 15 15.5 5a2.1 2.1 0 0 1 3 3l-10 10-4 1.5ZM13.5 7l3 3" />
+    ),
+  },
+  {
+    title: "Sharing in one tap",
+    body: "Cards sized for Instagram Stories, and a link for group chats, so friends can see what you saw.",
+    icon: (
+      // Share: a box with an arrow out of it.
+      <path d="M12 15V3.5M7.5 8 12 3.5 16.5 8M6 11.5H5v9h14v-9h-1" />
+    ),
+  },
+  {
+    title: "Your diary, your choice",
+    body: "Keep any show private, make your whole profile private, or share it all with everyone.",
+    icon: (
+      // A lock.
+      <>
+        <rect x="5" y="10.5" width="14" height="9.5" rx="2" />
+        <path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" />
+      </>
     ),
   },
 ];
 
 export function Callouts() {
   return (
-    <section aria-label="Why Stubbed" className="pt-8 pb-20 sm:pb-28">
-      <Container>
-        <ul className="grid gap-4 md:grid-cols-3">
+    <section aria-labelledby="callouts-heading" className="pt-8 pb-20 sm:pb-28">
+      <Container className="flex flex-col gap-8">
+        <h2
+          id="callouts-heading"
+          className="text-center font-display text-[clamp(32px,4.4vw,48px)] leading-[1.05] font-extrabold tracking-[-0.03em] text-balance text-label"
+        >
+          Built for theatre lovers
+        </h2>
+        <ul className="mx-auto grid w-full max-w-[1040px] gap-4 md:grid-cols-2">
           {CALLOUTS.map(({ title, body, icon }) => (
-            <li key={title} className="flex flex-col gap-3 rounded-[24px] bg-surface p-6 ring-1 ring-separator sm:p-7">
+            <li key={title} className="flex flex-col gap-3 rounded-[28px] bg-surface p-7 ring-1 ring-separator sm:p-9">
               <span className="flex size-11 items-center justify-center rounded-pill bg-tint-fill text-tint-text">
                 <svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
                   {icon}
                 </svg>
               </span>
-              <h3 className="font-display text-[21px] leading-7 font-bold tracking-[-0.01em] text-balance text-label">{title}</h3>
+              <h3 className="font-display text-[22px] leading-7 font-bold tracking-[-0.01em] text-balance text-label">{title}</h3>
               <p className="text-body leading-6 text-pretty text-label-secondary">{body}</p>
             </li>
           ))}

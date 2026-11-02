@@ -8,22 +8,22 @@ import { Phone, type Shot } from "@/components/landing/Screens";
 const FEATURES: { eyebrow: string; title: string; body: string; shot?: Shot; alt?: string }[] = [
   {
     eyebrow: "Made to share",
-    title: "Share with your friends",
-    body: "Turn any show into a card for your Stories, with your photo, the show, your stats and your handle. Pick a design and post it in a tap.",
+    title: "Share your theatre life",
+    body: "Turn your stage photos, curtain calls and ratings into a card in a tap, then share it to your Instagram Stories, a group chat or fellow theatregoers.",
     shot: "share",
     alt: "A share card for The Lost Boys: the photo, four and a half stars and the handle @sillyelphaba",
   },
   {
     eyebrow: "Your diary",
-    title: "Track your visits",
-    body: "Every show you see in one place: the theatre, the date, your half-star rating and a note. Start from a photo and Stubbed fills in what it can.",
+    title: "Never forget a show, a seat or a standing ovation",
+    body: "Log a visit in seconds, from a long run to a one-night-only fringe show. Add a photo of the stage or the programme, rate it in half stars and note where you sat, all before the house lights come up.",
     shot: "log",
     alt: "Logging The Lost Boys: a photo from the show, the Palace Theatre, the date and four and a half stars",
   },
   {
     eyebrow: "The bigger picture",
-    title: "Trips and stats",
-    body: "Group a weekend away or a festival’s shows into a trip, and see your year in theatre: how many shows, which theatres, your streaks.",
+    title: "Your theatre season at a glance",
+    body: "Look back at your year in theatre: how many shows you’ve logged, the ones you keep going back to and your streaks. Group a weekend away or a festival into a trip.",
     shot: "plan",
     alt: "A trip called Birthday weekend: 2 shows at 2 venues, Cabaret and Groundhog Day",
   },

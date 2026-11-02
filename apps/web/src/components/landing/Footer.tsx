@@ -22,7 +22,7 @@ export function Footer() {
       <Container className="flex flex-col items-center gap-4 py-10 text-center text-footnote text-label-secondary">
         <div className="flex flex-col items-center gap-1">
           <Wordmark size={20} mark />
-          <p>Your theatre diary.</p>
+          <p>Your social theatre diary</p>
         </div>
         <nav aria-label="Footer" className="flex flex-wrap justify-center">
           {LINKS.map(({ href, label }) => (

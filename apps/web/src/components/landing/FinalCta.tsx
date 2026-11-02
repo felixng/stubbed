@@ -29,7 +29,7 @@ export function FinalCta() {
               href="/signup"
               className="inline-flex min-h-[54px] items-center justify-center rounded-pill bg-tint px-7 font-sans text-headline font-semibold text-on-tint shadow-btn transition-colors hover:bg-tint-pressed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
             >
-              Sign up free
+              Get started
             </Link>
             <Link
               href="/login"

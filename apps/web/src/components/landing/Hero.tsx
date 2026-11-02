@@ -13,11 +13,11 @@ export function Hero() {
       <Container className="flex flex-col items-center gap-14 text-center sm:gap-16">
         <div className="flex max-w-[820px] flex-col items-center gap-6">
           <h1 className="font-display text-[clamp(48px,9vw,104px)] leading-[0.98] font-extrabold tracking-[-0.035em] text-balance text-label">
-            Your theatre life, shared.
+            A theatre diary made for sharing.
           </h1>
           <p className="max-w-[560px] text-[clamp(19px,2.2vw,23px)] leading-[1.4] text-pretty text-label-secondary">
-            Log every show you see, rate it in half stars, and share cards made for your Stories with the people who
-            get it.
+            Keep your stage photos, curtain calls and stage door memories in one place. Log your visits, look back at
+            your stats, and share your theatre life.
           </p>
           <div id="get-started" className="mt-2 flex scroll-mt-24 flex-col items-center gap-3">
             <div className="flex flex-wrap items-center justify-center gap-3">
@@ -25,13 +25,13 @@ export function Hero() {
                 href="/signup"
                 className="inline-flex min-h-[54px] items-center justify-center rounded-pill bg-tint px-7 font-sans text-headline font-semibold text-on-tint shadow-btn transition-colors hover:bg-tint-pressed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
               >
-                Sign up free
+                Get started
               </Link>
               <a
                 href="#features"
                 className="inline-flex min-h-[54px] items-center justify-center gap-1.5 rounded-pill px-5 text-headline font-semibold text-tint-text transition-colors hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
               >
-                Learn more
+                Explore features
                 <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="m6 9 6 6 6-6" />
                 </svg>
