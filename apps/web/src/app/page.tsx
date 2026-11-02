@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from "next";
 
+import { Callouts } from "@/components/landing/Callouts";
 import { Container } from "@/components/landing/Container";
 import { Features } from "@/components/landing/Features";
+import { FinalCta } from "@/components/landing/FinalCta";
 import { Footer } from "@/components/landing/Footer";
 import { Hero } from "@/components/landing/Hero";
-import { SignUpReminder } from "@/components/landing/SignUpReminder";
 import { SiteMenu } from "@/components/landing/SiteMenu";
 import { Wordmark } from "@/components/ui/Wordmark";
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from "@/lib/site";
@@ -57,8 +58,9 @@ const JSON_LD = {
 // The landing page is always light, whatever the visitor's appearance.
 export const viewport: Viewport = { themeColor: "#f2f2f7" };
 
-// Public landing page: hero with sign-up, and features (#9, #149). The header
-// button links to /login, or the app when signed in.
+// Public landing page (#230): the hero with sign-up, four features led by
+// sharing, a grid of smaller features, a final call to action and a minimal
+// footer. The header button links to /login, or the app when signed in.
 export default function Home() {
   return (
     <div data-theme="light" className="flex flex-1 flex-col">
@@ -84,7 +86,8 @@ export default function Home() {
       <main className="flex-auto">
         <Hero />
         <Features />
-        <SignUpReminder />
+        <Callouts />
+        <FinalCta />
       </main>
       <Footer />
     </div>

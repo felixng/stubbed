@@ -54,7 +54,7 @@ export default async function OpengraphImage() {
               maxWidth: 900,
             }}
           >
-            Your theatre life, shared.
+            A theatre diary made for sharing.
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 16, fontSize: 32, color: "#6c6c70" }}>
             <div style={{ width: 16, height: 16, borderRadius: 9999, background: "#dc2f4f" }} />
