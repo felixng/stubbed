@@ -4,6 +4,7 @@ import { getSiteCopy } from "@/lib/cms/content";
 import type { Metadata, Viewport } from "next";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { SiteAnalytics } from "@/components/SiteAnalytics";
+import { PageLoading } from "@/components/ui/PageLoading";
 import "./globals.css";
 
 // Type is the system font (SF Pro on Apple devices), set in globals.css, so
@@ -41,7 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className="h-full antialiased">
       <body className="flex min-h-full flex-col font-sans text-body">
-        <Suspense fallback={<div className="p-8" role="status">Loading…</div>}>{children}</Suspense>
+        <Suspense fallback={<PageLoading />}>{children}</Suspense>
         <Suspense fallback={null}><Preview /></Suspense>
         <SiteAnalytics />
       </body>
