@@ -4,7 +4,6 @@ import UIKit
 /// which drops all EXIF and GPS metadata. Sizes match apps/web/src/lib/photo.ts.
 enum Photo {
   static let storedEdge: CGFloat = 1600
-  static let identifyEdge: CGFloat = 1024
   static let avatarEdge: CGFloat = 512
 
   enum Failure: Error { case unreadable }

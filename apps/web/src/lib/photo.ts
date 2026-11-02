@@ -2,7 +2,7 @@
 //
 // The original file never leaves the phone. We read its date and GPS here,
 // then re-encode it to JPEG through a canvas, which drops all EXIF/GPS
-// metadata. Only those clean copies are uploaded or sent for identification.
+// metadata. Only those clean copies are uploaded.
 import exifr from "exifr";
 
 export type PhotoMeta = {
@@ -72,9 +72,7 @@ export async function reencodeJpeg(file: Blob, maxEdge: number, quality = 0.85, 
   }
 }
 
-// Sizes: stored photos back the share card (#15); the identify copy is
-// smaller to keep the Claude call quick and cheap.
+// Stored photos back the share card (#15).
 export const STORED_PHOTO_EDGE = 1600;
-export const IDENTIFY_PHOTO_EDGE = 1024;
 // Avatars show at most 88px; 512 covers 3x screens with room to spare.
 export const AVATAR_EDGE = 512;

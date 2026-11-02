@@ -41,43 +41,9 @@ struct PhotoMeta: Equatable, Sendable {
   }
 }
 
-/// What the show-detection model said about a photo (the web's Identification).
-struct Identification: Decodable, Equatable, Sendable {
-  let showTitle: String?
-  let showType: ShowType?
-  let venueOsmId: String?
-  let venueName: String?
-  let confidence: Confidence
-  let reason: String
-
-  enum Confidence: String, Decodable, Sendable { case high, medium, low }
-
-  enum CodingKeys: String, CodingKey {
-    case confidence, reason
-    case showTitle = "show_title"
-    case showType = "show_type"
-    case venueOsmId = "venue_osm_id"
-    case venueName = "venue_name"
-  }
-
-  init(from decoder: any Decoder) throws {
-    let c = try decoder.container(keyedBy: CodingKeys.self)
-    func text(_ key: CodingKeys) throws -> String? {
-      let value = try c.decodeIfPresent(String.self, forKey: key)
-      return value?.isEmpty == false ? value : nil
-    }
-    showTitle = try text(.showTitle)
-    showType = try text(.showType).flatMap(ShowType.init(rawValue:))
-    venueOsmId = try text(.venueOsmId)
-    venueName = try text(.venueName)
-    confidence = try c.decode(Confidence.self, forKey: .confidence)
-    reason = try c.decode(String.self, forKey: .reason)
-  }
-}
-
-/// The photo steps from apps/web/src/lib/import/photo-pipeline.ts: theatres
-/// near where the photo was taken, then which show it was. Each step is
-/// best effort; a failure leaves its part for the user to fill in.
+/// The photo step from apps/web/src/lib/import/photo-pipeline.ts: theatres
+/// near where the photo was taken. Best effort; a failure leaves the venue
+/// for the user to fill in.
 enum PhotoDetect {
   static let nearbyRadius: Double = 150
   static let minNearbyRadius: Double = 60
@@ -173,56 +139,6 @@ enum PhotoDetect {
       var v = VenueChoice(row)
       v.distance = Int(d.rounded())
       return v
-    }
-  }
-
-  enum IdentifyOutcome: Sendable {
-    case found(Identification?)
-    case notConfigured
-    case failed
-  }
-
-  /// POST /api/photo/identify: the small photo, date and time, place,
-  /// rounded point and nearby theatres. Gives up after `timeout`.
-  static func identify(
-    photo: Data, meta: PhotoMeta, place: (city: String?, country: String?), candidates: [VenueChoice],
-    timeout: TimeInterval = 20
-  ) async -> IdentifyOutcome {
-    guard var request = await authorized("api/photo/identify") else { return .failed }
-    request.timeoutInterval = timeout
-    let boundary = "stubbed-\(UUID().uuidString)"
-    request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
-    var body = Data()
-    func field(_ name: String, _ value: String?) {
-      guard let value else { return }
-      body.append("--\(boundary)\r\nContent-Disposition: form-data; name=\"\(name)\"\r\n\r\n\(value)\r\n".data(using: .utf8)!)
-    }
-    body.append(
-      "--\(boundary)\r\nContent-Disposition: form-data; name=\"photo\"; filename=\"photo-1.jpg\"\r\nContent-Type: image/jpeg\r\n\r\n"
-        .data(using: .utf8)!)
-    body.append(photo)
-    body.append("\r\n".data(using: .utf8)!)
-    field("date", meta.date)
-    field("time", meta.time)
-    field("city", place.city)
-    field("country", place.country)
-    // ~100 m precision: enough to search the area if no theatre was found.
-    field("lat", meta.lat.map { String(format: "%.3f", $0) })
-    field("lng", meta.lng.map { String(format: "%.3f", $0) })
-    let list = candidates.map { ["osm_id": $0.osmId as Any, "name": $0.name, "distance_m": $0.distance as Any] }
-    field("candidates", (try? JSONSerialization.data(withJSONObject: list)).flatMap { String(data: $0, encoding: .utf8) })
-    body.append("--\(boundary)--\r\n".data(using: .utf8)!)
-    request.httpBody = body
-
-    struct Result: Decodable { let result: Identification? }
-    do {
-      let (data, response) = try await URLSession.shared.data(for: request)
-      let status = (response as? HTTPURLResponse)?.statusCode ?? 0
-      if status == 503 { return .notConfigured }
-      guard status == 200 else { return .failed }
-      return .found(try JSONDecoder().decode(Result.self, from: data).result)
-    } catch {
-      return .failed
     }
   }
 

@@ -129,7 +129,7 @@ Free-tier limits change often. Check the vendor pricing pages before relying on 
 - `/api/card/[id]`: renders the Instagram Story card (1080×1920) with `next/og`, reading data through the **publishable (anon) key**, which means RLS lets it see public entries only. Responses are cached at the edge, so crawlers and repeat shares don't re-render.
 - `/@[handle]` and `/e/[id]`: server-rendered public pages with `og:image` pointing at the card route.
 - The Supabase **service-role key is never deployed** in this phase, so a bug in a route can't bypass RLS.
-- Email import (`/api/import/email`) was paused and removed in #282; photo detection is the only remaining LLM call until #281.
+- Email import (#282) and photo detection (#281) were removed: no request from either app reaches an LLM.
 
 ### 4. Photos
 - Resize to roughly 1600px and **re-encode on the device before upload**: canvas on web, `ImageIO`/`UIImage` JPEG re-encode on iOS. Re-encoding drops EXIF/GPS, and the free tier has no server-side image processing.

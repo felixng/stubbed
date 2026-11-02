@@ -114,9 +114,9 @@ export const FAQ_SECTIONS: readonly FaqSection[] = [
       },
       {
         id: "photo-privacy",
-        question: "What happens to my photos and email text?",
-        answer: "Photos are re-encoded on your device to remove EXIF and GPS metadata before upload. Photo detection can still use the date and location to find nearby theatres, and sends a clean photo and context to an AI provider to suggest the show. Imported email text is also sent to an AI provider to read the booking details. You review the results before saving. You can log by hand without a photo or email instead.",
-        link: { href: "/privacy#collect", label: "Read how photo and email data is used" },
+        question: "What happens to my photos?",
+        answer: "Photos are re-encoded on your device to remove EXIF and GPS metadata before upload. Stubbed can use the photo’s date and location to find nearby theatres. No photo is sent to an AI service. You review everything before saving, and you can log by hand without a photo instead.",
+        link: { href: "/privacy#collect", label: "Read how photo data is used" },
       },
       {
         id: "delete-account",
