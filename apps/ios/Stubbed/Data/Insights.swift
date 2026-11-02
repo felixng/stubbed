@@ -2,6 +2,12 @@ import Foundation
 import Supabase
 
 struct InsightStats: Decodable, Sendable {
+  struct RepeatedShow: Decodable, Identifiable, Sendable {
+    let id: UUID
+    let title: String
+    let count: Int
+    let rank: Int
+  }
   struct Streaks: Decodable, Sendable {
     let current_daily: Int
     let longest_daily: Int
@@ -38,6 +44,7 @@ struct InsightStats: Decodable, Sendable {
   }
   let total: Int
   let unique_shows: Int
+  let repeated_shows: [RepeatedShow]
   let unlocated: Int
   let streaks: Streaks
   let years: [Year]
@@ -65,6 +72,7 @@ enum Insights {
     var day: String?
     var country: String?
     var type: String?
+    var show: UUID?
     var title: String
   }
   struct Visit: Decodable, Identifiable, Sendable {
@@ -81,12 +89,13 @@ enum Insights {
       let selected_country: String?
       let selected_type: String?
       let page_offset: Int
+      let selected_show: UUID?
     }
     return try await supabase.rpc(
       "own_insight_entries",
       params: Params(
         selected_year: filter.year, selected_day: filter.day, selected_country: filter.country,
-        selected_type: filter.type, page_offset: offset)
+        selected_type: filter.type, page_offset: offset, selected_show: filter.show)
     ).execute().value
   }
 }
