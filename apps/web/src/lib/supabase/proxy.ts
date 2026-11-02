@@ -58,7 +58,7 @@ export async function updateSession(request: NextRequest) {
   if (!userId && pathname === "/reset-password") {
     return redirectWithCookies(new URL("/login?error=reset-link", request.url), response);
   }
-  if (userId && (pathname === "/" || pathname === "/login" || pathname === "/signup")) {
+  if (userId && (pathname === "/login" || pathname === "/signup")) {
     return redirectWithCookies(new URL("/app", request.url), response);
   }
 

@@ -1,40 +1,36 @@
-import Link from "next/link";
+"use client";
 
-// Hamburger menu at the top right of the landing page. For now it only links
-// to sign-in. <details> gives keyboard and screen-reader support with no
-// client JavaScript.
+import Link from "next/link";
+import { useEffect, useState } from "react";
+
+import { createClient } from "@/lib/supabase/client";
+
+// The header button at the top right of the public pages: "Sign in" for
+// visitors, "Open app" once a session exists. The pages stay static, so the
+// session is checked in the browser; until then (and if the check fails) it
+// reads "Sign in", and /login sends a signed-in visitor on to the app anyway.
 export function SiteMenu() {
+  const [signedIn, setSignedIn] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    createClient()
+      .auth.getSession()
+      .then(({ data }) => {
+        if (!cancelled && data.session) setSignedIn(true);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   return (
-    <details className="relative">
-      <summary
-        aria-label="Menu"
-        className="flex size-11 cursor-pointer list-none items-center justify-center rounded-pill text-label hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus [&::-webkit-details-marker]:hidden"
-      >
-        <svg
-          viewBox="0 0 24 24"
-          width={24}
-          height={24}
-          aria-hidden="true"
-          focusable="false"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={1.5}
-          strokeLinecap="round"
-        >
-          <path d="M4 7h16M4 12h16M4 17h16" />
-        </svg>
-      </summary>
-      <nav
-        aria-label="Site"
-        className="absolute right-0 z-10 mt-1 min-w-44 overflow-hidden rounded-md border border-separator bg-surface shadow-lg"
-      >
-        <Link
-          href="/login"
-          className="flex min-h-11 items-center px-4 text-body text-label hover:bg-fill focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus"
-        >
-          Sign in
-        </Link>
-      </nav>
-    </details>
+    <Link
+      href={signedIn ? "/app" : "/login"}
+      className="inline-flex min-h-11 items-center rounded-pill bg-surface px-5 text-body font-medium text-label shadow-sm ring-1 ring-separator hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+    >
+      {signedIn ? "Open app" : "Sign in"}
+    </Link>
   );
 }

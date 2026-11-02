@@ -57,8 +57,8 @@ const JSON_LD = {
 // The landing page is always light, whatever the visitor's appearance.
 export const viewport: Viewport = { themeColor: "#f2f2f7" };
 
-// Public landing page: hero with sign-up, and features (#9, #149). The menu
-// links to /login.
+// Public landing page: hero with sign-up, and features (#9, #149). The header
+// button links to /login, or the app when signed in.
 export default function Home() {
   return (
     <div data-theme="light" className="flex flex-1 flex-col">
