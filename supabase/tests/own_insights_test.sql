@@ -40,6 +40,6 @@ select is(public.own_insights(null,'2026-01-06')->>'total','0','other user sees 
 select is((select count(*)::integer from public.own_insight_entries()),0,'drill-down isolates caller');
 reset role;
 select ok(not has_function_privilege('anon','public.own_insights(integer,date)','execute'),'anon cannot read aggregates');
-select ok(not has_function_privilege('anon','public.own_insight_entries(integer,date,text,text,integer)','execute'),'anon cannot drill down');
+select ok(not has_function_privilege('anon','public.own_insight_entries(integer,date,text,text,integer,uuid)','execute'),'anon cannot drill down');
 select * from finish();
 rollback;
