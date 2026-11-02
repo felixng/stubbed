@@ -50,6 +50,47 @@ enum Entries {
       .execute().value
   }
 
+  /// Close existing matches for a show or venue about to be added, best
+  /// first (#146). `same` means it's the same one, so saving reuses it.
+  struct Similar<Item: Decodable & Sendable>: Decodable, Sendable {
+    let item: Item
+    let same: Bool
+
+    init(from decoder: any Decoder) throws {
+      item = try Item(from: decoder)
+      same = try decoder.container(keyedBy: Keys.self).decode(Bool.self, forKey: .same)
+    }
+
+    private enum Keys: String, CodingKey { case same }
+  }
+
+  static func similarShows(_ title: String) async throws -> [Similar<Show>] {
+    try await supabase.rpc("similar_shows", params: ["q": title]).execute().value
+  }
+
+  static func similarVenues(_ name: String, near: (lat: Double, lng: Double)?, city: String?) async throws
+    -> [Similar<Venue>]
+  {
+    struct Params: Encodable {
+      let q: String
+      let near_lat: Double?
+      let near_lng: Double?
+      let in_city: String?
+    }
+    let city = city?.trimmingCharacters(in: .whitespaces)
+    return try await supabase.rpc(
+      "similar_venues",
+      params: Params(q: name, near_lat: near?.lat, near_lng: near?.lng, in_city: city?.isEmpty == false ? city : nil)
+    ).execute().value
+  }
+
+  /// "HAMILTON - Premium Orchestra" → "Hamilton". New shows are also tidied
+  /// on insert, so this is for showing the title before saving.
+  static func tidyShowTitle(_ title: String) async throws -> String {
+    let tidy: String? = try await supabase.rpc("tidy_show_title", params: ["title": title]).execute().value
+    return tidy ?? title.trimmingCharacters(in: .whitespacesAndNewlines)
+  }
+
   static func searchVenues(_ query: String, near: (lat: Double, lng: Double)? = nil) async throws -> [Venue] {
     struct Params: Encodable {
       let q: String
@@ -87,13 +128,13 @@ enum Entries {
 
   // MARK: - Catalogue
 
-  /// Reuses a show whose title matches exactly (any case), so a suggested
-  /// or retyped title doesn't create a duplicate.
+  /// Reuses the same existing show ("Les Miserables (Broadway)" is Les
+  /// Misérables), so a suggested or retyped title doesn't add a duplicate.
   static func ensureShow(_ show: ShowChoice) async throws -> UUID {
     if let id = show.id { return id }
     let title = show.title.trimmingCharacters(in: .whitespacesAndNewlines)
-    if let same = try await searchShows(title).first(where: { $0.title.lowercased() == title.lowercased() }) {
-      return same.id
+    if let same = try await similarShows(title).first(where: \.same) {
+      return same.item.id
     }
     struct Insert: Encodable {
       let title: String
@@ -105,8 +146,9 @@ enum Entries {
     return row.id
   }
 
-  /// OpenStreetMap venues match on osm_id, then on name in the same city;
-  /// otherwise a new row is added.
+  /// OpenStreetMap venues match on osm_id, then on the same venue nearby or
+  /// in the same city ("Wyndhams Theater" is Wyndham's Theatre); otherwise a
+  /// new row is added.
   static func ensureVenue(_ venue: VenueChoice) async throws -> UUID {
     if let id = venue.id { return id }
     struct Row: Decodable { let id: UUID }
@@ -118,10 +160,8 @@ enum Entries {
     }
     let near = venue.lat.flatMap { lat in venue.lng.map { (lat, $0) } }
     let city = (venue.city ?? "").trimmingCharacters(in: .whitespaces)
-    if let same = try await searchVenues(name, near: near).first(where: {
-      $0.name.lowercased() == name.lowercased() && ($0.city ?? "").lowercased() == city.lowercased()
-    }) {
-      return same.id
+    if let same = try await similarVenues(name, near: near, city: venue.city).first(where: \.same) {
+      return same.item.id
     }
     struct Insert: Encodable {
       let name: String

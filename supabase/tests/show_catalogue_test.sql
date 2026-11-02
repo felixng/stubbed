@@ -85,7 +85,8 @@ create temp table merge_result as select * from public.merge_into_catalogue();
 
 select is((select count(*)::int from merge_result where outcome = 'merged'), 2, 'only unique title/type pairs merge');
 select is((select count(*)::int from merge_result where outcome = 'ambiguous'), 2, 'ambiguous and type-mismatched titles are reported');
-select is((select moved_entries from merge_result where title = 'The Les Misérables (Broadway)'), 2::bigint,
+-- Typed in as 'The Les Misérables (Broadway)', tidied on insert (#146).
+select is((select moved_entries from merge_result where title = 'The Les Misérables'), 2::bigint,
   'all owners and both entry statuses are moved');
 select is((select count(*)::int from public.entries where show_id = '5a000145-0000-0000-0000-000000000011'), 2,
   'entries reference the catalogue row');

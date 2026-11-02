@@ -4,15 +4,18 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
-import { SHOW_TYPE_LABELS, type NewShow, type Show, type ShowType } from "@/lib/entries";
+import { SHOW_TYPE_LABELS, similarShows, tidyShowTitle, type NewShow, type Show, type ShowType } from "@/lib/entries";
 import { createClient } from "@/lib/supabase/client";
+import { DidYouMean } from "./DidYouMean";
 import { SelectedValue } from "./SelectedValue";
 import { Typeahead, type TypeaheadOption } from "./Typeahead";
 
 // Pick a show: type-ahead over search_shows, or "Add '<title>'" to create it
 // on save (type defaults to musical, editable). After a search that found
 // nothing, picking a show offers to remember that search as its nickname
-// (#35), so "Lez Miz" finds it next time.
+// (#35), so "Lez Miz" finds it next time. A new show gets a tidy title and
+// "Did you mean…?" with close existing shows; the same show is used outright
+// (#146).
 export function ShowField({
   labelledBy,
   value,
@@ -45,6 +48,26 @@ export function ShowField({
     };
   }, [query]);
 
+  // A new show (typed, or from an import): tidy it and look for existing ones.
+  const newTitle = value && !value.id ? value.title : null;
+  const [similar, setSimilar] = useState<{ title: string; shows: Show[] } | null>(null);
+  useEffect(() => {
+    if (!newTitle || !value) return;
+    let cancelled = false;
+    const supabase = createClient();
+    void Promise.all([tidyShowTitle(supabase, newTitle), similarShows(supabase, newTitle)]).then(([tidy, found]) => {
+      if (cancelled) return;
+      const same = found.find((s) => s.same);
+      if (same) return onChange({ id: same.id, title: same.title, type: same.type });
+      if (tidy && tidy !== newTitle) return onChange({ ...value, title: tidy });
+      setSimilar({ title: newTitle, shows: found.map(({ id, title, type }) => ({ id, title, type })) });
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- once per new title, not per render
+  }, [newTitle]);
+
   if (value) {
     return (
       <div className="flex flex-col gap-3">
@@ -76,6 +99,16 @@ export function ShowField({
               No thanks
             </Button>
           </div>
+        )}
+        {!value.id && similar?.title === value.title && (
+          <DidYouMean
+            keep={`“${value.title}” as a new show`}
+            options={similar.shows.map((s) => ({
+              key: s.id,
+              label: `${s.title} · ${SHOW_TYPE_LABELS[s.type]}`,
+              onPick: () => onChange(s),
+            }))}
+          />
         )}
         {!value.id && (
           <div role="group" aria-label="Show type" className="flex flex-wrap gap-2">

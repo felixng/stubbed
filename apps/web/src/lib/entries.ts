@@ -110,21 +110,63 @@ export async function signPhotos(supabase: SupabaseClient, paths: (string | null
   return urls;
 }
 
-// Reuse an existing show when the title matches exactly (any case), so a
-// suggested or retyped title doesn't create a duplicate.
+// Close existing matches for a show or venue someone is about to add,
+// best first (#146). `same` means it's the same one, so saving reuses it.
+export type SimilarShow = Show & { same: boolean };
+export type SimilarVenue = Venue & { distance_km: number | null; same: boolean };
+
+export async function similarShows(supabase: SupabaseClient, title: string): Promise<SimilarShow[]> {
+  const { data } = await supabase.rpc("similar_shows", { q: title });
+  return (data as SimilarShow[] | null) ?? [];
+}
+
+export async function similarVenues(
+  supabase: SupabaseClient,
+  name: string,
+  near: { lat: number; lng: number } | null,
+  city: string | null | undefined,
+): Promise<SimilarVenue[]> {
+  const { data } = await supabase.rpc("similar_venues", {
+    q: name,
+    near_lat: near?.lat ?? null,
+    near_lng: near?.lng ?? null,
+    in_city: city?.trim() || null,
+  });
+  return (data as SimilarVenue[] | null) ?? [];
+}
+
+export const asVenue = ({ id, name, city, country, lat, lng, osm_id }: SimilarVenue): Venue => ({
+  id,
+  name,
+  city,
+  country,
+  lat,
+  lng,
+  osm_id,
+});
+
+// "HAMILTON - Premium Orchestra" → "Hamilton". New shows are also tidied on
+// insert, so this is for showing the title before saving.
+export async function tidyShowTitle(supabase: SupabaseClient, title: string): Promise<string> {
+  const { data } = await supabase.rpc("tidy_show_title", { title });
+  return (data as string | null) ?? title.trim();
+}
+
+// Reuse an existing show when it's the same one ("Les Miserables (Broadway)"
+// is Les Misérables), so a suggested or retyped title doesn't add a duplicate.
 export async function ensureShow(supabase: SupabaseClient, show: Show | NewShow): Promise<string> {
   if (show.id) return show.id;
   const title = show.title.trim();
-  const { data: matches } = await supabase.rpc("search_shows", { q: title });
-  const same = (matches as Show[] | null)?.find((s) => s.title.toLowerCase() === title.toLowerCase());
+  const same = (await similarShows(supabase, title)).find((s) => s.same);
   if (same) return same.id;
   const { data, error } = await supabase.from("shows").insert({ title, type: show.type }).select("id").single();
   if (error) throw error;
   return data.id;
 }
 
-// Venues from OpenStreetMap are matched on osm_id, then on name in the same
-// city; otherwise a new row is added.
+// Venues from OpenStreetMap are matched on osm_id, then on the same venue
+// nearby or in the same city ("Wyndhams Theater" is Wyndham's Theatre);
+// otherwise a new row is added.
 export async function ensureVenue(supabase: SupabaseClient, venue: Venue | NewVenue): Promise<string> {
   if (venue.id) return venue.id;
   const name = venue.name.trim();
@@ -132,16 +174,8 @@ export async function ensureVenue(supabase: SupabaseClient, venue: Venue | NewVe
     const { data } = await supabase.from("venues").select("id").eq("osm_id", venue.osm_id).maybeSingle();
     if (data) return data.id;
   }
-  const { data: matches } = await supabase.rpc("search_venues", {
-    q: name,
-    near_lat: venue.lat ?? null,
-    near_lng: venue.lng ?? null,
-  });
-  const same = (matches as Venue[] | null)?.find(
-    (v) =>
-      v.name.toLowerCase() === name.toLowerCase() &&
-      (v.city ?? "").toLowerCase() === (venue.city ?? "").trim().toLowerCase(),
-  );
+  const near = venue.lat != null && venue.lng != null ? { lat: venue.lat, lng: venue.lng } : null;
+  const same = (await similarVenues(supabase, name, near, venue.city)).find((v) => v.same);
   if (same) return same.id;
   const { data, error } = await supabase
     .from("venues")
