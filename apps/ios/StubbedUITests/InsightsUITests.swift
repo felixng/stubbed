@@ -4,6 +4,38 @@ final class InsightsUITests: XCTestCase {
   override func setUp() { continueAfterFailure = false }
 
   @MainActor
+  func testRepeatShowLeaderboard() throws {
+    let app = launchApp()
+    if app.buttons["Profile"].waitForExistence(timeout: 5) { openTab("Profile", in: app) }
+    if !app.staticTexts["@ios_test"].waitForExistence(timeout: 3) {
+      signOutIfNeeded(app)
+      try signIn(app)
+      XCTAssertTrue(onHome(app))
+      openTab("Profile", in: app)
+    }
+    scrollAndTap(app.buttons["profile-insights"], in: app)
+    XCTAssertTrue(app.navigationBars["Insights"].waitForExistence(timeout: 10))
+    let musical = app.buttons["insights-repeat-00000000-0000-4000-e400-000000000001"]
+    reveal(musical, in: app)
+    XCTAssertEqual(musical.label, "Rank 1, A musical evening, 5 visits")
+    snapshot("insights-repeat-shows")
+    musical.tap()
+    XCTAssertTrue(app.navigationBars["A musical evening"].waitForExistence(timeout: 10))
+    XCTAssertTrue(
+      app.cells.containing(.staticText, identifier: "A musical evening").firstMatch
+        .waitForExistence(timeout: 10))
+    XCTAssertFalse(app.staticTexts["A new play"].exists)
+    snapshot("insights-repeat-visits")
+    app.navigationBars.buttons.element(boundBy: 0).tap()
+    for _ in 0..<4 { app.collectionViews.firstMatch.swipeDown() }
+    app.buttons["insights-year"].tap()
+    app.buttons["All time"].tap()
+    reveal(musical, in: app)
+    XCTAssertEqual(musical.label, "Rank 5, A musical evening, 8 visits")
+    snapshot("insights-repeat-all-time")
+  }
+
+  @MainActor
   func testAccessibilitySummary() throws {
     let app = launchApp()
     if app.buttons["Profile"].waitForExistence(timeout: 5) { openTab("Profile", in: app) }

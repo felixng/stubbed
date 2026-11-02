@@ -4,7 +4,7 @@ import UIKit
 
 struct InsightCardTests {
   private func stats(total: Int = 24, weekly: Int = 8) -> InsightStats {
-    InsightStats(total: total, unique_shows: min(total, 18), unlocated: total == 0 ? 0 : 2,
+    InsightStats(total: total, unique_shows: min(total, 18), repeated_shows: [], unlocated: total == 0 ? 0 : 2,
       streaks: .init(current_daily: 0, longest_daily: 4, current_weekly: weekly, longest_weekly: 12),
       years: [.init(year: 2026, count: total)], months: [.init(month: "2026-10", count: total)],
       days: [], types: total == 0 ? [] : [.init(type: "musical", count: 12), .init(type: "play", count: 6),

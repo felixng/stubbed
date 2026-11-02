@@ -22,6 +22,7 @@ struct InsightsView: View {
       }
       if let stats {
         overview(stats)
+        repeatedShows(stats)
         streaks(stats)
         activity(stats)
         geography(stats)
@@ -73,6 +74,42 @@ struct InsightsView: View {
       }
     } footer: {
       Text("Your logged shows, including private entries. Planned shows aren’t counted.")
+    }
+  }
+
+  private func repeatedShows(_ stats: InsightStats) -> some View {
+    Section {
+      if stats.repeated_shows.isEmpty {
+        ContentUnavailableView(
+          "No repeat visits yet", systemImage: "repeat",
+          description: Text("Shows you’ve seen more than once in this period will appear here."))
+      } else {
+        ForEach(stats.repeated_shows) { show in
+          NavigationLink(
+            value: AppRouter.Route.insightVisits(
+              Insights.Filter(year: year, show: show.id, title: show.title))
+          ) {
+            HStack(alignment: .firstTextBaseline, spacing: Space.m) {
+              Text(show.rank.formatted())
+                .font(.headline).monospacedDigit().foregroundStyle(Palette.tint)
+                .accessibilityHidden(true)
+              LabeledContent {
+                Text("\(show.count) visits").monospacedDigit()
+              } label: {
+                Text(show.title)
+              }
+            }
+          }
+          .accessibilityLabel("Rank \(show.rank), \(show.title), \(show.count) visits")
+          .accessibilityIdentifier("insights-repeat-\(show.id.uuidString.lowercased())")
+        }
+      }
+    } header: {
+      Text("Most-seen shows")
+    } footer: {
+      if !stats.repeated_shows.isEmpty {
+        Text("Ranked by visits in the selected period. Equal counts share a rank. Tap a show to see your visits.")
+      }
     }
   }
 
