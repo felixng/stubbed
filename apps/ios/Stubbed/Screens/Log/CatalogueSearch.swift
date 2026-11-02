@@ -1,7 +1,9 @@
 import SwiftUI
 
 /// Pick a show: search the catalogue (`search_shows`), or "Add '<title>'"
-/// to create it on save. Presented as a sheet from the log form.
+/// to create it on save. Presented as a sheet from the log form. After a
+/// search that found nothing, picking a show offers to remember that search
+/// as its nickname (#35), so "Lez Miz" finds it next time.
 struct ShowSearch: View {
   var initialQuery = ""
   let onPick: (ShowChoice) -> Void
@@ -10,13 +12,16 @@ struct ShowSearch: View {
   @State private var query = ""
   @State private var results: [Show] = []
   @State private var searching = false
+  /// The last search that found nothing, and the nickname offer it led to.
+  @State private var missed: String?
+  @State private var offer: Show?
 
   var body: some View {
     NavigationStack {
       List {
         let q = query.trimmingCharacters(in: .whitespaces)
         ForEach(q.count >= 2 ? results : []) { show in
-          row(show.title, show.type.label) { pick(ShowChoice(show)) }
+          row(show.title, show.type.label) { pickExisting(show, query: q) }
         }
         if !q.isEmpty, !results.contains(where: { $0.title.lowercased() == q.lowercased() }) {
           row("Add “\(q)”", "New show", emphasis: true) { pick(ShowChoice(newTitle: q)) }
@@ -37,11 +42,36 @@ struct ShowSearch: View {
         try? await Task.sleep(for: .milliseconds(150))
         guard !Task.isCancelled, let found = try? await Entries.searchShows(q) else { return }
         results = Array(found.prefix(8))
+        if found.isEmpty { missed = q }
+      }
+      .alert(
+        "Remember “\(missed ?? "")”?", isPresented: Binding(get: { offer != nil }, set: { if !$0 { offer = nil } }),
+        presenting: offer
+      ) { show in
+        Button("Remember") {
+          if let alias = missed {
+            Task { try? await Entries.rememberShowAlias(alias, for: show.id) }
+          }
+          pick(ShowChoice(show))
+        }
+        Button("Not now", role: .cancel) { pick(ShowChoice(show)) }
+      } message: { show in
+        Text("Searching it will find \(show.title) next time.")
       }
     }
     .onAppear {
       query = initialQuery
       searching = true
+    }
+  }
+
+  /// Offers the nickname first when an earlier search missed, unless that
+  /// miss was just this search overtyped ("Hamiltonx").
+  private func pickExisting(_ show: Show, query q: String) {
+    if let missed, !missed.lowercased().hasPrefix(q.lowercased()) {
+      offer = show
+    } else {
+      pick(ShowChoice(show))
     }
   }
 

@@ -938,6 +938,54 @@ internal enum PublicSchema {
       case targetType = "target_type"
     }
   }
+  internal struct ShowAliasesSelect: Codable, Hashable, Sendable {
+    internal let alias: String
+    internal let createdAt: String
+    internal let createdBy: UUID?
+    internal let id: UUID
+    internal let searchText: String?
+    internal let showId: UUID
+    internal enum CodingKeys: String, CodingKey {
+      case alias = "alias"
+      case createdAt = "created_at"
+      case createdBy = "created_by"
+      case id = "id"
+      case searchText = "search_text"
+      case showId = "show_id"
+    }
+  }
+  internal struct ShowAliasesInsert: Codable, Hashable, Sendable {
+    internal let alias: String
+    internal let createdAt: String?
+    internal let createdBy: UUID?
+    internal let id: UUID?
+    internal let searchText: String?
+    internal let showId: UUID
+    internal enum CodingKeys: String, CodingKey {
+      case alias = "alias"
+      case createdAt = "created_at"
+      case createdBy = "created_by"
+      case id = "id"
+      case searchText = "search_text"
+      case showId = "show_id"
+    }
+  }
+  internal struct ShowAliasesUpdate: Codable, Hashable, Sendable {
+    internal let alias: String?
+    internal let createdAt: String?
+    internal let createdBy: UUID?
+    internal let id: UUID?
+    internal let searchText: String?
+    internal let showId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case alias = "alias"
+      case createdAt = "created_at"
+      case createdBy = "created_by"
+      case id = "id"
+      case searchText = "search_text"
+      case showId = "show_id"
+    }
+  }
   internal struct ShowsSelect: Codable, Hashable, Sendable {
     internal let aliases: [String]
     internal let createdAt: String

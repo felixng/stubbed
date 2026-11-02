@@ -545,6 +545,7 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
             return trip ? tripCovers(trip, d.date) : false;
           }),
           photo,
+          alias: d.reading.sources.some((src) => src.kind === "email") ? d.reading.extracted.show_title : null,
         });
         saved++;
         if (result.photoFailed) photoFailures++;

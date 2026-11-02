@@ -38,6 +38,18 @@ enum Entries {
     try await supabase.rpc("search_shows", params: ["q": query]).execute().value
   }
 
+  /// Saves a search as a nickname for the show picked after it (#35). The
+  /// database skips searches that already find the show. Returns whether it saved.
+  @discardableResult
+  static func rememberShowAlias(_ alias: String, for showID: UUID) async throws -> Bool {
+    struct Params: Encodable {
+      let show_id: UUID
+      let alias: String
+    }
+    return try await supabase.rpc("remember_show_alias", params: Params(show_id: showID, alias: alias))
+      .execute().value
+  }
+
   static func searchVenues(_ query: String, near: (lat: Double, lng: Double)? = nil) async throws -> [Venue] {
     struct Params: Encodable {
       let q: String
