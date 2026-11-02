@@ -840,3 +840,25 @@ The owner's About draft supplies the founder story. Public instructions were che
 - Gone: the identify step in the log form and import tool, `lib/identify.ts`, all of `lib/ai`, `/api/ai/providers`, the admin model-compare page, `@anthropic-ai/sdk`, and the AI env vars. `/api/photo/identify` now answers `410 {"error":"gone"}` so builds already on TestFlight show "no suggestion"; delete the route once they're gone.
 - The privacy page, terms, FAQ and `.env.example` no longer mention AI providers.
 - Owner action: remove `ANTHROPIC_API_KEY` (and any Groq, Gemini, Cerebras keys) from Vercel.
+
+### 2026-11-02: Spike: Vision text recognition on theatre paper (#279, part of #273)
+**Verdict: Vision only. No Foundation Models for now.**
+
+What was measured: `StubbedTests/PhotoTextSpikeTests.swift` draws 13 pieces of theatre paper with known text (3 programmes, 3 Playbills, 4 tickets, 3 posters, in Helvetica, Georgia italic, Courier and Futura), then renders each clean, tilted 4°, dimmed and blurred. It runs `VNRecognizeTextRequest` (`.accurate`, language correction, en-GB and en-US), ranks a 40-title catalogue against each line and pair of lines (a stand-in for `search_shows`), and reads dates with `NSDataDetector`. Run time is on the iPhone 17 Pro Simulator at 3600×4800 px.
+
+| Kind | Variants | Title top-1 | Title top-3 | Printed date | Time per image |
+|---|---|---|---|---|---|
+| Programme | clean, tilted, dim, blurred (3 each) | 12/12 | 12/12 | n/a | 1.7–3.6 s |
+| Playbill | same | 12/12 | 12/12 | n/a | 1.5–3.2 s |
+| Poster | same | 12/12 | 12/12 | n/a | 1.5–3.2 s |
+| Ticket | same (4 each) | 16/16 | 16/16 | 15/16 (blurred "14 September" split across lines) | 1.5–3.3 s |
+
+**These numbers are a best case and are not accuracy on real photos.** The fixtures in `scripts/fixtures` are flat colour blocks with no text, so they can't be read. Real photos (glare, angle, a hand in shot, stage-door posters) will do worse. Before #280 ships, run the harness on the owner's own photos: put them in a folder named like `ticket--Hamilton--2026-08-21.jpg` (kinds: programme, playbill, ticket, poster) and pass `TEST_RUNNER_SPIKE_PHOTOS=<folder>` as well (the command is in the test file's header comment). Any kind that scores under about 80% top-3 gets "pick from suggestions", not auto-fill.
+
+Findings that shape #280:
+- **Dates:** `NSDataDetector` returns today's date for a bare time such as "19:30". Keep only matches whose text has a month name or a day/month/year, and drop the rest.
+- **"03/10/2026" follows the device's locale** (3 Oct here; 10 Mar in en-US). Use the venue's country (UK day-first, US month-first) when the venue is known, else offer both.
+- Vision splits a line when it is blurred or wide. Match the title against each line and each adjacent pair, as the harness does.
+- **Speed:** 1.5–3.5 s per full-size image on the Simulator. Downscale to about 2000 px on the long edge before reading, and read in the background like the nearby lookup does.
+
+**Foundation Models: not measured.** It needs iOS 26 and an Apple Intelligence iPhone, and the Simulator has no model, so there are no numbers. Plain matching already finds every clean title, so the case for it is weak: it would add an iOS 26 availability branch for a gain nobody has shown. Revisit only if real photos show Vision text that matching can't use (an author line instead of the title, say). The owner can then time `SystemLanguageModel` on a device. The deployment target stays iOS 17.
