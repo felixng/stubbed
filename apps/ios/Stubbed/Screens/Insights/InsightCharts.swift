@@ -3,6 +3,7 @@ import SwiftUI
 
 struct CountryHeatmap: View {
   let countries: [InsightStats.Country]
+  var ink: Color? = nil
   private static let shapes = CountryBoundary.load()
 
   var body: some View {
@@ -11,7 +12,7 @@ struct CountryHeatmap: View {
     GeometryReader { geometry in
       let maximum = max(1, countries.map(\.count).max() ?? 1)
       ZStack {
-        Color(.tertiarySystemFill).opacity(0.3)
+        (ink.map { $0.opacity(0.04) } ?? Color(.tertiarySystemFill).opacity(0.3))
         ForEach(Self.shapes.filter { $0.code != "AQ" }) { shape in
           let count = countries.first { $0.country == shape.code }?.count ?? 0
           let path = Path { path in
@@ -25,9 +26,9 @@ struct CountryHeatmap: View {
           }
           path.fill(
             count == 0
-              ? Color(.systemGray4)
-              : Palette.tint.opacity(0.3 + 0.6 * Double(count) / Double(maximum)))
-          path.stroke(Color(.secondarySystemGroupedBackground), lineWidth: 0.5)
+              ? (ink?.opacity(0.12) ?? Color(.systemGray4))
+              : (ink ?? Palette.tint).opacity(0.3 + 0.6 * Double(count) / Double(maximum)))
+          path.stroke(ink?.opacity(0.2) ?? Color(.secondarySystemGroupedBackground), lineWidth: 0.5)
         }
       }
     }
