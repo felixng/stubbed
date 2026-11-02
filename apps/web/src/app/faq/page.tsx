@@ -7,7 +7,7 @@ import { SITE_NAME } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "FAQ and guides — Stubbed",
-  description: "Get started with Stubbed: install on Android, log shows, import ticket emails and photos, and manage your privacy and data.",
+  description: "Get started with Stubbed: install on Android, log shows, import theatre photos, and manage your privacy and data.",
   alternates: { canonical: "/faq" },
 };
 

@@ -80,15 +80,8 @@ export const FAQ_SECTIONS: readonly FaqSection[] = [
     items: [
       {
         id: "import-emails",
-        question: "How do I import ticket emails?",
-        answer: "Use Import shows on the website. Stubbed reads ticket confirmation emails into drafts; nothing is saved until you review it.",
-        steps: [
-          "Open Settings → Import shows, or follow the import link from Log.",
-          "Choose emails to upload .eml, .mbox, .html or .txt files. Or open Or paste an email, paste the whole confirmation and tap Read email. Outlook .msg files aren’t supported; save as .eml instead.",
-          "Review each draft’s show, theatre and performance date. Correct missing or wrong details and untick anything you don’t want to keep.",
-          "Tap Save to save the selected shows. They use your default visibility; you can change each entry afterwards.",
-        ],
-        link: { href: "/app/import", label: "Import shows on the website" },
+        question: "Can I import ticket emails?",
+        answer: "Not at the moment. Email import is paused, and Stubbed never reads or stores your emails. You can add past shows by hand, or bring them in from theatre photos on the website.",
       },
       {
         id: "import-photos",
@@ -97,14 +90,9 @@ export const FAQ_SECTIONS: readonly FaqSection[] = [
         link: { href: "/app/import", label: "Import photos on the website" },
       },
       {
-        id: "forward-emails",
-        question: "Can I forward emails directly to Stubbed?",
-        answer: "Not yet. There is no Stubbed forwarding address. Upload saved email files or paste confirmation emails into Import shows on the website instead.",
-      },
-      {
         id: "theaterdiary",
         question: "Can I import a TheaterDiary CSV?",
-        answer: "Not yet. TheaterDiary CSV import isn’t available. You can add past shows by hand, or bring them in from ticket emails and theatre photos on the website.",
+        answer: "Not yet. TheaterDiary CSV import isn’t available. You can add past shows by hand, or bring them in from theatre photos on the website.",
       },
       {
         id: "export",

@@ -22,7 +22,7 @@ const FEATURES: { title: string; body: string; shot: Shot; alt: string }[] = [
   },
   {
     title: "See your history",
-    body: "Every show you’ve seen in one diary. Bring past shows in from ticket emails and photos.",
+    body: "Every show you’ve seen in one diary. Bring past shows in from theatre photos.",
     shot: "history",
     alt: "A diary of shows seen, newest first, each with a photo, its theatre, date and star rating",
   },

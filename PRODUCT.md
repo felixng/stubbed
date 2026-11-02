@@ -31,7 +31,7 @@ A purpose-built home for a behaviour theatregoers already have, with structure I
 - Logging is photo first: pick a photo, and the date comes from its EXIF, nearby theatres from its GPS, and the show from an AI suggestion that never overwrites a field the user has touched. "No photo? Fill in by hand" skips to the form.
 - Saving a new entry opens its share screen. Cards are square 1080×1080, drawn on the device, posted to Instagram and elsewhere.
 - Public pages (`/@handle`, `/e/[id]`, `/t/[id]`) are what a share recipient lands on, with server-drawn link previews.
-- Import turns ticket emails and photos into drafts that the user reviews before anything saves.
+- Import turns photos into drafts (email import is paused, #282) that the user reviews before anything saves.
 - Usage is infrequent, so the app must be worth opening between visits, and must feel worthwhile with zero followers.
 
 ## Capabilities and Constraints

@@ -16,7 +16,7 @@ export default function AdminImportPage() {
         <BackLink href="/app/admin">Admin</BackLink>
         <h1 className="text-title font-display text-label">Import: compare models</h1>
         <p className="text-subheadline text-label-secondary">
-          Read past shows from ticket emails or theatre photos with the models you pick. You check every one before it’s saved.
+          Read past shows from theatre photos with the models you pick. You check every one before it’s saved.
         </p>
       </div>
       <Suspense fallback={<p className="text-subheadline text-label-secondary">Loading…</p>}>

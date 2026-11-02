@@ -21,8 +21,6 @@ import {
 } from "@/lib/import/drafts";
 import { pickBest, type Attempt } from "@/lib/import/compare";
 import { importErrorText } from "@/lib/import/errors";
-import { EMAIL_FILE_ACCEPT, parseEmailFile, type ParsedEmail } from "@/lib/import/email-parse";
-import type { EmailExtraction } from "@/lib/import/extract-email";
 import { lookupNearby, preparePhoto, requestIdentify, type PreparedPhoto } from "@/lib/import/photo-pipeline";
 import { resolveShow, resolveVenue, runPool, saveDraft, SaveError } from "@/lib/import/resolve";
 import { createClient } from "@/lib/supabase/client";
@@ -31,10 +29,10 @@ import { DraftCard, draftCardId, type Draft } from "./DraftCard";
 import { CompareGrid } from "./CompareGrid";
 import { COMPARE_ALL, DEFAULT_CHAIN, ModelPicker, type ProvidersInfo } from "./ModelPicker";
 
-// One thing being read: an email, or a group of photos from one visit.
+// One thing being read: a group of photos from one visit.
 type Job = {
   ref: string;
-  kind: "email" | "photos";
+  kind: "photos";
   label: string;
   detail: string | null;
   state: "queued" | "reading" | "nearby" | "identifying" | "done" | "failed";
@@ -58,9 +56,8 @@ const STATE_TEXT: Record<Job["state"], string> = {
   failed: "Failed",
 };
 
-// Sources run a few at a time: quick enough, and gentle on rate limits
+// Photos are read a few at a time: quick enough, and gentle on rate limits
 // (compare mode adds one call per compared model).
-const EMAIL_CONCURRENCY = 3;
 const PHOTO_CONCURRENCY = 3;
 
 // One photo per entry for now, even for shots from the same evening: several
@@ -108,8 +105,7 @@ function blank(date: string | null): Extracted {
   };
 }
 
-// Bulk import (#17, #18): drop exported confirmation emails or a set of
-// photos, see what was read from each, correct the drafts, and save the ones
+// Bulk import (#17, #18): drop a set of photos, see what was read from each, correct the drafts, and save the ones
 // you tick. Nothing is written until "Save". Built from the shared
 // lib/import steps so a mobile-first flow can reuse them.
 //
@@ -120,8 +116,6 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
   const id = useId();
   const [jobs, setJobs] = useState<Job[]>([]);
   const [drafts, setDrafts] = useState<Draft[]>([]);
-  const [emails, setEmails] = useState<Map<string, ParsedEmail>>(new Map());
-  const [pasted, setPasted] = useState("");
   const [dragging, setDragging] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   // COMPARE_ALL (default), DEFAULT_CHAIN, or "provider[:model]" (see ModelPicker).
@@ -140,10 +134,8 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
   const seq = useRef(0);
   // Latest drafts for async steps (merging into a draft added meanwhile).
   const draftsRef = useRef(drafts);
-  draftsRef.current = drafts;
   const urls = useRef<string[]>([]);
   const existingRef = useRef(existing);
-  existingRef.current = existing;
   // Per source: how to turn an attempt into drafts, and the drafts it made,
   // so "Use this" can swap one model's reading for another's.
   // A null attempt makes a blank draft to fill in by hand.
@@ -172,6 +164,12 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
       setExisting((entries.data as typeof existing | null) ?? []);
     })();
   }, []);
+
+  // Async steps read the latest values through these refs.
+  useEffect(() => {
+    draftsRef.current = drafts;
+    existingRef.current = existing;
+  });
 
   // Preview URLs are freed by reset(), not in an effect cleanup: that also runs
   // when the page is hidden, and the kept drafts would come back with broken
@@ -298,7 +296,7 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
     jobDrafts.current.set(ref, created ?? []);
   }
 
-  async function finishJob(ref: string, attempts: Attempt[], kind: "email" | "identify") {
+  async function finishJob(ref: string, attempts: Attempt[], kind: "identify") {
     const order = (providers?.defaults[kind] ?? []).map((m) => m.split(":")[0]);
     const best = pickBest(attempts, order);
     const done = attempts.some((a) => a.state === "done");
@@ -306,87 +304,8 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
       state: done ? "done" : "failed",
       detail: best ? best.note : (attempts.find((a) => a.note)?.note ?? null),
     });
-    // A photo visit is always worth logging; an email only when reading it
-    // failed (not when it simply wasn't a booking).
-    await chooseAttempt(ref, best, kind === "identify" || !done);
-  }
-
-  async function readEmails(files: File[], text?: string) {
-    // The model picked when the files were added, even if changed meanwhile.
-    const chosen = model;
-    const parsed: ParsedEmail[] = [];
-    for (const f of files) {
-      try {
-        if (/\.msg$/i.test(f.name)) throw new Error("Outlook .msg files aren’t supported; save as .eml instead.");
-        parsed.push(...parseEmailFile(f.name, await f.text()));
-      } catch (err) {
-        const ref = `${f.name}@${++seq.current}`;
-        setJobs((js) => [...js, { ref, kind: "email", label: f.name, detail: err instanceof Error ? err.message : "Unreadable file", state: "failed", found: 0 }]);
-      }
-    }
-    if (text?.trim()) parsed.push(...parseEmailFile(`Pasted email ${++seq.current}`, text));
-    // Unique refs even when the same file is dropped twice.
-    const batch = parsed.map((p) => ({ ...p, ref: `${p.ref}@${++seq.current}` }));
-    setEmails((m) => new Map([...m, ...batch.map((p) => [p.ref, p] as const)]));
-    setJobs((js) => [
-      ...js,
-      ...batch.map((p): Job => ({
-        ref: p.ref,
-        kind: "email",
-        label: p.subject ?? p.fileName,
-        detail: p.text ? null : "No readable text",
-        state: p.text ? "queued" : "failed",
-        found: 0,
-      })),
-    ]);
-
-    const models = targets(chosen, false);
-    await runPool(batch.filter((p) => p.text), EMAIL_CONCURRENCY, async (email) => {
-      updateJob(email.ref, { state: "reading" });
-      appliers.current.set(email.ref, async (attempt) => {
-        const source = { kind: "email" as const, ref: email.ref, fileName: email.fileName, subject: email.subject, from: email.from, sent: email.sent, trimmed: email.trimmed, readBy: attempt?.readBy ?? null };
-        if (!attempt) {
-          const added = await addReading({ extracted: blank(null), sources: [source] }, { nearby: [], place: { city: null, country: null }, photos: [], unread: true });
-          return added.created ? [added.key] : [];
-        }
-        const keys: string[] = [];
-        for (const extracted of attempt.shows) {
-          const added = await addReading({ extracted, sources: [source] }, { nearby: [], place: { city: extracted.city, country: extracted.country }, photos: [] });
-          if (added.created) keys.push(added.key);
-        }
-        return keys;
-      });
-      const attempts = await runAttempts(email.ref, models, async (m) => {
-        const res = await fetch("/api/import/email", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ subject: email.subject, from: email.from, sent: email.sent, text: email.text, model: m || undefined }),
-        });
-        if (!res.ok) {
-          const { error: code, detail } = (await res.json().catch(() => ({}))) as { error?: string; detail?: string | null };
-          throw new Error(
-            res.status === 503
-              ? "Import isn’t set up yet (no API key)."
-              : res.status === 429
-                ? "Too many at once. Try again in a few minutes."
-                : code === "model_unavailable" || code === "invalid_model"
-                  ? `Can’t use ${m}: no API key, or not a valid model.`
-                  : // Admins also see the provider's raw reply, to debug a model.
-                    `${importErrorText("email", detail)}${admin && detail ? ` ${detail}` : ""}`,
-          );
-        }
-        const { result, model: readBy } = (await res.json()) as { result: EmailExtraction | null; model: string | null };
-        const shows = result?.shows ?? [];
-        const note =
-          result?.kind === "not_a_booking" || !shows.length
-            ? "No booking found"
-            : result?.kind && result.kind !== "booking"
-              ? `${result.kind[0].toUpperCase()}${result.kind.slice(1)}`
-              : null;
-        return { readBy, shows, note };
-      });
-      await finishJob(email.ref, attempts, "email");
-    });
+    // A photo visit is always worth logging.
+    await chooseAttempt(ref, best, true);
   }
 
   async function readPhotos(files: File[]) {
@@ -496,9 +415,8 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
     const files = [...list];
     setNotice(null);
     const photos = files.filter(isImage);
-    const others = files.filter((f) => !isImage(f));
     if (photos.length) void readPhotos(photos);
-    if (others.length) void readEmails(others);
+    if (photos.length < files.length) setNotice("Only photos can be imported for now. Importing ticket emails is paused.");
   }
 
   const providerNames = Object.fromEntries((providers?.providers ?? []).map((p) => [p.id, p.name]));
@@ -588,7 +506,6 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
     setJobs([]);
     setDrafts([]);
     draftsRef.current = [];
-    setEmails(new Map());
     appliers.current.clear();
     jobDrafts.current.clear();
     setNotice(null);
@@ -599,7 +516,7 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
       {/* Sources */}
       <section aria-labelledby={`${id}-add`} className="flex flex-col gap-3">
         <h2 id={`${id}-add`} className="text-title-2 font-display text-label">
-          Add emails or photos
+          Add photos
         </h2>
         {admin && <ModelPicker value={model} onChange={setModel} info={providers} />}
         <div
@@ -619,29 +536,13 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
         >
           {/* Drag and drop needs a mouse or trackpad; phones get tap wording. */}
           <p className="text-headline text-label">
-            <span className="hidden [@media(pointer:fine)]:inline">Drop your ticket emails or photos here</span>
-            <span className="[@media(pointer:fine)]:hidden">Add your ticket emails or photos</span>
+            <span className="hidden [@media(pointer:fine)]:inline">Drop your photos here</span>
+            <span className="[@media(pointer:fine)]:hidden">Add your photos</span>
           </p>
           <p className="max-w-[420px] text-subheadline text-label-secondary">
-            We read the show, theatre and date from ticket confirmation emails, and the date and place from photos taken at the theatre. Each photo becomes its own show to check.
-          </p>
-          <p className="max-w-[420px] text-footnote text-label-secondary">
-            Emails saved from your mail app (.eml or .mbox) or as a web page (.html) all work.
+            We read the date and place from photos taken at the theatre. Each photo becomes its own show to check.
           </p>
           <div className="mt-1 flex flex-wrap justify-center gap-2">
-            <label className="inline-flex min-h-11 cursor-pointer items-center rounded-pill bg-tint-fill px-4 text-subheadline font-semibold text-tint-text hover:bg-fill focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus">
-              Choose emails
-              <input
-                type="file"
-                multiple
-                accept={EMAIL_FILE_ACCEPT}
-                className="sr-only"
-                onChange={(e) => {
-                  if (e.target.files?.length) onFiles(e.target.files);
-                  e.target.value = "";
-                }}
-              />
-            </label>
             <label className="inline-flex min-h-11 cursor-pointer items-center rounded-pill bg-tint-fill px-4 text-subheadline font-semibold text-tint-text hover:bg-fill focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-focus">
               Choose photos
               <input
@@ -657,34 +558,6 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
             </label>
           </div>
         </div>
-        <details>
-          <summary className="min-h-11 cursor-pointer py-2 text-subheadline font-semibold text-tint-text">Or paste an email</summary>
-          <div className="flex flex-col gap-2 pt-1">
-            <label htmlFor={`${id}-paste`} className="sr-only">
-              Email text
-            </label>
-            <textarea
-              id={`${id}-paste`}
-              rows={6}
-              value={pasted}
-              onChange={(e) => setPasted(e.target.value)}
-              placeholder="Paste the whole confirmation email"
-              className="block w-full rounded-md border border-separator bg-surface px-4 py-3 text-body text-label shadow-sm placeholder:text-label-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-            />
-            <Button
-              variant="secondary"
-              size="sm"
-              className="self-start"
-              disabled={!pasted.trim()}
-              onClick={() => {
-                void readEmails([], pasted);
-                setPasted("");
-              }}
-            >
-              Read email
-            </Button>
-          </div>
-        </details>
       </section>
 
       {/* What we read from each source */}
@@ -785,7 +658,7 @@ export function ImportTool({ admin = false }: { admin?: boolean }) {
               key={d.key}
               draft={d}
               duplicateOf={duplicateOf(d)}
-              emailText={(ref) => emails.get(ref)?.text}
+              emailText={() => undefined}
               onChange={(patch) => updateDraft(d.key, { ...patch, ...(d.error ? { error: undefined } : {}) })}
             />
           ))}
