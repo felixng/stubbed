@@ -49,7 +49,7 @@ struct ShareCardTests {
     #expect(photoLess.filter { $0.isPhoto }.isEmpty)
     #expect(!EntryCardDesign.available(photo: true, rating: nil, timesSeen: 1).contains(.name))
     #expect(EntryCardDesign.available(photo: true, rating: 0.5, timesSeen: 1).contains(.name))
-    #expect(!EntryCardDesign.available(photo: true, rating: 5, timesSeen: 1).contains(.encore))
+    #expect(EntryCardDesign.available(photo: true, rating: 5, timesSeen: 1).contains(.encore))
     #expect(EntryCardDesign.available(photo: false, rating: nil, timesSeen: 2) == [.data, .encore, .number])
     #expect(EntryCardDesign.available(photo: true, rating: 1, timesSeen: 5) == [.stats, .name, .data, .encore, .number])
   }

@@ -27,8 +27,9 @@ enum EntryShare {
     do {
       async let stats = ShareCards.stats(entry.id)
       async let owner = Profiles.profile(entry.userId)
+      async let insights = Insights.load(year: InsightStats.currentYear)
       async let image = ShareCards.image(photo)
-      let (s, profile, picture) = try await (stats, owner, image)
+      let (s, profile, picture, aggregate) = try await (stats, owner, image, insights)
       let data = EntryCardData(
         title: entry.show.title, venue: entry.venue?.name, whereText: entry.whereText ?? "",
         date: Day.format(entry.date), year: Int(entry.date.prefix(4)) ?? 0, rating: entry.rating,
@@ -38,7 +39,8 @@ enum EntryShare {
       let info = Info(text: "\(caption). Tracked on Stubbed \(stubbedInstagram)", link: isPublic ? link(entry.id) : nil)
       do {
         return Prepared(
-          info: info, cards: try ShareCards.entryCards(data, photo: picture))
+          info: info, cards: try ShareCards.showCards(data, photo: picture,
+            insights: InsightCardData(stats: aggregate, year: InsightStats.currentYear, handle: profile.handle)))
       } catch {
         Log.app.error("Drawing the share cards failed: \(error.localizedDescription, privacy: .public)")
         return Prepared(info: info, cards: nil)
