@@ -53,18 +53,13 @@ struct LogView: View {
   @State private var detect = Detect.idle
   @State private var nearby: [VenueChoice] = []
   @State private var place: (city: String?, country: String?) = (nil, nil)
-  /// A guess, or a show that differs from the one already picked: a chip.
-  @State private var suggestion: Identification?
-  /// A venue the photo matched that differs from the one picked by hand.
-  @State private var venueSuggestion: VenueChoice?
   /// Fields whose value came from the photo; a new photo clears these.
   @State private var fromPhoto: Set<String> = []
   /// Bumped per photo, so a newer photo cancels the older one's results.
   @State private var run = 0
 
   enum Detect: Equatable {
-    case idle, reading, nearby, identifying
-    case done(Identification?, note: String?)
+    case idle, reading, nearby
   }
 
   private enum Picker: String, Identifiable {
@@ -307,28 +302,8 @@ struct LogView: View {
         }
       } else {
         SearchButton(title: "Search shows") { picking = .show }
-        if detect == .identifying {
-          Label("Working out the show from your photo…", systemImage: "sparkle.magnifyingglass")
-            .font(.footnote)
-            .foregroundStyle(.secondary)
-        }
-      }
-      if let suggestion, let title = suggestion.showTitle, show == nil || showDiffers {
-        Button { Task { await take(suggestion) } } label: {
-          Label {
-            Text(showDiffers ? "Photo suggests \(title)" : "Maybe \(title)?")
-            Text(suggestion.reason).lineLimit(2)
-          } icon: {
-            Image(systemName: "sparkles")
-          }
-        }
       }
     }
-  }
-
-  private var showDiffers: Bool {
-    guard let title = suggestion?.showTitle, let show else { return false }
-    return show.title.lowercased() != title.lowercased()
   }
 
   private var venueSection: some View {
@@ -355,11 +330,6 @@ struct LogView: View {
               Label("\(v.name) · \(v.distance ?? 0) m", systemImage: "mappin.and.ellipse")
             }
           }
-        }
-      }
-      if let venueSuggestion, venue != nil {
-        Button { pickVenue(venueSuggestion) } label: {
-          Label("Photo suggests \(venueSuggestion.name)", systemImage: "sparkles")
         }
       }
     } header: {
@@ -469,14 +439,12 @@ struct LogView: View {
   private func pickShow(_ choice: ShowChoice) {
     touchedShow = true
     fromPhoto.remove("show")
-    suggestion = nil
     show = choice
   }
 
   private func pickVenue(_ choice: VenueChoice) {
     touchedVenue = true
     fromPhoto.remove("venue")
-    venueSuggestion = nil
     venue = choice
   }
 
@@ -493,13 +461,6 @@ struct LogView: View {
     case .idle: return nil
     case .reading: return ("Reading the photo…", true)
     case .nearby: return ("Looking for theatres nearby…", true)
-    case .identifying: return ("Working out the show…", true)
-    case .done(let result, let note):
-      if let result, result.confidence != .low, !showDiffers {
-        return ("\(result.confidence == .high ? "Matched" : "Probably"): \(result.reason)", false)
-      }
-      if let note { return (note, false) }
-      return result == nil ? ("Couldn’t tell the show from this photo.", false) : nil
     }
   }
 
@@ -510,16 +471,14 @@ struct LogView: View {
     if fromPhoto.contains("venue") { venue = nil }
     if fromPhoto.contains("date") { date = Day.today() }
     fromPhoto = []
-    suggestion = nil
-    venueSuggestion = nil
     nearby = []
     place = (nil, nil)
     photoError = nil
     detect = .idle
   }
 
-  /// The photo's date at once, theatres near it within about a second, and
-  /// the show suggestion when it's ready. Each fills only untouched fields.
+  /// The photo's date at once, then theatres near it within about a second.
+  /// Each fills only untouched fields.
   /// `lookup` may already be under way (an import starts the next show's
   /// early); otherwise it starts here.
   private func detect(from data: Data, lookup: PhotoLookup? = nil) async {
@@ -546,66 +505,7 @@ struct LogView: View {
       }
     }
 
-    detect = .identifying
-    let outcome = await lookup.identify.value
-    guard current() else { return }
-    switch outcome {
-    case nil:
-      detect = .done(nil, note: nil)
-    case .notConfigured?:
-      detect = .done(nil, note: "Show detection isn’t set up yet.")
-    case .failed?:
-      detect = .done(nil, note: "Couldn’t work out the show.")
-    case .found(let result)?:
-      detect = .done(result, note: nil)
-      guard let result else { return }
-      let differs = show.map { s in result.showTitle.map { s.title.lowercased() != $0.lowercased() } ?? false } ?? false
-      if result.confidence == .low || (touchedShow && differs) {
-        if result.showTitle != nil { suggestion = result }
-        if result.confidence == .low { return }
-      }
-      await apply(result)
-    }
-  }
-
-  /// Fill show and venue from the photo, where the user hasn't.
-  private func apply(_ result: Identification) async {
-    let token = run
-    if let title = result.showTitle, !touchedShow, show == nil {
-      let same = (try? await Entries.searchShows(title))?.first { $0.title.lowercased() == title.lowercased() }
-      guard token == run else { return }
-      show = same.map(ShowChoice.init) ?? ShowChoice(newTitle: title, type: result.showType ?? .musical)
-      fromPhoto.insert("show")
-    }
-    let picked = nearby.first { $0.osmId != nil && $0.osmId == result.venueOsmId }
-    // A venue picked by hand is never swapped: a different match is offered.
-    if touchedVenue {
-      if let picked, let current = venue, (current.osmId ?? current.name) != (picked.osmId ?? picked.name) {
-        venueSuggestion = picked
-      }
-      return
-    }
-    if let picked {
-      venue = picked
-      fromPhoto.insert("venue")
-    } else if let name = result.venueName, venue == nil {
-      let same = (try? await Entries.searchVenues(name))?.first { $0.name.lowercased() == name.lowercased() }
-      guard token == run else { return }
-      venue = same.map(VenueChoice.init) ?? VenueChoice(name: name, city: place.city, country: place.country)
-      fromPhoto.insert("venue")
-    }
-  }
-
-  /// Tapping a "Maybe…" chip is the user's choice, replacing any show.
-  private func take(_ s: Identification) async {
-    suggestion = nil
-    guard let title = s.showTitle else { return }
-    let same = (try? await Entries.searchShows(title))?.first { $0.title.lowercased() == title.lowercased() }
-    pickShow(same.map(ShowChoice.init) ?? ShowChoice(newTitle: title, type: s.showType ?? .musical))
-    if !touchedVenue, let picked = nearby.first(where: { $0.osmId != nil && $0.osmId == s.venueOsmId }) {
-      venue = picked
-      fromPhoto.insert("venue")
-    }
+    detect = .idle
   }
 
   // MARK: - Load and save
@@ -667,19 +567,14 @@ struct LogView: View {
     await detect(from: prepared.original, lookup: prepared.lookup)
   }
 
-  /// How far detection got, for entry_logged (same values as the web).
-  private var detectionLabel: String {
-    switch detect {
-    case .idle: "skipped"
-    case .done(let result, _): result?.confidence.rawValue ?? "none"
-    default: "pending"
-    }
-  }
+  /// For entry_logged. Show detection is gone (#281), so this is "none" with a
+  /// photo and "skipped" without; kept for one release so analytics stay comparable.
+  private var detectionLabel: String { photo == nil ? "skipped" : "none" }
 
   private func save() async {
     error = nil
     guard let show else {
-      return error = detect == .identifying ? "Pick a show, or wait for the suggestion from your photo." : "Pick a show."
+      return error = "Pick a show."
     }
     if venue == nil, !planned { return error = "Pick a venue." }
     if let venue, venue.isNew,
@@ -690,7 +585,7 @@ struct LogView: View {
     }
     guard let userId = session.userId else { return error = "You’re signed out. Sign in again to save." }
 
-    // Saving wins over a suggestion still on its way: ignore it from here.
+    // Saving wins over a lookup still on its way: ignore it from here.
     run += 1
     saving = true
     defer { saving = false }

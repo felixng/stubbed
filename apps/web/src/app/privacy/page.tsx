@@ -130,7 +130,7 @@ export default function PrivacyPage() {
           sexuality) in notes, especially public ones.
         </p>
 
-        <SubHeading>Photos and show detection</SubHeading>
+        <SubHeading>Photos and nearby theatres</SubHeading>
         <p>
           When you add a photo to an entry, your browser reads the date, time and
           location the photo was taken from its metadata (EXIF), then makes a
@@ -138,21 +138,12 @@ export default function PrivacyPage() {
           uploaded. The original photo never leaves your device, and we never
           store the photo’s location.
         </p>
-        <p>To suggest the show and venue for you, we may also:</p>
-        <List>
-          <li>
-            send the photo’s location to OpenStreetMap services to look up
-            nearby theatres and the city. This is sent from our servers without
-            your name, email or any account identifier;
-          </li>
-          <li>
-            send the clean copy of the photo, its date and time, an approximate
-            location (rounded to about 100 metres) and the nearby theatres to
-            an AI provider (see{" "}
-            <TextLink href="#sharing">who we share data with</TextLink>), which
-            may search the web to identify the show.
-          </li>
-        </List>
+        <p>
+          To suggest the venue for you, we send the photo’s location to
+          OpenStreetMap services to look up nearby theatres and the city. This
+          is sent from our servers without your name, email or any account
+          identifier. No photo is sent to an AI service.
+        </p>
         <p>
           Suggestions are only suggestions: nothing is saved until you confirm
           it, and you can always fill in an entry by hand without a photo.
@@ -258,13 +249,6 @@ export default function PrivacyPage() {
             <strong>Kit</strong>: keeps the waitlist and sends its emails.
           </li>
           <li>
-            <strong>AI providers</strong>: reading photos, as
-            described above. We use Anthropic (Claude) by default, and may use
-            Google (Gemini), Groq or Cerebras instead. We use their paid
-            business services, whose terms don’t allow them to use this data to
-            train their models.
-          </li>
-          <li>
             <strong>Google</strong>: sign-in, only if you choose “Continue with
             Google”.
           </li>
@@ -318,8 +302,8 @@ export default function PrivacyPage() {
             period, typically no more than 30 days.
           </li>
           <li>
-            <strong>Photo location and AI results</strong>:
-            not stored by us. They’re used to make your drafts and then
+            <strong>Photo location</strong>:
+            not stored by us. It’s used to find nearby theatres and then
             discarded.
           </li>
         </List>

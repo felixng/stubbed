@@ -157,18 +157,6 @@ export function centroid(points: PhotoPoint[]): { lat: number; lng: number } | n
   };
 }
 
-// Photos sent in one identify call: enough clues, still quick and cheap.
-export const MAX_IDENTIFY_PHOTOS = 4;
-
-// Up to `max` photos spread across the group, for identification: the first
-// and last shots of an evening (set before curtain-up, curtain call) and a
-// few in between usually carry the most clues.
-export function pickSpread<T>(items: T[], max: number): T[] {
-  if (items.length <= max) return items;
-  if (max === 1) return [items[0]];
-  return Array.from({ length: max }, (_, i) => items[Math.round((i * (items.length - 1)) / (max - 1))]);
-}
-
 // What a ticked draft still needs before it can be saved. "place": a venue
 // added by hand needs its city and country.
 export type MissingField = "show" | "venue" | "place" | "date";

@@ -28,10 +28,6 @@ final class PhotoLogUITests: XCTestCase {
     let chip = button(app, startingWith: "Richard Rodgers Theatre ·")
     XCTAssertTrue(filled.waitForExistence(timeout: 20) || chip.exists)
     XCTAssertTrue(app.buttons["Yesterday"].exists)
-    let status = app.staticTexts.matching(
-      NSPredicate(format: "label IN %@", ["Couldn’t work out the show.", "Show detection isn’t set up yet."])
-    ).firstMatch
-    XCTAssertTrue(status.waitForExistence(timeout: 30))
     snapshot("photo-filled")
 
     app.buttons["Cancel"].tap()

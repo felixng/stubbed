@@ -834,3 +834,9 @@ The owner's About draft supplies the founder story. Public instructions were che
 - The web import tool takes photos only. `/api/import/email`, the email extraction and parsing code, and their tests are gone. Pasted or uploaded emails are never sent anywhere. #3 decides its future.
 - `lib/ai` stays until #281 removes photo detection, its last user. The privacy page, FAQ, press and landing copy no longer mention emails.
 - Owner action: remove `ANTHROPIC_API_KEY` (and any Groq, Gemini or Cerebras keys) from Vercel once #281 has shipped. The brief's "Import credits" monetisation idea no longer has LLM spend behind it.
+
+### 2026-11-02: Claude photo detection removed (#281, part of #273)
+- The owner chose to remove it now, ahead of the catalogue suggestion (#278) and on-device reading (#280). Until those ship, logging a photo fills the date and nearby theatres only; the show is picked by hand. Imports make one blank draft per photo with its date, nearby theatres and city.
+- Gone: the identify step in the log form and import tool, `lib/identify.ts`, all of `lib/ai`, `/api/ai/providers`, the admin model-compare page, `@anthropic-ai/sdk`, and the AI env vars. `/api/photo/identify` now answers `410 {"error":"gone"}` so builds already on TestFlight show "no suggestion"; delete the route once they're gone.
+- The privacy page, terms, FAQ and `.env.example` no longer mention AI providers.
+- Owner action: remove `ANTHROPIC_API_KEY` (and any Groq, Gemini, Cerebras keys) from Vercel.

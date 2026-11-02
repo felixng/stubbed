@@ -6,9 +6,7 @@ import { BackLink } from "@/components/ui/BackLink";
 export const metadata: Metadata = { title: "Import" };
 
 // Bulk import from photos (#17, #18; email import paused in #282), as every user
-// gets it: the default AI chain, no model picker. Admins compare models at
-// /app/admin/import. The steps live in lib/import so a mobile-first flow can
-// reuse them.
+// gets it. The steps live in lib/import so a mobile-first flow can reuse them.
 export default function ImportPage() {
   return (
     <section className="flex flex-col gap-5">

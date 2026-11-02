@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { centroid, groupPhotos, mergeReadings, pickSpread, showKey, type Extracted, type Reading } from "@/lib/import/drafts";
+import { centroid, groupPhotos, mergeReadings, showKey, type Extracted, type Reading } from "@/lib/import/drafts";
 
 const extracted = (over: Partial<Extracted>): Extracted => ({
   show_title: null,
@@ -79,12 +79,6 @@ test("groupPhotos: a photo without location joins the visit by time alone", () =
 
 test("groupPhotos: hours apart on the same day is two visits", () => {
   assert.equal(groupPhotos([photo("2026-10-10", "13:00"), photo("2026-10-10", "19:30")]).length, 2);
-});
-
-test("pickSpread keeps the first and last and spreads the rest", () => {
-  assert.deepEqual(pickSpread([1, 2, 3, 4, 5, 6, 7, 8, 9], 4), [1, 4, 6, 9]);
-  assert.deepEqual(pickSpread([1, 2], 4), [1, 2]);
-  assert.deepEqual(pickSpread([1, 2, 3], 1), [1]);
 });
 
 test("visitAccuracy: the worst located photo, unknown if any is unknown", async () => {

@@ -55,15 +55,13 @@ enum PhotoImport {
   }
 }
 
-/// A photo's detection, started as soon as it's made: theatres near where
-/// it was taken, then which show it was. The import starts the next visit's
+/// A photo's lookup, started as soon as it's made: theatres near where it
+/// was taken. The import starts the next visit's
 /// lookup while you're on the current one, so its form opens already filled.
 final class PhotoLookup: Sendable {
   let meta: PhotoMeta
   /// Nil when the photo has no location.
   let nearby: Task<PhotoDetect.Nearby?, Never>
-  /// Nil when the photo couldn't be made small enough to send.
-  let identify: Task<PhotoDetect.IdentifyOutcome?, Never>
 
   /// `data` is the original photo: its EXIF is read here and never stored.
   init(data: Data) {
@@ -74,16 +72,9 @@ final class PhotoLookup: Sendable {
       return await PhotoDetect.nearby(lat: lat, lng: lng, accuracy: meta.accuracy)
     }
     self.nearby = nearby
-    identify = Task {
-      let found = await nearby.value
-      guard let small = try? Photo.jpeg(from: data, maxEdge: Photo.identifyEdge, quality: 0.8) else { return nil }
-      return await PhotoDetect.identify(
-        photo: small, meta: meta, place: (found?.city, found?.country), candidates: found?.candidates ?? [])
-    }
   }
 
   deinit {
     nearby.cancel()
-    identify.cancel()
   }
 }
