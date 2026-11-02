@@ -1,15 +1,16 @@
+import { getCopy } from "@/lib/cms/content";
 import Link from "next/link";
 
-import { FAQ_SECTIONS } from "@/lib/faq";
+import { getFaqSections } from "@/lib/faq";
 
 const textLink = "rounded-sm text-tint-text underline underline-offset-4 hover:text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
 
-export function Faq() {
+export async function Faq() {
+  const [copy, FAQ_SECTIONS] = await Promise.all([getCopy("faqIntro"), getFaqSections()]);
   return (
     <div className="flex flex-col gap-10">
       <p className="text-body text-label-secondary">
-        A few answers, and practical guides to getting your theatre history into Stubbed.
-        The steps below are for the website unless stated otherwise.
+        {copy.aFewAnswersAndPracticalGuides}
       </p>
       <nav aria-label="FAQ topics" className="flex flex-wrap gap-x-5 gap-y-1 border-y border-separator py-3">
         {FAQ_SECTIONS.map((section) => (

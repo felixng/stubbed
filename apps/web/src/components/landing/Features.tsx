@@ -1,5 +1,7 @@
 "use client";
 
+import type { Copy } from "@/lib/cms/model";
+
 import { useId, useRef, useState } from "react";
 
 import { Container } from "@/components/landing/Container";
@@ -7,34 +9,35 @@ import { Phone, type Shot } from "@/components/landing/Screens";
 
 // "How it works": four banners, and the phone beside them follows the one
 // that is open. The screenshots come from the iOS app (Screens.tsx).
-const FEATURES: { title: string; body: string; shot: Shot; alt: string }[] = [
+const features = (copy: Copy<"features">): { title: string; body: string; shot: Shot; alt: string }[] => [
   {
-    title: "Log every show",
-    body: "Every show you see, in one place: the venue, the date, your half-star rating and your thoughts about the show.",
+    title: copy.feature1Title,
+    body: copy.feature1Body,
     shot: "log",
-    alt: "Logging The Lost Boys: a photo from the show, the show, the Palace Theatre, the date and four and a half stars",
+    alt: copy.feature1Alt,
   },
   {
-    title: "Share with your friends",
-    body: "Turn any show into a card for your Stories, with the show, your rating and your handle.",
+    title: copy.feature2Title,
+    body: copy.feature2Body,
     shot: "share",
-    alt: "A share card for The Lost Boys: the photo, four and a half stars, the 8th show of 2026 and the handle @sillyelphaba",
+    alt: copy.feature2Alt,
   },
   {
-    title: "See your history",
-    body: "Every show you’ve seen in one diary. Bring past shows in from theatre photos.",
+    title: copy.feature3Title,
+    body: copy.feature3Body,
     shot: "history",
-    alt: "A diary of shows seen, newest first, each with a photo, its theatre, date and star rating",
+    alt: copy.feature3Alt,
   },
   {
-    title: "Plan ahead",
-    body: "Group a trip or a festival’s shows together and keep track of what you want to see next.",
+    title: copy.feature4Title,
+    body: copy.feature4Body,
     shot: "plan",
-    alt: "A trip called Birthday weekend: 2 shows at 2 venues over 2 nights, Cabaret and Groundhog Day",
+    alt: copy.feature4Alt,
   },
 ];
 
-export function Features() {
+export function Features({ copy }: { copy: Copy<"features"> }) {
+  const FEATURES = features(copy);
   const [active, setActive] = useState(0);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   const id = useId();
@@ -62,7 +65,7 @@ export function Features() {
     <section aria-labelledby="features-heading" className="pt-6 pb-16 sm:pb-20">
       <Container className="flex flex-col gap-6">
         <h2 id="features-heading" className="font-display text-title text-label">
-          How it works
+          {copy.heading}
         </h2>
         <div className="flex flex-col gap-8 lg:flex-row-reverse lg:items-center lg:gap-16">
           <div

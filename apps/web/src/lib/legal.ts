@@ -1,6 +1,7 @@
 // Details the Terms and Privacy Policy depend on, kept in one place so the
 // two pages can't disagree. Bump `updated` whenever either page changes in
 // substance, and tell users about material changes (see both pages).
+// CMS-enabled pages use their own editable dates; this is the repo fallback.
 type Legal = {
   // The person or company legally responsible for Stubbed (the "controller"),
   // and a postal address for legal notices. Left out for the private beta

@@ -9,10 +9,12 @@ import { LEGAL } from "@/lib/legal";
 // a readable column of text. Always light, like the landing page.
 export function LegalPage({
   title,
+  updated = LEGAL.updated,
   intro,
   children,
 }: {
   title: string;
+  updated?: string;
   intro: React.ReactNode;
   children: React.ReactNode;
 }) {
@@ -33,7 +35,7 @@ export function LegalPage({
           <article className="mx-auto max-w-[680px] pb-16">
             <h1 className="font-display text-large-title text-label">{title}</h1>
             <p className="mt-2 text-subheadline text-label-secondary">
-              Last updated {LEGAL.updated}
+              Last updated {updated}
             </p>
             <div className="mt-6 flex flex-col gap-4 text-body text-label">
               {intro}

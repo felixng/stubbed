@@ -144,3 +144,20 @@ export function faqAnswerText(faq: FaqItem): string {
     ...(faq.link ? [faq.link.label] : []),
   ].join("\n");
 }
+
+export async function getFaqSections(): Promise<readonly FaqSection[]> {
+  const { getCopy } = await import("@/lib/cms/content");
+  const copy = await getCopy("faqEntries");
+  const values = copy as Record<string, string>;
+  const keyFor = (id: string) => id.replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
+  return FAQ_SECTIONS.map((section, index) => ({
+    ...section, title: values[`section${index}Title`],
+    items: section.items.map((item) => {
+      const key = keyFor(item.id);
+      return { ...item, question: values[`${key}Question`], answer: values[`${key}Answer`],
+        steps: item.steps?.map((_, index) => values[`${key}Step${index}`]),
+        link: item.link ? { ...item.link, label: values[`${key}LinkLabel`] } : undefined,
+      };
+    }),
+  }));
+}
