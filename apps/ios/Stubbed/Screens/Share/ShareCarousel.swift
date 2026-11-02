@@ -65,6 +65,11 @@ enum ShareCards {
     return UIImage(data: data)
   }
 }
+struct ShareCardOption: Identifiable {
+  let id: String
+  let name: String
+}
+
 struct ShareCarousel: View {
   enum Subject { case show, trip, insights }
   let subject: Subject
@@ -73,6 +78,9 @@ struct ShareCarousel: View {
   let text: String
   var link: URL?
   var initialCardID: String? = nil
+  /// Stats can list the designs without eagerly rendering every image.
+  var options: [ShareCardOption]? = nil
+  var prepareCard: (@MainActor (String) async -> Void)? = nil
   @Environment(\.sharePreviewSize) private var previewSize
   @Environment(\.shareScreenHeight) private var screenHeight
   /// The background sheet's height: the swatches, plus the text colours on
@@ -81,6 +89,7 @@ struct ShareCarousel: View {
   @ScaledMetric(relativeTo: .body) private var pickerHeight: CGFloat = 190
   @ScaledMetric(relativeTo: .body) private var pickerHeightWithInk: CGFloat = 300
   @State private var active: String?
+  @State private var retryCount = 0
   @State private var appearance = ShareAppearance.standard
   @State private var pickingBackground = false
   @State private var notice: String?
@@ -99,31 +108,45 @@ struct ShareCarousel: View {
     guard pickingBackground, screenHeight > 0 else { return previewSize }
     return min(previewSize, max(160, screenHeight - currentPickerHeight - Space.xxl))
   }
-  private var current: RenderedCard? { cards?.first(where: { $0.id == (active ?? initialCardID) }) ?? cards?.first }
+  private var designs: [ShareCardOption] {
+    options ?? cards?.map { ShareCardOption(id: $0.id, name: $0.name) } ?? []
+  }
+  private var selectedID: String? {
+    designs.first { $0.id == (active ?? initialCardID) }?.id ?? designs.first?.id
+  }
+  private var current: RenderedCard? { cards?.first(where: { $0.id == selectedID }) }
   private var currentText: String { current?.isInsights == true ? "" : text }
   private var currentLink: URL? { current?.isInsights == true ? nil : link }
   private var currentAsset: ShareAsset? { current?.asset(for: appearance) }
   private var selection: Binding<String> {
-    Binding(get: { current?.id ?? "loading" }, set: { active = $0 })
+    Binding(get: { selectedID ?? "loading" }, set: { active = $0 })
   }
   var body: some View {
     VStack(spacing: Space.m) {
       TabView(selection: selection) {
-        if let cards, !cards.isEmpty {
-          ForEach(Array(cards.enumerated()), id: \.element.id) { index, card in cardImage(card, index: index).tag(card.id) }
+        if !designs.isEmpty {
+          ForEach(Array(designs.enumerated()), id: \.element.id) { index, option in
+            Group {
+              if let card = cards?.first(where: { $0.id == option.id }) {
+                cardImage(card, index: index)
+              } else {
+                loadingCard
+              }
+            }.tag(option.id)
+          }
         } else {
-          RoundedRectangle(cornerRadius: 20).fill(Color(.tertiarySystemFill))
-            .overlay {
-              if failed { Text("Couldn’t draw this card.").font(.subheadline).foregroundStyle(.secondary) }
-              else { Image(systemName: "ticket").font(.largeTitle).foregroundStyle(.quaternary).redacted(reason: .placeholder) }
-            }.accessibilityLabel(failed ? "Couldn’t draw cards" : "Preparing share cards").tag("loading")
+          loadingCard.tag("loading")
         }
-      }.tabViewStyle(.page(indexDisplayMode: .never)).aspectRatio(1, contentMode: .fit)
-        .frame(maxWidth: shownPreviewSize).accessibilityLabel("Card designs")
-        .animation(.smooth, value: shownPreviewSize)
+      }
+      .tabViewStyle(.page(indexDisplayMode: .never))
+      // Explicit dimensions keep the placeholder and finished card identical.
+      .frame(width: shownPreviewSize, height: shownPreviewSize)
+      .clipped()
+      .accessibilityLabel("Card designs")
+      .animation(.smooth, value: shownPreviewSize)
       HStack(spacing: 8) {
-        ForEach(cards ?? []) { card in
-          Circle().fill(card.id == current?.id ? AnyShapeStyle(Palette.tint) : AnyShapeStyle(.quaternary)).frame(width: 7, height: 7)
+        ForEach(designs) { option in
+          Circle().fill(option.id == selectedID ? AnyShapeStyle(Palette.tint) : AnyShapeStyle(.quaternary)).frame(width: 7, height: 7)
         }
       }.accessibilityHidden(true)
       (Text("Share your \(subjectName) · Tag ") + Text(stubbedInstagram).fontWeight(.semibold))
@@ -138,7 +161,7 @@ struct ShareCarousel: View {
             // Available for show and stats cards; photo cards have no background
             // to change, so it's dimmed there.
             let canPick = current?.supportsBackground == true
-            let shown = canPick ? appearance.background : .dark
+            let shown = canPick || subject == .insights ? appearance.background : .dark
             action("Background") {
               ZStack {
                 ShareBackgroundSwatch(background: shown)
@@ -151,7 +174,7 @@ struct ShareCarousel: View {
             }
             .disabled(!canPick)
             .opacity(canPick ? 1 : 0.4)
-            .accessibilityValue(canPick ? appearance.background.name : "Not available for photo cards")
+            .accessibilityValue(current == nil ? "Preparing card" : canPick ? appearance.background.name : "Not available for photo cards")
             Divider().frame(height: 48).padding(.top, 4)
           }
           action("Stories") {
@@ -201,6 +224,9 @@ struct ShareCarousel: View {
         .foregroundStyle(.secondary)
         .accessibilityHidden(notice == nil)
     }
+    .task(id: "\(selectedID ?? "loading")-\(retryCount)") {
+      if let id = selectedID, let prepareCard { await prepareCard(id) }
+    }
     .onChange(of: notice) { _, value in if let value { AccessibilityNotification.Announcement(value).post() } }
     .sheet(isPresented: $pickingBackground) {
       BackgroundPicker(appearance: $appearance)
@@ -218,13 +244,37 @@ struct ShareCarousel: View {
       }.presentationDetents([.medium, .large])
     }
   }
+  private var loadingCard: some View {
+    RoundedRectangle(cornerRadius: 20).fill(Color(.tertiarySystemFill))
+      .overlay {
+        VStack(spacing: Space.m) {
+          if failed {
+            Text("Couldn’t prepare this card.")
+              .font(.subheadline).foregroundStyle(.secondary)
+            if prepareCard != nil {
+              Button("Try again") { retryCount += 1 }.buttonStyle(.bordered)
+            }
+          } else {
+            ProgressView {
+              Text("Preparing card…").font(.footnote)
+            }
+            .tint(Palette.tint)
+            .accessibilityLabel(subject == .insights ? "Preparing your stats" : "Preparing your card")
+          }
+        }
+        .padding(Space.l)
+      }
+      .frame(maxWidth: .infinity, maxHeight: .infinity)
+      .accessibilityIdentifier(failed ? "share-card-error" : "share-card-loading")
+  }
+
   private func cardImage(_ card: RenderedCard, index: Int) -> some View {
     ZStack {
       // Light checks behind dark text, so it reads while you choose.
       if card.isTransparent(appearance) { Checkerboard(light: appearance.ink == .dark) }
       Image(uiImage: card.asset(for: appearance).image).resizable().scaledToFit()
         .accessibilityIdentifier("share-card-\(card.id)")
-        .accessibilityLabel("Share card \(index + 1) of \(cards?.count ?? 0), \(card.name.lowercased())\(card.isTransparent(appearance) ? ", no background" : "")")
+        .accessibilityLabel("Share card \(index + 1) of \(designs.count), \(card.name.lowercased())\(card.isTransparent(appearance) ? ", no background" : "")")
     }.clipShape(.rect(cornerRadius: 20))
   }
   private var subjectName: String {
@@ -440,7 +490,8 @@ struct ShareScreen<Content: View>: View {
       GeometryReader { geometry in
         ScrollView {
           content
-            .environment(\.sharePreviewSize, max(180, geometry.size.height - controlsHeight))
+            .environment(\.sharePreviewSize,
+              min(geometry.size.width - Space.l * 2, max(180, geometry.size.height - controlsHeight)))
             .environment(\.shareScreenHeight, geometry.size.height)
             .padding(.horizontal, Space.l)
             .padding(.top, Space.s)

@@ -99,6 +99,7 @@ struct InsightCardView: View {
   let data: InsightCardData
   var appearance: ShareAppearance = .standard
   private var ink: Color { appearance.foreground }
+  private var accent: Color { appearance.statsAccent }
   var body: some View {
     ZStack {
       ShareCardSurface(appearance: appearance)
@@ -106,11 +107,11 @@ struct InsightCardView: View {
         switch design {
         case .year: year
         case .weekly, .daily, .bestWeekly, .bestDaily: streak
-        case .activity: ShareActivityCard(data: data, ink: ink)
-        case .repeats: ShareRepeatCard(data: data, ink: ink)
-        case .countries: ShareCountriesCard(data: data, ink: ink)
+        case .activity: ShareActivityCard(data: data, ink: ink, accent: accent)
+        case .repeats: ShareRepeatCard(data: data, ink: ink, accent: accent)
+        case .countries: ShareCountriesCard(data: data, ink: ink, accent: accent)
         case .mix: mix
-        case .history: ShareHistoryCard(data: data, ink: ink)
+        case .history: ShareHistoryCard(data: data, ink: ink, accent: accent)
         }
         Spacer(minLength: 12)
         CardFooter(handle: data.handle, ink: ink)
@@ -128,7 +129,7 @@ struct InsightCardView: View {
         .font(.system(size: 30, weight: .bold))
       Text(best ? data.period : "Current · across all years").font(.system(size: 18))
       Spacer(minLength: 12)
-      Text(String(count)).font(.system(size: 112, weight: .heavy))
+      Text(String(count)).font(.system(size: 112, weight: .heavy)).foregroundStyle(accent)
         .tracking(-4).lineLimit(1).minimumScaleFactor(0.45)
       Text(weekly ? (count == 1 ? "Week" : "Weeks") : (count == 1 ? "Day" : "Days"))
         .font(.system(size: 32, weight: .bold))
@@ -136,7 +137,7 @@ struct InsightCardView: View {
         .font(.system(size: 22, weight: .medium))
       HStack(spacing: 8) {
         ForEach(0..<min(12, count), id: \.self) { _ in
-          RoundedRectangle(cornerRadius: 3).fill(ink).frame(width: 28, height: 10)
+          RoundedRectangle(cornerRadius: 3).fill(accent).frame(width: 28, height: 10)
         }
       }.padding(.top, 12)
       if count > 12 { Text("12 of \(count) \(weekly ? "weeks" : "days") shown").font(.system(size: 15)) }
@@ -153,10 +154,10 @@ struct InsightCardView: View {
       }
       Spacer(minLength: 0)
       if let year = data.year {
-        ShareMonthChart(months: data.stats.months, year: year, ink: ink).frame(height: 190)
+        ShareMonthChart(months: data.stats.months, year: year, ink: ink, accent: accent).frame(height: 190)
       } else {
         Text("All time").font(.system(size: 24, weight: .medium))
-        ShareYearChart(years: data.stats.years, ink: ink).frame(height: 190)
+        ShareYearChart(years: data.stats.years, ink: ink, accent: accent).frame(height: 190)
       }
     }
   }
@@ -171,7 +172,7 @@ struct InsightCardView: View {
       Text("My show mix").font(.system(size: 32, weight: .bold))
       Text("\(data.period) · \(data.stats.total) visits").font(.system(size: 18))
       Spacer(minLength: 0)
-      ShareRadar(categories: data.stats.types, total: data.stats.total, ink: ink).frame(height: 310)
+      ShareRadar(categories: data.stats.types, total: data.stats.total, ink: ink, accent: accent).frame(height: 310)
     }
   }
 }
@@ -180,6 +181,7 @@ struct ShareMonthChart: View {
   let months: [InsightStats.Month]
   let year: Int
   let ink: Color
+  var accent: Color? = nil
   private let names = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
   private var counts: [Int] {
     (1...12).map { month in
@@ -195,7 +197,7 @@ struct ShareMonthChart: View {
           VStack(spacing: 6) {
             Spacer(minLength: 0)
             Text(String(counts[i])).font(.system(size: 12, weight: .medium)).lineLimit(1).minimumScaleFactor(0.5)
-            Rectangle().fill(ink.opacity(0.85))
+            Rectangle().fill((accent ?? ink).opacity(0.9))
               .frame(height: barHeight * Double(counts[i]) / Double(maxCount))
             Text(names[i]).font(.system(size: 11, weight: .medium))
           }.frame(maxWidth: .infinity)
@@ -209,6 +211,7 @@ struct ShareRadar: View {
   let categories: [InsightStats.Category]
   let total: Int
   let ink: Color
+  var accent: Color? = nil
   private var values: [Double] {
     ShowType.ordered.map { type in Double(categories.first { $0.type == type.rawValue }?.count ?? 0) }
   }
@@ -229,8 +232,8 @@ struct ShareRadar: View {
             context.stroke(axis, with: .color(ink.opacity(0.15)), lineWidth: 1)
           }
           let shape = polygon(values.map { $0 / maximum }, center, radius)
-          context.fill(shape, with: .color(ink.opacity(0.18)))
-          context.stroke(shape, with: .color(ink), lineWidth: 2)
+          context.fill(shape, with: .color((accent ?? ink).opacity(0.22)))
+          context.stroke(shape, with: .color(accent ?? ink), lineWidth: 2)
         }
         ForEach(Array(ShowType.ordered.enumerated()), id: \.offset) { i, type in
           VStack(spacing: 3) {
@@ -277,6 +280,28 @@ extension ShareCards {
       return RenderedCard(id: design.id, name: design == .year && data.year == nil ? "All time in theatre" : design.name, file: full.file, image: full.image, backgrounds: variants, isInsights: true)
     }
   }
+
+  @MainActor static func prepareInsightCard(
+    _ data: InsightCardData, design: InsightCardDesign
+  ) async throws -> RenderedCard {
+    let name = "stubbed-\(design.id)-\(data.filenamePeriod(for: design))"
+    var variants: [ShareAppearance: ShareAsset] = [:]
+    for appearance in ShareAppearance.variants {
+      // Give the sheet/ProgressView a frame between synchronous ImageRenderer
+      // passes. Only this design's five variants are needed before sharing.
+      try await Task.sleep(for: .milliseconds(1))
+      try Task.checkCancellation()
+      variants[appearance] = try render(
+        InsightCardView(design: design, data: data, appearance: appearance),
+        name: "\(name)-\(appearance.key)")
+    }
+    try Task.checkCancellation()
+    let full = variants[.standard]!
+    return RenderedCard(
+      id: design.id, name: design == .year && data.year == nil ? "All time in theatre" : design.name,
+      file: full.file, image: full.image, backgrounds: variants, isInsights: true)
+  }
+
 }
 
 struct InsightShareSheet: View {
@@ -284,22 +309,49 @@ struct InsightShareSheet: View {
   let year: Int?
   var activityYear: Int? = nil
   var initialDesign: InsightCardDesign? = nil
-  @State private var cards: [RenderedCard]?
+  var handle: String? = nil
+  @State private var cards: [RenderedCard] = []
+  @State private var loadedHandle: String?
   @State private var failed = false
+  private var designs: [InsightCardDesign] {
+    InsightCardDesign.available(stats, year: year, activityYear: activityYear)
+  }
   var body: some View {
     ShareScreen {
-      if cards?.isEmpty == true {
+      if designs.isEmpty {
         ContentUnavailableView("No shows to share", systemImage: "ticket", description: Text("Choose a period with logged shows."))
       } else {
-        ShareCarousel(subject: .insights, cards: cards, failed: failed, text: "", link: nil, initialCardID: initialDesign?.id)
+        ShareCarousel(
+          subject: .insights, cards: cards, failed: failed, text: "", link: nil,
+          initialCardID: initialDesign?.id,
+          options: designs.map { ShareCardOption(id: $0.id, name: $0 == .year && year == nil ? "All time in theatre" : $0.name) },
+          prepareCard: prepare)
       }
-    }.task {
-      do {
+    }
+  }
+
+  private func prepare(_ id: String) async {
+    guard !cards.contains(where: { $0.id == id }), let design = designs.first(where: { $0.id == id }) else { return }
+    failed = false
+    do {
+      let ownerHandle: String
+      if let known = handle ?? loadedHandle {
+        ownerHandle = known
+      } else {
         let user = try await supabase.auth.session.user
         let profile = try await Profiles.profile(user.id)
         try Task.checkCancellation()
-        cards = try ShareCards.insightsCards(InsightCardData(stats: stats, year: year, handle: profile.handle, activityYear: activityYear))
-      } catch { if !Task.isCancelled { failed = true } }
+        loadedHandle = profile.handle
+        ownerHandle = profile.handle
+      }
+      let data = InsightCardData(stats: stats, year: year, handle: ownerHandle, activityYear: activityYear)
+      let card = try await ShareCards.prepareInsightCard(data, design: design)
+      try Task.checkCancellation()
+      cards.append(card)
+    } catch is CancellationError {
+      // Swiping or dismissing cancels unused work, and must not show an error.
+    } catch {
+      if !Task.isCancelled { failed = true }
     }
   }
 }

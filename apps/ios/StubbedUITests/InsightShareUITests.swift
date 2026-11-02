@@ -55,6 +55,40 @@ final class InsightShareUITests: XCTestCase {
     snapshot("share-section-historical-best-streak")
   }
 
+  @MainActor func testLazyStatsCardsAndCoralMap() throws {
+    let app = try openInsights()
+    reveal(app.buttons["insights-share-activity"], in: app)
+    app.buttons["insights-share-activity"].tap()
+    let activity = app.images["share-card-activity"]
+    XCTAssertTrue(activity.waitForExistence(timeout: 20))
+    XCTAssertTrue(activity.isHittable)
+    XCTAssertFalse(app.images["share-card-most-seen-shows"].exists)
+    snapshot("share-coral-activity")
+    activity.swipeLeft()
+    let repeats = app.images["share-card-most-seen-shows"]
+    XCTAssertTrue(repeats.waitForExistence(timeout: 20))
+    snapshot("share-coral-repeats")
+    repeats.swipeLeft()
+    let map = app.images["share-card-around-the-world"]
+    XCTAssertTrue(map.waitForExistence(timeout: 20))
+    snapshot("share-coral-map")
+    app.buttons["Background"].tap()
+    app.buttons["Light"].tap()
+    app.buttons["background-picker-done"].tap()
+    snapshot("share-coral-map-light")
+    app.buttons["Background"].tap()
+    app.buttons["Transparent"].tap()
+    app.buttons["Dark text"].tap()
+    app.buttons["background-picker-done"].tap()
+    snapshot("share-coral-map-transparent")
+    map.swipeRight()
+    XCTAssertTrue(repeats.waitForExistence(timeout: 3))
+    repeats.swipeRight()
+    XCTAssertTrue(activity.waitForExistence(timeout: 3))
+    XCTAssertTrue(app.buttons["More"].isEnabled)
+    snapshot("share-coral-activity-cached")
+  }
+
   @MainActor func testCompactSectionHeaders() throws {
     let app = try openInsights()
     reveal(app.buttons["insights-share-activity"], in: app)
