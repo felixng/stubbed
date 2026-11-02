@@ -874,3 +874,8 @@ Follows the spike's verdict (#279): Vision text recognition only, no Foundation 
 ## 2026-11-02: Sanity edits public copy; assets stay in code
 
 Owner requested a CMS and implementation PR so landing, press and other public copy can be edited without a coding agent. Use Sanity Studio at `/studio`, with explicit singleton schemas for the existing copy slots. Preserve screenshots, logos, icons, generated artwork, ZIPs, route destinations and layout in the repository; provide no CMS asset-upload fields. Repository defaults keep unconfigured development/CI and CMS failures usable. Published reads use the published perspective and cache invalidation; authenticated Studio previews read drafts without persistent caching. A create-if-missing seed preserves existing editorial changes. FAQ HTML, structured data and `llms.txt` share edited answers. Account setup and ownership boundaries are documented in `docs/CMS.md`. No paid plan is required or activated.
+
+
+## 2026-11-02: One cache for published CMS copy
+
+Production continued showing an earlier headline despite successful signed webhook responses. Published reads now fetch directly from the Sanity API (`useCdn: false`, `cache: "no-store"`) inside the existing tagged `use cache` function, replacing the nested `sanityFetch` cache. This prevents an invalidated application cache from being refilled by a stale fetch/CDN result. The signed webhook expires `cms-copy`; the next visitor blocks on a current published read. Keep the 60-second revalidation lifetime and repository fallback. Draft reads retain their authenticated, uncached path. This trades an API request per cache refill for predictable publish freshness; live production verification remains necessary.

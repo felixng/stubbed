@@ -8,7 +8,6 @@ import { stegaClean } from "next-sanity";
 
 import { copyDefinitions } from "./definitions";
 import { cmsClient } from "./client";
-import { cmsLive } from "./live";
 import { mergeCopy, defaultsFor, safeEmail, safeWebUrl, type CopySection, type ContentDocument } from "./model";
 
 async function readPublishedDocument(id: ContentDocument): Promise<Record<string, unknown> | null> {
@@ -16,15 +15,17 @@ async function readPublishedDocument(id: ContentDocument): Promise<Record<string
   cacheLife({ stale: 0, revalidate: 60, expire: 3600 });
   cacheTag("cms-copy");
   try {
-    if (!cmsLive) return null;
-    const { data } = await cmsLive.sanityFetch({
-      query: '*[_id == $id && _type == $id][0]',
-      params: { id },
-      perspective: "published",
-      stega: false,
-      tags: ["cms-copy"],
-    });
-    return data as Record<string, unknown> | null;
+    if (!cmsClient) return null;
+    // Cache only this function's result. After a publishing webhook expires it,
+    // read the authoritative API rather than another fetch cache or the CDN.
+    return await cmsClient.fetch<Record<string, unknown> | null>(
+      '*[_id == $id && _type == $id][0]', { id }, {
+        perspective: "published",
+        useCdn: false,
+        stega: false,
+        cache: "no-store",
+      },
+    );
   } catch (error) {
     console.error("Sanity published content unavailable; using repository copy", error instanceof Error ? error.message : "Unknown error");
     return null;
