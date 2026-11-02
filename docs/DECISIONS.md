@@ -753,6 +753,10 @@ The owner expected the eight layouts in one place after sharing a show. Entry sh
 
 The count badge is available from the first visit: “First visit” at 1×, “Encore” from 2× onward, per the owner’s follow-up. Its stable design ID stays `encore`. Photo and rating prerequisites remain real requirements. To keep all three stats templates available from an older show even when this year has no visits, show truthful zero totals/charts and “No current streak”; the standalone empty Insights view keeps its existing empty state. No counts or achievements are invented. The current native round action row, background sheet and Light option are preserved.
 
+## 2026-11-02: Repeat-show leaderboard in iOS Insights
+
+Most-seen shows sits below the overview and follows the selected year or All time. It includes only shows with at least two logged visits in that period, including private entries and visits without a venue. Postgres groups by show ID, ranks by visit count (equal counts share a rank), and sorts ties by title then ID. Separate catalogue shows with identical titles remain separate. Each native navigation row opens the existing paginated visit list filtered to that show and period. The optional show filter replaces the prior RPC signature with a defaulted parameter so existing clients can continue omitting it without overload ambiguity. Planned visits remain excluded. Apply the migration before releasing the updated iOS client.
+
 ### 2026-11-02 — Native notification response completion on the main actor (#242)
 
 Tapping a like alert reproduced a cold-start crash in the simulator:
