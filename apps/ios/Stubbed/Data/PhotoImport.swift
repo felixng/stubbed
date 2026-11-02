@@ -56,12 +56,15 @@ enum PhotoImport {
 }
 
 /// A photo's lookup, started as soon as it's made: theatres near where it
-/// was taken. The import starts the next visit's
-/// lookup while you're on the current one, so its form opens already filled.
+/// was taken, and any text printed in it (a programme, ticket or poster). The
+/// import starts the next visit's lookup while you're on the current one, so
+/// its form opens already filled.
 final class PhotoLookup: Sendable {
   let meta: PhotoMeta
   /// Nil when the photo has no location.
   let nearby: Task<PhotoDetect.Nearby?, Never>
+  /// Read on the device; nil when the photo can't be decoded.
+  let text: Task<PhotoText.Reading?, Never>
 
   /// `data` is the original photo: its EXIF is read here and never stored.
   init(data: Data) {
@@ -72,9 +75,11 @@ final class PhotoLookup: Sendable {
       return await PhotoDetect.nearby(lat: lat, lng: lng, accuracy: meta.accuracy)
     }
     self.nearby = nearby
+    text = Task { await PhotoText.read(data) }
   }
 
   deinit {
     nearby.cancel()
+    text.cancel()
   }
 }

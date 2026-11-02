@@ -53,13 +53,15 @@ struct LogView: View {
   @State private var detect = Detect.idle
   @State private var nearby: [VenueChoice] = []
   @State private var place: (city: String?, country: String?) = (nil, nil)
+  /// Shows the photo's printed text matched, when more than one did.
+  @State private var photoShows: [Show] = []
   /// Fields whose value came from the photo; a new photo clears these.
   @State private var fromPhoto: Set<String> = []
   /// Bumped per photo, so a newer photo cancels the older one's results.
   @State private var run = 0
 
   enum Detect: Equatable {
-    case idle, reading, nearby
+    case idle, reading, nearby, text
   }
 
   private enum Picker: String, Identifiable {
@@ -302,6 +304,11 @@ struct LogView: View {
         }
       } else {
         SearchButton(title: "Search shows") { picking = .show }
+        ForEach(photoShows) { s in
+          Button { pickShow(ShowChoice(s)) } label: {
+            Label("Maybe \(s.title)?", systemImage: "text.viewfinder")
+          }
+        }
       }
     }
   }
@@ -439,6 +446,7 @@ struct LogView: View {
   private func pickShow(_ choice: ShowChoice) {
     touchedShow = true
     fromPhoto.remove("show")
+    photoShows = []
     show = choice
   }
 
@@ -461,6 +469,7 @@ struct LogView: View {
     case .idle: return nil
     case .reading: return ("Reading the photo…", true)
     case .nearby: return ("Looking for theatres nearby…", true)
+    case .text: return ("Reading the text in the photo…", true)
     }
   }
 
@@ -471,6 +480,7 @@ struct LogView: View {
     if fromPhoto.contains("venue") { venue = nil }
     if fromPhoto.contains("date") { date = Day.today() }
     fromPhoto = []
+    photoShows = []
     nearby = []
     place = (nil, nil)
     photoError = nil
@@ -498,10 +508,40 @@ struct LogView: View {
       guard current() else { return }
       nearby = found.candidates
       place = (found.city, found.country)
-      // One theatre in range is as good as an answer.
-      if found.candidates.count == 1, !touchedVenue, venue == nil {
-        venue = found.candidates[0]
+    }
+
+    detect = .text
+    let reading = await lookup.text.value
+    guard current() else { return }
+    let paper = reading?.isPaper ?? false
+    // A ticket or programme says when and where the show was; a stage photo
+    // only says where the camera was.
+    if paper, let reading {
+      let printed = PhotoText.printedDate(in: reading.lines.map(\.text), country: place.country)
+      if let printed, !touchedDate {
+        date = printed
+        fromPhoto.insert("date")
+      }
+      if !touchedVenue, venue == nil, let saved = await PhotoText.matchVenue(reading) {
+        guard current() else { return }
+        venue = VenueChoice(saved)
         fromPhoto.insert("venue")
+      }
+    }
+    // One theatre in range is as good as an answer, unless the paper
+    // was printed for a show seen somewhere else.
+    if !paper, nearby.count == 1, !touchedVenue, venue == nil {
+      venue = nearby[0]
+      fromPhoto.insert("venue")
+    }
+    if let reading {
+      let matches = await PhotoText.matchShows(reading)
+      guard current() else { return }
+      if let found = matches.confident, !touchedShow, show == nil {
+        show = ShowChoice(found)
+        fromPhoto.insert("show")
+      } else if show == nil {
+        photoShows = matches.suggestions
       }
     }
 
