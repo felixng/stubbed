@@ -28,7 +28,7 @@ A purpose-built home for a behaviour theatregoers already have, with structure I
 
 ## Operating Context
 
-- Logging is photo first: pick a photo, and the date comes from its EXIF, nearby theatres from its GPS, and the show is picked by hand (catalogue suggestions and on-device reading are coming, #273). "No photo? Fill in by hand" skips to the form.
+- Logging is photo first: pick a photo, and the date comes from its EXIF, nearby theatres from its GPS, and on iOS the show is read from a programme, Playbill, ticket or poster photo on the device (Apple text recognition, nothing uploaded) and matched to the catalogue. On the web the show is picked by hand for now (catalogue suggestions, #272). "No photo? Fill in by hand" skips to the form.
 - Saving a new entry opens its share screen. Cards are square 1080×1080, drawn on the device, posted to Instagram and elsewhere.
 - Public pages (`/@handle`, `/e/[id]`, `/t/[id]`) are what a share recipient lands on, with server-drawn link previews.
 - Import turns photos into drafts (email import is paused, #282) that the user reviews before anything saves.
