@@ -8,7 +8,7 @@ Stubbed's context is split in two, on purpose:
 |---|---|---|
 | Holds | Product and project context: what we're building, for whom and why, direction, brand and voice, monetisation | Code and tech context: architecture, data model, stack, conventions, implementation decisions. The list of work (ideas, improvements, bugs) is GitHub issues |
 | Read by | Any tool or person: design, marketing, copywriting, SEO, planning | Claude Code and anyone working on the code |
-| Main docs | [Stubbed: Project Brief](https://docs.google.com/document/d/1NdEgeTRMkKQ5TL87Urwpe7WG9fcrejPsZKsmrO2Enak/edit), [Stubbed: Monetisation Ideas](https://docs.google.com/document/d/1LJanHT3SpBYSQB7SiRVaeX-1PFZTPQ-cBLXlSC50KAM/edit) | This file, [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/DECISIONS.md`](docs/DECISIONS.md), [`docs/DESIGN.md`](docs/DESIGN.md), [`docs/ANALYTICS.md`](docs/ANALYTICS.md), `supabase/` |
+| Main docs | [Stubbed: Project Brief](https://docs.google.com/document/d/1NdEgeTRMkKQ5TL87Urwpe7WG9fcrejPsZKsmrO2Enak/edit), [Stubbed: Monetisation Ideas](https://docs.google.com/document/d/1LJanHT3SpBYSQB7SiRVaeX-1PFZTPQ-cBLXlSC50KAM/edit) | This file, [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/DECISIONS.md`](docs/DECISIONS.md), [`docs/DESIGN.md`](docs/DESIGN.md), [`docs/ANALYTICS.md`](docs/ANALYTICS.md), [`docs/CATALOGUE.md`](docs/CATALOGUE.md), `supabase/` |
 
 **The rule:** if it's about *what* we build and *why*, it belongs in Drive. If it's about *how* it's built, it belongs here. Don't copy product context into the repo, or code detail into Drive.
 
