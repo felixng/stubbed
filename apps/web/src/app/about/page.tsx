@@ -1,19 +1,23 @@
+import { getCopy } from "@/lib/cms/content";
 import type { Metadata, Viewport } from "next";
 
 import { About } from "@/components/landing/About";
 import { ContentPage } from "@/components/landing/ContentPage";
 
-export const metadata: Metadata = {
-  title: "About — Stubbed",
-  description: "A theatre diary built by a theatre regular. Meet Felix and find out why he built Stubbed.",
-  alternates: { canonical: "/about" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const copy = await getCopy("aboutMeta");
+  return { title: copy.seoTitle, description: copy.description,
+    alternates: { canonical: "/about" },
+    openGraph: { title: copy.seoTitle, description: copy.description, url: "/about" },
+  };
+}
 
 export const viewport: Viewport = { themeColor: "#f2f2f7" };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const pageCopy = await getCopy("aboutMeta");
   return (
-    <ContentPage title="About Stubbed">
+    <ContentPage title={pageCopy.title}>
       <About />
     </ContentPage>
   );

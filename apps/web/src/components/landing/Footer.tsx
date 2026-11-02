@@ -1,24 +1,27 @@
+import type { Copy } from "@/lib/cms/model";
+import { getCopy } from "@/lib/cms/content";
 import Link from "next/link";
 
 import { Container } from "@/components/landing/Container";
 import { Wordmark } from "@/components/ui/Wordmark";
 
-const LINKS = [
-  { href: "/about", label: "About" },
-  { href: "/faq", label: "FAQ" },
-  { href: "/terms", label: "Terms" },
-  { href: "/privacy", label: "Privacy" },
+const links = (copy: Copy<"footer">) => [
+  { href: "/about", label: copy.aboutLabel },
+  { href: "/faq", label: copy.faqLabel },
+  { href: "/terms", label: copy.termsLabel },
+  { href: "/privacy", label: copy.privacyLabel },
 ] as const;
 
-export function Footer() {
+export async function Footer() {
+  const copy = await getCopy("footer");
   return (
     <footer className="border-t border-separator">
       <Container className="flex flex-col items-center justify-between gap-2 py-8 text-footnote text-label-secondary sm:flex-row">
         <Wordmark size={16} />
-        <p>Built by a theatre regular, for the theatre regulars.</p>
+        <p>{copy.builtByATheatreRegularFor}</p>
         <div className="flex items-center gap-1">
           <nav aria-label="Footer" className="flex items-center">
-            {LINKS.map(({ href, label }) => (
+            {links(copy).map(({ href, label }) => (
               <Link
                 key={href}
                 href={href}

@@ -1,18 +1,20 @@
-import { FAQS, faqAnswerText } from "@/lib/faq";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/lib/site";
+import { getSiteCopy } from "@/lib/cms/content";
+import { getFaqSections, faqAnswerText } from "@/lib/faq";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
 
 // /llms.txt: a plain-text summary for AI assistants (llmstxt.org). Built
-// from the landing page's own copy so the two say the same thing. Static,
-// generated at build time.
-export function GET() {
+// from the same CMS content used by the public pages.
+export async function GET() {
+  const site = await getSiteCopy();
+  const FAQS = (await getFaqSections()).flatMap((section) => section.items);
   const body = [
     `# ${SITE_NAME}`,
     "",
-    `> ${SITE_DESCRIPTION}`,
+    `> ${site.description}`,
     "",
-    "Stubbed is a theatre diary app for theatre regulars, like a film diary but for live theatre. People track the shows they see (musicals, plays, opera, dance, comedy, stand-up), rate them in half stars, add a note, group shows into trips, and share cards of a show or trip to Instagram. It covers any theatre, anywhere; shows and venues that aren't listed are added by users.",
+    site.llmsIntroduction,
     "",
-    "Status: public beta. Anyone can sign up free on the website.",
+    site.llmsStatus,
     "",
     "## Questions",
     "",
