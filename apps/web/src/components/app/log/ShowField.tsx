@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
 import { SHOW_TYPE_LABELS, type NewShow, type Show, type ShowType } from "@/lib/entries";
 import { createClient } from "@/lib/supabase/client";
@@ -9,7 +10,9 @@ import { SelectedValue } from "./SelectedValue";
 import { Typeahead, type TypeaheadOption } from "./Typeahead";
 
 // Pick a show: type-ahead over search_shows, or "Add '<title>'" to create it
-// on save (type defaults to musical, editable).
+// on save (type defaults to musical, editable). After a search that found
+// nothing, picking a show offers to remember that search as its nickname
+// (#35), so "Lez Miz" finds it next time.
 export function ShowField({
   labelledBy,
   value,
@@ -21,6 +24,9 @@ export function ShowField({
 }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Show[]>([]);
+  // The last search that found nothing, and the nickname offer it led to.
+  const [missed, setMissed] = useState<string | null>(null);
+  const [offer, setOffer] = useState<{ alias: string; showId: string } | null>(null);
 
   useEffect(() => {
     const q = query.trim();
@@ -28,7 +34,10 @@ export function ShowField({
     let cancelled = false;
     const timer = setTimeout(async () => {
       const { data } = await createClient().rpc("search_shows", { q });
-      if (!cancelled) setResults(((data as Show[] | null) ?? []).slice(0, 8));
+      if (cancelled) return;
+      const found = (data as Show[] | null) ?? [];
+      setResults(found.slice(0, 8));
+      if (!found.length) setMissed(q);
     }, 150);
     return () => {
       cancelled = true;
@@ -44,9 +53,30 @@ export function ShowField({
           secondary={value.id ? SHOW_TYPE_LABELS[value.type] : "New show"}
           onChange={() => {
             setQuery(value.title);
+            setOffer(null);
             onChange(null);
           }}
         />
+        {offer && offer.showId === value.id && (
+          <div className="flex flex-wrap items-center gap-2 rounded-md bg-fill px-4 py-3">
+            <p className="min-w-0 flex-1 text-footnote text-label-secondary">
+              Remember “{offer.alias}” for this show? Searching it will find {value.title} next time.
+            </p>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => {
+                void createClient().rpc("remember_show_alias", { show_id: offer.showId, alias: offer.alias });
+                setOffer(null);
+              }}
+            >
+              Remember
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setOffer(null)}>
+              No thanks
+            </Button>
+          </div>
+        )}
         {!value.id && (
           <div role="group" aria-label="Show type" className="flex flex-wrap gap-2">
             {(Object.keys(SHOW_TYPE_LABELS) as ShowType[]).map((t) => (
@@ -67,7 +97,12 @@ export function ShowField({
     key: s.id,
     primary: s.title,
     secondary: SHOW_TYPE_LABELS[s.type],
-    onSelect: () => onChange(s),
+    onSelect: () => {
+      // Not when the miss was just this search overtyped ("Hamiltonx").
+      if (missed && !missed.toLowerCase().startsWith(q.toLowerCase())) setOffer({ alias: missed, showId: s.id });
+      setMissed(null);
+      onChange(s);
+    },
   }));
   if (q && !exact) {
     options.push({

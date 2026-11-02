@@ -63,6 +63,9 @@ export type ConfirmedDraft = {
   collectionIds: string[];
   // The clean 1600px copy to attach, if any.
   photo: Blob | null;
+  // The title an email used, kept as a nickname when it was mapped to an
+  // existing show (#35). The database skips titles search already finds.
+  alias?: string | null;
 };
 
 export class SaveError extends Error {
@@ -110,6 +113,10 @@ export async function saveDraft(
   } catch (err) {
     const detail = err && typeof err === "object" && "message" in err ? String(err.message) : String(err);
     throw new SaveError(step, detail);
+  }
+
+  if (draft.alias && draft.show.id) {
+    await supabase.rpc("remember_show_alias", { show_id: draft.show.id, alias: draft.alias });
   }
 
   let photoFailed = false;
