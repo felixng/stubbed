@@ -752,3 +752,22 @@ Follow-up to #295, from testing it on iPhone 17e. The sheet is now sized to its 
 The owner expected the eight layouts in one place after sharing a show. Entry sharing now appends the three existing current-year Insights cards, using the owner’s current stats even when the selected entry is historical. Entry ordinals retain their original date-based context. Aggregate cards carry explicit current-year/live labels and never inherit a show caption or public entry link; returning to an entry card restores its actions. Aggregate filenames contain the stats design and period, without an entry title. The standalone Insights period selector remains.
 
 The count badge is available from the first visit: “First visit” at 1×, “Encore” from 2× onward, per the owner’s follow-up. Its stable design ID stays `encore`. Photo and rating prerequisites remain real requirements. To keep all three stats templates available from an older show even when this year has no visits, show truthful zero totals/charts and “No current streak”; the standalone empty Insights view keeps its existing empty state. No counts or achievements are invented. The current native round action row, background sheet and Light option are preserved.
+
+### 2026-11-02 — Native notification response completion on the main actor (#242)
+
+Tapping a like alert reproduced a cold-start crash in the simulator:
+`NSInternalInconsistencyException: Call must be made on main thread`.
+The symbolicated stack enters UIKit state restoration from the generated
+Objective-C closure for the async `PushAppDelegate.userNotificationCenter(_:didReceive:)`
+on a cooperative executor. Moving only the observable-state assignment to
+`MainActor.run` did not move the generated completion there.
+
+Use synchronous, explicitly nonisolated UserNotifications delegate callbacks.
+Extract a UUID before crossing executors, then update pending navigation and
+invoke the system completion on the main actor. Malformed IDs, dismissals and
+unsupported actions still acknowledge on main without navigating. Foreground
+receipt keeps the existing inbox-only presentation and also completes on main.
+No unsafe actor assumptions, blanket concurrency suppression, SDK dependency or
+backend changes are needed. A simulator regression taps actual system alerts
+from background and terminated states; physical TestFlight retesting remains
+separate acceptance work.

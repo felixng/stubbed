@@ -25,6 +25,9 @@ set -euo pipefail
 
 IOS_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 REPO_DIR="$(cd "$IOS_DIR/../.." && pwd)"
+# Allow an isolated local Supabase stack without changing the shared dev stack.
+SB_WORKDIR="${SB_WORKDIR:-$REPO_DIR}"
+SB_DB_CONTAINER="${SB_DB_CONTAINER:-supabase_db_stubbed}"
 BUILD_DIR="$IOS_DIR/build"
 DERIVED="$BUILD_DIR/DerivedData"
 SIM="${SIM:-iPhone 17 Pro}"
@@ -123,7 +126,7 @@ user_id() {
 
 sb_env() {
   local env
-  env="$(cd "$REPO_DIR" && supabase status -o env 2>/dev/null)" || { echo "Local Supabase isn't running: supabase start" >&2; exit 1; }
+  env="$(supabase status --workdir "$SB_WORKDIR" -o env 2>/dev/null)" || { echo "Local Supabase isn't running: supabase start" >&2; exit 1; }
   SB_API="$(sed -n 's/^API_URL="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' <<<"$env")"
   SB_KEY="$(sed -n 's/^SERVICE_ROLE_KEY="\{0,1\}\([^"]*\)"\{0,1\}$/\1/p' <<<"$env")"
 }
@@ -142,7 +145,7 @@ test_users() {
   id="$(user_id "$NEW_EMAIL")"
   [ -n "$id" ] && admin DELETE "/auth/v1/admin/users/$id" >/dev/null
   admin POST /auth/v1/admin/users "$user,\"email\":\"$NEW_EMAIL\"}" >/dev/null
-  docker exec -i supabase_db_stubbed psql -q -U postgres -d postgres -v ON_ERROR_STOP=1 <"$IOS_DIR/scripts/test-seed.sql" >/dev/null \
+  docker exec -i "$SB_DB_CONTAINER" psql -q -U postgres -d postgres -v ON_ERROR_STOP=1 <"$IOS_DIR/scripts/test-seed.sql" >/dev/null \
     || { echo "Seeding the test diary failed" >&2; exit 1; }
   echo "Test users: $TEST_EMAIL (@$TEST_HANDLE) and $NEW_EMAIL (no handle), password $TEST_PASSWORD"
 }
@@ -160,7 +163,7 @@ marketing_user() {
   admin POST /auth/v1/admin/users "{\"password\":\"$TEST_PASSWORD\",\"email_confirm\":true,\"email\":\"$MARKETING_EMAIL\"}" >/dev/null
   id="$(user_id "$MARKETING_EMAIL")"
   admin PATCH "/rest/v1/profiles?id=eq.$id&handle=is.null" '{"handle":"sillyelphaba"}' >/dev/null
-  docker exec -i supabase_db_stubbed psql -q -U postgres -d postgres -v ON_ERROR_STOP=1 <"$IOS_DIR/scripts/marketing-seed.sql" >/dev/null \
+  docker exec -i "$SB_DB_CONTAINER" psql -q -U postgres -d postgres -v ON_ERROR_STOP=1 <"$IOS_DIR/scripts/marketing-seed.sql" >/dev/null \
     || { echo "Seeding the marketing diary failed" >&2; exit 1; }
   for n in 01 02 03 04 05 06 07 08; do
     [ -f "$MARKETING_PHOTOS/$n.jpg" ] || { echo "Missing $MARKETING_PHOTOS/$n.jpg" >&2; exit 1; }
@@ -180,7 +183,7 @@ case "$cmd" in
   test)
     udid="$(sim_udid)"
     boot "$udid"
-    xcb test "$udid" -only-testing:StubbedTests
+    xcb test "$udid" -parallel-testing-enabled NO -only-testing:StubbedTests
     ;;
   ui)
     udid="$(sim_udid)"
@@ -209,13 +212,13 @@ case "$cmd" in
     for class in $classes; do
       test_users >/dev/null
       if [[ "$class" == InsightsUITests* || "$class" == InsightShareUITests* ]]; then
-        docker exec -i supabase_db_stubbed psql -q -U postgres -d postgres -v ON_ERROR_STOP=1 \
+        docker exec -i "$SB_DB_CONTAINER" psql -q -U postgres -d postgres -v ON_ERROR_STOP=1 \
           <"$IOS_DIR/scripts/insights-seed.sql" >/dev/null
       fi
       TEST_RUNNER_STUBBED_EMAIL="$TEST_EMAIL" TEST_RUNNER_STUBBED_NEW_EMAIL="$NEW_EMAIL" \
         TEST_RUNNER_STUBBED_PASSWORD="$TEST_PASSWORD" \
         TEST_RUNNER_STUBBED_SCREENSHOTS="$BUILD_DIR/ui" \
-        xcb test-without-building "$udid" "-only-testing:StubbedUITests/$class" || failed=1
+        xcb test-without-building "$udid" -parallel-testing-enabled NO "-only-testing:StubbedUITests/$class" || failed=1
       cat "$BUILD_DIR/logs/test-without-building.log" >>"$BUILD_DIR/logs/ui-all.log"
     done
     ls "$BUILD_DIR/ui"/*.png 2>/dev/null | sed 's/^/Screenshot: /' || true
