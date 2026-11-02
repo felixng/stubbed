@@ -44,7 +44,7 @@ A purpose-built home for a behaviour theatregoers already have, with structure I
 - The show catalogue is optional: everything works for shows that aren't in it, and with no catalogue at all.
 - Official show artwork (from the show catalogue) appears only inside the app, never on share cards, public pages or link previews.
 - Sign-ups are closed; the landing page collects a waitlist.
-- Monetisation is deferred: no payment, paywall or upsell UI.
+- One paid tier, "Pro" (name configurable), for advanced stats only: Show mix, earlier years and All time. Logging, the diary, trips, share cards, this year's stats and getting your data out stay free. Upgrade prompts appear on Profile and at a locked stat, never as a blocking screen. Prices and trial come from the store at runtime; never hard-code them in copy.
 - Not built yet, so never shown as working: CSV export, a stats page, diary filters, notifications, moderation, show pages.
 
 ## Brand Commitments

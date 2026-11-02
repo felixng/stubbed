@@ -184,7 +184,7 @@ This uses both free Supabase project slots. Supabase's own branching feature is 
 | Supabase pauses free projects after **7 days idle** | GitHub Actions cron sends a tiny query every few days. During validation, real use keeps it awake anyway. |
 | **No automatic backups** on the Supabase free plan | Nightly GitHub Action: `pg_dump` → encrypt (`age`) → upload as an Actions artifact (90-day retention). Encryption matters if the repo is public. |
 | Supabase's built-in email sender is heavily rate-limited | Configure Resend as custom SMTP from day one. |
-| Vercel Hobby is **non-commercial only** and pauses (doesn't bill) at limits | Fine while monetisation is deferred. Move to Pro ($20/mo) or Cloudflare Pages if that changes. |
+| Vercel Hobby is **non-commercial only** and pauses (doesn't bill) at limits | Pro (#219) makes the web commercial: payment requests and advertised upgrades count. Move to Vercel Pro ($20/mo) or another host before web sales go live (#261, `docs/PAYWALL.md` §9). |
 | Storage fills up (1 GB) | Resize on device (above). Monitor; Supabase Pro is $25/mo when needed. |
 | Share links are tied to a `*.vercel.app` domain | Buy a domain early (~$10/yr) so links shared on Instagram keep working if hosting ever moves. |
 
