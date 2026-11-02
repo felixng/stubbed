@@ -61,6 +61,7 @@ export default function SettingsPage() {
       </Group>
       <Group title="Help and information">
         <SettingsLink href="mailto:support@getstubbed.app" external>Contact us</SettingsLink>
+        <SettingsLink href="/about" external>About Stubbed</SettingsLink>
         <SettingsLink href="/faq" external>FAQ</SettingsLink>
         <SettingsLink href="/privacy" external>Privacy policy</SettingsLink>
         <SettingsLink href="/terms" external>Terms</SettingsLink>

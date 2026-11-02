@@ -70,12 +70,11 @@ export default function Home() {
         }}
       />
       <header>
-        <Container className="flex items-center justify-between gap-4 py-6 sm:py-8">
+        <Container className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-6 sm:py-8">
           <Wordmark size={28} href="/" mark />
-          <div className="flex items-center gap-2">
-            <p className="inline-flex min-h-7 items-center rounded-pill bg-fill px-3 text-footnote font-medium text-label">
-              <span className="sm:hidden">Beta</span>
-              <span className="hidden sm:inline">Now in public beta</span>
+          <div className="ml-auto flex items-center gap-2">
+            <p className="hidden min-h-7 items-center rounded-pill bg-fill px-3 text-footnote font-medium text-label lg:inline-flex">
+              Now in public beta
             </p>
             <SiteMenu />
           </div>

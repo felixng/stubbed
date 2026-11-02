@@ -4,6 +4,7 @@ import { Container } from "@/components/landing/Container";
 import { Wordmark } from "@/components/ui/Wordmark";
 
 const LINKS = [
+  { href: "/about", label: "About" },
   { href: "/faq", label: "FAQ" },
   { href: "/terms", label: "Terms" },
   { href: "/privacy", label: "Privacy" },

@@ -1,36 +1,41 @@
-// Questions people ask before signing up. The same list feeds the FAQPage
-// structured data on /faq, so the two can't drift. No prices or dates.
-export const FAQS = [
-  {
-    question: "Can I sign up for Stubbed now?",
-    answer:
-      "Yes. Sign up free with Apple, Google or your email, pick a handle and log your first show. Stubbed is in public beta, so expect it to keep improving.",
-  },
-  {
-    question: "Can I add shows I saw before joining?",
-    answer:
-      "Yes. Paste or upload your ticket confirmation emails, or add photos from shows you’ve been to, and Stubbed reads the show, venue and date and suggests entries. Nothing is saved until you have checked it.",
-  },
-  {
-    question: "Are my entries public?",
-    answer:
-      "Entries start public so they are easy to share, and you can make any entry private with one tap. Photos have their location data removed before they are uploaded.",
-  },
-  {
-    question: "Can I export my data?",
-    answer:
-      "Your diary is yours. You’ll be able to download all of it as a CSV file at any time.",
-  },
-];
+import Link from "next/link";
+
+import { FAQ_SECTIONS } from "@/lib/faq";
+
+const textLink = "rounded-sm text-tint-text underline underline-offset-4 hover:text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
 
 export function Faq() {
   return (
-    <div className="flex flex-col gap-6">
-      {FAQS.map((faq) => (
-        <div key={faq.question} className="flex flex-col gap-1">
-          <h2 className="text-headline text-label">{faq.question}</h2>
-          <p className="text-body text-label-secondary">{faq.answer}</p>
-        </div>
+    <div className="flex flex-col gap-10">
+      <p className="text-body text-label-secondary">
+        A few answers, and practical guides to getting your theatre history into Stubbed.
+        The steps below are for the website unless stated otherwise.
+      </p>
+      <nav aria-label="FAQ topics" className="flex flex-wrap gap-x-5 gap-y-1 border-y border-separator py-3">
+        {FAQ_SECTIONS.map((section) => (
+          <a key={section.id} href={`#${section.id}`} className={`${textLink} inline-flex min-h-11 items-center text-subheadline font-medium`}>
+            {section.title}
+          </a>
+        ))}
+      </nav>
+      {FAQ_SECTIONS.map((section) => (
+        <section key={section.id} aria-labelledby={section.id} className="flex flex-col gap-6">
+          <h2 id={section.id} className="scroll-mt-6 font-display text-title-2 text-label">{section.title}</h2>
+          {section.items.map((faq) => (
+            <div key={faq.id} className="flex flex-col gap-2">
+              <h3 id={faq.id} className="scroll-mt-6 text-headline text-label">{faq.question}</h3>
+              <p className="text-body text-label-secondary">{faq.answer}</p>
+              {faq.steps && (
+                <ol className="list-decimal space-y-2 pl-6 text-body text-label-secondary marker:text-label">
+                  {faq.steps.map((step) => <li key={step} className="pl-1">{step}</li>)}
+                </ol>
+              )}
+              {faq.link && (
+                <p className="text-body"><Link href={faq.link.href} className={textLink}>{faq.link.label}</Link></p>
+              )}
+            </div>
+          ))}
+        </section>
       ))}
     </div>
   );
