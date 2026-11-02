@@ -746,3 +746,36 @@ Following Hevy, a data card's background is chosen from a sheet opened by a Back
 
 ### 2026-11-01: The background sheet keeps the whole card in view
 Follow-up to #295, from testing it on iPhone 17e. The sheet is now sized to its contents (a plain header instead of a navigation bar; taller only when Transparent adds Text colour), and while it's up the card shrinks to fit above it, so every choice shows on the whole card, small phones included. The sheet has a solid background, and the action row and tag line fade out beneath it, since iOS 26's floating sheet showed their ends beside it. With Transparent and Dark text, the preview's checkerboard turns light so the text reads; exports are unchanged.
+
+## 2026-11-01: All sharing layouts in the show carousel (#297)
+
+The owner expected the eight layouts in one place after sharing a show. Entry sharing now appends the three existing current-year Insights cards, using the owner’s current stats even when the selected entry is historical. Entry ordinals retain their original date-based context. Aggregate cards carry explicit current-year/live labels and never inherit a show caption or public entry link; returning to an entry card restores its actions. Aggregate filenames contain the stats design and period, without an entry title. The standalone Insights period selector remains.
+
+The count badge is available from the first visit: “First visit” at 1×, “Encore” from 2× onward, per the owner’s follow-up. Its stable design ID stays `encore`. Photo and rating prerequisites remain real requirements. To keep all three stats templates available from an older show even when this year has no visits, show truthful zero totals/charts and “No current streak”; the standalone empty Insights view keeps its existing empty state. No counts or achievements are invented. The current native round action row, background sheet and Light option are preserved.
+
+## 2026-11-02: Repeat-show leaderboard in iOS Insights
+
+Most-seen shows sits directly after Activity, per the owner’s layout follow-up, and follows the selected year or All time. It includes only shows with at least two logged visits in that period, including private entries and visits without a venue. Postgres groups by show ID, ranks by visit count (equal counts share a rank), and sorts ties by title then ID. Separate catalogue shows with identical titles remain separate. Each native navigation row opens the existing paginated visit list filtered to that show and period. The optional show filter replaces the prior RPC signature with a defaulted parameter so existing clients can continue omitting it without overload ambiguity. Planned visits remain excluded. Apply the migration before releasing the updated iOS client.
+
+### 2026-11-02 — Native notification response completion on the main actor (#242)
+
+Tapping a like alert reproduced a cold-start crash in the simulator:
+`NSInternalInconsistencyException: Call must be made on main thread`.
+The symbolicated stack enters UIKit state restoration from the generated
+Objective-C closure for the async `PushAppDelegate.userNotificationCenter(_:didReceive:)`
+on a cooperative executor. Moving only the observable-state assignment to
+`MainActor.run` did not move the generated completion there.
+
+Use synchronous, explicitly nonisolated UserNotifications delegate callbacks.
+Extract a UUID before crossing executors, then update pending navigation and
+invoke the system completion on the main actor. Malformed IDs, dismissals and
+unsupported actions still acknowledge on main without navigating. Foreground
+receipt keeps the existing inbox-only presentation and also completes on main.
+No unsafe actor assumptions, blanket concurrency suppression, SDK dependency or
+backend changes are needed. A simulator regression taps actual system alerts
+from background and terminated states; physical TestFlight retesting remains
+separate acceptance work.
+
+## 2026-11-02: Share every Insights section
+
+Each Insights section has one system share symbol with a 44pt hit target in its header; Overview places it beside the headline count. The control is absent when its section has no shareable data. It opens the existing background-capable carousel on that section’s design, while the navigation-bar action opens the full collection. Streaks offers current weekly/daily and best weekly/daily designs, with current streaks limited to current-year/All time contexts and bests labelled with the selected period. Overview gains an All time design; Activity exports the displayed calendar year even in All time mode; Year by year always exports the complete history, with empty calendar years left as gaps. Most-seen shows exports the first five ranked shows; Around the world reuses the bundled country geometry and lists the top three country counts. Cards keep the established footer, square export and five background/ink appearances. The show-entry carousel retains its existing eight layouts. Most-seen shows follows Activity on the page. The Activity chart height and share-action icon grounds scale with Dynamic Type to keep axis labels and symbols from overlapping or clipping at accessibility sizes. No backend migration is needed.

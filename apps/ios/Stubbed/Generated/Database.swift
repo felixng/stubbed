@@ -944,6 +944,7 @@ internal enum PublicSchema {
     internal let createdBy: UUID?
     internal let firstPerformed: Int16?
     internal let id: UUID
+    internal let searchText: String?
     internal let title: String
     internal let type: ShowType
     internal let verified: Bool
@@ -954,6 +955,7 @@ internal enum PublicSchema {
       case createdBy = "created_by"
       case firstPerformed = "first_performed"
       case id = "id"
+      case searchText = "search_text"
       case title = "title"
       case type = "type"
       case verified = "verified"
@@ -966,6 +968,7 @@ internal enum PublicSchema {
     internal let createdBy: UUID?
     internal let firstPerformed: Int16?
     internal let id: UUID?
+    internal let searchText: String?
     internal let title: String
     internal let type: ShowType?
     internal let verified: Bool?
@@ -976,6 +979,7 @@ internal enum PublicSchema {
       case createdBy = "created_by"
       case firstPerformed = "first_performed"
       case id = "id"
+      case searchText = "search_text"
       case title = "title"
       case type = "type"
       case verified = "verified"
@@ -988,6 +992,7 @@ internal enum PublicSchema {
     internal let createdBy: UUID?
     internal let firstPerformed: Int16?
     internal let id: UUID?
+    internal let searchText: String?
     internal let title: String?
     internal let type: ShowType?
     internal let verified: Bool?
@@ -998,6 +1003,7 @@ internal enum PublicSchema {
       case createdBy = "created_by"
       case firstPerformed = "first_performed"
       case id = "id"
+      case searchText = "search_text"
       case title = "title"
       case type = "type"
       case verified = "verified"
@@ -1014,6 +1020,7 @@ internal enum PublicSchema {
     internal let lng: Double?
     internal let name: String
     internal let osmId: String?
+    internal let searchText: String?
     internal let verified: Bool
     internal enum CodingKeys: String, CodingKey {
       case city = "city"
@@ -1025,6 +1032,7 @@ internal enum PublicSchema {
       case lng = "lng"
       case name = "name"
       case osmId = "osm_id"
+      case searchText = "search_text"
       case verified = "verified"
     }
   }
@@ -1038,6 +1046,7 @@ internal enum PublicSchema {
     internal let lng: Double?
     internal let name: String
     internal let osmId: String?
+    internal let searchText: String?
     internal let verified: Bool?
     internal enum CodingKeys: String, CodingKey {
       case city = "city"
@@ -1049,6 +1058,7 @@ internal enum PublicSchema {
       case lng = "lng"
       case name = "name"
       case osmId = "osm_id"
+      case searchText = "search_text"
       case verified = "verified"
     }
   }
@@ -1062,6 +1072,7 @@ internal enum PublicSchema {
     internal let lng: Double?
     internal let name: String?
     internal let osmId: String?
+    internal let searchText: String?
     internal let verified: Bool?
     internal enum CodingKeys: String, CodingKey {
       case city = "city"
@@ -1073,6 +1084,7 @@ internal enum PublicSchema {
       case lng = "lng"
       case name = "name"
       case osmId = "osm_id"
+      case searchText = "search_text"
       case verified = "verified"
     }
   }

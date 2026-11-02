@@ -59,8 +59,8 @@ const JSON_LD = {
 export const viewport: Viewport = { themeColor: "#f2f2f7" };
 
 // Public landing page (#230): the hero with sign-up, four features led by
-// sharing, minor callouts, a final call to action and a minimal footer. The
-// menu links to /login.
+// sharing, a grid of smaller features, a final call to action and a minimal
+// footer. The header button links to /login, or the app when signed in.
 export default function Home() {
   return (
     <div data-theme="light" className="flex flex-1 flex-col">

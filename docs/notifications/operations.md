@@ -40,6 +40,31 @@ Builds, simulated permissions, fake transports and provider acceptance are not e
 - Verify foreground (inbox without duplicate OS banner), background and terminated delivery/cold start. Tap opens the exact entry/comments/person/requests after sign-in; deleted/inaccessible activity goes neutrally to Notifications.
 - Log out offline, reconnect, verify old cleanup; sign into another account and confirm no former-account pushes. Rotate APNs token, simulate invalid token/provider retry, and delete the account. Verify sandbox and production separately; simulator injection is not APNs verification.
 
+### Native notification-tap regression
+
+From `apps/ios`, run `scripts/test-push-tap` with local Supabase running and
+notification migrations applied. It uses the repository's disposable iOS test
+users and Hamilton like fixture. It builds Debug, grants simulator notification
+permission through the real system dialog, backgrounds/terminates the app,
+injects a system push with `simctl push`, then taps the displayed alert. Both
+cases must open Hamilton's exact diary entry; Back must leave the resolver.
+The tests skip in ordinary UI runs where no push injector is running.
+
+`SIM` selects the test phone. An isolated local stack can be selected with
+`SB_WORKDIR` and `SB_DB_CONTAINER`; Debug's git-ignored `Secrets.xcconfig` must
+point to that same local URL/key. The runner checks Debug build settings before
+sign-in and the built app's URL before sending. Logs are in
+`apps/ios/build/logs/push-tap.log`, screenshots in
+`apps/ios/build/ui`. The runner shuts down the selected simulator if it booted
+it, including on failure, and preserves previously booted simulators. Stop any
+task-owned local database after testing.
+
+This exercises UserNotifications' Objective-C delegate entry point and cold
+navigation, rather than substituting an inbox-row tap. It does **not** verify
+APNs transport or prove that an installed TestFlight build is fixed: repeat a
+real like alert tap on iPhone after shipping the replacement build, and inspect
+the shared symbolicated crash report if the device still fails.
+
 ### Shared inbox and web
 
 - Inspect running desktop and mobile web layouts with representative test data, keyboard navigation and screen reader labels. Capture both sizes and update the existing gallery/PR evidence. Local browser control is currently disabled in Work settings, so these captures remain outstanding.

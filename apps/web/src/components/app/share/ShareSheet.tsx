@@ -3,13 +3,13 @@
 import { useEffect, useEffectEvent, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/Button";
 import { track } from "@/lib/analytics";
-import { availableEntryDesigns, cardBackground, renderCard, CARD_DOMAIN, type CardData, type CardDesign, type ShareBackground, type ShareInk } from "@/lib/share-card";
-import { availableInsightDesigns, renderInsightCard, type InsightCardData } from "@/lib/share-card-insights";
+import { cardBackground, renderCard, CARD_DOMAIN, type CardData, type CardDesign, type ShareBackground, type ShareInk } from "@/lib/share-card";
+import { availableInsightDesigns, availableShowDesigns, isInsightDesign, renderInsightCard, type InsightCardData, type InsightStats } from "@/lib/share-card-insights";
 import { renderTripCard, TRIP_CARD_DESIGNS, type TripCardData } from "@/lib/share-card-trip";
 import { createClient } from "@/lib/supabase/client";
 
 type Rendered = { file: File; url: string };
-type DrawnCard = { design: CardDesign; variants: Record<string, Rendered>; story?: Rendered };
+type DrawnCard = { isInsights?: boolean; design: CardDesign; variants: Record<string, Rendered>; story?: Rendered };
 export type ShareSubject =
   | { kind: "entry"; data: CardData; photoUrl: string | null }
   | { kind: "trip"; data: TripCardData; photoUrls: (string | null)[] }
@@ -59,17 +59,27 @@ export function ShareSheet({ subject, slug, publicHref = null }: { subject: Shar
         }
       } else {
         const photo = subject.kind === "entry" ? await loadPhoto(subject.photoUrl) : null;
-        const designs = subject.kind === "entry" ? availableEntryDesigns(subject.data, photo != null) : availableInsightDesigns(subject.data);
+        let insightData: InsightCardData;
+        if (subject.kind === "entry") {
+          const now = new Date();
+          const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+          const { data, error } = await createClient().rpc("own_insights", { selected_year: now.getFullYear(), today });
+          if (error || !data) throw new Error("Couldn’t load sharing stats");
+          insightData = { stats: data as InsightStats, year: now.getFullYear(), handle: subject.data.handle };
+        } else insightData = subject.data;
+        const designs = subject.kind === "entry" ? availableShowDesigns(subject.data, photo != null, insightData) : availableInsightDesigns(insightData);
         for (const design of designs) {
           const variants: Record<string, Rendered> = {};
           for (const variant of design.background ? keys : ["photo"]) {
             const bg: ShareBackground = variant.startsWith("transparent") ? "transparent" : variant === "gradient" ? "gradient" : "solid";
             const textInk: ShareInk = variant.endsWith("dark") ? "dark" : "light";
-            const options = { background: bg, ink: textInk };
-            const blob = subject.kind === "entry" ? await renderCard(design.id, subject.data, photo, options) : await renderInsightCard(design.id, subject.data, options);
-            variants[variant] = make(blob, `stubbed-${slug}-${design.id}-${variant}.png`);
+            const options = { background: bg, ink: textInk, includingEmpty: subject.kind === "entry" };
+            const blob = subject.kind === "entry" && !isInsightDesign(design.id) ? await renderCard(design.id, subject.data, photo, options) : await renderInsightCard(design.id, insightData, options);
+            const exportID = design.id === "encore" && subject.kind === "entry" && subject.data.timesSeen === 1 ? "first-visit" : design.id;
+            const name = isInsightDesign(design.id) ? `stubbed-${design.id}-${insightData.year ?? "all-time"}` : `stubbed-${slug}-${exportID}`;
+            variants[variant] = make(blob, `${name}-${variant}.png`);
           }
-          result.push({ design, variants });
+          result.push({ design, variants, isInsights: isInsightDesign(design.id) });
         }
       }
       if (cancelled) { pending.forEach(URL.revokeObjectURL); return; }
@@ -98,7 +108,8 @@ export function ShareSheet({ subject, slug, publicHref = null }: { subject: Shar
   });
   useLayoutEffect(() => { alignSelection(); }, [cards]);
 
-  const text = subject.kind === "entry" ? `${subject.data.title}${subject.data.venue ? ` at ${subject.data.venue}` : ""}. Tracked on Stubbed ${CARD_DOMAIN}`
+  const sharingInsights = subject.kind === "insights" || current?.isInsights === true;
+  const text = sharingInsights ? "" : subject.kind === "entry" ? `${subject.data.title}${subject.data.venue ? ` at ${subject.data.venue}` : ""}. Tracked on Stubbed ${CARD_DOMAIN}`
     : subject.kind === "trip" ? `${subject.data.name}: ${subject.data.shows.length} shows. Tracked on Stubbed ${CARD_DOMAIN}` : "";
   const title = subject.kind === "entry" ? subject.data.title : subject.kind === "trip" ? subject.data.name : "My theatre stats";
   function record(action: "stories" | "more" | "download" | "copy_text" | "copy_link") {
@@ -152,7 +163,7 @@ export function ShareSheet({ subject, slug, publicHref = null }: { subject: Shar
             return <div key={item.design.id} data-design={item.design.id} role="group" aria-label={`${i + 1} of ${cards.length}: ${item.design.name}`}
               className={`relative aspect-square w-full shrink-0 snap-center overflow-hidden rounded-[6%] ${clear ? checker : ""}`}>
               {/* eslint-disable-next-line @next/next/no-img-element -- locally drawn PNG */}
-              <img src={item.variants[variant].url} alt={`Share card, ${item.design.name.toLowerCase()}${clear ? ", no background" : ""}: ${title}`} className="size-full" />
+              <img src={item.variants[variant].url} alt={`Share card, ${item.design.name.toLowerCase()}${clear ? ", no background" : ""}: ${item.isInsights ? "My theatre stats" : title}`} className="size-full" />
             </div>;
           })}
         </div>
@@ -179,7 +190,7 @@ export function ShareSheet({ subject, slug, publicHref = null }: { subject: Shar
         <Button variant="secondary" disabled={!card} onClick={() => { setMore(false); void share(true); }}>Share…</Button>
         <Button variant="secondary" disabled={!card} onClick={() => { if (card) { save(card); record("download"); setNotice("Image saved."); } setMore(false); }}>Download image</Button>
         {text && <Button variant="secondary" onClick={() => { void copy(text, "copy_text"); setMore(false); }}>Copy text</Button>}
-        {publicHref && subject.kind !== "insights" && <Button variant="secondary" onClick={() => { void copy(new URL(publicHref, location.origin).href, "copy_link"); setMore(false); }}>Copy link</Button>}
+        {publicHref && !sharingInsights && <Button variant="secondary" onClick={() => { void copy(new URL(publicHref, location.origin).href, "copy_link"); setMore(false); }}>Copy link</Button>}
       </div>}
       <p className="text-center text-footnote text-label-secondary">Tag <span className="font-semibold text-label">{CARD_DOMAIN}</span> in your story.</p>
       <p role="status" className="min-h-5 text-center text-footnote text-label-secondary">{notice}</p>

@@ -121,6 +121,25 @@ final class PushRegistration {
   }
 }
 
+/// A notification callback may arrive on UserNotifications' background queue.
+/// Copy only its ID across to the main actor. UIKit's response completion also
+/// updates UI state, so acknowledge there even for malformed IDs/dismissals.
+/// Navigation waits for RootView.
+enum NativeNotificationResponse {
+  nonisolated static func receive(
+    notificationID: String?, actionIdentifier: String,
+    open: @escaping @MainActor @Sendable (UUID) -> Void,
+    completion: @escaping @Sendable () -> Void
+  ) {
+    let id = actionIdentifier == UNNotificationDefaultActionIdentifier
+      ? notificationID.flatMap(UUID.init(uuidString:)) : nil
+    Task { @MainActor in
+      if let id { open(id) }
+      completion()
+    }
+  }
+}
+
 final class PushAppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
   func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
     UNUserNotificationCenter.current().delegate = self
@@ -132,13 +151,28 @@ final class PushAppDelegate: NSObject, UIApplicationDelegate, UNUserNotification
   func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
     Task { @MainActor in PushRegistration.shared.registrationFailed() }
   }
-  nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
+  // Keep the Objective-C entry points synchronous and explicitly nonisolated.
+  // The async bridge completed on a cooperative queue, crashing UIKit's
+  // post-tap state restoration. Both state changes and completion run on main.
+  nonisolated func userNotificationCenter(
+    _ center: UNUserNotificationCenter, willPresent notification: UNNotification,
+    withCompletionHandler completionHandler: @escaping @Sendable (UNNotificationPresentationOptions) -> Void
+  ) {
     // Shared inbox is the foreground presentation; no duplicate system banner.
-    await MainActor.run { PushRegistration.shared.activityVersion += 1 }
-    return []
+    Task { @MainActor in
+      PushRegistration.shared.activityVersion += 1
+      completionHandler([])
+    }
   }
-  nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-    guard let raw = response.notification.request.content.userInfo["notification_id"] as? String, let id = UUID(uuidString: raw) else { return }
-    await MainActor.run { PushRegistration.shared.openedNotification = id }
+  nonisolated func userNotificationCenter(
+    _ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
+    withCompletionHandler completionHandler: @escaping @Sendable () -> Void
+  ) {
+    NativeNotificationResponse.receive(
+      notificationID: response.notification.request.content.userInfo["notification_id"] as? String,
+      actionIdentifier: response.actionIdentifier,
+      open: { PushRegistration.shared.openedNotification = $0 },
+      completion: completionHandler
+    )
   }
 }

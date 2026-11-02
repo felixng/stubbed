@@ -30,7 +30,7 @@ enum EntryCardDesign: String, CaseIterable, Identifiable, Sendable {
   var isPhoto: Bool { self == .stats || self == .name }
   static func available(photo: Bool, rating: Double?, timesSeen: Int) -> [Self] {
     (photo ? [.stats] + (rating != nil ? [.name] : []) : [])
-      + [.data] + (timesSeen > 1 ? [.encore] : []) + [.number]
+      + [.data, .encore, .number]
   }
 }
 
@@ -100,7 +100,7 @@ struct EntryCardView: View {
           }
           Spacer(minLength: 12)
         } else if !design.isPhoto {
-          Text(design == .encore ? "Encore" : "My theatre year")
+          Text(design == .encore ? (data.timesSeen == 1 ? "First visit" : "Encore") : "My theatre year")
             .font(.system(size: 22, weight: .medium))
           Spacer(minLength: 0)
           CardBadge(value: design == .encore ? "\(data.timesSeen)x" : ordinal(data.showOfYear))

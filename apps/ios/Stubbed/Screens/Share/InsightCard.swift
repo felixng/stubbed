@@ -1,26 +1,72 @@
 import Supabase
 import SwiftUI
+import UIKit
 
 enum InsightCardDesign: String, CaseIterable, Identifiable {
-  case weekly = "weekly-streak"
   case year = "year-in-theatre"
+  case weekly = "weekly-streak"
+  case daily = "daily-streak"
+  case bestWeekly = "best-weekly-streak"
+  case bestDaily = "best-daily-streak"
+  case activity = "activity"
+  case repeats = "most-seen-shows"
+  case countries = "around-the-world"
   case mix = "show-mix"
+  case history = "year-by-year"
   var id: String { rawValue }
   var name: String {
     switch self {
-    case .weekly: "Weekly streak"
     case .year: "Year in theatre"
+    case .weekly: "Weekly streak"
+    case .daily: "Daily streak"
+    case .bestWeekly: "Best weekly streak"
+    case .bestDaily: "Best daily streak"
+    case .activity: "Activity"
+    case .repeats: "Most-seen shows"
+    case .countries: "Around the world"
     case .mix: "Show mix"
+    case .history: "Year by year"
     }
   }
-  static func available(_ stats: InsightStats, year: Int?, currentYear: Int = InsightStats.currentYear) -> [Self] {
+  static func available(
+    _ stats: InsightStats, year: Int?, currentYear: Int = InsightStats.currentYear,
+    activityYear: Int? = nil, includingEmpty: Bool = false
+  ) -> [Self] {
     var result: [Self] = []
-    if (year == nil || year == currentYear), stats.streaks.current_weekly > 0 { result.append(.weekly) }
-    if stats.total > 0 {
-      if year != nil { result.append(.year) }
-      result.append(.mix)
+    if stats.total > 0 || includingEmpty { result.append(.year) }
+    if year == nil || year == currentYear {
+      if stats.streaks.current_weekly > 0 || includingEmpty { result.append(.weekly) }
+      if stats.streaks.current_daily > 0 { result.append(.daily) }
     }
+    if stats.total > 0 {
+      if stats.streaks.longest_weekly > 0 { result.append(.bestWeekly) }
+      if stats.streaks.longest_daily > 0 { result.append(.bestDaily) }
+    }
+    let calendarYear = year ?? activityYear ?? currentYear
+    if stats.days.contains(where: { $0.date.hasPrefix(String(calendarYear)) && $0.count > 0 }) {
+      result.append(.activity)
+    }
+    if !stats.repeated_shows.isEmpty { result.append(.repeats) }
+    if !stats.countries.isEmpty { result.append(.countries) }
+    if stats.total > 0 || includingEmpty { result.append(.mix) }
+    if stats.years.contains(where: { $0.count > 0 }) { result.append(.history) }
     return result
+  }
+}
+
+enum InsightShareSection: String, CaseIterable, Identifiable {
+  case overview, streaks, activity, repeats, countries, mix, history
+  var id: String { rawValue }
+  var designs: [InsightCardDesign] {
+    switch self {
+    case .overview: [.year]
+    case .streaks: [.weekly, .daily, .bestWeekly, .bestDaily]
+    case .activity: [.activity]
+    case .repeats: [.repeats]
+    case .countries: [.countries]
+    case .mix: [.mix]
+    case .history: [.history]
+    }
   }
 }
 
@@ -29,9 +75,22 @@ struct InsightCardData {
   let year: Int?
   let handle: String?
   var currentYear = InsightStats.currentYear
+  var activityYear: Int?
+  var calendarYear: Int { year ?? activityYear ?? currentYear }
   var period: String {
     guard let year else { return "All time" }
     return String(year) + (year == currentYear ? " so far" : "")
+  }
+  var available: [InsightCardDesign] {
+    InsightCardDesign.available(stats, year: year, currentYear: currentYear, activityYear: activityYear)
+  }
+  func filenamePeriod(for design: InsightCardDesign) -> String {
+    switch design {
+    case .weekly, .daily: "current"
+    case .activity: String(calendarYear)
+    case .history: "all-time"
+    default: year.map(String.init) ?? "all-time"
+    }
   }
 }
 
@@ -45,45 +104,60 @@ struct InsightCardView: View {
       ShareCardSurface(appearance: appearance)
       VStack(alignment: .leading, spacing: 0) {
         switch design {
-        case .weekly: weekly
         case .year: year
+        case .weekly, .daily, .bestWeekly, .bestDaily: streak
+        case .activity: ShareActivityCard(data: data, ink: ink)
+        case .repeats: ShareRepeatCard(data: data, ink: ink)
+        case .countries: ShareCountriesCard(data: data, ink: ink)
         case .mix: mix
+        case .history: ShareHistoryCard(data: data, ink: ink)
         }
         Spacer(minLength: 12)
         CardFooter(handle: data.handle, ink: ink)
       }.foregroundStyle(ink).padding(28)
     }.frame(width: 540, height: 540).environment(\.colorScheme, .dark)
   }
-  private var weekly: some View {
-    VStack(alignment: .leading, spacing: 12) {
-      Text("Current weekly streak").font(.system(size: 24, weight: .medium))
+  private var streak: some View {
+    let weekly = design == .weekly || design == .bestWeekly
+    let best = design == .bestWeekly || design == .bestDaily
+    let count = best
+      ? (weekly ? data.stats.streaks.longest_weekly : data.stats.streaks.longest_daily)
+      : (weekly ? data.stats.streaks.current_weekly : data.stats.streaks.current_daily)
+    return VStack(alignment: .leading, spacing: 12) {
+      Text("\(best ? "Best" : "Current") \(weekly ? "weekly" : "daily") streak")
+        .font(.system(size: 30, weight: .bold))
+      Text(best ? data.period : "Current · across all years").font(.system(size: 18))
       Spacer(minLength: 12)
-      Text(String(data.stats.streaks.current_weekly)).font(.system(size: 112, weight: .heavy))
+      Text(String(count)).font(.system(size: 112, weight: .heavy))
         .tracking(-4).lineLimit(1).minimumScaleFactor(0.45)
-      Text(data.stats.streaks.current_weekly == 1 ? "Week" : "Weeks").font(.system(size: 32, weight: .bold))
-      Text("A show every week").font(.system(size: 22, weight: .medium))
+      Text(weekly ? (count == 1 ? "Week" : "Weeks") : (count == 1 ? "Day" : "Days"))
+        .font(.system(size: 32, weight: .bold))
+      Text(count == 0 ? "No current streak" : "A show every \(weekly ? "week" : "day")")
+        .font(.system(size: 22, weight: .medium))
       HStack(spacing: 8) {
-        ForEach(0..<min(12, data.stats.streaks.current_weekly), id: \.self) { _ in
+        ForEach(0..<min(12, count), id: \.self) { _ in
           RoundedRectangle(cornerRadius: 3).fill(ink).frame(width: 28, height: 10)
         }
       }.padding(.top, 12)
-      if data.stats.streaks.current_weekly > 12 {
-        Text("Most recent 12 weeks").font(.system(size: 15))
-      }
+      if count > 12 { Text("12 of \(count) \(weekly ? "weeks" : "days") shown").font(.system(size: 15)) }
       Spacer(minLength: 0)
     }
   }
   private var year: some View {
     VStack(alignment: .leading, spacing: 16) {
-      Text("My \(String(data.year ?? data.currentYear)) in theatre").font(.system(size: 32, weight: .bold))
+      Text(data.year.map { "My \(String($0)) in theatre" } ?? "My life in theatre").font(.system(size: 32, weight: .bold))
       if data.year == data.currentYear { Text("So far").font(.system(size: 18)) }
       HStack(spacing: 36) {
         metric(data.stats.total, label: "Show visits")
         metric(data.stats.unique_shows, label: "Unique shows")
       }
       Spacer(minLength: 0)
-      ShareMonthChart(months: data.stats.months, year: data.year ?? data.currentYear, ink: ink)
-        .frame(height: 190)
+      if let year = data.year {
+        ShareMonthChart(months: data.stats.months, year: year, ink: ink).frame(height: 190)
+      } else {
+        Text("All time").font(.system(size: 24, weight: .medium))
+        ShareYearChart(years: data.stats.years, ink: ink).frame(height: 190)
+      }
     }
   }
   private func metric(_ count: Int, label: String) -> some View {
@@ -182,15 +256,25 @@ struct ShareRadar: View {
 }
 
 extension ShareCards {
-  @MainActor static func insightsCards(_ data: InsightCardData) throws -> [RenderedCard] {
-    try InsightCardDesign.available(data.stats, year: data.year, currentYear: data.currentYear).map { design in
-      let name = "stubbed-\(design.id)-\(data.year.map(String.init) ?? "all-time")"
+  @MainActor static func showCards(_ data: EntryCardData, photo: UIImage?, insights: InsightCardData) throws -> [RenderedCard] {
+    // Keep the established eight-card show carousel; the expanded collection lives in Insights.
+    try entryCards(data, photo: photo) + insightsCards(
+      insights, includingEmpty: true, designs: [.weekly, .year, .mix])
+  }
+  @MainActor static func insightsCards(
+    _ data: InsightCardData, includingEmpty: Bool = false, designs: [InsightCardDesign]? = nil
+  ) throws -> [RenderedCard] {
+    let available = InsightCardDesign.available(
+      data.stats, year: data.year, currentYear: data.currentYear,
+      activityYear: data.activityYear, includingEmpty: includingEmpty)
+    return try (designs ?? available).filter { available.contains($0) }.map { design in
+      let name = "stubbed-\(design.id)-\(data.filenamePeriod(for: design))"
       var variants: [ShareAppearance: ShareAsset] = [:]
       for appearance in ShareAppearance.variants {
         variants[appearance] = try render(InsightCardView(design: design, data: data, appearance: appearance), name: "\(name)-\(appearance.key)")
       }
       let full = variants[.standard]!
-      return RenderedCard(id: design.id, name: design.name, file: full.file, image: full.image, backgrounds: variants)
+      return RenderedCard(id: design.id, name: design == .year && data.year == nil ? "All time in theatre" : design.name, file: full.file, image: full.image, backgrounds: variants, isInsights: true)
     }
   }
 }
@@ -198,6 +282,8 @@ extension ShareCards {
 struct InsightShareSheet: View {
   let stats: InsightStats
   let year: Int?
+  var activityYear: Int? = nil
+  var initialDesign: InsightCardDesign? = nil
   @State private var cards: [RenderedCard]?
   @State private var failed = false
   var body: some View {
@@ -205,14 +291,14 @@ struct InsightShareSheet: View {
       if cards?.isEmpty == true {
         ContentUnavailableView("No shows to share", systemImage: "ticket", description: Text("Choose a period with logged shows."))
       } else {
-        ShareCarousel(subject: .insights, cards: cards, failed: failed, text: "", link: nil)
+        ShareCarousel(subject: .insights, cards: cards, failed: failed, text: "", link: nil, initialCardID: initialDesign?.id)
       }
     }.task {
       do {
         let user = try await supabase.auth.session.user
         let profile = try await Profiles.profile(user.id)
         try Task.checkCancellation()
-        cards = try ShareCards.insightsCards(InsightCardData(stats: stats, year: year, handle: profile.handle))
+        cards = try ShareCards.insightsCards(InsightCardData(stats: stats, year: year, handle: profile.handle, activityYear: activityYear))
       } catch { if !Task.isCancelled { failed = true } }
     }
   }

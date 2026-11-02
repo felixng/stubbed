@@ -4,12 +4,17 @@ import SwiftUI
 struct InsightsView: View {
   @Environment(AppRouter.self) private var router
   @Environment(\.dynamicTypeSize) private var typeSize
+  @ScaledMetric(relativeTo: .body) private var monthlyChartHeight: CGFloat = 140
   @State private var year: Int? = InsightStats.currentYear
   @State private var gridYear = InsightStats.currentYear
   @State private var stats: InsightStats?
   @State private var years: [Int] = [InsightStats.currentYear]
   @State private var error: String?
-  @State private var sharing = false
+  @State private var shareRequest: ShareRequest?
+  private struct ShareRequest: Identifiable {
+    let id = UUID()
+    let design: InsightCardDesign?
+  }
 
   var body: some View {
     List {
@@ -24,6 +29,7 @@ struct InsightsView: View {
         overview(stats)
         streaks(stats)
         activity(stats)
+        repeatedShows(stats)
         geography(stats)
         categories(stats)
         history(stats)
@@ -46,14 +52,16 @@ struct InsightsView: View {
     .toolbar {
       ToolbarItem(placement: .primaryAction) {
         if let stats {
-          Button("Share", systemImage: "square.and.arrow.up") { sharing = true }
-            .disabled(InsightCardDesign.available(stats, year: year).isEmpty)
+          Button("Share", systemImage: "square.and.arrow.up") { shareRequest = ShareRequest(design: nil) }
+            .disabled(InsightCardDesign.available(stats, year: year, activityYear: gridYear).isEmpty)
             .accessibilityIdentifier("insights-share")
         }
       }
     }
-    .sheet(isPresented: $sharing) {
-      if let stats { InsightShareSheet(stats: stats, year: year) }
+    .sheet(item: $shareRequest) { request in
+      if let stats {
+        InsightShareSheet(stats: stats, year: year, activityYear: gridYear, initialDesign: request.design)
+      }
     }
     .task(id: "\(year ?? 0)-\(router.dataVersion)") { await load() }
     .refreshable { await load() }
@@ -62,7 +70,11 @@ struct InsightsView: View {
   private func overview(_ stats: InsightStats) -> some View {
     Section {
       VStack(alignment: .leading, spacing: Space.s) {
-        Text(stats.total.formatted()).font(.largeTitle.bold()).monospacedDigit()
+        HStack(alignment: .top) {
+          Text(stats.total.formatted()).font(.largeTitle.bold()).monospacedDigit()
+          Spacer()
+          shareButton(.overview, title: "overview", stats: stats)
+        }
         Text(verbatim: year.map { "Shows in \(String($0))" } ?? "Shows, all time").font(.headline)
         Text("\(stats.unique_shows) unique shows · repeat visits included")
           .font(.footnote).foregroundStyle(.secondary)
@@ -73,6 +85,42 @@ struct InsightsView: View {
       }
     } footer: {
       Text("Your logged shows, including private entries. Planned shows aren’t counted.")
+    }
+  }
+
+  private func repeatedShows(_ stats: InsightStats) -> some View {
+    Section {
+      if stats.repeated_shows.isEmpty {
+        ContentUnavailableView(
+          "No repeat visits yet", systemImage: "repeat",
+          description: Text("Shows you’ve seen more than once in this period will appear here."))
+      } else {
+        ForEach(stats.repeated_shows) { show in
+          NavigationLink(
+            value: AppRouter.Route.insightVisits(
+              Insights.Filter(year: year, show: show.id, title: show.title))
+          ) {
+            HStack(alignment: .firstTextBaseline, spacing: Space.m) {
+              Text(show.rank.formatted())
+                .font(.headline).monospacedDigit().foregroundStyle(Palette.tint)
+                .accessibilityHidden(true)
+              LabeledContent {
+                Text("\(show.count) visits").monospacedDigit()
+              } label: {
+                Text(show.title)
+              }
+            }
+          }
+          .accessibilityLabel("Rank \(show.rank), \(show.title), \(show.count) visits")
+          .accessibilityIdentifier("insights-repeat-\(show.id.uuidString.lowercased())")
+        }
+      }
+    } header: {
+      sectionHeading("Most-seen shows", section: .repeats, stats: stats)
+    } footer: {
+      if !stats.repeated_shows.isEmpty {
+        Text("Ranked by visits in the selected period. Equal counts share a rank. Tap a show to see your visits.")
+      }
     }
   }
 
@@ -100,7 +148,7 @@ struct InsightsView: View {
             AxisValueLabel(format: .dateTime.month(.abbreviated))
           }
         }
-        .frame(height: 140)
+        .frame(height: monthlyChartHeight)
         .accessibilityLabel("Monthly show counts")
         DisclosureGroup("Monthly totals") {
           ForEach(stats.months.filter { $0.month.hasPrefix(String(year ?? gridYear)) }) { month in
@@ -111,7 +159,7 @@ struct InsightsView: View {
         }
       }
     } header: {
-      Text("Activity · \(String(year ?? gridYear))")
+      sectionHeading("Activity · \(String(year ?? gridYear))", section: .activity, stats: stats)
     }
   }
 
@@ -131,7 +179,7 @@ struct InsightsView: View {
       }
       .padding(.vertical, Space.s)
     } header: {
-      Text("Streaks")
+      sectionHeading("Streaks", section: .streaks, stats: stats)
     } footer: {
       Text(
         "A show each day or each Monday–Sunday week. An unfinished day or week doesn’t break your current streak. Best streaks are for the selected period."
@@ -171,7 +219,7 @@ struct InsightsView: View {
         }
       }
     } header: {
-      Text("Around the world")
+      sectionHeading("Around the world", section: .countries, stats: stats)
     } footer: {
       Text(
         "Darker countries mean more visits. \(stats.unlocated) shows have no country. Some small countries appear in the list only."
@@ -203,7 +251,7 @@ struct InsightsView: View {
         }
       }
     } header: {
-      Text("Your show mix")
+      sectionHeading("Your show mix", section: .mix, stats: stats)
     } footer: {
       Text(
         "Each visit counts once in its show’s category. The outer ring represents your most-seen type; percentages are listed above."
@@ -212,7 +260,7 @@ struct InsightsView: View {
   }
 
   private func history(_ stats: InsightStats) -> some View {
-    Section("Year by year") {
+    Section {
       if stats.years.isEmpty {
         Text("Your history appears after your first logged show.").foregroundStyle(.secondary)
       }
@@ -224,6 +272,36 @@ struct InsightsView: View {
         }
         .foregroundStyle(.primary)
       }
+    } header: {
+      sectionHeading("Year by year", section: .history, stats: stats)
+    }
+  }
+
+  private func sectionHeading(_ title: String, section: InsightShareSection, stats: InsightStats) -> some View {
+    HStack {
+      Text(title).fixedSize(horizontal: false, vertical: true)
+      Spacer(minLength: Space.s)
+      shareButton(section, title: title, stats: stats)
+    }
+  }
+
+  @ViewBuilder
+  private func shareButton(_ section: InsightShareSection, title: String, stats: InsightStats) -> some View {
+    let available = InsightCardDesign.available(stats, year: year, activityYear: gridYear)
+    if let design = section.designs.first(where: { available.contains($0) }) {
+      Button {
+        shareRequest = ShareRequest(design: design)
+      } label: {
+        Label("Share \(title)", systemImage: "square.and.arrow.up")
+          .labelStyle(.iconOnly)
+          .font(.body)
+          .frame(minWidth: Space.touch, minHeight: Space.touch)
+          .contentShape(.rect)
+      }
+      .foregroundStyle(Palette.tint)
+      .buttonStyle(.borderless)
+      .textCase(nil)
+      .accessibilityIdentifier("insights-share-\(section.id)")
     }
   }
 
