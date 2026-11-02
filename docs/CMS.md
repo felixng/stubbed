@@ -38,7 +38,7 @@ This first version edits existing content slots. Adding a new layout, FAQ item, 
    - Keep draft events disabled.
 7. Open Studio's **Presentation** tab. Edit a headline and check the unpublished draft in the embedded preview. Confirm a signed-out browser still sees the published version. Publish, then confirm the signed-out page updates without deploying. Click **Exit content preview** to return to published content.
 
-If Studio is disabled, check the public project ID and redeploy: `NEXT_PUBLIC_` variables are embedded at build time. An empty or unavailable CMS falls back to repository copy. Missing/blank/malformed fields fall back individually. Publishing does not need a Git commit or a Vercel deployment. Sanity Live invalidates published query tags; the signed webhook immediately expires the application content cache. A short server cache also bounds ordinary reads. The webhook is recommended for reliable updates even when no browser is subscribed to live events.
+If Studio is disabled, check the public project ID and redeploy: `NEXT_PUBLIC_` variables are embedded at build time. An empty or unavailable CMS falls back to repository copy. Missing/blank/malformed fields fall back individually. Publishing does not need a Git commit or a Vercel deployment. Published copy uses one tagged application cache. The signed webhook immediately expires it; the next read fetches published content directly from the Sanity API, bypassing the CDN and the Next.js fetch cache. A short server cache also bounds ordinary reads. Sanity Live remains mounted for preview refreshes, but published copy invalidation relies on the webhook or the cache lifetime. The webhook is recommended for reliable updates even when no browser is subscribed to live events.
 
 ## Editing
 
