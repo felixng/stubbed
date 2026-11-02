@@ -756,3 +756,22 @@ The count badge is available from the first visit: “First visit” at 1×, “
 ## 2026-11-02: Repeat-show leaderboard in iOS Insights
 
 Most-seen shows sits below the overview and follows the selected year or All time. It includes only shows with at least two logged visits in that period, including private entries and visits without a venue. Postgres groups by show ID, ranks by visit count (equal counts share a rank), and sorts ties by title then ID. Separate catalogue shows with identical titles remain separate. Each native navigation row opens the existing paginated visit list filtered to that show and period. The optional show filter replaces the prior RPC signature with a defaulted parameter so existing clients can continue omitting it without overload ambiguity. Planned visits remain excluded. Apply the migration before releasing the updated iOS client.
+
+### 2026-11-02 — Native notification response completion on the main actor (#242)
+
+Tapping a like alert reproduced a cold-start crash in the simulator:
+`NSInternalInconsistencyException: Call must be made on main thread`.
+The symbolicated stack enters UIKit state restoration from the generated
+Objective-C closure for the async `PushAppDelegate.userNotificationCenter(_:didReceive:)`
+on a cooperative executor. Moving only the observable-state assignment to
+`MainActor.run` did not move the generated completion there.
+
+Use synchronous, explicitly nonisolated UserNotifications delegate callbacks.
+Extract a UUID before crossing executors, then update pending navigation and
+invoke the system completion on the main actor. Malformed IDs, dismissals and
+unsupported actions still acknowledge on main without navigating. Foreground
+receipt keeps the existing inbox-only presentation and also completes on main.
+No unsafe actor assumptions, blanket concurrency suppression, SDK dependency or
+backend changes are needed. A simulator regression taps actual system alerts
+from background and terminated states; physical TestFlight retesting remains
+separate acceptance work.

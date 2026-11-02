@@ -1,0 +1,103 @@
+#!/usr/bin/env python3
+"""Tap actual simulator push alerts against disposable local test fixtures.
+
+Uses scripts/dev ui for build, seed and XCTest. No APNs credentials or production
+requests. Debug's SupabaseURL must match the local stack. SIM, SB_WORKDIR and
+SB_DB_CONTAINER select a different simulator/local stack when needed.
+"""
+import json
+import os
+from pathlib import Path
+import plistlib
+import signal
+import subprocess
+import time
+from urllib.parse import urlparse
+
+
+def main():
+    ios = Path(__file__).resolve().parent.parent
+    env = dict(os.environ)
+    sim = env.setdefault("SIM", "iPhone SE (3rd generation)")
+    stack = env.get("SB_WORKDIR", str(ios.parent.parent))
+    container = env.get("SB_DB_CONTAINER", "supabase_db_stubbed")
+    status = json.loads(subprocess.check_output(
+        ["supabase", "status", "--workdir", stack, "-o", "json"], text=True))
+    api = status["API_URL"]
+    if urlparse(api).hostname not in {"127.0.0.1", "localhost"}:
+        raise SystemExit("Push regressions require a local Supabase stack")
+    devices = json.loads(subprocess.check_output(
+        ["xcrun", "simctl", "list", "devices", "available", "-j"], text=True))["devices"]
+    runtimes = sorted((r for r in devices if ".iOS-" in r),
+                      key=lambda r: [int(v) for v in r.rsplit("iOS-", 1)[1].split("-")], reverse=True)
+    device = next(d for r in runtimes for d in devices[r] if d["name"] == sim)
+    udid, was_booted = device["udid"], device["state"] == "Booted"
+    settings = json.loads(subprocess.check_output([
+        "xcodebuild", "-showBuildSettings", "-json", "-project", str(ios / "Stubbed.xcodeproj"),
+        "-scheme", "Stubbed", "-configuration", "Debug", "-sdk", "iphonesimulator",
+        "-destination", f"platform=iOS Simulator,id={udid}",
+        "-derivedDataPath", str(ios / "build/DerivedData")], cwd=ios, text=True))
+    app_settings = next(s["buildSettings"] for s in settings if s["target"] == "Stubbed")
+    if app_settings["SUPABASE_URL"].rstrip("/") != api.rstrip("/"):
+        raise SystemExit("Debug must point to the selected local Supabase stack before UI tests sign in")
+    title = f"Stubbed push tap regression {os.getpid()}"
+    env["TEST_RUNNER_STUBBED_PUSH_TITLE"] = title
+    shots = ios / "build/ui"
+    log_path = ios / "build/logs/push-tap.log"
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    for state in ("background", "cold"):
+        (shots / f"push-tap-ready-{state}.png").unlink(missing_ok=True)
+    sent = set()
+    proc = None
+    try:
+        with log_path.open("w") as log:
+            proc = subprocess.Popen([str(ios / "scripts/dev"), "ui", "PushTapUITests"],
+                                    cwd=ios, env=env, stdout=log, stderr=subprocess.STDOUT,
+                                    start_new_session=True)
+            deadline = time.monotonic() + 900
+            while proc.poll() is None:
+                if time.monotonic() > deadline:
+                    raise TimeoutError("Push tap regression exceeded 15 minutes")
+                for state in ("background", "cold"):
+                    if state in sent or not (shots / f"push-tap-ready-{state}.png").exists():
+                        continue
+                    # Check the built app as well as CLI configuration before injection.
+                    info = ios / "build/DerivedData/Build/Products/Debug-iphonesimulator/Stubbed.app/Info.plist"
+                    with info.open("rb") as file:
+                        if plistlib.load(file)["SupabaseURL"].rstrip("/") != api.rstrip("/"):
+                            raise RuntimeError("Debug build must point to the selected local Supabase stack")
+                    sql = """select n.id from public.notifications n join auth.users u
+                        on u.id=n.recipient_id where u.email='ios-test@stubbed.local'
+                        and n.category='like'
+                        and n.entry_id='00000000-0000-4000-d000-000000000001'
+                        order by n.created_at desc limit 1"""
+                    notification_id = subprocess.check_output(
+                        ["docker", "exec", container, "psql", "-U", "postgres", "-d", "postgres", "-Atc", sql],
+                        text=True).strip()
+                    if not notification_id:
+                        raise RuntimeError("Local Hamilton like fixture is missing")
+                    payload = ios / f"build/push-tap-{state}.apns"
+                    payload.write_text(json.dumps({"aps": {"alert": {
+                        "title": title, "body": "ios_friend liked your Hamilton show"}, "sound": "default"},
+                        "notification_id": notification_id}))
+                    subprocess.run(["xcrun", "simctl", "push", udid, "app.getstubbed", str(payload)], check=True)
+                    sent.add(state)
+                    print(f"Injected local like alert: {state}", flush=True)
+                time.sleep(0.25)
+            if proc.returncode or sent != {"background", "cold"}:
+                raise RuntimeError(f"Push tap tests failed; inspect {log_path}")
+            print(f"Both system-notification tap tests passed. Screenshots: {shots}")
+    finally:
+        if proc is not None and proc.poll() is None:
+            os.killpg(proc.pid, signal.SIGTERM)
+            try:
+                proc.wait(timeout=15)
+            except subprocess.TimeoutExpired:
+                os.killpg(proc.pid, signal.SIGKILL)
+                proc.wait()
+        if not was_booted:
+            subprocess.run(["xcrun", "simctl", "shutdown", udid], check=False)
+
+
+if __name__ == "__main__":
+    main()
