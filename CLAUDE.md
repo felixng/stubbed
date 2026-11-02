@@ -41,7 +41,7 @@ Details and reasoning: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs
 
 ### Stack
 - **Monorepo, pnpm workspaces:** `apps/web` (Next.js App Router, TypeScript, Tailwind) on Vercel Hobby; `apps/ios` (SwiftUI, iOS 17+, `supabase-swift`, see `apps/ios/CLAUDE.md`); `supabase/` (migrations, pgTAP tests).
-- **Supabase Free** for Postgres, Auth and Storage. Both apps talk to it directly; there is no custom API server. Vercel hosts only routes that need a server: AI calls (`/api/photo/identify`, `/api/import/email`), the nearby-theatre lookup (`/api/photo/nearby`) and link-preview images (`/api/og/*`). The routes accept the web session cookie or an `Authorization: Bearer` token from iOS.
+- **Supabase Free** for Postgres, Auth and Storage. Both apps talk to it directly; there is no custom API server. Vercel hosts only routes that need a server: AI calls (`/api/photo/identify`), the nearby-theatre lookup (`/api/photo/nearby`) and link-preview images (`/api/og/*`). The routes accept the web session cookie or an `Authorization: Bearer` token from iOS.
 - **AI** goes through `apps/web/src/lib/ai`. Default chain: `claude-opus-5-5`, then `claude-haiku-5-5`. Groq, Gemini and Cerebras are optional providers.
 - **Share cards** are drawn on the device: Canvas 2D on web (`lib/share-card.ts`, `lib/share-card-trip.ts`), SwiftUI on iOS. Square 1080×1080. Card stats come from `entry_card_stats`.
 - **Design system:** Footlight Sweep (the app icon's magenta, coral and amber on system greys); tokens and mapping in `docs/DESIGN.md`. The app and sign-in are always light for now.

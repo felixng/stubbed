@@ -20,7 +20,7 @@ export const viewport: Viewport = { themeColor: "#fff9f6" };
 const features = [
   ["Track your visits", "Every show you see, in one place: the venue, the date, your half-star rating, and your thoughts about the show.", "M4 4h16v16H4zM8 4v16M4 9h16"],
   ["Share with your friends", "Generate beautiful Instagram share cards of your theatre trips to share with your network.", "M12 16V3m-4 4 4-4 4 4M5 12v8h14v-8"],
-  ["See your history", "Bring old nights in from ticket emails and photos to build your definitive theatre log.", "M3 11a9 9 0 1 1 2 7M3 4v7h7M12 7v5l3 2"],
+  ["See your history", "Bring old nights in from theatre photos to build your definitive theatre log.", "M3 11a9 9 0 1 1 2 7M3 4v7h7M12 7v5l3 2"],
   ["Trips and stats", "Group your shows into specific trips and see stats across your theatre life.", "M5 20v-7m7 7V4m7 16V9"],
   ["Plan ahead", "Keep track of upcoming shows you're excited to see.", "M4 5h16v15H4zM8 3v4m8-4v4M4 10h16"],
 ];

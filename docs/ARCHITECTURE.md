@@ -129,7 +129,7 @@ Free-tier limits change often. Check the vendor pricing pages before relying on 
 - `/api/card/[id]`: renders the Instagram Story card (1080×1920) with `next/og`, reading data through the **publishable (anon) key**, which means RLS lets it see public entries only. Responses are cached at the edge, so crawlers and repeat shares don't re-render.
 - `/@[handle]` and `/e/[id]`: server-rendered public pages with `og:image` pointing at the card route.
 - The Supabase **service-role key is never deployed** in this phase, so a bug in a route can't bypass RLS.
-- Phase 2 adds `/api/import/email`, which calls an LLM with a server-side key. That's the first paid usage, and only a few pence.
+- Email import (`/api/import/email`) was paused and removed in #282; photo detection is the only remaining LLM call until #281.
 
 ### 4. Photos
 - Resize to roughly 1600px and **re-encode on the device before upload**: canvas on web, `ImageIO`/`UIImage` JPEG re-encode on iOS. Re-encoding drops EXIF/GPS, and the free tier has no server-side image processing.
@@ -198,7 +198,7 @@ Tracked in the **NYC week** epic on GitHub (label `nyc-week`). Goal: the owner l
 |---|---|---|
 | `/` landing page | Public | Hero, phone mockups of real share cards, features, waitlist form |
 | `/login` (unlinked, `noindex`) | Owner only | Email one-time code; **public sign-ups disabled** in Supabase Auth |
-| `/app/*` | Owner only | Log entry, trips/labels, import from email or photo, diary |
+| `/app/*` | Owner only | Log entry, trips/labels, import from photo, diary |
 | `/api/card/*`, `/e/:id`, `/t/:id` | Public | Entry and trip share cards + public pages with Open Graph |
 
 Additions to the architecture for this week:

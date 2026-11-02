@@ -829,3 +829,8 @@ The owner's About draft supplies the founder story. Public instructions were che
 - **`canonical_city(city, country)`** plus a trigger on `venues`: London boroughs and OpenStreetMap areas (Greater London, City of Westminster, …) become "London"; New York boroughs become "New York". The rule is in SQL so web and iOS agree; existing rows were backfilled.
 - **Admin script** `supabase/scripts/merge.mjs` lists candidates and merges one pair. Merges are dry runs (rolled back) unless `--apply`. No admin screen: one owner, so a script is enough.
 
+
+### 2026-11-02: Email import paused (#282, part of #273)
+- The web import tool takes photos only. `/api/import/email`, the email extraction and parsing code, and their tests are gone. Pasted or uploaded emails are never sent anywhere. #3 decides its future.
+- `lib/ai` stays until #281 removes photo detection, its last user. The privacy page, FAQ, press and landing copy no longer mention emails.
+- Owner action: remove `ANTHROPIC_API_KEY` (and any Groq, Gemini or Cerebras keys) from Vercel once #281 has shipped. The brief's "Import credits" monetisation idea no longer has LLM spend behind it.
