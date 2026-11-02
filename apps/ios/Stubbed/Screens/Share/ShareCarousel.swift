@@ -72,10 +72,12 @@ struct ShareCarousel: View {
   var failed = false
   let text: String
   var link: URL?
+  var initialCardID: String? = nil
   @Environment(\.sharePreviewSize) private var previewSize
   @Environment(\.shareScreenHeight) private var screenHeight
   /// The background sheet's height: the swatches, plus the text colours on
   /// a transparent card. Kept short so the whole card shows above it.
+  @ScaledMetric(relativeTo: .body) private var actionIconSide: CGFloat = 56
   @ScaledMetric(relativeTo: .body) private var pickerHeight: CGFloat = 190
   @ScaledMetric(relativeTo: .body) private var pickerHeightWithInk: CGFloat = 300
   @State private var active: String?
@@ -97,7 +99,7 @@ struct ShareCarousel: View {
     guard pickingBackground, screenHeight > 0 else { return previewSize }
     return min(previewSize, max(160, screenHeight - currentPickerHeight - Space.xxl))
   }
-  private var current: RenderedCard? { cards?.first(where: { $0.id == active }) ?? cards?.first }
+  private var current: RenderedCard? { cards?.first(where: { $0.id == (active ?? initialCardID) }) ?? cards?.first }
   private var currentText: String { current?.isInsights == true ? "" : text }
   private var currentLink: URL? { current?.isInsights == true ? nil : link }
   private var currentAsset: ShareAsset? { current?.asset(for: appearance) }
@@ -221,6 +223,7 @@ struct ShareCarousel: View {
       // Light checks behind dark text, so it reads while you choose.
       if card.isTransparent(appearance) { Checkerboard(light: appearance.ink == .dark) }
       Image(uiImage: card.asset(for: appearance).image).resizable().scaledToFit()
+        .accessibilityIdentifier("share-card-\(card.id)")
         .accessibilityLabel("Share card \(index + 1) of \(cards?.count ?? 0), \(card.name.lowercased())\(card.isTransparent(appearance) ? ", no background" : "")")
     }.clipShape(.rect(cornerRadius: 20))
   }
@@ -238,7 +241,7 @@ struct ShareCarousel: View {
     Button(action: perform) {
       VStack(spacing: 6) {
         icon()
-          .frame(width: 56, height: 56)
+          .frame(width: actionIconSide, height: actionIconSide)
           .clipShape(Circle())
         Text(label)
           .font(.footnote)

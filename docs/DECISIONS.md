@@ -755,7 +755,7 @@ The count badge is available from the first visit: “First visit” at 1×, “
 
 ## 2026-11-02: Repeat-show leaderboard in iOS Insights
 
-Most-seen shows sits below the overview and follows the selected year or All time. It includes only shows with at least two logged visits in that period, including private entries and visits without a venue. Postgres groups by show ID, ranks by visit count (equal counts share a rank), and sorts ties by title then ID. Separate catalogue shows with identical titles remain separate. Each native navigation row opens the existing paginated visit list filtered to that show and period. The optional show filter replaces the prior RPC signature with a defaulted parameter so existing clients can continue omitting it without overload ambiguity. Planned visits remain excluded. Apply the migration before releasing the updated iOS client.
+Most-seen shows sits directly after Activity, per the owner’s layout follow-up, and follows the selected year or All time. It includes only shows with at least two logged visits in that period, including private entries and visits without a venue. Postgres groups by show ID, ranks by visit count (equal counts share a rank), and sorts ties by title then ID. Separate catalogue shows with identical titles remain separate. Each native navigation row opens the existing paginated visit list filtered to that show and period. The optional show filter replaces the prior RPC signature with a defaulted parameter so existing clients can continue omitting it without overload ambiguity. Planned visits remain excluded. Apply the migration before releasing the updated iOS client.
 
 ### 2026-11-02 — Native notification response completion on the main actor (#242)
 
@@ -775,3 +775,7 @@ No unsafe actor assumptions, blanket concurrency suppression, SDK dependency or
 backend changes are needed. A simulator regression taps actual system alerts
 from background and terminated states; physical TestFlight retesting remains
 separate acceptance work.
+
+## 2026-11-02: Share every Insights section
+
+Each Insights section has one system share symbol with a 44pt hit target in its header; Overview places it beside the headline count. The control is absent when its section has no shareable data. It opens the existing background-capable carousel on that section’s design, while the navigation-bar action opens the full collection. Streaks offers current weekly/daily and best weekly/daily designs, with current streaks limited to current-year/All time contexts and bests labelled with the selected period. Overview gains an All time design; Activity exports the displayed calendar year even in All time mode; Year by year always exports the complete history, with empty calendar years left as gaps. Most-seen shows exports the first five ranked shows; Around the world reuses the bundled country geometry and lists the top three country counts. Cards keep the established footer, square export and five background/ink appearances. The show-entry carousel retains its existing eight layouts. Most-seen shows follows Activity on the page. The Activity chart height and share-action icon grounds scale with Dynamic Type to keep axis labels and symbols from overlapping or clipping at accessibility sizes. No backend migration is needed.
