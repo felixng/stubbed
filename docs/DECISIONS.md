@@ -9,7 +9,6 @@ A short log of choices made and why, mostly about how things are built. Newest a
 | 1 | Confirm architecture in `docs/ARCHITECTURE.md` (Next.js on Vercel Hobby + Supabase Free) | Now | Proposed 2026-10-12 |
 | 6 | Badges: app-defined only, or user/group-defined too? | When badges are scheduled | Idea; see the brief's "Ideas to explore" |
 | 7 | Discord: channel webhook vs. Discord login vs. server/bot integration | When Discord is scheduled | Idea; tied to groups |
-| 8 | Monetisation: charge at all? Which features (extra photos, import credits, long-range insights), subscription vs. one-off, prices | Before any paid feature | Ideas only; see [Stubbed: Monetisation Ideas](https://docs.google.com/document/d/1LJanHT3SpBYSQB7SiRVaeX-1PFZTPQ-cBLXlSC50KAM/edit) (Google Doc) |
 
 ## Log
 
@@ -791,3 +790,14 @@ All iOS stats designs retain coral in charts, heatmaps, streaks or leaderboard r
 - **How they're taught:** after a search that found nothing, picking a show asks "Remember 'X' for this show?" (inline on the web, an alert on iOS). Not when the miss was the same search overtyped. On the web, an email import mapped to an existing show saves the email's title quietly.
 - **Only useful ones are kept:** `remember_show_alias` skips anything search already finds in its top 3 (a retyped title, a typo), so ticket titles like "HAMILTON" add nothing.
 - **No review for now** (#35 triage); `created_by` is kept for moderation later (#4). Anyone signed in can add; creators edit or delete their own. `merge_into_catalogue` moves a merged show's nicknames to the catalogue show, and #274's `merge_shows` must do the same.
+
+Most-seen shows sits below the overview and follows the selected year or All time. It includes only shows with at least two logged visits in that period, including private entries and visits without a venue. Postgres groups by show ID, ranks by visit count (equal counts share a rank), and sorts ties by title then ID. Separate catalogue shows with identical titles remain separate. Each native navigation row opens the existing paginated visit list filtered to that show and period. The optional show filter replaces the prior RPC signature with a defaulted parameter so existing clients can continue omitting it without overload ambiguity. Planned visits remain excluded. Apply the migration before releasing the updated iOS client.
+
+### 2026-11-02: Pro: commercial decisions and the technical contract
+Supersedes "Monetisation is deferred" in `CLAUDE.md` and `PRODUCT.md`. Epic #219; contract issue #258; full contract in `docs/PAYWALL.md`.
+- **Owner's decisions:** one paid tier, "Pro" for now, with the name in config; monthly £2.99 and annual £19.99; a 30-day trial on every plan; no special treatment for existing users; iOS and web at launch; RevenueCat for both, with Web Billing (Stripe) on the web. Free/Pro line from 1 Nov: this year's stats are free except Show mix; Show mix, earlier years and All time are Pro.
+- **Prices and trials live in the stores**, read at runtime from RevenueCat offerings, so they change without a release. The tier name and two switches (`paywall_sales_enabled`, `paywall_gates_enabled`) live in `app_config`.
+- **One access policy in Postgres** (`feature_access` + `has_feature`). Gated responses keep their shape, return locked fields empty and list them in `access.locked`, so the current iOS build (non-optional fields) keeps decoding and never receives paid values.
+- **"This year" is the server's**: the client's `today` is clamped to the server date ± 1 day, so it can't unlock an earlier year.
+- **Membership is written only by the server**, from RevenueCat's API state on each webhook, on demand after purchase, and in a daily reconciliation, keyed to the Supabase UUID as RevenueCat's App User ID.
+- **Vercel Hobby is non-commercial**: web sales need a commercial plan first (owner will handle; noted on #261).

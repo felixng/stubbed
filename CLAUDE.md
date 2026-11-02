@@ -21,7 +21,7 @@ The one exception is [`PRODUCT.md`](PRODUCT.md): a lean distillation of the brie
 ## Working agreements
 
 - **Product name: Stubbed.** Use it in UI copy, the landing page and share-card wordmarks. Brand and voice live in the brief.
-- **Monetisation is deferred.** Don't build payment or paywall features.
+- **One paid tier, for advanced stats.** "Pro" (a configurable name) unlocks Show mix, earlier years and All time stats; everything else stays free (owner, 1–2 Nov 2026, epic #219). Build it to [`docs/PAYWALL.md`](docs/PAYWALL.md). Don't add other paid features, prices or upsells without the owner.
 - **Public copy never mentions launch cities or regions**, or asks users where they go to the theatre. The product covers any theatre, anywhere.
 - **Privacy:** every read and write path respects visibility and private profiles, with database tests around the privacy rules. Strip EXIF/GPS from any stored or served image.
 - **Rules live in Postgres** (constraints, RLS, SQL functions), so the web and iOS apps can't drift.
