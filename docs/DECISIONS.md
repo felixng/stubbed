@@ -879,3 +879,8 @@ Owner requested a CMS and implementation PR so landing, press and other public c
 ## 2026-11-02: One cache for published CMS copy
 
 Production continued showing an earlier headline despite successful signed webhook responses. Published reads now fetch directly from the Sanity API (`useCdn: false`, `cache: "no-store"`) inside the existing tagged `use cache` function, replacing the nested `sanityFetch` cache. This prevents an invalidated application cache from being refilled by a stale fetch/CDN result. The signed webhook expires `cms-copy`; the next visitor blocks on a current published read. Keep the 60-second revalidation lifetime and repository fallback. Draft reads retain their authenticated, uncached path. This trades an API request per cache refill for predictable publish freshness; live production verification remains necessary.
+
+
+## 2026-11-02: Invalidate prerendered CMS route output on publish
+
+After the direct-API fetch fix, production still served a Vercel cache HIT with `x-nextjs-prerender: 1` and an old headline after a successful webhook. The signed webhook now also calls `revalidatePath("/", "layout")` so prerendered page/layout output is regenerated on the next visit, alongside immediate expiration of `cms-copy`. Root-layout invalidation covers shared metadata/navigation and all copy consumers; it also invalidates other pages under that layout on infrequent editorial publishes. No token or draft-access changes.
