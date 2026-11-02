@@ -3,11 +3,13 @@ import SwiftUI
 
 struct InsightsView: View {
   @Environment(AppRouter.self) private var router
+  @Environment(AppSession.self) private var session
   @Environment(\.dynamicTypeSize) private var typeSize
   @ScaledMetric(relativeTo: .body) private var monthlyChartHeight: CGFloat = 140
   @State private var year: Int? = InsightStats.currentYear
   @State private var gridYear = InsightStats.currentYear
   @State private var stats: InsightStats?
+  @State private var shareHandle: String?
   @State private var years: [Int] = [InsightStats.currentYear]
   @State private var error: String?
   @State private var shareRequest: ShareRequest?
@@ -60,11 +62,22 @@ struct InsightsView: View {
     }
     .sheet(item: $shareRequest) { request in
       if let stats {
-        InsightShareSheet(stats: stats, year: year, activityYear: gridYear, initialDesign: request.design)
+        InsightShareSheet(stats: stats, year: year, activityYear: gridYear, initialDesign: request.design, handle: shareHandle)
       }
     }
     .task(id: "\(year ?? 0)-\(router.dataVersion)") { await load() }
     .refreshable { await load() }
+    .task(id: "\(session.userId?.uuidString ?? "")-\(router.dataVersion)") {
+      // Fetch the footer handle while browsing Insights rather than after Share.
+      shareHandle = nil
+      if let id = session.userId {
+        do {
+          let profile = try await Profiles.profile(id)
+          try Task.checkCancellation()
+          shareHandle = profile.handle
+        } catch { /* Sharing can retry the profile read if this prefetch fails. */ }
+      }
+    }
   }
 
   private func overview(_ stats: InsightStats) -> some View {

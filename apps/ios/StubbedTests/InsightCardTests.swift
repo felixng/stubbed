@@ -69,6 +69,49 @@ struct InsightCardTests {
     #expect(cards.allSatisfy { $0.image.cgImage?.width == 1080 })
   }
 
+  @Test @MainActor func selectedCardPreparationIsCompleteAndCancellable() async throws {
+    let data = InsightCardData(stats: stats(), year: 2026, handle: "ios_test", currentYear: 2026)
+    let card = try await ShareCards.prepareInsightCard(data, design: .activity)
+    #expect(card.id == "activity")
+    #expect(card.backgrounds.count == ShareAppearance.variants.count)
+    #expect(card.supportsBackground)
+    for appearance in ShareAppearance.variants {
+      #expect(FileManager.default.fileExists(atPath: card.asset(for: appearance).file.path))
+      #expect(coralPixelsInArtwork(card.asset(for: appearance).image) > 100)
+    }
+    let cancelled = Task { try await ShareCards.prepareInsightCard(data, design: .countries) }
+    cancelled.cancel()
+    do {
+      _ = try await cancelled.value
+      Issue.record("Dismissing or swiping away must cancel unused rendering")
+    } catch is CancellationError { }
+  }
+
+  @MainActor private func coralPixelsInArtwork(_ image: UIImage) -> Int {
+    guard let cg = image.cgImage else { return 0 }
+    let width = cg.width, height = cg.height
+    let bytes = UnsafeMutablePointer<UInt8>.allocate(capacity: width * height * 4)
+    defer { bytes.deallocate() }
+    guard let context = CGContext(
+      data: bytes, width: width, height: height, bitsPerComponent: 8, bytesPerRow: width * 4,
+      space: CGColorSpaceCreateDeviceRGB(),
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue | CGBitmapInfo.byteOrder32Big.rawValue)
+    else { return 0 }
+    context.draw(cg, in: CGRect(x: 0, y: 0, width: width, height: height))
+    var count = 0
+    // Exclude the existing coloured footer logo: the artwork itself needs coral.
+    for y in 160..<(height - 160) {
+      for x in 0..<width {
+        let offset = (y * width + x) * 4
+        let red = Int(bytes[offset]), green = Int(bytes[offset + 1]), blue = Int(bytes[offset + 2])
+        if bytes[offset + 3] > 150 && red > 140 && green < 140 && blue < 150 && red > green + 70 {
+          count += 1
+        }
+      }
+    }
+    return count
+  }
+
   @Test @MainActor func everyDesignExportsEveryAppearance() throws {
     let data = InsightCardData(stats: stats(), year: 2026, handle: "sillyelphaba", currentYear: 2026)
     // Render every design, including daily streak, independently of eligibility.
@@ -77,6 +120,7 @@ struct InsightCardTests {
         let asset = try ShareCards.render(InsightCardView(design: design, data: data, appearance: appearance), name: design.id)
         #expect(asset.image.cgImage?.width == 1080)
         #expect(asset.image.cgImage?.height == 1080)
+        #expect(coralPixelsInArtwork(asset.image) > 100, "\(design.id) must retain coral in \(appearance.key)")
         if let folder = ProcessInfo.processInfo.environment["STUBBED_CARD_PREVIEWS"] {
           let directory = URL(fileURLWithPath: folder)
           try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

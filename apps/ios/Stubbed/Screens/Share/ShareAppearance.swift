@@ -38,6 +38,14 @@ struct ShareAppearance: Hashable {
     case .dark, .gradient: ShareInk.light.color
     }
   }
+  /// Fixed export colours: the surrounding app's colour scheme must not turn
+  /// light-background highlights into the lighter dark-mode tint.
+  var statsAccent: Color {
+    let darkInk = background == .light || (background == .transparent && ink == .dark)
+    return darkInk
+      ? Color(red: 220.0 / 255, green: 47.0 / 255, blue: 79.0 / 255)
+      : Color(red: 1, green: 90.0 / 255, blue: 90.0 / 255)
+  }
   var key: String { "\(background.rawValue)-\(background == .transparent ? ink.rawValue : "light")" }
 }
 

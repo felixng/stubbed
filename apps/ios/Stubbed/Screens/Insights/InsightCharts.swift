@@ -4,32 +4,35 @@ import SwiftUI
 struct CountryHeatmap: View {
   let countries: [InsightStats.Country]
   var ink: Color? = nil
+  var accent: Color? = nil
   private static let shapes = CountryBoundary.load()
 
   var body: some View {
     // A fixed projection shows the whole world without stealing List gestures
     // or letting MapKit's camera crop countries on a compact screen.
-    GeometryReader { geometry in
+    Canvas { context, size in
       let maximum = max(1, countries.map(\.count).max() ?? 1)
-      ZStack {
-        (ink.map { $0.opacity(0.04) } ?? Color(.tertiarySystemFill).opacity(0.3))
-        ForEach(Self.shapes.filter { $0.code != "AQ" }) { shape in
-          let count = countries.first { $0.country == shape.code }?.count ?? 0
-          let path = Path { path in
-            for (index, coordinate) in shape.points.enumerated() {
-              let point = CGPoint(
-                x: (coordinate.longitude + 180) / 360 * geometry.size.width,
-                y: (85 - coordinate.latitude) / 145 * geometry.size.height)
-              if index == 0 { path.move(to: point) } else { path.addLine(to: point) }
-            }
-            path.closeSubpath()
+      let counts = Dictionary(countries.map { ($0.country, $0.count) }, uniquingKeysWith: +)
+      context.fill(Path(CGRect(origin: .zero, size: size)),
+        with: .color(ink?.opacity(0.04) ?? Color(.tertiarySystemFill).opacity(0.3)))
+      // One drawing pass avoids hundreds of separate SwiftUI polygon views.
+      for shape in Self.shapes where shape.code != "AQ" {
+        let count = counts[shape.code] ?? 0
+        let path = Path { path in
+          for (index, coordinate) in shape.points.enumerated() {
+            let point = CGPoint(
+              x: (coordinate.longitude + 180) / 360 * size.width,
+              y: (85 - coordinate.latitude) / 145 * size.height)
+            if index == 0 { path.move(to: point) } else { path.addLine(to: point) }
           }
-          path.fill(
-            count == 0
-              ? (ink?.opacity(0.12) ?? Color(.systemGray4))
-              : (ink ?? Palette.tint).opacity(0.3 + 0.6 * Double(count) / Double(maximum)))
-          path.stroke(ink?.opacity(0.2) ?? Color(.secondarySystemGroupedBackground), lineWidth: 0.5)
+          path.closeSubpath()
         }
+        let fill = count == 0
+          ? (ink?.opacity(0.12) ?? Color(.systemGray4))
+          : (accent ?? ink ?? Palette.tint).opacity(0.3 + 0.6 * Double(count) / Double(maximum))
+        context.fill(path, with: .color(fill))
+        context.stroke(path,
+          with: .color(ink?.opacity(0.2) ?? Color(.secondarySystemGroupedBackground)), lineWidth: 0.5)
       }
     }
     .aspectRatio(2, contentMode: .fit)
