@@ -811,3 +811,9 @@ Supersedes "Monetisation is deferred" in `CLAUDE.md` and `PRODUCT.md`. Epic #219
 - **"This year" is the server's**: the client's `today` is clamped to the server date ± 1 day, so it can't unlock an earlier year.
 - **Membership is written only by the server**, from RevenueCat's API state on each webhook, on demand after purchase, and in a daily reconciliation, keyed to the Supabase UUID as RevenueCat's App User ID.
 - **Vercel Hobby is non-commercial**: web sales need a commercial plan first (owner will handle; noted on #261).
+
+## 2026-11-02: Public About and FAQ guides (#228)
+
+The existing content-page shell now exposes About and FAQ through the shared public header, footer and sitemap; Settings also links to About. FAQ content lives in a typed, server-safe data module so the rendered sections, numbered instructions, FAQPage JSON-LD and llms.txt use the same answers. Topic anchors keep the guides directly linkable without adding client-side state or dependencies. Public headers wrap on narrow screens to accommodate the additional navigation.
+
+The owner's About draft supplies the founder story. Public instructions were checked against the web forms, import parser, photo pipeline, account deletion action and database visibility rules. Email forwarding, TheaterDiary CSV import and self-service CSV export are explicitly unavailable; CSV export stays future-tense. Guides say when they describe the website rather than assuming identical iOS controls. Photo help distinguishes stripping embedded metadata from using date/location as detection context; deletion help distinguishes the live service from backup retention and the shared catalogue.

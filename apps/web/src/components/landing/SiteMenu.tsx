@@ -26,11 +26,18 @@ export function SiteMenu() {
   }, []);
 
   return (
-    <Link
-      href={signedIn ? "/app" : "/login"}
-      className="inline-flex min-h-11 items-center rounded-pill bg-surface px-5 text-body font-medium text-label shadow-sm ring-1 ring-separator hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-    >
-      {signedIn ? "Open app" : "Sign in"}
-    </Link>
+    <nav aria-label="Main" className="ml-auto flex flex-wrap items-center justify-end gap-x-1 gap-y-2 sm:gap-x-2">
+      {[{ href: "/about", label: "About" }, { href: "/faq", label: "FAQ" }].map(({ href, label }) => (
+        <Link key={href} href={href} className="inline-flex min-h-11 items-center rounded-sm px-2 text-subheadline text-label-secondary hover:text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
+          {label}
+        </Link>
+      ))}
+      <Link
+        href={signedIn ? "/app" : "/login"}
+        className="inline-flex min-h-11 items-center rounded-pill bg-surface px-5 text-body font-medium text-label shadow-sm ring-1 ring-separator hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
+      >
+        {signedIn ? "Open app" : "Sign in"}
+      </Link>
+    </nav>
   );
 }
