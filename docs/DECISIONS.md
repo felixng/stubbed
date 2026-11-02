@@ -812,6 +812,12 @@ Supersedes "Monetisation is deferred" in `CLAUDE.md` and `PRODUCT.md`. Epic #219
 - **Membership is written only by the server**, from RevenueCat's API state on each webhook, on demand after purchase, and in a daily reconciliation, keyed to the Supabase UUID as RevenueCat's App User ID.
 - **Vercel Hobby is non-commercial**: web sales need a commercial plan first (owner will handle; noted on #261).
 
+### 2026-11-02: "Did you mean…?" before adding a show or venue (#146)
+Typed-in shows and venues stay visible to everyone, so duplicates are stopped before they're added rather than hidden. Live Wikidata search was dropped in the #147 review; this uses our own tables only and finds nothing, harmlessly, with an empty catalogue.
+- **Tidy titles in Postgres** (`tidy_show_title`): no "(Broadway)", "- UK Tour", ": The Musical" or ticket parts after a dash, bar, comma or colon ("- Premium Orchestra", ", Stalls Row F"); all-caps titles of 5+ characters in normal case, so "MJ" and "SIX" stay. A trigger applies it to every user-added show on insert, from any app or the import; catalogue titles are left as Wikidata has them.
+- **`similar_shows` / `similar_venues`** return up to three close matches. `same` marks the same one: equal once tidied and normalised (ignoring spaces, apostrophes and theatre/theater, or a nickname), and for venues also under 2 km away or, without locations, in the same city. Saving (web `ensureShow`/`ensureVenue`, iOS `Entries`) and import matching reuse a `same` match outright; other matches are offered.
+- **Where it's offered:** web shows "Did you mean…?" under a new show or hand-added venue (including import drafts); iOS asks in a dialog when "Add …" is tapped. Offline on iOS, it adds as typed.
+
 ## 2026-11-02: Public About and FAQ guides (#228)
 
 The existing content-page shell now exposes About and FAQ through the shared public header, footer and sitemap; Settings also links to About. FAQ content lives in a typed, server-safe data module so the rendered sections, numbered instructions, FAQPage JSON-LD and llms.txt use the same answers. Topic anchors keep the guides directly linkable without adding client-side state or dependencies. Public headers wrap on narrow screens to accommodate the additional navigation.

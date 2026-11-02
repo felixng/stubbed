@@ -4,6 +4,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import {
+  asVenue,
   ensureShow,
   ensureVenue,
   localToday,
@@ -11,25 +12,27 @@ import {
   photoPath,
   statusFor,
   type NearbyVenue,
+  similarShows,
+  similarVenues,
+  tidyShowTitle,
   type NewShow,
   type Show,
-  type Venue,
   type VenueChoice,
 } from "@/lib/entries";
 import type { Extracted, Place } from "./drafts";
 
-// An existing catalogue show with the same title (any case), or a new one
-// to create on save.
+// The same existing show ("LES MIS - Dress Circle" is Les Misérables), or a
+// new one with a tidied title; the draft card then offers close matches (#146).
 export async function resolveShow(supabase: SupabaseClient, e: Extracted): Promise<Show | NewShow | null> {
   if (!e.show_title) return null;
-  const { data } = await supabase.rpc("search_shows", { q: e.show_title });
-  const same = (data as Show[] | null)?.find((s) => s.title.toLowerCase() === e.show_title!.toLowerCase());
-  return same ?? { title: e.show_title, type: e.show_type ?? "musical" };
+  const [similar, title] = await Promise.all([similarShows(supabase, e.show_title), tidyShowTitle(supabase, e.show_title)]);
+  const same = similar.find((s) => s.same);
+  return same ? { id: same.id, title: same.title, type: same.type } : { title, type: e.show_type ?? "musical" };
 }
 
-// A nearby theatre the source picked, then a catalogue venue with the same
-// name (in the same city when we know it), then a new venue. A lone nearby
-// theatre wins when the source named none.
+// A nearby theatre the source picked, then the same venue already in the
+// catalogue (near the photo, or in the same city), then a new venue. A lone
+// nearby theatre wins when the source named none.
 export async function resolveVenue(
   supabase: SupabaseClient,
   e: Extracted,
@@ -42,16 +45,11 @@ export async function resolveVenue(
   const name = e.venue_name.toLowerCase();
   const byName = nearby.find((c) => c.name.toLowerCase() === name);
   if (byName) return byName;
-  const near = nearby[0];
-  const { data } = await supabase.rpc("search_venues", {
-    q: e.venue_name,
-    near_lat: near?.lat ?? null,
-    near_lng: near?.lng ?? null,
-  });
-  const city = (e.city ?? place.city ?? "").toLowerCase();
-  const same = (data as Venue[] | null)?.filter((v) => v.name.toLowerCase() === name);
-  const match = same?.find((v) => !city || (v.city ?? "").toLowerCase() === city) ?? (city ? undefined : same?.[0]);
-  return match ?? { name: e.venue_name, city: e.city ?? place.city, country: e.country ?? place.country };
+  const near = nearby[0]?.lat != null && nearby[0]?.lng != null ? { lat: nearby[0].lat, lng: nearby[0].lng } : null;
+  const city = e.city ?? place.city;
+  const same = (await similarVenues(supabase, e.venue_name, near, city)).find((v) => v.same);
+  if (same) return asVenue(same);
+  return { name: e.venue_name, city, country: e.country ?? place.country };
 }
 
 export type ConfirmedDraft = {

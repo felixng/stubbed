@@ -14,6 +14,21 @@ struct EntryLogicTests {
     #expect(try show("circus").type == .other)
   }
 
+  @Test func readsSimilarShowsAndVenues() throws {
+    let shows = #"[{"id":"00000000-0000-4000-a000-000000000001","title":"Les Misérables","type":"musical","same":true}]"#
+    let show = try JSONDecoder().decode([Entries.Similar<Show>].self, from: Data(shows.utf8))
+    #expect(show.first?.item.title == "Les Misérables")
+    #expect(show.first?.same == true)
+
+    let venues = #"""
+      [{"id":"00000000-0000-4000-a000-000000000002","name":"Wyndham's Theatre","city":"London","country":"GB",
+        "lat":51.5,"lng":-0.12,"osm_id":null,"distance_km":0.01,"same":false}]
+      """#
+    let venue = try JSONDecoder().decode([Entries.Similar<Venue>].self, from: Data(venues.utf8))
+    #expect(venue.first?.item.name == "Wyndham's Theatre")
+    #expect(venue.first?.same == false)
+  }
+
   @Test func formatsDaysLikeTheWeb() {
     #expect(Day.format("2026-10-08") == "8 Oct 2026")
     #expect(Day.formatLong("2026-10-08") == "Thursday 8 October 2026")

@@ -2,8 +2,9 @@
 
 import { useEffect, useId, useState } from "react";
 
-import type { NearbyVenue, VenueChoice, Venue } from "@/lib/entries";
+import { asVenue, similarVenues, type NearbyVenue, type VenueChoice, type Venue } from "@/lib/entries";
 import { createClient } from "@/lib/supabase/client";
+import { DidYouMean } from "./DidYouMean";
 import { SelectedValue } from "./SelectedValue";
 import { fieldClass, Typeahead, type TypeaheadOption } from "./Typeahead";
 
@@ -15,7 +16,9 @@ const where = (v: { city?: string | null; country?: string | null }) =>
 // Pick a venue. With an empty field it lists nearby theatres (from the photo)
 // and suggestions (last used with this show, recent venues); typing searches
 // the catalogue. "Add '<name>'" creates one on save, with city and country
-// prefilled from where the photo was taken or the last venue used.
+// prefilled from where the photo was taken or the last venue used. A venue
+// added by hand first offers close existing ones near the photo or in its
+// city ("Did you mean…?"), and the same venue is used outright (#146).
 export function VenueField({
   labelledBy,
   value,
@@ -54,6 +57,28 @@ export function VenueField({
     };
   }, [query, near?.lat, near?.lng]);
 
+  // A venue added by hand: look for existing ones, again as the city is typed.
+  const handAdded = value && !value.id && !value.osm_id ? value : null;
+  const [similar, setSimilar] = useState<{ name: string; venues: Venue[] } | null>(null);
+  useEffect(() => {
+    if (!handAdded) return;
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      const coords = near?.lat != null && near?.lng != null ? { lat: near.lat, lng: near.lng } : null;
+      const found = await similarVenues(createClient(), handAdded.name, coords, handAdded.city);
+      if (cancelled) return;
+      const venues = found.map(asVenue);
+      const same = found.findIndex((v) => v.same);
+      if (same >= 0) return onChange(venues[same]);
+      setSimilar({ name: handAdded.name, venues });
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- per name and city typed, not per render
+  }, [handAdded?.name, handAdded?.city, near?.lat, near?.lng]);
+
   if (value) {
     const isNew = !value.id;
     return (
@@ -66,6 +91,16 @@ export function VenueField({
             onChange(null);
           }}
         />
+        {isNew && !value.osm_id && similar?.name === value.name && (
+          <DidYouMean
+            keep={`“${value.name}” as a new venue`}
+            options={similar.venues.map((v) => ({
+              key: v.id,
+              label: [v.name, where(v)].filter(Boolean).join(" · "),
+              onPick: () => onChange(v),
+            }))}
+          />
+        )}
         {/* A venue added by hand needs a city and country for stats. */}
         {isNew && !value.osm_id && (
           <div className="grid grid-cols-2 gap-3">
