@@ -451,8 +451,16 @@ struct LogView: View {
   }
 
   private func pickVenue(_ choice: VenueChoice) {
-    touchedVenue = true
-    fromPhoto.remove("venue")
+    // One of the photo's own candidates is still the photo's answer: a new
+    // photo replaces it and removing the photo clears it. A theatre found by
+    // searching is the user's own choice and stays.
+    if nearby.contains(choice) {
+      touchedVenue = false
+      fromPhoto.insert("venue")
+    } else {
+      touchedVenue = true
+      fromPhoto.remove("venue")
+    }
     venue = choice
   }
 

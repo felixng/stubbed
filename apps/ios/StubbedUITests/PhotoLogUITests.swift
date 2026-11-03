@@ -6,6 +6,42 @@ import XCTest
 final class PhotoLogUITests: XCTestCase {
   override func setUp() { continueAfterFailure = false }
 
+  /// Removing the photo clears what it filled, a theatre picked from its
+  /// candidates included, and adding it again fills the form again.
+  @MainActor
+  func testRemovingAndReaddingAPhotoResetsTheVenue() throws {
+    let app = launchApp()
+    signOutIfNeeded(app)
+    try signIn(app)
+    XCTAssertTrue(onHome(app))
+    app.buttons["Log"].tap()
+    let start = app.buttons["Start with a photo"]
+    XCTAssertTrue(start.waitForExistence(timeout: 10), app.debugDescription)
+    start.tap()
+    XCTAssertTrue(app.images.firstMatch.waitForExistence(timeout: 15), app.debugDescription)
+    pickPhoto(app, takenInNewYork: "2026-10-03 19:58")
+
+    let filled = button(app, startingWith: "Change Richard Rodgers Theatre")
+    let chip = button(app, startingWith: "Richard Rodgers Theatre ·")
+    XCTAssertTrue(filled.waitForExistence(timeout: 20) || chip.waitForExistence(timeout: 5))
+    // Several theatres in range: the user picks one of the photo's candidates.
+    if !filled.exists {
+      chip.tap()
+      XCTAssertTrue(filled.waitForExistence(timeout: 5))
+    }
+
+    app.buttons["Remove"].tap()
+    XCTAssertFalse(filled.waitForExistence(timeout: 3), "the photo's venue is cleared with the photo")
+
+    app.buttons["Add photo"].tap()
+    XCTAssertTrue(app.images.firstMatch.waitForExistence(timeout: 15), app.debugDescription)
+    pickPhoto(app, takenInNewYork: "2026-10-03 19:58")
+    XCTAssertTrue(filled.waitForExistence(timeout: 20) || chip.waitForExistence(timeout: 5))
+
+    app.buttons["Cancel"].tap()
+    app.buttons["Discard"].firstMatch.tap()
+  }
+
   @MainActor
   func testPhotoFillsDateAndNearbyTheatre() throws {
     let app = launchApp()
