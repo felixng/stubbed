@@ -224,9 +224,16 @@ test("with every Overpass mirror hanging, the lookup still returns within 2.5 s"
     if (url.includes("/search")) return theatreAtSearchCentre(url);
     return Response.json({ address: { city: "New York", country_code: "us" } });
   });
-  const a = elsewhere(6);
-  const started = Date.now();
-  const out = await findNearbyTheatres(a.lat, a.lng);
-  assert.ok(Date.now() - started <= 2_500, `took ${Date.now() - started} ms`);
-  assert.deepEqual(out.candidates.map((c) => c.name), ["Hudson Theatre"]);
+  // AbortSignal.timeout's timers don't keep Node alive, so without this the
+  // runner can decide nothing is left to happen while the mirrors "hang".
+  const keepAlive = setTimeout(() => {}, 10_000);
+  try {
+    const a = elsewhere(6);
+    const started = Date.now();
+    const out = await findNearbyTheatres(a.lat, a.lng);
+    assert.ok(Date.now() - started <= 2_500, `took ${Date.now() - started} ms`);
+    assert.deepEqual(out.candidates.map((c) => c.name), ["Hudson Theatre"]);
+  } finally {
+    clearTimeout(keepAlive);
+  }
 });
