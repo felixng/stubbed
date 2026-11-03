@@ -840,6 +840,7 @@ The owner's About draft supplies the founder story. Public instructions were che
 - Gone: the identify step in the log form and import tool, `lib/identify.ts`, all of `lib/ai`, `/api/ai/providers`, the admin model-compare page, `@anthropic-ai/sdk`, and the AI env vars. `/api/photo/identify` now answers `410 {"error":"gone"}` so builds already on TestFlight show "no suggestion"; delete the route once they're gone.
 - The privacy page, terms, FAQ and `.env.example` no longer mention AI providers.
 - Owner action: remove `ANTHROPIC_API_KEY` (and any Groq, Gemini, Cerebras keys) from Vercel.
+- 2026-11-03: `/api/photo/identify` deleted at the owner's request (#334). Older TestFlight builds now get 404; the last build that called it treated any status other than 200 or 503 as a failed lookup, so a 404 reads as no suggestion, same as the 410 did. `ANTHROPIC_API_KEY` stays in Vercel (owner's choice).
 
 ### 2026-11-02: Spike: Vision text recognition on theatre paper (#279, part of #273)
 **Verdict: Vision only. No Foundation Models for now.**
