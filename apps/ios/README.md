@@ -58,7 +58,7 @@ Left out: admin pages, and the landing / waitlist / FAQ / legal pages (the app l
 - Logic both apps need (validation, stats, search) lives in Postgres (`supabase/migrations`), not in Swift or TypeScript. Swift types from the schema are in `Stubbed/Generated/Database.swift`; regenerate with `scripts/dev types`.
 - Every entry read must tolerate a **null venue** and **planned** entries (`status = 'planned'`, no rating).
 - **Share cards are drawn natively** (SwiftUI `ImageRenderer`), matching the web designs in `apps/web/src/lib/share-card.ts` (1080×1080, three designs, transparent-background option). Their numbers come from `rpc("entry_card_stats", { entry_id })`.
-- **Server routes** on the web app (`/api/photo/nearby`, `/api/photo/identify`): send the session's access token as `Authorization: Bearer <token>`.
+- **Server routes** on the web app (`/api/photo/nearby`): send the session's access token as `Authorization: Bearer <token>`.
 - **Photos**: resize to 1600px and re-encode as JPEG on the device before upload, which drops EXIF/GPS (`apps/web/src/lib/photo.ts` has the sizes).
 - **Google avatar**: the web copies the Google profile photo into the `avatars` bucket on first sign-in (no handle and no avatar yet). The app’s sign-in skips that callback, so do it on the device: take the profile image URL from the user’s Google metadata (`avatar_url` / `picture`), re-encode to 512px JPEG, upload, set `profiles.avatar_url`.
 - **Analytics**: record `entry_logged` and `card_shared` in the `events` table, with the same props as the web (`apps/web/src/lib/analytics.ts`, `docs/ANALYTICS.md`).

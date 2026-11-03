@@ -42,7 +42,7 @@ Details and reasoning: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs
 ### Stack
 - **Monorepo, pnpm workspaces:** `apps/web` (Next.js App Router, TypeScript, Tailwind) on Vercel Hobby; `apps/ios` (SwiftUI, iOS 17+, `supabase-swift`, see `apps/ios/CLAUDE.md`); `supabase/` (migrations, pgTAP tests).
 - **Supabase Free** for Postgres, Auth and Storage. Both apps talk to it directly; there is no custom API server. Vercel hosts only routes that need a server: the nearby-theatre lookup (`/api/photo/nearby`) and link-preview images (`/api/og/*`). The routes accept the web session cookie or an `Authorization: Bearer` token from iOS.
-- **No cloud AI in the apps** (#273): photo detection (#281) and email import (#282) are gone. `/api/photo/identify` answers 410 for builds already on TestFlight. The catalogue crawler keeps its own key as a GitHub Actions secret only.
+- **No cloud AI in the apps** (#273): photo detection (#281) and email import (#282) are gone. The catalogue crawler keeps its own key as a GitHub Actions secret only.
 - **Share cards** are drawn on the device: Canvas 2D on web (`lib/share-card.ts`, `lib/share-card-trip.ts`), SwiftUI on iOS. Square 1080×1080. Card stats come from `entry_card_stats`.
 - **Design system:** Footlight Sweep (the app icon's magenta, coral and amber on system greys); tokens and mapping in `docs/DESIGN.md`. The app and sign-in are always light for now.
 - **Auth:** Apple, Google and email + password. Sign-ups are open (#149): email accounts confirm by a link or a 6-digit code (`supabase/templates/`, landing on `/auth/confirm`). Admins have `app_metadata.role = "admin"`; admin pages live under `/app/admin`.
