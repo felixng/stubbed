@@ -27,13 +27,15 @@ struct ShareCardTests {
     #expect(clear.image.cgImage?.width == 1080)
     #expect(clear.image.cgImage?.height == 1080)
     #expect(alpha(clear.image) == 0)
-    #expect(alpha(background.image) == 255)
+    // The card body is opaque; only the rounded corners (#349) are clear.
+    #expect(alpha(background.image, at: bodyPoint(background.image)) == 255)
+    #expect(alpha(background.image, at: CGPoint(x: 1, y: 1)) == 0)
     #expect(background.asset(for: .init(background: .transparent, ink: .dark)).file != clear.file)
     // Light is its own export, opaque, and ignores a text colour left over
     // from transparent.
     let light = background.asset(for: .init(background: .light))
     #expect(light.file != background.file)
-    #expect(alpha(light.image) == 255)
+    #expect(alpha(light.image, at: bodyPoint(light.image)) == 255)
     #expect(background.asset(for: .init(background: .light, ink: .dark)).file == light.file)
   }
 
@@ -64,6 +66,23 @@ struct ShareCardTests {
     let firstBytes = try Data(contentsOf: first.file)
     let secondBytes = try Data(contentsOf: second.file)
     #expect(firstBytes != secondBytes)
+  }
+
+  /// A point inside the card, clear of the rounded corners and the text.
+  private func bodyPoint(_ image: UIImage) -> CGPoint {
+    CGPoint(x: 8, y: CGFloat(image.cgImage?.height ?? 0) / 2)
+  }
+
+  /// The alpha of one pixel (in image pixels, from the top left).
+  private func alpha(_ image: UIImage, at point: CGPoint) -> UInt8 {
+    guard let cg = image.cgImage,
+      let pixelImage = cg.cropping(to: CGRect(x: point.x, y: point.y, width: 1, height: 1))
+    else { return 1 }
+    var pixel: [UInt8] = [0, 0, 0, 0]
+    let context = CGContext(data: &pixel, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
+      space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+    context.draw(pixelImage, in: CGRect(x: 0, y: 0, width: 1, height: 1))
+    return pixel[3]
   }
 
   private func alpha(_ image: UIImage) -> UInt8 {
