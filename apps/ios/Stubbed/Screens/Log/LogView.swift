@@ -487,14 +487,27 @@ struct LogView: View {
     detect = .idle
   }
 
-  /// The photo's date at once, then theatres near it within about a second.
-  /// Each fills only untouched fields.
+  /// The photo's date at once, then everything else as each answer arrives:
+  /// theatres near it, the text on it, the shows and venue that text names.
+  /// Each fills only untouched fields, whatever order the answers come in.
   /// `lookup` may already be under way (an import starts the next show's
   /// early); otherwise it starts here.
   private func detect(from data: Data, lookup: PhotoLookup? = nil) async {
     let token = run
     let current = { token == run }
-    detect = .reading
+    let clock = ContinuousClock()
+    let start = clock.now
+    func logStep(_ step: String) {
+      let ms = Int((clock.now - start) / .milliseconds(1))
+      Log.data.info("photo detect: \(step, privacy: .public) after \(ms, privacy: .public) ms")
+    }
+    enum Step {
+      case nearby(PhotoDetect.Nearby?)
+      case text(PhotoText.Reading?)
+      case shows(PhotoText.ShowMatches)
+      case venue(Venue?)
+    }
+
     let lookup = lookup ?? PhotoLookup(data: data)
     let meta = lookup.meta
     if let day = meta.date, !touchedDate {
@@ -502,49 +515,107 @@ struct LogView: View {
       fromPhoto.insert("date")
     }
 
-    if meta.lat != nil, meta.lng != nil {
-      detect = .nearby
-      let found = await lookup.nearby.value ?? PhotoDetect.Nearby()
-      guard current() else { return }
-      nearby = found.candidates
-      place = (found.city, found.country)
+    let hasLocation = meta.lat != nil && meta.lng != nil
+    var nearbyPending = hasLocation
+    var textPending = true
+    var venuePending = false
+    var nearbyDone = !hasLocation
+    var reading: PhotoText.Reading?
+    var textDone = false
+    var printedDateSet = false
+    var singleNearbyApplied = false
+    detect = nearbyPending ? .reading : .text
+
+    func updateStatus() {
+      switch (nearbyPending || venuePending, textPending) {
+      case (true, true): detect = .reading
+      case (true, false): detect = .nearby
+      case (false, true): detect = .text
+      case (false, false): detect = .idle
+      }
     }
 
-    detect = .text
-    let reading = await lookup.text.value
-    guard current() else { return }
-    let paper = reading?.isPaper ?? false
-    // A ticket or programme says when and where the show was; a stage photo
-    // only says where the camera was.
-    if paper, let reading {
+    /// A ticket or programme says when and where the show was; a stage photo
+    /// only says where the camera was.
+    func applyPrintedDate() {
+      guard !printedDateSet, !touchedDate, let reading, reading.isPaper else { return }
       let printed = PhotoText.printedDate(in: reading.lines.map(\.text), country: place.country)
-      if let printed, !touchedDate {
+      if let printed {
         date = printed
         fromPhoto.insert("date")
+        printedDateSet = true
       }
-      if !touchedVenue, venue == nil, let saved = await PhotoText.matchVenue(reading) {
-        guard current() else { return }
-        venue = VenueChoice(saved)
+    }
+
+    /// One theatre in range is as good as an answer, unless the paper
+    /// was printed for a show seen somewhere else.
+    func applySingleNearby() {
+      guard nearbyDone, textDone, !singleNearbyApplied else { return }
+      singleNearbyApplied = true
+      let paper = reading?.isPaper ?? false
+      if !paper, nearby.count == 1, !touchedVenue, venue == nil {
+        venue = nearby[0]
         fromPhoto.insert("venue")
       }
     }
-    // One theatre in range is as good as an answer, unless the paper
-    // was printed for a show seen somewhere else.
-    if !paper, nearby.count == 1, !touchedVenue, venue == nil {
-      venue = nearby[0]
-      fromPhoto.insert("venue")
-    }
-    if let reading {
-      let matches = await PhotoText.matchShows(reading)
-      guard current() else { return }
-      if let found = matches.confident, !touchedShow, show == nil {
-        show = ShowChoice(found)
-        fromPhoto.insert("show")
-      } else if show == nil {
-        photoShows = matches.suggestions
+
+    await withTaskGroup(of: Step.self) { group in
+      if hasLocation { group.addTask { .nearby(await lookup.nearby.value) } }
+      group.addTask { .text(await lookup.text.value) }
+      for await step in group {
+        guard current() else {
+          group.cancelAll()
+          return
+        }
+        switch step {
+        case .nearby(let found):
+          logStep("nearby")
+          let found = found ?? PhotoDetect.Nearby()
+          nearby = found.candidates
+          place = (found.city, found.country)
+          nearbyPending = false
+          nearbyDone = true
+          // Text may have come first, before the country was known.
+          applyPrintedDate()
+          applySingleNearby()
+        case .text(let read):
+          logStep("text")
+          reading = read
+          textDone = true
+          if let read {
+            applyPrintedDate()
+            group.addTask { .shows(await PhotoText.matchShows(read)) }
+            textPending = true
+            if read.isPaper, !touchedVenue, venue == nil {
+              group.addTask { .venue(await PhotoText.matchVenue(read)) }
+              venuePending = true
+            }
+          } else {
+            textPending = false
+          }
+          applySingleNearby()
+        case .shows(let matches):
+          logStep("shows")
+          textPending = false
+          if let found = matches.confident, !touchedShow, show == nil {
+            show = ShowChoice(found)
+            fromPhoto.insert("show")
+          } else if show == nil {
+            photoShows = matches.suggestions
+          }
+        case .venue(let saved):
+          logStep("venue")
+          venuePending = false
+          if !touchedVenue, venue == nil, let saved {
+            venue = VenueChoice(saved)
+            fromPhoto.insert("venue")
+          }
+        }
+        updateStatus()
       }
     }
-
+    guard current() else { return }
+    logStep("done")
     detect = .idle
   }
 
