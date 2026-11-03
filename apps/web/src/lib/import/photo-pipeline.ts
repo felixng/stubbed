@@ -53,6 +53,8 @@ export async function lookupNearby(
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ lat, lng, accuracy_m }),
+      // Give up after a few seconds; saved venues carry on alone.
+      signal: AbortSignal.timeout(6_000),
     })
       .then((res) => (res.ok ? (res.json() as Promise<NearbyPlaces>) : null))
       // Offline or the lookup failed: carry on with saved venues only.

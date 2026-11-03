@@ -1,12 +1,14 @@
 import assert from "node:assert/strict";
 import { afterEach, test } from "node:test";
 
-import { findNearbyTheatres, parseNominatimSearch } from "@/lib/places";
+import { findNearbyTheatres, parseNominatimSearch, resetOverpassHealth } from "@/lib/places";
 
 const realFetch = globalThis.fetch;
 afterEach(() => {
   globalThis.fetch = realFetch;
+  resetOverpassHealth();
 });
+const pause = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 // Hudson Theatre, New York.
 const HUDSON = { lat: 40.75697, lng: -73.98393 };
@@ -46,8 +48,16 @@ function serve(handler: Handler) {
   globalThis.fetch = (async (input: string | URL, init?: RequestInit) => {
     const url = String(input);
     calls.push(new URL(url).host + new URL(url).pathname);
-    if (init?.signal?.aborted) throw new DOMException("aborted", "AbortError");
-    return handler(url);
+    const signal = init?.signal;
+    if (signal?.aborted) throw new DOMException("aborted", "AbortError");
+    // Like real fetch, give up when the caller's signal fires (timeout or cancel).
+    const aborted = signal
+      ? new Promise<never>((_, reject) =>
+          signal.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")), { once: true }),
+        )
+      : null;
+    const answer = Promise.resolve(handler(url));
+    return aborted ? Promise.race([answer, aborted]) : answer;
   }) as typeof fetch;
   return calls;
 }
@@ -137,4 +147,86 @@ test("a second lookup near the same point doesn't reverse geocode again", async 
   const second = await findNearbyTheatres(53.8041, -1.5491);
   assert.equal(second.city, "Leeds");
   assert.equal(calls.filter((c) => c.endsWith("/reverse")).length, 1);
+});
+
+// A Nominatim search answer with the theatre at the middle of the asked-for box.
+const theatreAtSearchCentre = (url: string) => {
+  const [west, north, east, south] = new URL(url).searchParams.get("viewbox")!.split(",").map(Number);
+  return Response.json([{ ...nominatimTheatre, lat: String((north + south) / 2), lon: String((west + east) / 2) }]);
+};
+const overpassDown = (url: string) => {
+  if (url.includes("/api/interpreter")) return new Response("busy", { status: 504 });
+  if (url.includes("/search")) return theatreAtSearchCentre(url);
+  return Response.json({ address: { city: "New York", country_code: "us" } });
+};
+const point = { lat: HUDSON.lat + 0.0004, lng: HUDSON.lng };
+// Each lookup uses its own ~100 m square so the result cache stays out of the way.
+const elsewhere = (n: number) => ({ lat: point.lat + n * 0.01, lng: point.lng });
+
+test("after every mirror fails, the next lookup skips Overpass and returns the Nominatim results", async () => {
+  await pause(1_200); // let Nominatim's 1 s spacing from earlier tests pass
+  const calls = serve(overpassDown);
+  const a = elsewhere(1);
+  await findNearbyTheatres(a.lat, a.lng);
+  assert.ok(calls.some((c) => c.includes("/api/interpreter")), "the first lookup tried Overpass");
+
+  await pause(1_200);
+  const before = calls.length;
+  const b = elsewhere(2);
+  const started = Date.now();
+  const out = await findNearbyTheatres(b.lat, b.lng);
+  assert.ok(Date.now() - started < 500, "answered without waiting for Overpass");
+  assert.ok(!calls.slice(before).some((c) => c.includes("/api/interpreter")), "no Overpass request while skipping");
+  assert.deepEqual(out.candidates.map((c) => c.name), ["Hudson Theatre"]);
+});
+
+test("after the skip window one lookup tries Overpass, and a success clears the skip", async () => {
+  await pause(1_200);
+  let up = false;
+  const calls = serve((url) => {
+    if (url.includes("/api/interpreter")) {
+      return up
+        ? Response.json({ elements: [{ type: "node", id: 5, lat: elsewhere(4).lat, lon: elsewhere(4).lng, tags: { name: "Hudson Theatre" } }] })
+        : new Response("busy", { status: 504 });
+    }
+    if (url.includes("/search")) return theatreAtSearchCentre(url);
+    return Response.json({ address: { city: "New York", country_code: "us" } });
+  });
+  const realNow = Date.now;
+  try {
+    const a = elsewhere(3);
+    await findNearbyTheatres(a.lat, a.lng); // fails: skipping starts
+    const overpassCalls = () => calls.filter((c) => c.includes("/api/interpreter")).length;
+    const afterFirst = overpassCalls();
+
+    Date.now = () => realNow() + 11 * 60_000; // past the 10 minutes
+    up = true;
+    await pause(1_200);
+    const b = elsewhere(4);
+    const out = await findNearbyTheatres(b.lat, b.lng);
+    assert.ok(overpassCalls() > afterFirst, "one trial lookup after the window");
+    assert.deepEqual(out.candidates.map((c) => c.osm_id), ["node/5"]);
+
+    await pause(1_200);
+    const mid = overpassCalls();
+    const c = elsewhere(5);
+    await findNearbyTheatres(c.lat, c.lng);
+    assert.ok(overpassCalls() > mid, "Overpass is used again after the trial worked");
+  } finally {
+    Date.now = realNow;
+  }
+});
+
+test("with every Overpass mirror hanging, the lookup still returns within 2.5 s", async () => {
+  await pause(1_200);
+  serve((url) => {
+    if (url.includes("/api/interpreter")) return new Promise<Response>(() => {});
+    if (url.includes("/search")) return theatreAtSearchCentre(url);
+    return Response.json({ address: { city: "New York", country_code: "us" } });
+  });
+  const a = elsewhere(6);
+  const started = Date.now();
+  const out = await findNearbyTheatres(a.lat, a.lng);
+  assert.ok(Date.now() - started <= 2_500, `took ${Date.now() - started} ms`);
+  assert.deepEqual(out.candidates.map((c) => c.name), ["Hudson Theatre"]);
 });

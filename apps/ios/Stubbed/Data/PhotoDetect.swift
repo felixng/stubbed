@@ -115,6 +115,8 @@ enum PhotoDetect {
     }
     guard var request = await authorized("api/photo/nearby") else { return nil }
     request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+    // Give up after a few seconds; saved venues carry on alone.
+    request.timeoutInterval = 6
     request.httpBody = try? JSONEncoder().encode(Body(lat: lat, lng: lng, accuracy_m: accuracy))
     guard let (data, response) = try? await URLSession.shared.data(for: request),
       (response as? HTTPURLResponse)?.statusCode == 200
