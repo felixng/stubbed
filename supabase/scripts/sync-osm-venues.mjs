@@ -208,12 +208,32 @@ export function parsePsqlOutput(output) {
   return output.split('\n').filter(record => record.trim()).map(record => JSON.parse(record));
 }
 
+const LOCAL_DB_URL = 'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
+
+// psql reads a connection URI from its command line but not from PGDATABASE,
+// so the URL is split into the PG* variables: still never in argv, where
+// other users' `ps` could read the password.
+export function psqlEnv(url) {
+  let parsed;
+  try { parsed = new URL(url || LOCAL_DB_URL); } catch { throw new Error('SUPABASE_DB_URL is not a valid postgresql:// connection string'); }
+  if (!['postgresql:', 'postgres:'].includes(parsed.protocol)) throw new Error('SUPABASE_DB_URL must start with postgresql://');
+  const env = {
+    PGHOST: parsed.hostname.replace(/^\[|\]$/g, ''),
+    PGPORT: parsed.port || '5432',
+    PGUSER: decodeURIComponent(parsed.username),
+    PGPASSWORD: decodeURIComponent(parsed.password),
+    PGDATABASE: decodeURIComponent(parsed.pathname.replace(/^\//, '')) || 'postgres',
+  };
+  const sslmode = parsed.searchParams.get('sslmode');
+  if (sslmode) env.PGSSLMODE = sslmode;
+  return env;
+}
+
 export function runPsql(sql) {
   return new Promise((resolve, reject) => {
     // The URL is never an argv value or shell interpolation. -X ignores ~/.psqlrc.
     const child = spawn('psql', ['-X', '-q', '-A', '-t', '-v', 'ON_ERROR_STOP=1'], {
-      env: { ...process.env, PGDATABASE: process.env.SUPABASE_DB_URL
-        ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres', PGCONNECT_TIMEOUT: '10' },
+      env: { ...process.env, ...psqlEnv(process.env.SUPABASE_DB_URL), PGCONNECT_TIMEOUT: '10' },
       stdio: ['pipe', 'pipe', 'pipe'], timeout: 600_000,
     });
     let output = '';
