@@ -1,0 +1,302 @@
+{
+  "GB": [
+    {
+      "osm": {
+        "type": "uri",
+        "value": "https://www.openstreetmap.org/node/12284673396"
+      },
+      "name": {
+        "type": "literal",
+        "value": "Theatr Y Ddraig"
+      },
+      "name_en": {
+        "type": "literal",
+        "value": "Dragon Threatre"
+      },
+      "lat": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "52.72139508531"
+      },
+      "lng": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "-4.054774664393"
+      },
+      "city": {
+        "type": "literal",
+        "value": "Barmouth"
+      },
+      "wikidata": {
+        "type": "literal",
+        "value": "Q39006507"
+      }
+    },
+    {
+      "osm": {
+        "type": "uri",
+        "value": "https://www.openstreetmap.org/node/258940580"
+      },
+      "name": {
+        "type": "literal",
+        "value": "The Leatherhead Theatre"
+      },
+      "lat": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "51.29482332738"
+      },
+      "lng": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "-0.3289211358213"
+      },
+      "wikidata": {
+        "type": "literal",
+        "value": "Q26666980"
+      }
+    },
+    {
+      "osm": {
+        "type": "uri",
+        "value": "https://www.openstreetmap.org/way/1340550657"
+      },
+      "name": {
+        "type": "literal",
+        "value": "Thorndike Theatre"
+      },
+      "lat": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "51.29484444977"
+      },
+      "lng": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "-0.3284302915711"
+      },
+      "wikidata": {
+        "type": "literal",
+        "value": "Q26666980"
+      }
+    },
+    {
+      "osm": {
+        "type": "uri",
+        "value": "https://www.openstreetmap.org/node/10609146305"
+      },
+      "name": {
+        "type": "literal",
+        "value": "Palace Court Theatre"
+      },
+      "lat": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "50.71866907246"
+      },
+      "lng": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "-1.873337088035"
+      }
+    },
+    {
+      "osm": {
+        "type": "uri",
+        "value": "https://www.openstreetmap.org/way/223346381"
+      },
+      "name": {
+        "type": "literal",
+        "value": "Palace Court Theatre"
+      },
+      "lat": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "50.71852222152"
+      },
+      "lng": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "-1.87320934783"
+      },
+      "city": {
+        "type": "literal",
+        "value": "Bournemouth"
+      },
+      "website": {
+        "type": "literal",
+        "value": "https://aub.ac.uk/campus/palace-court-theatre"
+      }
+    },
+    {
+      "osm": {
+        "type": "uri",
+        "value": "https://www.openstreetmap.org/way/149173453"
+      },
+      "name": {
+        "type": "literal",
+        "value": "Apollo Theatre"
+      },
+      "lat": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "51.51157515264"
+      },
+      "lng": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "-0.1334119030585"
+      },
+      "city": {
+        "type": "literal",
+        "value": "London"
+      },
+      "wikidata": {
+        "type": "literal",
+        "value": "Q4780361"
+      },
+      "website": {
+        "type": "literal",
+        "value": "https://www.nimaxtheatres.com/nimax/apollo"
+      }
+    },
+    {
+      "osm": {
+        "type": "uri",
+        "value": "https://www.openstreetmap.org/way/313005904"
+      },
+      "name": {
+        "type": "literal",
+        "value": "Adelphi Theatre"
+      },
+      "name_en": {
+        "type": "literal",
+        "value": "Adelphi Theatre"
+      },
+      "lat": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "51.51024695626"
+      },
+      "lng": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "-0.1231494360819"
+      },
+      "city": {
+        "type": "literal",
+        "value": "London"
+      },
+      "wikidata": {
+        "type": "literal",
+        "value": "Q355319"
+      }
+    },
+    {
+      "osm": {
+        "type": "uri",
+        "value": "https://www.openstreetmap.org/node/10024742071"
+      },
+      "name": {
+        "type": "literal",
+        "value": "Malvern Theater"
+      },
+      "lat": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "52.11037714231"
+      },
+      "lng": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "-2.326744405857"
+      }
+    }
+  ],
+  "US": [
+    {
+      "osm": {
+        "type": "uri",
+        "value": "https://www.openstreetmap.org/way/244558109"
+      },
+      "name": {
+        "type": "literal",
+        "value": "Berklee Performance Center"
+      },
+      "lat": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "42.34706188771"
+      },
+      "lng": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "-71.08703167279"
+      },
+      "city": {
+        "type": "literal",
+        "value": "Boston"
+      },
+      "wikidata": {
+        "type": "literal",
+        "value": "Q5443666;Q4892165"
+      }
+    },
+    {
+      "osm": {
+        "type": "uri",
+        "value": "https://www.openstreetmap.org/way/266149330"
+      },
+      "name": {
+        "type": "literal",
+        "value": "Richard Rodgers Theatre"
+      },
+      "lat": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "40.75903891656"
+      },
+      "lng": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "-73.98674202523"
+      },
+      "city": {
+        "type": "literal",
+        "value": "New York"
+      },
+      "wikidata": {
+        "type": "literal",
+        "value": "Q7328714"
+      }
+    },
+    {
+      "osm": {
+        "type": "uri",
+        "value": "https://www.openstreetmap.org/way/266170751"
+      },
+      "name": {
+        "type": "literal",
+        "value": "Hudson Theatre"
+      },
+      "lat": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "40.75713588927"
+      },
+      "lng": {
+        "datatype": "http://www.w3.org/2001/XMLSchema#decimal",
+        "type": "literal",
+        "value": "-73.98444806597"
+      },
+      "city": {
+        "type": "literal",
+        "value": "New York"
+      },
+      "wikidata": {
+        "type": "literal",
+        "value": "Q10526870"
+      }
+    }
+  ]
+}

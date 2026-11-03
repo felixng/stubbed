@@ -42,6 +42,26 @@ supabase test db
 
 The source option accepts the script's combined SPARQL `results.bindings` JSON. Unit tests include synthetic edge cases and a small captured live response. SQL tests seed and roll back their own catalogue, covering the empty-catalogue workflow, grants, aliases, ranking and privacy-preserving merges.
 
+## Theatres from OpenStreetMap (#290)
+
+`scripts/sync-osm-venues.mjs` loads every named `amenity=theatre` in the UK and US from OpenStreetMap (ODbL) into `venues`, so photo detection answers from Postgres (#343). It queries QLever's public OpenStreetMap endpoint (no key), then calls `public.load_osm_venues`, which holds the import rules and is service-role only. Requires **Node 24+** and **psql**; apply `20261103140000_venue_catalogue.sql` first. West End and Broadway houses get `circuit` and `verified` from the reviewed Wikidata lists `scripts/west-end-theatres.json` and `scripts/broadway-theatres.json`.
+
+```sh
+# Defaults to postgresql://postgres:postgres@127.0.0.1:54322/postgres.
+node --use-env-proxy supabase/scripts/sync-osm-venues.mjs --skip-cities --dry-run
+node --use-env-proxy supabase/scripts/sync-osm-venues.mjs --skip-cities
+# One country, or save and replay the fetched data:
+node --use-env-proxy supabase/scripts/sync-osm-venues.mjs --country GB --save-source /tmp/osm-venues.json
+node supabase/scripts/sync-osm-venues.mjs --source /tmp/osm-venues.json --dry-run
+node --test supabase/scripts/sync-osm-venues.test.mjs
+```
+
+About 5,900 of the ~9,700 theatres have no `addr:city`. Without `--skip-cities` the script fills them with Nominatim reverse lookups (one per ~1 km square, at most one a second, roughly 90 minutes), caching results in `--city-cache` (default `$TMPDIR/stubbed-osm-cities.json`) after every lookup so a stopped run resumes. Dry runs wrap the call in a transaction that is rolled back and print the counts. A run reports rows fetched, rows after de-duplication, cities looked up, and the counts `inserted`, `filled`, `attached`, `west_end` and `broadway`, and lists any reviewed West End or Broadway Wikidata ID with no OpenStreetMap row (expect one Broadway ID, Q45103687, Bijou Theatre).
+
+Rules in `load_osm_venues`: a hand-added venue with no `osm_id` gets the id of the same-named OpenStreetMap theatre under 200 m away; new theatres are inserted with `source = 'osm'`; blanks (city, country, coordinates, website) on existing venues are filled but a name is never changed; a Wikidata id is set only where no other venue has it; circuits are set only where empty. A second run changes nothing.
+
+**For the hosted project, the owner runs it**: apply the migration, review a `--dry-run`, then run it for real without `--skip-cities`. Set `SUPABASE_DB_URL` as for the Wikidata sync. OpenStreetMap data is © OpenStreetMap contributors (ODbL); the terms already credit it.
+
 ## Local
 
 Requires Docker and the Supabase CLI (`npx supabase ...` works).

@@ -28,6 +28,15 @@ internal enum PublicSchema {
     case standup = "standup"
     case other = "other"
   }
+  internal enum VenueCircuit: String, Codable, Hashable, Sendable {
+    case westEnd = "west_end"
+    case offWestEnd = "off_west_end"
+    case pub = "pub"
+    case broadway = "broadway"
+    case offBroadway = "off_broadway"
+    case regionalUk = "regional_uk"
+    case regionalUs = "regional_us"
+  }
   internal enum Visibility: String, Codable, Hashable, Sendable {
     case `public` = "public"
     case `private` = "private"
@@ -1059,6 +1068,7 @@ internal enum PublicSchema {
     }
   }
   internal struct VenuesSelect: Codable, Hashable, Sendable {
+    internal let circuit: VenueCircuit?
     internal let city: String?
     internal let country: String?
     internal let createdAt: String
@@ -1069,8 +1079,12 @@ internal enum PublicSchema {
     internal let name: String
     internal let osmId: String?
     internal let searchText: String?
+    internal let source: String
     internal let verified: Bool
+    internal let website: String?
+    internal let wikidataId: String?
     internal enum CodingKeys: String, CodingKey {
+      case circuit = "circuit"
       case city = "city"
       case country = "country"
       case createdAt = "created_at"
@@ -1081,10 +1095,14 @@ internal enum PublicSchema {
       case name = "name"
       case osmId = "osm_id"
       case searchText = "search_text"
+      case source = "source"
       case verified = "verified"
+      case website = "website"
+      case wikidataId = "wikidata_id"
     }
   }
   internal struct VenuesInsert: Codable, Hashable, Sendable {
+    internal let circuit: VenueCircuit?
     internal let city: String?
     internal let country: String?
     internal let createdAt: String?
@@ -1095,8 +1113,12 @@ internal enum PublicSchema {
     internal let name: String
     internal let osmId: String?
     internal let searchText: String?
+    internal let source: String?
     internal let verified: Bool?
+    internal let website: String?
+    internal let wikidataId: String?
     internal enum CodingKeys: String, CodingKey {
+      case circuit = "circuit"
       case city = "city"
       case country = "country"
       case createdAt = "created_at"
@@ -1107,10 +1129,14 @@ internal enum PublicSchema {
       case name = "name"
       case osmId = "osm_id"
       case searchText = "search_text"
+      case source = "source"
       case verified = "verified"
+      case website = "website"
+      case wikidataId = "wikidata_id"
     }
   }
   internal struct VenuesUpdate: Codable, Hashable, Sendable {
+    internal let circuit: VenueCircuit?
     internal let city: String?
     internal let country: String?
     internal let createdAt: String?
@@ -1121,8 +1147,12 @@ internal enum PublicSchema {
     internal let name: String?
     internal let osmId: String?
     internal let searchText: String?
+    internal let source: String?
     internal let verified: Bool?
+    internal let website: String?
+    internal let wikidataId: String?
     internal enum CodingKeys: String, CodingKey {
+      case circuit = "circuit"
       case city = "city"
       case country = "country"
       case createdAt = "created_at"
@@ -1133,7 +1163,10 @@ internal enum PublicSchema {
       case name = "name"
       case osmId = "osm_id"
       case searchText = "search_text"
+      case source = "source"
       case verified = "verified"
+      case website = "website"
+      case wikidataId = "wikidata_id"
     }
   }
   internal struct WaitlistSelect: Codable, Hashable, Sendable {
