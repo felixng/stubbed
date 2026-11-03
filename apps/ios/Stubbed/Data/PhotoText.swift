@@ -29,6 +29,7 @@ enum PhotoText {
   /// Recognises the text in `data`. Nil when the photo can't be decoded.
   static func read(_ data: Data) async -> Reading? {
     await Task.detached(priority: .utility) { () -> Reading? in
+      let started = ContinuousClock.now
       let options: [CFString: Any] = [
         kCGImageSourceCreateThumbnailFromImageAlways: true,
         kCGImageSourceCreateThumbnailWithTransform: true,
@@ -47,6 +48,8 @@ enum PhotoText {
         guard let text = observation.topCandidates(1).first?.string else { return nil }
         return Line(text: text, height: Double(observation.boundingBox.height))
       }
+      let ms = Int((ContinuousClock.now - started) / .milliseconds(1))
+      Log.data.info("photo text read in \(ms, privacy: .public) ms")
       return Reading(lines: lines)
     }.value
   }
@@ -206,11 +209,21 @@ enum PhotoText {
 
   /// A line that names a theatre, matched to a saved venue by name.
   static func matchVenue(_ reading: Reading) async -> Venue? {
-    func key(_ s: String) -> String { normalise(s).replacingOccurrences(of: "theater", with: "theatre") }
-    let names = reading.lines.map(\.text).filter { key($0).contains("theatre") || key($0).contains("playhouse") }
-    for name in names.prefix(3) {
-      if let found = (try? await Entries.searchVenues(name))?.first(where: { key($0.name) == key(name) }) { return found }
+    let names = reading.lines.map(\.text).filter { venueKey($0).contains("theatre") || venueKey($0).contains("playhouse") }
+    // Up to 3 lookups at once; the first match in line order wins, as when
+    // they ran one after another.
+    let found = await withTaskGroup(of: (Int, Venue?).self) { group in
+      for (i, name) in names.prefix(3).enumerated() {
+        group.addTask { (i, (try? await Entries.searchVenues(name))?.first { venueKey($0.name) == venueKey(name) }) }
+      }
+      var all: [(Int, Venue?)] = []
+      for await r in group { all.append(r) }
+      return all.sorted { $0.0 < $1.0 }.compactMap(\.1).first
     }
-    return nil
+    return found
+  }
+
+  private static func venueKey(_ s: String) -> String {
+    normalise(s).replacingOccurrences(of: "theater", with: "theatre")
   }
 }

@@ -884,3 +884,6 @@ Production continued showing an earlier headline despite successful signed webho
 ## 2026-11-02: Invalidate prerendered CMS route output on publish
 
 After the direct-API fetch fix, production still served a Vercel cache HIT with `x-nextjs-prerender: 1` and an old headline after a successful webhook. The signed webhook now also calls `revalidatePath("/", "layout")` so prerendered page/layout output is regenerated on the next visit, alongside immediate expiration of `cms-copy`. Root-layout invalidation covers shared metadata/navigation and all copy consumers; it also invalidates other pages under that layout on infrequent editorial publishes. No token or draft-access changes.
+
+## 2026-11-03: Photo text reading keeps reading all print (#332, part of #328)
+Tried `VNRecognizeTextRequest.minimumTextHeight` to skip small print, on the spike harness (`PhotoTextSpikeTests`, Simulator, 52 synthetic images, `.accurate`). Ticket printed dates read: baseline 15/16; at 0.02, 0.015 and 0.01 all 14/16. Titles stayed 100% everywhere. Time per image did not improve (about 1.6–1.9 s at every value, baseline 1.6–1.7 s). So the threshold costs date accuracy for no measurable speed, and is not set. What did ship: the up-to-3 venue-name lookups in `matchVenue` run at once (same answer, one round trip), and `read` logs `photo text read in N ms`.
