@@ -92,3 +92,57 @@ struct PhotoDetectTests {
     #expect(d > 150 && d < 200)
   }
 }
+
+struct NearbyRuleTests {
+  private let hudson = VenueChoice(
+    id: UUID(), name: "Hudson Theatre", city: "New York", country: "US", lat: 40.757, lng: -73.984, osmId: "way/1",
+    distance: 30)
+
+  @Test func aSavedVenueInRangeIsTheAnswerAndOpenStreetMapIsNotAsked() async {
+    var osmCalls = 0
+    let found = await PhotoDetect.nearby(
+      lat: 40.757, lng: -73.984, accuracy: nil,
+      saved: { _, _, _ in [hudson] },
+      osm: { _, _, _ in
+        osmCalls += 1
+        return nil
+      })
+    #expect(osmCalls == 0)
+    #expect(found.candidates.map(\.name) == ["Hudson Theatre"])
+    #expect(found.city == "New York" && found.country == "US")
+    #expect(found.fromSaved)
+    // Exactly one saved theatre: the form fills it before the text is read.
+    #expect(found.singleSaved?.name == "Hudson Theatre")
+  }
+
+  @Test func twoSavedVenuesAreOfferedNotFilled() async {
+    var other = hudson
+    other.name = "Lyceum Theatre"
+    let found = await PhotoDetect.nearby(
+      lat: 40.757, lng: -73.984, accuracy: nil, saved: { _, _, _ in [hudson, other] }, osm: { _, _, _ in nil })
+    #expect(found.candidates.count == 2)
+    #expect(found.singleSaved == nil)
+  }
+
+  @Test func nothingSavedInRangeAsksOpenStreetMap() async throws {
+    var osmCalls = 0
+    let json = """
+      {"candidates":[{"osm_id":"way/2","name":"Lyceum Theatre","city":null,"country":null,"lat":40.7,"lng":-73.9,"distance_m":80}],
+       "city":"New York","country":"US"}
+      """
+    let places = try JSONDecoder().decode(PhotoDetect.Places.self, from: Data(json.utf8))
+    let found = await PhotoDetect.nearby(
+      lat: 40.757, lng: -73.984, accuracy: nil,
+      saved: { _, _, _ in [] },
+      osm: { _, _, _ in
+        osmCalls += 1
+        return places
+      })
+    #expect(osmCalls == 1)
+    #expect(found.candidates.map(\.osmId) == ["way/2"])
+    #expect(found.city == "New York")
+    #expect(!found.fromSaved)
+    // A single theatre from OpenStreetMap still waits for the text.
+    #expect(found.singleSaved == nil)
+  }
+}

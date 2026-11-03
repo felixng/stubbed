@@ -64,33 +64,36 @@ enum PhotoDetect {
     var candidates: [VenueChoice] = []
     var city: String?
     var country: String?
+    /// The answer came from our own venues table, not OpenStreetMap.
+    var fromSaved = false
+
+    /// The one theatre to fill in at once: only when our own table has exactly one in range.
+    var singleSaved: VenueChoice? { fromSaved && candidates.count == 1 ? candidates[0] : nil }
   }
 
-  /// Theatres near a point: the web's OpenStreetMap lookup and the saved
-  /// venues nearby, merged (a saved venue replaces its OSM twin), nearest
-  /// first.
-  static func nearby(lat: Double, lng: Double, accuracy: Double?) async -> Nearby {
-    let radius = radius(accuracy: accuracy)
-    async let found = osm(lat: lat, lng: lng, accuracy: accuracy)
-    async let saved = savedVenues(lat: lat, lng: lng, radius: radius)
-    let (places, rows) = await (found, saved)
-    var candidates: [VenueChoice] = (places?.candidates ?? []).map { c in
-      if let row = rows.first(where: { $0.osmId == c.osm_id }) {
-        var v = row
-        v.distance = c.distance_m
-        return v
-      }
-      return VenueChoice(
+  /// Theatres near a point, nearest first. Saved venues first: if any is in
+  /// range, that's the answer (city and country from the nearest) and
+  /// OpenStreetMap isn't asked. Only when none is saved nearby does the web's
+  /// OpenStreetMap lookup run. Both sources can be swapped for tests.
+  static func nearby(
+    lat: Double, lng: Double, accuracy: Double?,
+    saved: (Double, Double, Double) async -> [VenueChoice] = savedVenues,
+    osm: (Double, Double, Double?) async -> Places? = osm
+  ) async -> Nearby {
+    let rows = await saved(lat, lng, radius(accuracy: accuracy))
+    if !rows.isEmpty {
+      return Nearby(
+        candidates: Array(rows.prefix(8)), city: rows[0].city, country: rows[0].country, fromSaved: true)
+    }
+    let places = await osm(lat, lng, accuracy)
+    let candidates = (places?.candidates ?? []).map { c in
+      VenueChoice(
         name: c.name, city: c.city, country: c.country, lat: c.lat, lng: c.lng, osmId: c.osm_id, distance: c.distance_m)
     }
-    for v in rows where !candidates.contains(where: { $0.id != nil && $0.id == v.id }) { candidates.append(v) }
-    candidates.sort { ($0.distance ?? 0) < ($1.distance ?? 0) }
-    return Nearby(
-      candidates: Array(candidates.prefix(8)), city: places?.city ?? rows.first?.city,
-      country: places?.country ?? rows.first?.country)
+    return Nearby(candidates: Array(candidates.prefix(8)), city: places?.city, country: places?.country)
   }
 
-  private struct Places: Decodable {
+  struct Places: Decodable {
     struct Candidate: Decodable {
       let osm_id: String
       let name: String
@@ -107,7 +110,7 @@ enum PhotoDetect {
 
   /// POST /api/photo/nearby on the web app, with the session as a Bearer
   /// token. Offline or failed: nil, and saved venues carry on alone.
-  private static func osm(lat: Double, lng: Double, accuracy: Double?) async -> Places? {
+  static func osm(lat: Double, lng: Double, accuracy: Double?) async -> Places? {
     struct Body: Encodable {
       let lat: Double
       let lng: Double
@@ -124,23 +127,31 @@ enum PhotoDetect {
     return try? JSONDecoder().decode(Places.self, from: data)
   }
 
-  /// Saved venues within the radius: instant, and found even when the
-  /// OpenStreetMap lookups are down.
-  private static func savedVenues(lat: Double, lng: Double, radius: Double) async -> [VenueChoice] {
-    let dLat = radius / 111_320
-    let dLng = dLat / max(0.2, cos(lat * .pi / 180))
-    let rows: [Venue] =
-      (try? await supabase.from("venues").select("id, name, city, country, lat, lng, osm_id")
-        .gte("lat", value: lat - dLat).lte("lat", value: lat + dLat)
-        .gte("lng", value: lng - dLng).lte("lng", value: lng + dLng)
-        .limit(20).execute().value) ?? []
-    return rows.compactMap { row in
-      guard let vLat = row.lat, let vLng = row.lng else { return nil }
-      let d = distance(lat, lng, vLat, vLng)
-      guard d <= radius else { return nil }
-      var v = VenueChoice(row)
-      v.distance = Int(d.rounded())
-      return v
+  /// Saved venues within the radius, nearest first: one database call (the
+  /// rule lives in Postgres), found even when OpenStreetMap is down.
+  static func savedVenues(lat: Double, lng: Double, radius: Double) async -> [VenueChoice] {
+    struct Params: Encodable {
+      let lat: Double
+      let lng: Double
+      let radius_m: Double
+    }
+    struct Row: Decodable {
+      let id: UUID
+      let name: String
+      let city: String?
+      let country: String?
+      let lat: Double?
+      let lng: Double?
+      let osm_id: String?
+      let distance_m: Int
+    }
+    let rows: [Row] =
+      (try? await supabase.rpc("nearby_venues", params: Params(lat: lat, lng: lng, radius_m: radius)).execute().value)
+      ?? []
+    return rows.map {
+      VenueChoice(
+        id: $0.id, name: $0.name, city: $0.city, country: $0.country, lat: $0.lat, lng: $0.lng, osmId: $0.osm_id,
+        distance: $0.distance_m)
     }
   }
 
