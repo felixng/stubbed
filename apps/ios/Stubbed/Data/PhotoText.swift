@@ -178,6 +178,13 @@ enum PhotoText {
     return t.count >= 4 && " \(p) ".contains(" \(t) ")
   }
 
+  /// The shows a printed piece names: by title or by any other name they go by.
+  static func filterMatches(piece: String, shows: [Show], names: [UUID: [String]]) -> [Show] {
+    shows.filter { show in
+      isMatch(piece: piece, title: show.title) || (names[show.id] ?? []).contains { isMatch(piece: piece, title: $0) }
+    }
+  }
+
   struct ShowMatches: Sendable, Equatable {
     /// Exactly one show matched: fill it in.
     var confident: Show?
@@ -189,14 +196,20 @@ enum PhotoText {
   /// network). Nothing found, or offline: empty.
   static func matchShows(_ reading: Reading) async -> ShowMatches {
     let candidates = titleCandidates(reading.lines)
-    let results = await withTaskGroup(of: (Int, [Show]).self) { group in
+    let found = await withTaskGroup(of: (Int, [Show]).self) { group in
       for (i, piece) in candidates.enumerated() {
-        group.addTask { (i, (try? await Entries.searchShows(piece))?.filter { isMatch(piece: piece, title: $0.title) } ?? []) }
+        group.addTask { (i, (try? await Entries.searchShows(piece)) ?? []) }
       }
       var all: [(Int, [Show])] = []
       for await r in group { all.append(r) }
       return all.sorted { $0.0 < $1.0 }
     }
+    // The search also finds a show by its nicknames, so check every name,
+    // not just the title. Offline, or if that fails, titles only.
+    var ids: [UUID] = []
+    for show in found.flatMap(\.1) where !ids.contains(show.id) { ids.append(show.id) }
+    let names = ids.isEmpty ? [:] : ((try? await Entries.showMatchNames(ids)) ?? [:])
+    let results = found.map { i, shows in (i, filterMatches(piece: candidates[i], shows: shows, names: names)) }
     var shows: [Show] = []
     for show in results.flatMap(\.1) where !shows.contains(where: { $0.id == show.id }) { shows.append(show) }
     return ShowMatches(confident: shows.count == 1 ? shows[0] : nil, suggestions: shows.count > 1 ? Array(shows.prefix(3)) : [])
