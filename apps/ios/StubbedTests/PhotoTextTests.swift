@@ -64,6 +64,14 @@ struct PhotoTextTests {
     #expect(PhotoText.isMatch(piece: "SIX", title: "Six"))
   }
 
+  @Test func aShowMatchesAnyNameItGoesBy() {
+    let show = Show(id: UUID(), title: "Les Misérables", type: .musical)
+    let names = [show.id: ["Les Misérables", "Les Mis"]]
+    #expect(PhotoText.filterMatches(piece: "LES MIS", shows: [show], names: names) == [show])
+    #expect(PhotoText.filterMatches(piece: "LES MIS", shows: [show], names: [:]).isEmpty)
+    #expect(PhotoText.filterMatches(piece: "LES MISÉRABLES", shows: [show], names: [:]) == [show])
+  }
+
   @Test func aShortTitleOnlyMatchesAlone() {
     #expect(!PhotoText.isMatch(piece: "SIXTY SIX FLOORS", title: "Six"))
     #expect(!PhotoText.isMatch(piece: "Wicked Games Night", title: "Wi"))

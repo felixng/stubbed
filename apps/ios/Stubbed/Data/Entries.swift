@@ -38,6 +38,16 @@ enum Entries {
     try await supabase.rpc("search_shows", params: ["q": query]).execute().value
   }
 
+  /// Every name each show goes by: title, Wikidata aliases, taught nicknames.
+  static func showMatchNames(_ ids: [UUID]) async throws -> [UUID: [String]] {
+    struct Row: Decodable {
+      let show_id: UUID
+      let name: String
+    }
+    let rows: [Row] = try await supabase.rpc("show_match_names", params: ["show_ids": ids]).execute().value
+    return Dictionary(grouping: rows, by: \.show_id).mapValues { $0.map(\.name) }
+  }
+
   /// Saves a search as a nickname for the show picked after it (#35). The
   /// database skips searches that already find the show. Returns whether it saved.
   @discardableResult
