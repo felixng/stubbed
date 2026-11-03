@@ -45,6 +45,35 @@ struct PhotoDetectTests {
     #expect(meta.date == nil)
   }
 
+  @Test func resizedCopiesHaveNoMetadataAndFitTheStoredEdge() throws {
+    let data = try photo(lat: 51.5, latRef: "N", lng: 0.12, lngRef: "W", taken: "2026:09:12 19:30:00")
+    let clean = try Photo.resizedJPEG(from: data, maxEdge: Photo.storedEdge)
+    let source = try #require(CGImageSourceCreateWithData(clean as CFData, nil))
+    let props = try #require(CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any])
+    #expect(props[kCGImagePropertyGPSDictionary] == nil)
+    let exif = props[kCGImagePropertyExifDictionary] as? [CFString: Any]
+    #expect(exif?[kCGImagePropertyExifDateTimeOriginal] == nil)
+    #expect(PhotoMeta.read(clean) == PhotoMeta())
+    let size = try #require(UIImage(data: clean)).size
+    #expect(max(size.width, size.height) <= Photo.storedEdge)
+  }
+
+  @Test func resizingShrinksBigPhotosAndAppliesOrientation() throws {
+    let image = UIGraphicsImageRenderer(size: CGSize(width: 3000, height: 2000)).image { context in
+      UIColor.blue.setFill()
+      context.fill(CGRect(x: 0, y: 0, width: 3000, height: 2000))
+    }
+    let data = NSMutableData()
+    let dest = try #require(CGImageDestinationCreateWithData(data, UTType.jpeg.identifier as CFString, 1, nil))
+    // 6: the camera was held upright, so the pixels need turning.
+    CGImageDestinationAddImage(dest, try #require(image.cgImage), [kCGImagePropertyOrientation: 6] as CFDictionary)
+    #expect(CGImageDestinationFinalize(dest))
+    let out = try Photo.resizedJPEG(from: data as Data, maxEdge: 1000)
+    let cg = try #require(UIImage(data: out)?.cgImage)
+    #expect(cg.height > cg.width)
+    #expect(max(cg.width, cg.height) <= 1000)
+  }
+
   @Test func noExifMeansNothingFound() {
     let image = UIGraphicsImageRenderer(size: CGSize(width: 10, height: 10)).image { _ in }
     #expect(PhotoMeta.read(image.pngData()!) == PhotoMeta())
