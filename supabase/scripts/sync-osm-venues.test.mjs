@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { dedupe, fillCities, loadSql, mapRows, nameKey, parseNominatim, venueQuery } from './sync-osm-venues.mjs';
+import { dedupe, fillCities, loadSql, mapRows, nameKey, parseNominatim, psqlEnv, venueQuery } from './sync-osm-venues.mjs';
 
 const fixture = JSON.parse(await readFile(new URL('./fixtures/osm-venues.json', import.meta.url), 'utf8'));
 const gb = mapRows(fixture.GB, 'GB');
@@ -142,4 +142,27 @@ test('fillCities leaves a row blank when Nominatim keeps failing, without throwi
   });
   assert.equal(rows[0].city, null);
   assert.equal(result.blank, 1);
+});
+
+test('psqlEnv splits a connection URI into PG variables, decoding the password', () => {
+  assert.deepEqual(
+    psqlEnv('postgresql://postgres.abcd:p%40ss%3Aword@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?sslmode=require'),
+    {
+      PGHOST: 'aws-0-eu-west-1.pooler.supabase.com',
+      PGPORT: '6543',
+      PGUSER: 'postgres.abcd',
+      PGPASSWORD: 'p@ss:word',
+      PGDATABASE: 'postgres',
+      PGSSLMODE: 'require',
+    },
+  );
+});
+
+test('psqlEnv defaults to the local Supabase database, and rejects anything that is not a postgres URI', () => {
+  assert.deepEqual(psqlEnv(undefined), {
+    PGHOST: '127.0.0.1', PGPORT: '54322', PGUSER: 'postgres', PGPASSWORD: 'postgres', PGDATABASE: 'postgres',
+  });
+  assert.equal(psqlEnv('').PGPORT, '54322');
+  assert.throws(() => psqlEnv('mysql://u:p@h/db'), /postgresql:\/\//);
+  assert.throws(() => psqlEnv('not a url'), /valid/);
 });
