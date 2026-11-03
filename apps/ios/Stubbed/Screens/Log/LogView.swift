@@ -524,6 +524,9 @@ struct LogView: View {
     var textDone = false
     var printedDateSet = false
     var singleNearbyApplied = false
+    // The venue field holds a single saved theatre filled before the text was
+    // read; a theatre the paper names instead may still replace it.
+    var nearbyVenueFill = false
     detect = nearbyPending ? .reading : .text
 
     func updateStatus() {
@@ -575,6 +578,14 @@ struct LogView: View {
           place = (found.city, found.country)
           nearbyPending = false
           nearbyDone = true
+          // Our own table with exactly one theatre in range: fill it now,
+          // without waiting for the text.
+          if let only = found.singleSaved, !touchedVenue, venue == nil {
+            venue = only
+            fromPhoto.insert("venue")
+            nearbyVenueFill = true
+            singleNearbyApplied = true
+          }
           // Text may have come first, before the country was known.
           applyPrintedDate()
           applySingleNearby()
@@ -586,7 +597,7 @@ struct LogView: View {
             applyPrintedDate()
             group.addTask { .shows(await PhotoText.matchShows(read)) }
             textPending = true
-            if read.isPaper, !touchedVenue, venue == nil {
+            if read.isPaper, !touchedVenue, venue == nil || nearbyVenueFill {
               group.addTask { .venue(await PhotoText.matchVenue(read)) }
               venuePending = true
             }
@@ -606,9 +617,10 @@ struct LogView: View {
         case .venue(let saved):
           logStep("venue")
           venuePending = false
-          if !touchedVenue, venue == nil, let saved {
+          if !touchedVenue, venue == nil || nearbyVenueFill, let saved {
             venue = VenueChoice(saved)
             fromPhoto.insert("venue")
+            nearbyVenueFill = false
           }
         }
         updateStatus()
