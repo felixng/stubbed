@@ -34,6 +34,11 @@ const NOMINATIM_URL = "https://nominatim.openstreetmap.org";
 // Short waits: a lookup that hasn't answered in a few seconds rarely will,
 // and the identify step can still search near the point without it.
 const LOOKUP_TIMEOUT_MS = 4_000;
+// A healthy Overpass mirror answers a 150 m query in well under a second.
+const OVERPASS_TIMEOUT_MS = 2_000;
+// After every mirror failed, this instance goes straight to Nominatim for
+// this long, then lets one lookup try Overpass again.
+const OVERPASS_SKIP_MS = 10 * 60_000;
 
 // Broadway houses can be under 100 m apart and phone GPS in Midtown can be
 // 20–50 m off, so without better information look a little wider and let
@@ -134,7 +139,7 @@ async function queryOverpass(query: string) {
   try {
     return await Promise.any(
       OVERPASS_URLS.map((url) =>
-        getJson(url, { method: "POST", body: new URLSearchParams({ data: query }), signal: done.signal }),
+        getJson(url, { method: "POST", body: new URLSearchParams({ data: query }), signal: done.signal }, OVERPASS_TIMEOUT_MS),
       ),
     );
   } catch (error) {
@@ -195,6 +200,18 @@ function searchNominatim(lat: number, lng: number, radius: number) {
   }).then((json) => parseNominatimSearch(json, lat, lng, radius));
 }
 
+// Overpass health for this server instance. While `skipUntil` is in the
+// future, lookups go straight to Nominatim; the first one after that is the
+// trial (`trialing`, so only one), and its result decides whether to go on
+// skipping.
+const overpass = { skipUntil: 0, trialing: false };
+
+/** Test hook: forget what this instance knows about Overpass. */
+export function resetOverpassHealth() {
+  overpass.skipUntil = 0;
+  overpass.trialing = false;
+}
+
 // Results per ~100 m square for this server instance: theatres don't move,
 // and several photo visits often share a venue.
 const nearbyCache = new Map<string, NearbyPlaces>();
@@ -233,22 +250,46 @@ export async function findNearbyTheatres(lat: number, lng: number, radius = NEAR
     `nwr(around:${radius},${lat},${lng})["amenity"="theatre"];` +
     `out center tags;`;
 
-  // The reverse lookup goes first in Nominatim's queue, beside Overpass, so
-  // the city is usually ready when Overpass answers. Nominatim's theatre
-  // search is only the fallback for when every Overpass server is down.
-  // Both are best effort: if neither answers, the list is empty.
-  const reverse = reversePlace(lat, lng);
-  let candidates: PlaceCandidate[] | null = await queryOverpass(query)
-    .then((json) => parseOverpass(json, lat, lng))
-    .catch((error) => {
-      console.error("Overpass lookup failed", String(error));
-      return null;
-    });
-  if (!candidates) {
+  // Overpass is the main source. While it's known to be down we go straight
+  // to Nominatim's theatre search, which then runs first in the queue.
+  // Otherwise the reverse lookup goes first in the queue, beside Overpass,
+  // so the city is usually ready when Overpass answers, and Nominatim's
+  // theatre search is only the fallback. Both are best effort: if neither
+  // answers, the list is empty.
+  const skipping = Date.now() < overpass.skipUntil || overpass.trialing;
+  let candidates: PlaceCandidate[] | null = null;
+  let reverse: Promise<{ city: string | null; country: string | null }> | null = null;
+  if (skipping) {
     candidates = await searchNominatim(lat, lng, radius).catch((error) => {
       console.error("Nominatim theatre search failed", String(error));
       return null;
     });
+  } else {
+    const trial = overpass.skipUntil > 0;
+    if (trial) overpass.trialing = true;
+    const started = Date.now();
+    reverse = reversePlace(lat, lng);
+    candidates = await queryOverpass(query)
+      .then((json) => {
+        overpass.skipUntil = 0;
+        return parseOverpass(json, lat, lng);
+      })
+      .catch((error) => {
+        const alreadySkipping = overpass.skipUntil > Date.now();
+        overpass.skipUntil = Date.now() + OVERPASS_SKIP_MS;
+        if (!trial && !alreadySkipping) console.warn(`Overpass is down: skipping it for ${OVERPASS_SKIP_MS / 60_000} minutes`);
+        console.error(`Overpass lookup failed after ${Date.now() - started} ms`, String(error));
+        return null;
+      })
+      .finally(() => {
+        overpass.trialing = false;
+      });
+    if (!candidates) {
+      candidates = await searchNominatim(lat, lng, radius).catch((error) => {
+        console.error("Nominatim theatre search failed", String(error));
+        return null;
+      });
+    }
   }
 
   // City and country: from a theatre's address when there is one, else the
@@ -256,7 +297,7 @@ export async function findNearbyTheatres(lat: number, lng: number, radius = NEAR
   const addressed = candidates?.find((c) => c.city && c.country);
   const place: { city: string | null; country: string | null } = addressed
     ? { city: addressed.city, country: addressed.country }
-    : await reverse;
+    : await (reverse ?? reversePlace(lat, lng));
 
   const result: NearbyPlaces = {
     // Most theatres don't carry addr:city; the point's city is close enough.
