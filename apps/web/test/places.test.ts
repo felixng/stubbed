@@ -63,8 +63,8 @@ test("Nominatim covers for Overpass when every mirror fails, and the result is c
   assert.deepEqual(first.candidates.map((c) => c.name), ["Hudson Theatre"]);
   assert.equal(first.city, "New York");
   assert.equal(first.country, "US");
-  // The theatre's address gave the city, so no reverse lookup was needed.
-  assert.ok(!calls.some((c) => c.endsWith("/reverse")));
+  // The theatre's address gave the city; the reverse lookup started anyway.
+  assert.ok(calls.filter((c) => c.endsWith("/reverse")).length <= 1);
 
   const before = calls.length;
   const again = await findNearbyTheatres(point.lat, point.lng);
@@ -105,4 +105,36 @@ test("parseNominatimSearch honours a tighter radius", () => {
   const lat = HUDSON.lat + 0.0005;
   assert.equal(parseNominatimSearch([nominatimTheatre], lat, HUDSON.lng).length, 1);
   assert.equal(parseNominatimSearch([nominatimTheatre], lat, HUDSON.lng, 40).length, 0);
+});
+
+test("the reverse lookup is sent before Overpass answers, and the search is skipped when Overpass works", async () => {
+  const order: string[] = [];
+  serve(async (url) => {
+    if (url.includes("/api/interpreter")) {
+      order.push("overpass");
+      // Outlasts the 1.1 s Nominatim gap left by the earlier tests.
+      await new Promise((r) => setTimeout(r, 1_400));
+      order.push("overpass-answered");
+      return Response.json({ elements: [{ type: "node", id: 8, lat: 48.8566, lon: 2.3523, tags: { name: "Théâtre" } }] });
+    }
+    if (url.includes("/search")) order.push("search");
+    if (url.includes("/reverse")) order.push("reverse");
+    return Response.json({ address: { city: "Paris", country_code: "fr" } });
+  });
+  const out = await findNearbyTheatres(48.8566, 2.3522);
+  assert.equal(out.city, "Paris");
+  assert.ok(order.indexOf("reverse") !== -1 && order.indexOf("reverse") < order.indexOf("overpass-answered"));
+  assert.ok(!order.includes("search"), "Overpass answered, so no fallback search");
+});
+
+test("a second lookup near the same point doesn't reverse geocode again", async () => {
+  const calls = serve((url) => {
+    if (url.includes("/api/interpreter")) return Response.json({ elements: [] });
+    return Response.json({ address: { city: "Leeds", country_code: "gb" } });
+  });
+  await findNearbyTheatres(53.8008, -1.5491);
+  // Different 100 m square (a new nearby-cache key), same ~1 km square.
+  const second = await findNearbyTheatres(53.8041, -1.5491);
+  assert.equal(second.city, "Leeds");
+  assert.equal(calls.filter((c) => c.endsWith("/reverse")).length, 1);
 });

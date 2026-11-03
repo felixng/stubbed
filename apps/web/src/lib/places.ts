@@ -200,6 +200,28 @@ function searchNominatim(lat: number, lng: number, radius: number) {
 const nearbyCache = new Map<string, NearbyPlaces>();
 const MAX_CACHED = 500;
 
+// City and country per ~1 km square, so a second visit nearby skips Nominatim.
+const placeCache = new Map<string, { city: string | null; country: string | null }>();
+
+function reversePlace(lat: number, lng: number): Promise<{ city: string | null; country: string | null }> {
+  const key = `${lat.toFixed(2)},${lng.toFixed(2)}`;
+  const cached = placeCache.get(key);
+  if (cached) return Promise.resolve(cached);
+  return nominatim("reverse", { lat: String(lat), lon: String(lng), zoom: "10" })
+    .then(parseNominatim)
+    .then((place) => {
+      if (place.city || place.country) {
+        if (placeCache.size >= MAX_CACHED) placeCache.delete(placeCache.keys().next().value!);
+        placeCache.set(key, place);
+      }
+      return place;
+    })
+    .catch((error) => {
+      console.error("Nominatim lookup failed", String(error));
+      return { city: null, country: null };
+    });
+}
+
 // `radius` comes from nearbyRadius(): tighter when the photo's GPS is precise.
 export async function findNearbyTheatres(lat: number, lng: number, radius = NEARBY_RADIUS_M): Promise<NearbyPlaces> {
   const key = `${lat.toFixed(3)},${lng.toFixed(3)},${radius}`;
@@ -211,11 +233,11 @@ export async function findNearbyTheatres(lat: number, lng: number, radius = NEAR
     `nwr(around:${radius},${lat},${lng})["amenity"="theatre"];` +
     `out center tags;`;
 
-  // Overpass and Nominatim's theatre search run side by side; Overpass wins
-  // when it answers, Nominatim covers it when every Overpass server is down.
+  // The reverse lookup goes first in Nominatim's queue, beside Overpass, so
+  // the city is usually ready when Overpass answers. Nominatim's theatre
+  // search is only the fallback for when every Overpass server is down.
   // Both are best effort: if neither answers, the list is empty.
-  const nominatimSearch = searchNominatim(lat, lng, radius);
-  nominatimSearch.catch(() => {}); // not awaited when Overpass answers
+  const reverse = reversePlace(lat, lng);
   let candidates: PlaceCandidate[] | null = await queryOverpass(query)
     .then((json) => parseOverpass(json, lat, lng))
     .catch((error) => {
@@ -223,23 +245,18 @@ export async function findNearbyTheatres(lat: number, lng: number, radius = NEAR
       return null;
     });
   if (!candidates) {
-    candidates = await nominatimSearch.catch((error) => {
+    candidates = await searchNominatim(lat, lng, radius).catch((error) => {
       console.error("Nominatim theatre search failed", String(error));
       return null;
     });
   }
 
-  // City and country: from a theatre's address when there is one, else a
+  // City and country: from a theatre's address when there is one, else the
   // reverse lookup of the point.
   const addressed = candidates?.find((c) => c.city && c.country);
   const place: { city: string | null; country: string | null } = addressed
     ? { city: addressed.city, country: addressed.country }
-    : await nominatim("reverse", { lat: String(lat), lon: String(lng), zoom: "10" })
-        .then(parseNominatim)
-        .catch((error) => {
-          console.error("Nominatim lookup failed", String(error));
-          return { city: null, country: null };
-        });
+    : await reverse;
 
   const result: NearbyPlaces = {
     // Most theatres don't carry addr:city; the point's city is close enough.
