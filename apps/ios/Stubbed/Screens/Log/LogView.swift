@@ -648,12 +648,19 @@ struct LogView: View {
     started = true
     do {
       guard let data = try await item.loadTransferable(type: Data.self) else { throw Photo.Failure.unreadable }
-      let jpeg = try Photo.jpeg(from: data, maxEdge: Photo.storedEdge)
+      let token = run
+      // Nearby and Vision start now; the encode below doesn't hold them up.
+      let lookup = PhotoLookup(data: data)
+      let jpeg = try await Task.detached(priority: .userInitiated) {
+        try Photo.resizedJPEG(from: data, maxEdge: Photo.storedEdge)
+      }.value
+      // The user picked another photo meanwhile: that one wins.
+      guard token == run else { return }
       photo = jpeg
       preview = UIImage(data: jpeg)
       existingPhoto = nil
       // Detection reads the original (its EXIF); only the clean copy is stored.
-      await detect(from: data)
+      await detect(from: data, lookup: lookup)
     } catch {
       photoError = "Couldn’t read that photo. Try another, or fill in the details below."
       detect = .idle
@@ -668,7 +675,15 @@ struct LogView: View {
     let prepared = await step.photo.value
     // The user picked another photo meanwhile: that one wins.
     guard token == run else { return }
-    guard let prepared, let jpeg = try? Photo.jpeg(from: prepared.original, maxEdge: Photo.storedEdge) else {
+    var encoded: Data?
+    if let prepared {
+      let original = prepared.original
+      encoded = try? await Task.detached(priority: .userInitiated) {
+        try Photo.resizedJPEG(from: original, maxEdge: Photo.storedEdge)
+      }.value
+      guard token == run else { return }
+    }
+    guard let prepared, let jpeg = encoded else {
       photoError = "Couldn’t read this photo. Fill in the details below, or skip this show."
       detect = .idle
       return
