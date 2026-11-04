@@ -62,6 +62,19 @@ Rules in `load_osm_venues`: a hand-added venue with no `osm_id` gets the id of t
 
 **For the hosted project, the owner runs it**: apply the migration, review a `--dry-run`, then run it for real without `--skip-cities`. Set `SUPABASE_DB_URL` as for the Wikidata sync. OpenStreetMap data is © OpenStreetMap contributors (ODbL); the terms already credit it.
 
+## Crawl pilot: what's on at theatre websites (#277, #291)
+
+`scripts/crawl/` reads each venue's `whats_on_url` into `crawl_runs` and `crawl_findings`, which only admins can read. Nothing it writes reaches users or show search: findings keep the raw title and link to no show. Requires **Node 24+** and **psql**; apply `20261104150000_crawl_tables.sql` first. `SUPABASE_DB_URL` is read as for the other scripts (default: local Supabase).
+
+```sh
+node supabase/scripts/crawl/index.mjs --venues <id>,<id> --dry-run   # fetch and report, write nothing
+node supabase/scripts/crawl/index.mjs --venues <id>,<id>             # creates a run and stores findings
+node supabase/scripts/crawl/index.mjs --run-id <uuid>                # a run created elsewhere (the admin page, #358)
+node --test supabase/scripts/crawl/crawl.test.mjs
+```
+
+A URL shared by several venues is fetched once. It honours `robots.txt` (including `Crawl-delay`), waits at least `--delay-ms` (default 2000) between requests to a host, sends an identifying User-Agent, and with `--cache file.json` sends `If-None-Match` / `If-Modified-Since`. A site that blocks us, fails or redirects elsewhere is recorded in the run's `summary` and skipped; each site is stored in its own transaction. Pages are never kept, only the findings and a short evidence snippet. How a page becomes findings is in `readers.mjs`: a reader returns findings or `null` to pass; for now only the stub reader exists, which records the page title with confidence 0.
+
 ## Local
 
 Requires Docker and the Supabase CLI (`npx supabase ...` works).
