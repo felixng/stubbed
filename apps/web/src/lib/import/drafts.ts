@@ -16,7 +16,7 @@ export type Extracted = {
   show_title: string | null;
   show_type: ShowType | null;
   venue_name: string | null;
-  // Only from photo identification, and only from the nearby-theatre list.
+  // Only from the nearby-theatre list.
   venue_osm_id: string | null;
   city: string | null;
   country: string | null;
