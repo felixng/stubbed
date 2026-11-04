@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 
 import { AdminOnly } from "@/components/app/admin/AdminOnly";
+import { EditTheatre } from "@/components/app/admin/EditTheatre";
 import { BackLink } from "@/components/ui/BackLink";
 import { buttonClass } from "@/components/ui/Button";
 import { CIRCUITS, PAGE_SIZE, filterArgs, parseTheatreFilters, theatresHref } from "@/lib/admin-theatres";
@@ -154,6 +155,7 @@ async function Theatres({ searchParams }: Pick<PageProps<"/app/admin/theatres">,
                   <Missing>No what’s-on link</Missing>
                 )}
                 {!v.circuit && <Missing>No circuit</Missing>}
+                <EditTheatre key={`${v.id}${v.website}${v.whats_on_url}${v.circuit}`} id={v.id} website={v.website} whatsOn={v.whats_on_url} circuit={v.circuit} />
               </div>
             </li>
           ))}
