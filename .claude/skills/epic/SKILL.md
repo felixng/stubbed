@@ -23,7 +23,7 @@ Don't stop to ask mid-run: when something needs the owner, record it and move on
 **Merge it when green:**
 1. Wait for GitHub's checks: `gh pr checks <pr> --watch --fail-fast`. If one fails, fix it on the same branch and wait again. After two failed fixes, stop the epic (step 4).
 2. iOS is not in GitHub's checks: for any pull request touching `apps/ios`, `apps/ios/scripts/dev build` and `apps/ios/scripts/dev test` must have passed on the final commit.
-3. **Migrations:** if the pull request adds files under `supabase/migrations`, apply them to the hosted database before merging: `supabase db push` from the repo root (the clone is linked; the password is in `SUPABASE_DB_PASSWORD`). First read each new migration. If it drops a table or column, deletes rows, or rewrites existing data in a way that can't be undone, don't push it: label the pull request `needs-human`, comment why, and stop the epic. If the push fails, don't merge; stop the epic.
+3. **Migrations:** if the pull request adds files under `supabase/migrations`, apply them to the hosted database before merging: `supabase db push --db-url "$HOSTED_DB_URL"` from the repo root. It needs no `supabase link`, so it works in a fresh worktree; `HOSTED_DB_URL` is the hosted Postgres connection string, set in `.claude/settings.local.json`. Never print it. Run it with `--dry-run` first and check the list. First read each new migration. If it drops a table or column, deletes rows, or rewrites existing data in a way that can't be undone, don't push it: label the pull request `needs-human`, comment why, and stop the epic. If the push fails, don't merge; stop the epic.
 4. Merge: `gh pr merge <pr> --squash --delete-branch`. Then `git checkout main && git pull --ff-only`.
 5. Check the production deploy: `gh api repos/felixng/stubbed/commits/main/status --jq .state` until it's `success` or `failure` (Vercel reports here; allow 10 minutes). On `failure`, stop the epic. Vercel keeps the previous deployment live.
 
@@ -48,7 +48,7 @@ Needs you: #<issue>: <what and why> …
 ## Never
 
 - Push to `main` directly, force-push, or rewrite history.
-- Run `supabase db reset` or anything else against the hosted database except `supabase db push`.
+- Run `supabase db reset` or anything else against the hosted database except `supabase db push --db-url "$HOSTED_DB_URL"`.
 - Change `.claude/skills/epic/`, `.github/workflows/` or secrets as part of a run. If one of those needs changing, say so in the summary.
 - Merge a pull request with failing checks, or one you didn't open in this run.
 - Start work outside this epic.

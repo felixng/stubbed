@@ -34,16 +34,16 @@ Merge: `gh pr merge <pr> --squash --delete-branch`.
 
 Only if the pull request added migrations. After the merge, from the repo root:
 
-1. If `supabase migration list --linked` says the project isn't linked (a fresh worktree), run `supabase link --project-ref "$(cat "$(git worktree list --porcelain | awk 'NR==1{print $2}')/supabase/.temp/project-ref")"`. The project ref is in `supabase/.temp/project-ref` in the main checkout (the first entry of `git worktree list`), and the password is in `SUPABASE_DB_PASSWORD`.
-2. `supabase db push --dry-run` and check the list. It may include migrations from other merged pull requests that were never pushed. Those are fine to apply, but say so in the summary.
-3. `supabase db push --yes`.
+1. Use the hosted connection string, not a link: `HOSTED_DB_URL` is set in `.claude/settings.local.json` and works in a fresh worktree. Never print it. (If it isn't set, fall back to linking: `supabase link --project-ref "$(cat "$(git worktree list --porcelain | awk 'NR==1{print $2}')/supabase/.temp/project-ref")"`, with the password in `SUPABASE_DB_PASSWORD`, then drop `--db-url` below. Linking writes `supabase/.temp/`, which breaks a later `supabase db reset` in that worktree; delete it afterwards.)
+2. `supabase db push --db-url "$HOSTED_DB_URL" --dry-run` and check the list. It may include migrations from other merged pull requests that were never pushed. Those are fine to apply, but say so in the summary.
+3. `supabase db push --db-url "$HOSTED_DB_URL" --yes`.
 4. Verify with one read-only query that the change is in place (the new function exists, the backfill ran), and report what you saw.
 
 The order matters: merging first means production web briefly runs new code against the old schema while Vercel deploys. That is fine for additive migrations (new tables, columns, functions), which is what we write. If the new web code **requires** the schema (it calls a function that doesn't exist yet) and the migration is slow or the deploy is fast, push the migration first and say you did.
 
 If the push fails, don't retry blindly. Report the error without credentials, leave the pull request merged, and tell the owner the migration is pending.
 
-Never run `supabase db reset` or anything else that writes to the hosted database except `supabase db push`. Data fixes (such as merging duplicate venues) are separate: list what you'd change and wait for the owner's go-ahead.
+Never run `supabase db reset` or anything else that writes to the hosted database except `supabase db push --db-url "$HOSTED_DB_URL"`. Data fixes (such as merging duplicate venues) are separate: list what you'd change and wait for the owner's go-ahead.
 
 ## 5. Check the production deploy
 
