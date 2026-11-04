@@ -930,8 +930,8 @@ export const copyDefinitions = {
         "fieldsetTitle": "What we collect and why"
       },
       "whenYouAddANewShow": {
-        "title": ": when you add a new show (whether you started from a photo, w…",
-        "value": ": when you add a new show (whether you started from a photo, whether we could work out the show, and whether you added a rating or a note, but not what they say), and when you share, save or copy a share card (which button and card design). This is stored with your account so we can see how many people keep tracking and sharing.",
+        "title": ": when you add a new show (whether you started from a photo, a…",
+        "value": ": when you add a new show (whether you started from a photo, and whether you added a rating or a note, but not what they say), and when you share, save or copy a share card (which button and card design). This is stored with your account so we can see how many people keep tracking and sharing.",
         "multiline": true,
         "fieldset": "collect",
         "fieldsetTitle": "What we collect and why"
@@ -2099,7 +2099,7 @@ export const copyDefinitions = {
       },
       "logAShowAnswer": {
         "title": "Answer",
-        "value": "On the website, open Log and pick a photo, or choose No photo? Fill in by hand. A photo can suggest the date, nearby theatre and show. Check the details, add an optional half-star rating, note and photo, choose Public or Private, then save. Suggestions can be wrong; you can change them before saving.",
+        "value": "On the website, open Log and pick a photo, or choose No photo? Fill in by hand. A photo can suggest the date and nearby theatre. Check the details, add an optional half-star rating, note and photo, choose Public or Private, then save. Suggestions can be wrong; you can change them before saving.",
         "multiline": true,
         "fieldset": "logAShow",
         "fieldsetTitle": "How do I log a show?"
