@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Chip } from "@/components/ui/Chip";
-import { SHOW_TYPE_LABELS, similarShows, tidyShowTitle, type NewShow, type Show, type ShowType } from "@/lib/entries";
+import { SHOW_TYPE_LABELS, showSubtitle, similarShows, tidyShowTitle, type NewShow, type Show, type ShowType } from "@/lib/entries";
 import { createClient } from "@/lib/supabase/client";
 import { DidYouMean } from "./DidYouMean";
 import { SelectedValue } from "./SelectedValue";
@@ -129,7 +129,7 @@ export function ShowField({
   const options: TypeaheadOption[] = matches.map((s) => ({
     key: s.id,
     primary: s.title,
-    secondary: SHOW_TYPE_LABELS[s.type],
+    secondary: showSubtitle(s),
     onSelect: () => {
       // Not when the miss was just this search overtyped ("Hamiltonx").
       if (missed && !missed.toLowerCase().startsWith(q.toLowerCase())) setOffer({ alias: missed, showId: s.id });
@@ -141,7 +141,7 @@ export function ShowField({
     options.push({
       key: "add",
       primary: `Add “${q}”`,
-      secondary: "New show",
+      secondary: matches.length ? "Not one of these? Add it as a new show" : "New show",
       emphasis: true,
       onSelect: () => onChange({ title: q, type: "musical" }),
     });
