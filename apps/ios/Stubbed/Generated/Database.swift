@@ -1003,6 +1003,7 @@ internal enum PublicSchema {
     internal let id: UUID
     internal let searchText: String?
     internal let title: String
+    internal let titleLocked: Bool
     internal let type: ShowType
     internal let verified: Bool
     internal let wikidataId: String?
@@ -1014,6 +1015,7 @@ internal enum PublicSchema {
       case id = "id"
       case searchText = "search_text"
       case title = "title"
+      case titleLocked = "title_locked"
       case type = "type"
       case verified = "verified"
       case wikidataId = "wikidata_id"
@@ -1027,6 +1029,7 @@ internal enum PublicSchema {
     internal let id: UUID?
     internal let searchText: String?
     internal let title: String
+    internal let titleLocked: Bool?
     internal let type: ShowType?
     internal let verified: Bool?
     internal let wikidataId: String?
@@ -1038,6 +1041,7 @@ internal enum PublicSchema {
       case id = "id"
       case searchText = "search_text"
       case title = "title"
+      case titleLocked = "title_locked"
       case type = "type"
       case verified = "verified"
       case wikidataId = "wikidata_id"
@@ -1051,6 +1055,7 @@ internal enum PublicSchema {
     internal let id: UUID?
     internal let searchText: String?
     internal let title: String?
+    internal let titleLocked: Bool?
     internal let type: ShowType?
     internal let verified: Bool?
     internal let wikidataId: String?
@@ -1062,6 +1067,7 @@ internal enum PublicSchema {
       case id = "id"
       case searchText = "search_text"
       case title = "title"
+      case titleLocked = "title_locked"
       case type = "type"
       case verified = "verified"
       case wikidataId = "wikidata_id"
