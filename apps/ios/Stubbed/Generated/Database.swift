@@ -138,6 +138,7 @@ internal enum PublicSchema {
     internal let review: String?
     internal let reviewNote: String?
     internal let runId: UUID
+    internal let sentToReviewAt: String?
     internal let sourceUrl: String
     internal let stageText: String?
     internal let startDate: String?
@@ -155,6 +156,7 @@ internal enum PublicSchema {
       case review = "review"
       case reviewNote = "review_note"
       case runId = "run_id"
+      case sentToReviewAt = "sent_to_review_at"
       case sourceUrl = "source_url"
       case stageText = "stage_text"
       case startDate = "start_date"
@@ -174,6 +176,7 @@ internal enum PublicSchema {
     internal let review: String?
     internal let reviewNote: String?
     internal let runId: UUID
+    internal let sentToReviewAt: String?
     internal let sourceUrl: String
     internal let stageText: String?
     internal let startDate: String?
@@ -191,6 +194,7 @@ internal enum PublicSchema {
       case review = "review"
       case reviewNote = "review_note"
       case runId = "run_id"
+      case sentToReviewAt = "sent_to_review_at"
       case sourceUrl = "source_url"
       case stageText = "stage_text"
       case startDate = "start_date"
@@ -210,6 +214,7 @@ internal enum PublicSchema {
     internal let review: String?
     internal let reviewNote: String?
     internal let runId: UUID?
+    internal let sentToReviewAt: String?
     internal let sourceUrl: String?
     internal let stageText: String?
     internal let startDate: String?
@@ -227,6 +232,7 @@ internal enum PublicSchema {
       case review = "review"
       case reviewNote = "review_note"
       case runId = "run_id"
+      case sentToReviewAt = "sent_to_review_at"
       case sourceUrl = "source_url"
       case stageText = "stage_text"
       case startDate = "start_date"
@@ -1281,6 +1287,7 @@ internal enum PublicSchema {
     internal let title: String
     internal let type: ShowType
     internal let updatedAt: String
+    internal let venueId: UUID?
     internal enum CodingKeys: String, CodingKey {
       case aliases = "aliases"
       case createdAt = "created_at"
@@ -1297,6 +1304,7 @@ internal enum PublicSchema {
       case title = "title"
       case type = "type"
       case updatedAt = "updated_at"
+      case venueId = "venue_id"
     }
   }
   internal struct ShowCandidatesInsert: Codable, Hashable, Sendable {
@@ -1315,6 +1323,7 @@ internal enum PublicSchema {
     internal let title: String
     internal let type: ShowType?
     internal let updatedAt: String?
+    internal let venueId: UUID?
     internal enum CodingKeys: String, CodingKey {
       case aliases = "aliases"
       case createdAt = "created_at"
@@ -1331,6 +1340,7 @@ internal enum PublicSchema {
       case title = "title"
       case type = "type"
       case updatedAt = "updated_at"
+      case venueId = "venue_id"
     }
   }
   internal struct ShowCandidatesUpdate: Codable, Hashable, Sendable {
@@ -1349,6 +1359,7 @@ internal enum PublicSchema {
     internal let title: String?
     internal let type: ShowType?
     internal let updatedAt: String?
+    internal let venueId: UUID?
     internal enum CodingKeys: String, CodingKey {
       case aliases = "aliases"
       case createdAt = "created_at"
@@ -1365,6 +1376,7 @@ internal enum PublicSchema {
       case title = "title"
       case type = "type"
       case updatedAt = "updated_at"
+      case venueId = "venue_id"
     }
   }
   internal struct ShowsSelect: Codable, Hashable, Sendable {

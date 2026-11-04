@@ -19,8 +19,10 @@ type Candidate = {
   type: string;
   first_performed: number | null;
   aliases: string[];
+  source: string;
   source_ref: string;
   source_url: string | null;
+  venue_name: string | null;
   seen_count: number;
   status: string;
   match_id: string | null;
@@ -130,11 +132,12 @@ async function Candidates({ searchParams }: Pick<PageProps<"/app/admin/shows/can
                 <span className="text-footnote text-label-secondary">
                   {c.type}
                   {c.first_performed ? ` · ${c.first_performed}` : ""} · seen {c.seen_count}×
+                  {c.source === "crawler" && <>{" · "}from the crawl{c.venue_name ? ` at ${c.venue_name}` : ""}</>}
                   {c.source_url && (
                     <>
                       {" · "}
                       <a href={c.source_url} target="_blank" rel="noopener noreferrer" className="font-semibold text-tint-text">
-                        {c.source_ref}
+                        {c.source === "crawler" ? "Source page" : c.source_ref}
                       </a>
                     </>
                   )}
@@ -183,7 +186,7 @@ export default function AdminCandidatesPage({ searchParams }: PageProps<"/app/ad
         <BackLink href="/app/admin/shows">Shows</BackLink>
         <h1 className="text-title font-display text-label">Show candidates</h1>
         <p className="text-subheadline text-label-secondary">
-          Names pulled from Wikidata that aren’t in the show list yet. Nothing here appears in search until you add it.
+          Names from Wikidata and from crawled what’s-on pages that aren’t in the show list yet. Nothing here appears in search until you add it.
         </p>
       </div>
       <Suspense fallback={<p className="text-subheadline text-label-secondary">Loading…</p>}>

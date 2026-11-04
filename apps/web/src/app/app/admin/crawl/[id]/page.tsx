@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { AdminOnly } from "@/components/app/admin/AdminOnly";
 import { MissedTitles } from "@/components/app/admin/MissedTitles";
 import { ReviewFinding } from "@/components/app/admin/ReviewFinding";
+import { SendToReview } from "@/components/app/admin/SendToReview";
 import { BackLink } from "@/components/ui/BackLink";
 import { buttonClass } from "@/components/ui/Button";
 import {
@@ -123,7 +124,7 @@ async function Run({ params, searchParams }: Pick<PageProps<"/app/admin/crawl/[i
   const compareParam = (await searchParams).compare;
   const compareId = typeof compareParam === "string" && UUID.test(compareParam) && compareParam !== id ? compareParam : null;
   const { supabase } = await ownerContext();
-  const [runRes, findingsRes, scoresRes, missedRes, othersRes] = await Promise.all([
+  const [runRes, findingsRes, scoresRes, missedRes, othersRes, waitingRes] = await Promise.all([
     supabase.from("crawl_runs").select("id, status, method, model, prompt, branch, commit_sha, budget_usd, cost_usd, venue_ids, created_at").eq("id", id).maybeSingle(),
     supabase
       .from("crawl_findings")
@@ -133,6 +134,7 @@ async function Run({ params, searchParams }: Pick<PageProps<"/app/admin/crawl/[i
     supabase.rpc("admin_crawl_scores", { for_run: id }),
     supabase.from("crawl_missed").select("id, venue_id, title, note").eq("run_id", id).order("created_at"),
     supabase.from("crawl_runs").select("id, created_at, method, model").neq("id", id).order("created_at", { ascending: false }).limit(20),
+    supabase.from("crawl_findings").select("id", { count: "exact", head: true }).eq("run_id", id).eq("review", "right").eq("kind", "show").is("sent_to_review_at", null),
   ]);
   if (!runRes.data) notFound();
   const run = runRes.data as unknown as RunRow;
@@ -158,6 +160,8 @@ async function Run({ params, searchParams }: Pick<PageProps<"/app/admin/crawl/[i
           <p className="mt-2">Save the prompt above to prompt.md first. The admin form that does this from here comes with #358.</p>
         </details>
       </div>
+
+      <SendToReview runId={id} waiting={waitingRes.count ?? 0} />
 
       {others.length > 0 && (
         <form method="get" className="flex flex-wrap items-end gap-2">
