@@ -94,9 +94,13 @@ npx supabase test db      # run tests/ (also runs in CI)
 Nothing applies migrations to the hosted project automatically. When a PR adds a file under `migrations/`, apply it **before** merging, or the deployed app will call tables, functions or buckets that don't exist yet (this happened with `entry_photos`: saving failed until the bucket was created).
 
 ```bash
-npx supabase link --project-ref <project-ref>   # once
-npx supabase db push                            # applies migrations not yet on the hosted project
+# HOSTED_DB_URL = the hosted Postgres connection string (Session pooler). Keep it out of git,
+# e.g. in .claude/settings.local.json. No `supabase link` needed, so it works in any worktree.
+npx supabase db push --db-url "$HOSTED_DB_URL" --dry-run   # check the list first
+npx supabase db push --db-url "$HOSTED_DB_URL"             # applies migrations not yet on the hosted project
 ```
+
+Not `SUPABASE_DB_URL`: the admin scripts read that name and default to local Postgres when it is unset, so setting it globally would aim them at production. (Linking with `supabase link --project-ref <project-ref>` still works, but writes `supabase/.temp/`, which makes a later `supabase db reset` in that checkout pull the wrong image.)
 
 Check what's applied with `npx supabase migration list`.
 
