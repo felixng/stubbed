@@ -1265,6 +1265,108 @@ internal enum PublicSchema {
       case showId = "show_id"
     }
   }
+  internal struct ShowCandidatesSelect: Codable, Hashable, Sendable {
+    internal let aliases: [String]
+    internal let createdAt: String
+    internal let firstPerformed: Int16?
+    internal let id: UUID
+    internal let reviewedAt: String?
+    internal let sampleId: UUID?
+    internal let seenCount: Int32
+    internal let showId: UUID?
+    internal let source: String
+    internal let sourceRef: String
+    internal let sourceUrl: String?
+    internal let status: String
+    internal let title: String
+    internal let type: ShowType
+    internal let updatedAt: String
+    internal enum CodingKeys: String, CodingKey {
+      case aliases = "aliases"
+      case createdAt = "created_at"
+      case firstPerformed = "first_performed"
+      case id = "id"
+      case reviewedAt = "reviewed_at"
+      case sampleId = "sample_id"
+      case seenCount = "seen_count"
+      case showId = "show_id"
+      case source = "source"
+      case sourceRef = "source_ref"
+      case sourceUrl = "source_url"
+      case status = "status"
+      case title = "title"
+      case type = "type"
+      case updatedAt = "updated_at"
+    }
+  }
+  internal struct ShowCandidatesInsert: Codable, Hashable, Sendable {
+    internal let aliases: [String]?
+    internal let createdAt: String?
+    internal let firstPerformed: Int16?
+    internal let id: UUID?
+    internal let reviewedAt: String?
+    internal let sampleId: UUID?
+    internal let seenCount: Int32?
+    internal let showId: UUID?
+    internal let source: String?
+    internal let sourceRef: String
+    internal let sourceUrl: String?
+    internal let status: String?
+    internal let title: String
+    internal let type: ShowType?
+    internal let updatedAt: String?
+    internal enum CodingKeys: String, CodingKey {
+      case aliases = "aliases"
+      case createdAt = "created_at"
+      case firstPerformed = "first_performed"
+      case id = "id"
+      case reviewedAt = "reviewed_at"
+      case sampleId = "sample_id"
+      case seenCount = "seen_count"
+      case showId = "show_id"
+      case source = "source"
+      case sourceRef = "source_ref"
+      case sourceUrl = "source_url"
+      case status = "status"
+      case title = "title"
+      case type = "type"
+      case updatedAt = "updated_at"
+    }
+  }
+  internal struct ShowCandidatesUpdate: Codable, Hashable, Sendable {
+    internal let aliases: [String]?
+    internal let createdAt: String?
+    internal let firstPerformed: Int16?
+    internal let id: UUID?
+    internal let reviewedAt: String?
+    internal let sampleId: UUID?
+    internal let seenCount: Int32?
+    internal let showId: UUID?
+    internal let source: String?
+    internal let sourceRef: String?
+    internal let sourceUrl: String?
+    internal let status: String?
+    internal let title: String?
+    internal let type: ShowType?
+    internal let updatedAt: String?
+    internal enum CodingKeys: String, CodingKey {
+      case aliases = "aliases"
+      case createdAt = "created_at"
+      case firstPerformed = "first_performed"
+      case id = "id"
+      case reviewedAt = "reviewed_at"
+      case sampleId = "sample_id"
+      case seenCount = "seen_count"
+      case showId = "show_id"
+      case source = "source"
+      case sourceRef = "source_ref"
+      case sourceUrl = "source_url"
+      case status = "status"
+      case title = "title"
+      case type = "type"
+      case updatedAt = "updated_at"
+    }
+  }
   internal struct ShowsSelect: Codable, Hashable, Sendable {
     internal let aliases: [String]
     internal let createdAt: String
