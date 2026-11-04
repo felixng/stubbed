@@ -1,15 +1,16 @@
-# Catalogue: shows, venues, productions and runs
+# Catalogue: shows, venues and runs
 
-How the catalogue is built, and what the remaining catalogue epics add. Read this before picking up an issue in #147, #272, #289, the second crawler epic or #273. Product decisions stay in the issues and `docs/DECISIONS.md`; this file is the technical map. Where they disagree, the decisions log is newer.
+How the catalogue is built, and what the remaining catalogue epics add. Read this before picking up an issue in #147, #355, #289, #272 or #314. Product decisions stay in the issues and `docs/DECISIONS.md`; this file is the technical map. Where they disagree, the decisions log is newer.
 
 ## 1. Rules that apply to every issue
 
-- **The catalogue is optional.** Every feature works with empty catalogue tables, for user-added shows, and for entries with no production. Tests must include the empty case.
+- **The catalogue is optional.** Every feature works with empty catalogue tables, for user-added shows, and for entries with no matching run. Tests must include the empty case.
 - **Rules live in Postgres.** Matching, tidying, ranking and access are SQL functions that web and iOS both call, never logic copied into the two apps.
 - **Typed-in shows and venues are visible to everyone.** Duplicates are prevented ("Did you mean…?", #146) and merged (#274), never hidden per user.
 - **Venues are flat:** one row per auditorium (Olivier, Lyttelton and Dorfman are three venues). No parent or space column.
 - **Suggestions, never auto-save:** a strong match may fill an *empty* field; nothing overwrites a field the user has touched.
-- **Users never write catalogue facts** other than shows, venues and nicknames they add while logging. Productions, runs and crawled rows are written by the service role only.
+- **Entries stay show + venue + date.** They store no run or production. A run is found by looking up those three, so older entries match new runs and deleting crawl data can't touch an entry. There is no `productions` table until a feature needs one; adding it then means the table plus a nullable `runs.production_id`.
+- **Users never write catalogue facts** other than shows, venues and nicknames they add while logging. Runs and crawl data are written by the service role or admin functions only.
 
 ## 2. As built
 
@@ -34,31 +35,32 @@ App code that uses these: web `components/app/log/ShowField.tsx`, `VenueField.ts
 
 ## 3. What each remaining issue adds
 
-Epics close in this order, and each depends only on epics before it (section 6).
+Launch is Journey 2: the user types the show (#353). Journey 1 pre-fills the show from venue and date, and is built in steps after launch (section 6).
 
 ### #147 Show catalogue (finishing)
 - **#274 merges and cities.** `merge_shows(from_id, into_id, force boolean default false)` and `merge_venues(from_id, into_id)`: `security definer`, `set search_path = ''`, execute revoked from `public, anon, authenticated` and granted to `service_role`. Lock like `merge_into_catalogue()`, move `entries` and `show_aliases` (on conflict do nothing), delete the duplicate, return counts. Refuse a show type mismatch unless `force`. Cities: `canonical_city(city text, country text) returns text` (immutable) maps London boroughs and "Greater London"/"City of Westminster"/"City of London" to "London", and the five New York boroughs to "New York"; a `before insert or update of city` trigger on `venues` applies it; backfill in the same migration. Script `supabase/scripts/merge.mjs` (section 5): `--dry-run` lists likely duplicate pairs (same `normalise_show_title`; venues within 100 m with `similar_venues`-style names); `--shows A B` / `--venues A B` merges one pair. The hosted run is the owner's (needs-human).
 - **#132 artwork.** Independent of the rest. `shows.artwork_path`, `artwork_source_url`, `artwork_fetched_at`, `artwork_blocked`; private bucket `show-artwork` readable by `authenticated` only; script fetches `og:image` from the show's official website (Wikidata `P856`), resized to 600 px wide, skipping non-images and images under 300 px. `Poster` order: entry photo → artwork (signed-in surfaces only) → House Lights. Never on share cards, public pages or `/api/og/*`.
 
-### #272 Productions and runs
-- **#276 schema.** Tables as specified in the issue: `productions`, `runs` (GiST index on `(venue_id, daterange(start_date, end_date, '[]'))`; needs `btree_gist` for the composite, or index `daterange` alone), `entries.production_id` (`on delete set null`), `shows.source` (`user`, `wikidata`, `crawler`). Consistency trigger on `entries`: clear `production_id` when the production's show isn't the entry's show. RLS: select for everyone, no insert/update/delete policies (service role only). Extend `merge_shows`/`merge_venues` with `create or replace` to move productions and runs; add `merge_productions`.
-- **#278 suggestions.** `suggest_shows(venue_ids uuid[], on_date date)` returns `(show_id, production_id, venue_id, source, score)`, `source` in `run`, `community`, `yours`. `security definer` only if needed to count other people's public entries; it must return no user ids and must apply `profile_is_visible`, entry visibility and `blocks` (reuse the predicates used by `feed_entries`). Tests seed fixture productions and runs: this issue does **not** depend on the crawler. `confirm_run(run_id)` (security definer) raises confidence by a capped step once per user. Clients call it after the nearby venues resolve; `entry_logged` gains `show_source` (`run`, `community`, `yours`, `photo_text`, `identify`, `manual`).
+### #355 Admin: see and fix our theatres
+- **#356 list.** Admin-only SQL read function: venues with entry counts (never who), paged and filterable by search, circuit, country and missing links, plus totals. Page at `/app/admin/theatres`.
+- **#357 edit.** `venues.whats_on_url`; `admin_update_venue(...)` (security definer, checks `public.is_admin()`). Venues sharing a site share a URL: the crawl fetches it once and matches stages to those venues. No crawl-target table.
 
-### #289 Catalogue crawler (core)
-- **#290 theatre list (built).** `venues` gains `circuit` (`venue_circuit`: `west_end`, `off_west_end`, `pub`, `broadway`, `off_broadway`, `regional_uk`, `regional_us`), `website`, `wikidata_id` (unique) and `source` (`user`, `osm`, `crawler`); users can't write these. `supabase/scripts/sync-osm-venues.mjs` loads every named UK and US theatre from OpenStreetMap through `load_osm_venues(rows jsonb)` (service role only; the import rules are tested in pgTAP), labelling West End and Broadway houses from `west-end-theatres.json` and `broadway-theatres.json`. The other circuits stay null until the crawler labels them from Wikipedia lists. The nearby lookup asks `nearby_venues` first (#343). The crawler matches on `osm_id`, then `wikidata_id`, then `similar_venues(...).same`.
-- **#277 crawler core and Wikipedia.** `supabase/scripts/crawl/` with `index.mjs` (CLI), `fetch.mjs` (robots.txt, per-host rate limit, ETag/If-Modified-Since, User-Agent), `resolve.mjs` (venue and show matching through `similar_venues`/`similar_shows` via psql), `load.mjs` (one transaction, upsert on `(source, source_ref)`, stale marking, never deletes entries), `report.mjs` (Markdown summary), `sources/wikipedia.mjs`. Parsers are pure functions tested with `node --test` on saved fixture pages in `supabase/scripts/crawl/fixtures/`; add the test command to `.github/workflows/ci.yml`. The model step (Haiku, Wikipedia leftovers only) is behind `--budget` and off by default in tests.
-- **#288 monthly run.** `.github/workflows/catalogue-crawl.yml`; the owner adds `SUPABASE_DB_URL` and `ANTHROPIC_API_KEY` repository secrets (needs-human).
+### #289 Journey 1, step 1: crawl pilot and review tool
+Nothing here reaches users. Results stay in admin-only tables until a person publishes them.
+- **#277 core.** `crawl_runs` and `crawl_findings` (admin read, service-role write). `supabase/scripts/crawl/` with `index.mjs`, `fetch.mjs` (robots.txt, per-host rate limit, User-Agent, conditional requests), `load.mjs` (one transaction per theatre), `report.mjs`. Facts and short evidence only, never copies of pages. Parsers are pure functions tested with `node --test` on saved fixtures.
+- **#291 theatre sites.** Structured data (schema.org `Event`) by code first, then a model when the run allows it, with model and prompt taken from the `crawl_runs` row. Findings keep the raw title; no show matching here.
+- **#358 start from admin.** `/app/admin/crawl` creates a `crawl_runs` row and dispatches `.github/workflows/catalogue-crawl.yml` with a run id and branch. The crawl runs on GitHub Actions, so the model key stays out of Vercel and the app. The owner adds `SUPABASE_DB_URL` and `ANTHROPIC_API_KEY` as Actions secrets and a repository-scoped Actions token in Vercel.
+- **#359 review.** `/app/admin/crawl/[id]`: mark findings right or wrong, add missed titles, score per run and theatre, compare two runs and their settings.
 
-### Second crawler epic (more sources)
-- **#287 IBDB and Playbill:** `sources/ibdb.mjs`, `sources/playbill.mjs`, rules only, on only when `CRAWL_SOURCES` lists them; `crawl remove <source>` deletes their rows (entries keep show, venue, date).
-- **#291 theatre → shows:** `sources/theatre-site.mjs`; new shows go through `similar_shows` (attach when `same`, skip when several close matches, otherwise insert with `source = 'crawler'`, unverified).
-- **#292 Wayback history:** `sources/wayback.mjs` on the CDX API; progress saved so a capped run resumes.
+### #272 Journey 1, step 2: runs and show suggestions
+#360 can ship any time. The rest starts only when the owner says the pilot passed.
+- **#360 entry suggestions.** `suggest_shows(venue_ids uuid[], on_date date)` returns `(show_id, title, venue_id, source, score)`, `source` in `community`, `yours`. `security definer` only if needed to count other people's public entries; it must return no user ids and must apply `profile_is_visible`, entry visibility and `blocks` (reuse the predicates used by `feed_entries`). `entry_logged` gains `show_source`.
+- **#276 runs.** `runs(venue_id, title, show_id nullable, start_date, end_date, source, source_url, confidence, last_seen_at)`, with an index on venue and `daterange(start_date, end_date, '[]')`. `publish_crawl_findings(run_id)` (admin) upserts findings marked right, linking `show_id` only when `similar_shows` says `same`. `merge_shows`/`merge_venues` move runs (`create or replace`).
+- **#278 run suggestions.** Adds the `run` source. A single run at confidence 0.8 or above, seen recently, at a single venue fills an empty show; the rest are chips. Tapping a run with no show goes through the "Did you mean…?" path, so crawl noise never enters show search.
+- **#288 schedule.** Weekly to start, for `venues.crawl_enabled` theatres only. Findings at confidence 0.8 or above publish automatically.
 
-### #273 On-device photo reading, no cloud AI
-- **#279 spike** (iOS, throwaway target or DEBUG screen): Vision `VNRecognizeTextRequest` on fixtures; Foundation Models only on a device or Mac with Apple Intelligence (owner may run that part; the spike's verdict can be "Vision only").
-- **#280** iOS: OCR lines → `search_shows`; printed date and venue rules from the issue; merged with `suggest_shows` chips.
-- **#281** removes `/api/photo/identify` (answer 410 for one release), `lib/identify.ts`, the identify step in `lib/import/photo-pipeline.ts` and `LogForm.tsx`, iOS `Data/PhotoDetect.swift` and its callers (`LogView.swift`, `PhotoImport.swift`).
-- **#282** removes email import (`/api/import/email`, `lib/import/extract-email.ts`, the email option in `ImportTool.tsx`), then `lib/ai`, `/api/ai/providers` and the model-compare mode; the owner removes `ANTHROPIC_API_KEY` from Vercel (needs-human).
+### #314 Journey 1, step 3: more crawl sources (parked)
+Each is its own decision after step 2 shows real use: #361 Wikipedia, #287 IBDB and Playbill, #292 Wayback Machine. Each is one module under `supabase/scripts/crawl/sources/`, and goes through the review screen before it publishes.
 
 ## 4. SQL conventions and known traps
 
@@ -77,13 +79,15 @@ Follow `supabase/scripts/sync-wikidata.mjs`: Node 24+, **no npm packages**, `nod
 
 ## 6. Order and why
 
-| Epic | Needs before it | Gives to later epics |
+| Step | Needs before it | What it gives |
 |---|---|---|
-| #147 Show catalogue | nothing | `similar_shows`/`similar_venues` (crawler matching), `merge_shows`/`merge_venues` (extended by #276), canonical cities |
-| #272 Productions and runs | #147 | tables the crawler fills; `suggest_shows` (needed before #281) |
-| #289 Catalogue crawler (core) | #272 | real runs at West End and Broadway theatres, so suggestions work for most photos |
-| #273 On-device reading, no cloud AI | #272 (and #289 for real-world quality) | removes Claude from both apps |
-| Crawler: more sources | #289 | Broadway depth, fringe and pub theatres, 20-year history |
+| #353 Journey 2 (launch) | nothing | The launch logging flow |
+| #355 Admin: theatres | nothing | What's-on links, and where people actually log |
+| #289 Crawl pilot | #355 | An answer on whether theatre sites can be read accurately, and the tools to tune it |
+| #272 Runs and suggestions | The pilot passing (#360 needs nothing) | Show pre-filled from venue and date |
+| #314 More sources | Step 2's analytics | Past shows, for older photos |
+
+**Measure of progress:** of photo logs with a known venue, the share whose show came from a suggestion rather than being typed (`entry_logged.show_source`). Add theatres in order of entries logged there.
 
 ## 7. Checks before a pull request
 
