@@ -17,6 +17,11 @@ const PAGES = [
     title: "Theatres",
     text: "Every theatre we hold, how often people log at it, and which have no website or what’s-on link.",
   },
+  {
+    href: "/app/admin/shows",
+    title: "Shows",
+    text: "The show list users search: check pasted titles against it, and spot typed-in shows that look wrong or duplicated.",
+  },
 ];
 
 // Admin pages (see lib/admin). Nothing in the rest of the app links here, so
