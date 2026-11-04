@@ -1,8 +1,9 @@
 // How a fetched page becomes findings. A reader is
-//   (page: { url, html }, ctx: { venues, run }) => findings | null
-// and the first reader to return an array wins. #277 ships only the stub, so
-// every site is recorded and the plumbing can be tested; #291 adds the
-// structured-data and model readers in front of it.
+//   (page: { url, html }, ctx: { venues, run, spend, notes }) => findings | null | Promise of either
+// and the first reader to return an array wins. The real readers (structured
+// data, then a model) are in sources/theatre-site.mjs and index.mjs puts them
+// in front of the stub, which records the page title when nothing else could
+// read the page.
 
 export function decodeEntities(text) {
   return text
@@ -31,9 +32,9 @@ export function stubReader({ url, html }, { venues }) {
 
 export const readers = [stubReader];
 
-export function readPage(page, ctx, list = readers) {
+export async function readPage(page, ctx, list = readers) {
   for (const reader of list) {
-    const findings = reader(page, ctx);
+    const findings = await reader(page, ctx);
     if (Array.isArray(findings)) return findings;
   }
   return [];
