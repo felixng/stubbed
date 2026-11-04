@@ -1,6 +1,6 @@
 # Catalogue: shows, venues and runs
 
-How the catalogue is built, and what the remaining catalogue epics add. Read this before picking up an issue in #147, #355, #289, #272 or #314. Product decisions stay in the issues and `docs/DECISIONS.md`; this file is the technical map. Where they disagree, the decisions log is newer.
+How the catalogue is built, and what the remaining catalogue epics add. Read this before picking up an issue in #147, #353, #363, #355, #289, #272 or #314. Product decisions stay in the issues and `docs/DECISIONS.md`; this file is the technical map. Where they disagree, the decisions log is newer.
 
 ## 1. Rules that apply to every issue
 
@@ -10,7 +10,7 @@ How the catalogue is built, and what the remaining catalogue epics add. Read thi
 - **Venues are flat:** one row per auditorium (Olivier, Lyttelton and Dorfman are three venues). No parent or space column.
 - **Suggestions, never auto-save:** a strong match may fill an *empty* field; nothing overwrites a field the user has touched.
 - **Entries stay show + venue + date.** They store no run or production. A run is found by looking up those three, so older entries match new runs and deleting crawl data can't touch an entry. There is no `productions` table until a feature needs one; adding it then means the table plus a nullable `runs.production_id`.
-- **Users never write catalogue facts** other than shows, venues and nicknames they add while logging. Runs and crawl data are written by the service role or admin functions only.
+- **Users never write catalogue facts** other than shows, venues and nicknames they add while logging. Runs, crawl data and show candidates are written by the service role or admin functions only.
 
 ## 2. As built
 
@@ -41,6 +41,15 @@ Launch is Journey 2: the user types the show (#353). Journey 1 pre-fills the sho
 - **#274 merges and cities.** `merge_shows(from_id, into_id, force boolean default false)` and `merge_venues(from_id, into_id)`: `security definer`, `set search_path = ''`, execute revoked from `public, anon, authenticated` and granted to `service_role`. Lock like `merge_into_catalogue()`, move `entries` and `show_aliases` (on conflict do nothing), delete the duplicate, return counts. Refuse a show type mismatch unless `force`. Cities: `canonical_city(city text, country text) returns text` (immutable) maps London boroughs and "Greater London"/"City of Westminster"/"City of London" to "London", and the five New York boroughs to "New York"; a `before insert or update of city` trigger on `venues` applies it; backfill in the same migration. Script `supabase/scripts/merge.mjs` (section 5): `--dry-run` lists likely duplicate pairs (same `normalise_show_title`; venues within 100 m with `similar_venues`-style names); `--shows A B` / `--venues A B` merges one pair. The hosted run is the owner's (needs-human).
 - **#132 artwork.** Independent of the rest. `shows.artwork_path`, `artwork_source_url`, `artwork_fetched_at`, `artwork_blocked`; private bucket `show-artwork` readable by `authenticated` only; script fetches `og:image` from the show's official website (Wikidata `P856`), resized to 600 px wide, skipping non-images and images under 300 px. `Poster` order: entry photo → artwork (signed-in surfaces only) → House Lights. Never on share cards, public pages or `/api/og/*`.
 
+### #353 Journey 2 (launch)
+- **#368 search.** `search_shows` keeps its signature. A main name equal to the query, ignoring subtitles like ": The Musical", ranks first. Results show the year as well as the type, because 33 titles have two rows.
+- **#354 check.** Every log and import case on both apps, with no runs in the database.
+
+### #363 Admin: see and fix our shows
+- **#364 list and name check.** Admin-only read function, page at `/app/admin/shows`. Pasting a list of titles runs each through `search_shows`, showing what a user would see.
+- **#365 fix.** `admin_update_show`, `admin_merge_shows` (security definer, checks `public.is_admin()`). A corrected title must survive `sync-wikidata.mjs`.
+- **#366 pull and review.** `show_candidates` (admin only), filled by `sync-wikidata.mjs --candidates` using the wider query on branch `claude/wider-wikidata-catalogue`. Add, Same as, Not a show; review a sample, then bulk add. Nothing appears in show search until added.
+
 ### #355 Admin: see and fix our theatres
 - **#356 list.** Admin-only SQL read function: venues with entry counts (never who), paged and filterable by search, circuit, country and missing links, plus totals. Page at `/app/admin/theatres`.
 - **#357 edit.** `venues.whats_on_url`; `admin_update_venue(...)` (security definer, checks `public.is_admin()`). Venues sharing a site share a URL: the crawl fetches it once and matches stages to those venues. No crawl-target table.
@@ -51,6 +60,7 @@ Nothing here reaches users. Results stay in admin-only tables until a person pub
 - **#291 theatre sites.** Structured data (schema.org `Event`) by code first, then a model when the run allows it, with model and prompt taken from the `crawl_runs` row. Findings keep the raw title; no show matching here.
 - **#358 start from admin.** `/app/admin/crawl` creates a `crawl_runs` row and dispatches `.github/workflows/catalogue-crawl.yml` with a run id and branch. The crawl runs on GitHub Actions, so the model key stays out of Vercel and the app. The owner adds `SUPABASE_DB_URL` and `ANTHROPIC_API_KEY` as Actions secrets and a repository-scoped Actions token in Vercel.
 - **#359 review.** `/app/admin/crawl/[id]`: mark findings right or wrong, add missed titles, score per run and theatre, compare two runs and their settings.
+- **#367 titles to show review.** Findings marked right with no `similar_shows` same-match become `show_candidates` (#366). Adds a show-name pull as a job on the crawl form.
 
 ### #272 Journey 1, step 2: runs and show suggestions
 #360 can ship any time. The rest starts only when the owner says the pilot passed.
@@ -82,8 +92,9 @@ Follow `supabase/scripts/sync-wikidata.mjs`: Node 24+, **no npm packages**, `nod
 | Step | Needs before it | What it gives |
 |---|---|---|
 | #353 Journey 2 (launch) | nothing | The launch logging flow |
+| #363 Admin: shows | nothing | Correct, findable show names |
 | #355 Admin: theatres | nothing | What's-on links, and where people actually log |
-| #289 Crawl pilot | #355 | An answer on whether theatre sites can be read accurately, and the tools to tune it |
+| #289 Crawl pilot | #355 (and #366 for #367) | An answer on whether theatre sites can be read accurately, and the tools to tune it |
 | #272 Runs and suggestions | The pilot passing (#360 needs nothing) | Show pre-filled from venue and date |
 | #314 More sources | Step 2's analytics | Past shows, for older photos |
 
