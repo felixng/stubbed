@@ -24,10 +24,10 @@ struct ShowSearch: View {
       List {
         let q = query.trimmingCharacters(in: .whitespaces)
         ForEach(q.count >= 2 ? results : []) { show in
-          row(show.title, show.type.label) { pickExisting(show, query: q) }
+          row(show.title, show.subtitle) { pickExisting(show, query: q) }
         }
         if !q.isEmpty, !results.contains(where: { $0.title.lowercased() == q.lowercased() }) {
-          row("Add “\(q)”", "New show", emphasis: true) { Task { await addNew(q) } }
+          row("Add “\(q)”", results.isEmpty || q.count < 2 ? "New show" : "Not one of these? Add it as a new show", emphasis: true) { Task { await addNew(q) } }
         }
       }
       .listStyle(.plain)

@@ -28,11 +28,25 @@ struct Show: Codable, Hashable, Identifiable, Sendable {
   let id: UUID
   let title: String
   let type: ShowType
+  /// Year of the first performance, when the catalogue knows it.
+  var firstPerformed: Int?
 
-  init(id: UUID, title: String, type: ShowType) {
+  enum CodingKeys: String, CodingKey {
+    case id, title, type
+    case firstPerformed = "first_performed"
+  }
+
+  init(id: UUID, title: String, type: ShowType, firstPerformed: Int? = nil) {
     self.id = id
     self.title = title
     self.type = type
+    self.firstPerformed = firstPerformed
+  }
+
+  /// "Musical · 2017": the type, and the year when known, to tell
+  /// same-named shows apart.
+  var subtitle: String {
+    firstPerformed.map { "\(type.label) · \($0)" } ?? type.label
   }
 
   /// A type added to Postgres after this build reads as Other, so older
@@ -42,6 +56,7 @@ struct Show: Codable, Hashable, Identifiable, Sendable {
     id = try c.decode(UUID.self, forKey: .id)
     title = try c.decode(String.self, forKey: .title)
     type = ShowType(rawValue: try c.decode(String.self, forKey: .type)) ?? .other
+    firstPerformed = try c.decodeIfPresent(Int.self, forKey: .firstPerformed)
   }
 }
 
