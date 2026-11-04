@@ -233,6 +233,54 @@ internal enum PublicSchema {
       case venueId = "venue_id"
     }
   }
+  internal struct CrawlMissedSelect: Codable, Hashable, Sendable {
+    internal let createdAt: String
+    internal let id: UUID
+    internal let note: String?
+    internal let runId: UUID
+    internal let title: String
+    internal let venueId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case createdAt = "created_at"
+      case id = "id"
+      case note = "note"
+      case runId = "run_id"
+      case title = "title"
+      case venueId = "venue_id"
+    }
+  }
+  internal struct CrawlMissedInsert: Codable, Hashable, Sendable {
+    internal let createdAt: String?
+    internal let id: UUID?
+    internal let note: String?
+    internal let runId: UUID
+    internal let title: String
+    internal let venueId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case createdAt = "created_at"
+      case id = "id"
+      case note = "note"
+      case runId = "run_id"
+      case title = "title"
+      case venueId = "venue_id"
+    }
+  }
+  internal struct CrawlMissedUpdate: Codable, Hashable, Sendable {
+    internal let createdAt: String?
+    internal let id: UUID?
+    internal let note: String?
+    internal let runId: UUID?
+    internal let title: String?
+    internal let venueId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case createdAt = "created_at"
+      case id = "id"
+      case note = "note"
+      case runId = "run_id"
+      case title = "title"
+      case venueId = "venue_id"
+    }
+  }
   internal struct CrawlRunsSelect: Codable, Hashable, Sendable {
     internal let branch: String?
     internal let budgetUsd: Decimal

@@ -22,6 +22,11 @@ const PAGES = [
     title: "Shows",
     text: "The show list users search: check pasted titles against it, and spot typed-in shows that look wrong or duplicated.",
   },
+  {
+    href: "/app/admin/crawl",
+    title: "Crawl runs",
+    text: "What the crawler read from theatre websites: check findings, mark them right or wrong, and compare runs.",
+  },
 ];
 
 // Admin pages (see lib/admin). Nothing in the rest of the app links here, so
