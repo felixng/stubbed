@@ -49,6 +49,10 @@ async function Shows({ searchParams }: Pick<PageProps<"/app/admin/shows">, "sear
 
   return (
     <>
+      <Link href="/app/admin/shows/candidates" className="rounded-md border border-separator bg-surface px-4 py-3 shadow-sm hover:bg-fill focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus">
+        <span className="block text-headline text-label">Show candidates</span>
+        <span className="block text-footnote text-label-secondary">Names pulled from Wikidata, to review and add, one at a time or after checking a sample.</span>
+      </Link>
       <CheckShowNames />
 
       <form method="get" className="flex flex-col gap-3 rounded-md border border-separator bg-surface p-4 shadow-sm">

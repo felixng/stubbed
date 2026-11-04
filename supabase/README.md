@@ -42,6 +42,18 @@ supabase test db
 
 The source option accepts the script's combined SPARQL `results.bindings` JSON. Unit tests include synthetic edge cases and a small captured live response. SQL tests seed and roll back their own catalogue, covering the empty-catalogue workflow, grants, aliases, ranking and privacy-preserving merges.
 
+## Wider show names, for review (#366)
+
+`sync-wikidata.mjs --candidates` runs the wider Wikidata query (any play, musical, opera or ballet with an English Wikipedia article, about 13,500 names) and writes it to `show_candidates`, never to `shows`. Candidates are admin-only, aren't in `search_shows`, and are reviewed at `/app/admin/shows/candidates`: **Add** (tidied like a typed-in show, Wikidata id kept), **Same as** (links an existing show and saves the name as a nickname) or **Not a show**; or review a random sample of a group and, once 95% of it is right (at least 20 reviewed), **Add the rest** (up to 2,000 a call). Apply `20261104170000_show_candidates.sql` first.
+
+```sh
+node --use-env-proxy supabase/scripts/sync-wikidata.mjs --candidates --dry-run   # same work in a rolled-back transaction
+node --use-env-proxy supabase/scripts/sync-wikidata.mjs --candidates
+node supabase/scripts/sync-wikidata.mjs --candidates --source /tmp/catalogue.json   # replay a saved response
+```
+
+A second pull only raises each name's "seen" counter (and refreshes it while it is still pending); a decision already made is never undone, and a name already in `shows` by Wikidata id is skipped. The hosted run is the owner's.
+
 ## Theatres from OpenStreetMap (#290)
 
 `scripts/sync-osm-venues.mjs` loads every named `amenity=theatre` in the UK and US from OpenStreetMap (ODbL) into `venues`, so photo detection answers from Postgres (#343). It queries QLever's public OpenStreetMap endpoint (no key), then calls `public.load_osm_venues`, which holds the import rules and is service-role only. Requires **Node 24+** and **psql**; apply `20261103140000_venue_catalogue.sql` first. West End and Broadway houses get `circuit` and `verified` from the reviewed Wikidata lists `scripts/west-end-theatres.json` and `scripts/broadway-theatres.json`.

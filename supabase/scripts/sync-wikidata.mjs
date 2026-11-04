@@ -5,6 +5,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 import { setTimeout as delay } from 'node:timers/promises';
+import { connectionEnv } from './crawl/db.mjs';
 
 const ENDPOINT = 'https://query.wikidata.org/sparql';
 const USER_AGENT = 'Stubbed/1.0 (https://getstubbed.app; catalogue sync)';
@@ -23,17 +24,61 @@ PREFIX pq: <http://www.wikidata.org/prop/qualifier/>`;
 // of a work's author or publisher. It uses a reviewed list of theatre
 // building IDs, verified from Wikidata (see DECISIONS.md). No commercial sites
 // are scraped. P1191's P276 qualifier also records premiere venues in Wikidata.
+// The two English Wikipedia branches take any stage work notable enough for an
+// article, wherever it played: by form of creative work (play, musical, opera,
+// ballet), or by class (dramatico-musical work, ballet). Many plays carry only
+// P7937, with P31 "literary work", and no premiere venue. They feed the
+// candidates table (--candidates, #366), not the show list: the regular sync
+// keeps its two sources.
+const ENWIKI = '?article schema:about ?item ; schema:isPartOf <https://en.wikipedia.org/> .';
+export const SOURCES = {
+  'ibdb': '?item wdt:P1219 ?ibdb .',
+  'west-end': `VALUES ?venue { ${VENUES} }
+    { ?item wdt:P4647 ?venue } UNION { ?item p:P1191/pq:P276 ?venue }`,
+  'enwiki-form': `VALUES ?form { wd:Q25379 wd:Q2743 wd:Q1344 wd:Q15079786 }
+    ?item wdt:P7937 ?form . ${ENWIKI}`,
+  'enwiki-class': `VALUES ?class { wd:Q58483083 wd:Q15079786 }
+    ?item wdt:P31 ?class . ${ENWIKI}`,
+};
+export const SHOW_SOURCES = ['ibdb', 'west-end'];
+export const CANDIDATE_SOURCES = Object.keys(SOURCES);
+
 export function candidateQuery(offset, source = 'ibdb') {
+  if (!SOURCES[source]) throw new Error(`Unknown source ${source}`);
   return `${PREFIXES}
 SELECT DISTINCT ?item WHERE {
-  ${source === 'ibdb' ? '?item wdt:P1219 ?ibdb .' : `
-    VALUES ?venue { ${VENUES} }
-    { ?item wdt:P4647 ?venue } UNION { ?item p:P1191/pq:P276 ?venue }
-  `}
+  ${SOURCES[source]}
 } ORDER BY ?item LIMIT ${PAGE_SIZE} OFFSET ${offset}`;
 }
 
-export function detailQuery(ids) {
+const NARROW_TYPING = `  BIND(EXISTS { ?item (wdt:P31|wdt:P136)/wdt:P279* wd:Q1344 } AS ?opera)
+  BIND(EXISTS { ?item (wdt:P31|wdt:P136)/wdt:P279* wd:Q15079786 }
+    || EXISTS { ?item (wdt:P31|wdt:P136)/wdt:P279* ?class . ?class rdfs:label "dance work"@en } AS ?dance)
+  BIND(EXISTS { ?item wdt:P31/wdt:P279* wd:Q58483083 }
+    || EXISTS { ?item (wdt:P31|wdt:P136)/wdt:P279* wd:Q2743 } AS ?musical)
+  BIND(EXISTS { VALUES ?class { wd:Q7725634 wd:Q116476516 wd:Q25379 }
+    ?item wdt:P31/wdt:P279* ?class }
+    || EXISTS { VALUES ?genreLabel { "drama"@en "tragedy"@en "comedy"@en "farce"@en }
+      ?item wdt:P136 ?genre . ?genre rdfs:label ?genreLabel } AS ?play)`;
+
+// For candidates, form of creative work (P7937) counts too. Form "opera" alone
+// is weak: Jesus Christ Superstar carries it, operetta is a subclass of it,
+// and many musicals list it beside "musical". Count only the exact form, never
+// with "musical" too, and never for a Broadway (IBDB) show.
+const WIDE_TYPING = `  BIND(EXISTS { ?item (wdt:P31|wdt:P136)/wdt:P279* wd:Q1344 }
+    || (EXISTS { ?item wdt:P7937 wd:Q1344 } && NOT EXISTS { ?item wdt:P7937 wd:Q2743 }
+      && NOT EXISTS { ?item wdt:P1219 ?anyIbdb }) AS ?opera)
+  BIND(EXISTS { ?item (wdt:P31|wdt:P136|wdt:P7937)/wdt:P279* wd:Q15079786 }
+    || EXISTS { ?item (wdt:P31|wdt:P136)/wdt:P279* ?class . ?class rdfs:label "dance work"@en } AS ?dance)
+  BIND(EXISTS { ?item wdt:P31/wdt:P279* wd:Q58483083 }
+    || EXISTS { ?item (wdt:P31|wdt:P136|wdt:P7937)/wdt:P279* wd:Q2743 } AS ?musical)
+  BIND(EXISTS { VALUES ?class { wd:Q7725634 wd:Q116476516 wd:Q25379 }
+    ?item wdt:P31/wdt:P279* ?class }
+    || EXISTS { ?item wdt:P7937/wdt:P279* wd:Q25379 }
+    || EXISTS { VALUES ?genreLabel { "drama"@en "tragedy"@en "comedy"@en "farce"@en }
+      ?item wdt:P136 ?genre . ?genre rdfs:label ?genreLabel } AS ?play)`;
+
+export function detailQuery(ids, { wide = false } = {}) {
   if (!ids.every(id => /^Q[1-9]\d*$/.test(id))) throw new Error('Invalid Wikidata ID');
   return `${PREFIXES}
 SELECT DISTINCT ?item ?title ?description ?alias ?website ?premiere ?published ?ibdb
@@ -46,15 +91,7 @@ SELECT DISTINCT ?item ?title ?description ?alias ?website ?premiere ?published ?
   OPTIONAL { ?item wdt:P1191 ?premiere }
   OPTIONAL { ?item wdt:P577 ?published }
   OPTIONAL { ?item wdt:P1219 ?ibdb }
-  BIND(EXISTS { ?item (wdt:P31|wdt:P136)/wdt:P279* wd:Q1344 } AS ?opera)
-  BIND(EXISTS { ?item (wdt:P31|wdt:P136)/wdt:P279* wd:Q15079786 }
-    || EXISTS { ?item (wdt:P31|wdt:P136)/wdt:P279* ?class . ?class rdfs:label "dance work"@en } AS ?dance)
-  BIND(EXISTS { ?item wdt:P31/wdt:P279* wd:Q58483083 }
-    || EXISTS { ?item (wdt:P31|wdt:P136)/wdt:P279* wd:Q2743 } AS ?musical)
-  BIND(EXISTS { VALUES ?class { wd:Q7725634 wd:Q116476516 wd:Q25379 }
-    ?item wdt:P31/wdt:P279* ?class }
-    || EXISTS { VALUES ?genreLabel { "drama"@en "tragedy"@en "comedy"@en "farce"@en }
-      ?item wdt:P136 ?genre . ?genre rdfs:label ?genreLabel } AS ?play)
+${wide ? WIDE_TYPING : NARROW_TYPING}
   BIND(EXISTS { VALUES ?class { wd:Q11424 wd:Q482994 wd:Q5398426 wd:Q7366 wd:Q429785 }
     ?item wdt:P31/wdt:P279* ?class } AS ?excluded)
 }`;
@@ -89,11 +126,11 @@ export async function sparql(query, { fetcher = fetch, sleep = delay } = {}) {
   }
 }
 
-export async function fetchCatalogue({ request = sparql, sleep = delay, onProgress = () => {} } = {}) {
+export async function fetchCatalogue({ request = sparql, sleep = delay, onProgress = () => {}, sources = SHOW_SOURCES, wide = false } = {}) {
   const ids = new Set();
   // Keep source queries separate: the public endpoint can time out when its
   // optimiser joins the IBDB set with the venue/qualifier UNION.
-  for (const source of ['ibdb', 'west-end']) {
+  for (const source of sources) {
     for (let offset = 0; ; offset += PAGE_SIZE) {
       await sleep(1000);
       const page = await request(candidateQuery(offset, source));
@@ -111,7 +148,7 @@ export async function fetchCatalogue({ request = sparql, sleep = delay, onProgre
   const list = [...ids].sort();
   for (let i = 0; i < list.length; i += 50) {
     await sleep(1000);
-    bindings.push(...await request(detailQuery(list.slice(i, i + 50))));
+    bindings.push(...await request(detailQuery(list.slice(i, i + 50), { wide })));
     onProgress(`Details: ${Math.min(i + 50, list.length)}/${list.length} items`);
   }
   return { head: {}, results: { bindings } };
@@ -225,6 +262,20 @@ export function syncSql(rows, dryRun) {
     commit;`;
 }
 
+// --candidates: the pull goes to show_candidates and never touches shows
+// (public.load_show_candidates holds the rules). A dry run does the same work in
+// a transaction that is rolled back, so the counts are real.
+export function candidatesSql(rows, dryRun) {
+  if (!rows.length) throw new Error('No mapped catalogue rows; refusing an empty pull');
+  const payload = JSON.stringify(rows.map(({ wikidata_id, title, type, first_performed, aliases }) =>
+    ({ wikidata_id, title, type, first_performed, aliases })));
+  return `begin;
+    set local standard_conforming_strings = on;
+    set local statement_timeout = '120s';
+    select public.load_show_candidates(${literal(payload)}::jsonb);
+    ${dryRun ? 'rollback;' : 'commit;'}`;
+}
+
 export function parsePsqlOutput(output) {
   // SQL deliberately uses jsonb_agg, whose text output is one physical line.
   // json_agg(record) inserts physical newlines between records instead.
@@ -235,8 +286,8 @@ export function runPsql(sql) {
   return new Promise((resolve, reject) => {
     // URL is never an argv value or shell interpolation. -X ignores ~/.psqlrc.
     const child = spawn('psql', ['-X', '-q', '-A', '-t', '-v', 'ON_ERROR_STOP=1'], {
-      env: { ...process.env, PGDATABASE: process.env.SUPABASE_DB_URL
-        ?? 'postgresql://postgres:postgres@127.0.0.1:54322/postgres', PGCONNECT_TIMEOUT: '10' },
+      // psql reads a URI from its command line but not from PGDATABASE, so split it.
+      env: { ...process.env, ...connectionEnv() },
       stdio: ['pipe', 'pipe', 'pipe'], timeout: 120_000,
     });
     let output = '';
@@ -260,16 +311,22 @@ export function runPsql(sql) {
 export async function main(args = process.argv.slice(2)) {
   const { values } = parseArgs({ args, options: {
     'dry-run': { type: 'boolean' }, 'source': { type: 'string' },
-    'save-source': { type: 'string' }, 'help': { type: 'boolean' },
+    'save-source': { type: 'string' }, 'help': { type: 'boolean' }, 'candidates': { type: 'boolean' },
   } });
   if (values.help) {
-    console.log('Usage: node --use-env-proxy supabase/scripts/sync-wikidata.mjs [--dry-run] [--source response.json] [--save-source response.json]\nRequires psql. SUPABASE_DB_URL defaults to local Supabase on port 54322. See supabase/README.md.');
+    console.log('Usage: node --use-env-proxy supabase/scripts/sync-wikidata.mjs [--dry-run] [--source response.json] [--save-source response.json]\n       node --use-env-proxy supabase/scripts/sync-wikidata.mjs --candidates [--dry-run]   (the wider pull, into show_candidates for admin review; never touches shows)\nRequires psql. SUPABASE_DB_URL defaults to local Supabase on port 54322. See supabase/README.md.');
     return;
   }
   const response = values.source ? JSON.parse(await readFile(values.source, 'utf8'))
-    : await fetchCatalogue({ onProgress: message => console.error(message) });
+    : await fetchCatalogue({ onProgress: message => console.error(message),
+      ...(values.candidates ? { sources: CANDIDATE_SOURCES, wide: true } : {}) });
   if (values['save-source']) await writeFile(values['save-source'], `${JSON.stringify(response, null, 2)}\n`, { flag: 'wx' });
   const { rows, skipped } = mapCatalogue(response);
+  if (values.candidates) {
+    const [counts] = await runPsql(candidatesSql(rows, values['dry-run']));
+    console.log(JSON.stringify({ candidates: true, dry_run: Boolean(values['dry-run']), mapped: rows.length, ...counts, skipped: skipped.length }, null, 2));
+    return;
+  }
   const [counts, outcomes] = await runPsql(syncSql(rows, values['dry-run']));
   console.log(JSON.stringify({ dry_run: Boolean(values['dry-run']), ...counts,
     merged: outcomes.filter(row => row.outcome === 'merged').length,
