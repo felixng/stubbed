@@ -1082,6 +1082,7 @@ internal enum PublicSchema {
     internal let source: String
     internal let verified: Bool
     internal let website: String?
+    internal let whatsOnUrl: String?
     internal let wikidataId: String?
     internal enum CodingKeys: String, CodingKey {
       case circuit = "circuit"
@@ -1098,6 +1099,7 @@ internal enum PublicSchema {
       case source = "source"
       case verified = "verified"
       case website = "website"
+      case whatsOnUrl = "whats_on_url"
       case wikidataId = "wikidata_id"
     }
   }
@@ -1116,6 +1118,7 @@ internal enum PublicSchema {
     internal let source: String?
     internal let verified: Bool?
     internal let website: String?
+    internal let whatsOnUrl: String?
     internal let wikidataId: String?
     internal enum CodingKeys: String, CodingKey {
       case circuit = "circuit"
@@ -1132,6 +1135,7 @@ internal enum PublicSchema {
       case source = "source"
       case verified = "verified"
       case website = "website"
+      case whatsOnUrl = "whats_on_url"
       case wikidataId = "wikidata_id"
     }
   }
@@ -1150,6 +1154,7 @@ internal enum PublicSchema {
     internal let source: String?
     internal let verified: Bool?
     internal let website: String?
+    internal let whatsOnUrl: String?
     internal let wikidataId: String?
     internal enum CodingKeys: String, CodingKey {
       case circuit = "circuit"
@@ -1166,6 +1171,7 @@ internal enum PublicSchema {
       case source = "source"
       case verified = "verified"
       case website = "website"
+      case whatsOnUrl = "whats_on_url"
       case wikidataId = "wikidata_id"
     }
   }
