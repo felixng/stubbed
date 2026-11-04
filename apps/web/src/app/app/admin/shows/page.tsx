@@ -4,6 +4,7 @@ import { Suspense } from "react";
 
 import { AdminOnly } from "@/components/app/admin/AdminOnly";
 import { CheckShowNames } from "@/components/app/admin/CheckShowNames";
+import { EditShow } from "@/components/app/admin/EditShow";
 import { BackLink } from "@/components/ui/BackLink";
 import { buttonClass } from "@/components/ui/Button";
 import { PAGE_SIZE, SHOW_TYPES, parseShowFilters, showFilterArgs, showsHref } from "@/lib/admin-shows";
@@ -126,6 +127,7 @@ async function Shows({ searchParams }: Pick<PageProps<"/app/admin/shows">, "sear
                   {s.other_title ? `: “${s.other_title}”` : ""}
                 </p>
               )}
+              <EditShow key={`${s.id}${s.title}${s.type}`} id={s.id} title={s.title} type={s.type} otherId={s.wikidata_id ? null : s.other_id} otherTitle={s.other_title} />
             </li>
           ))}
         </ul>
