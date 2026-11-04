@@ -52,6 +52,8 @@ node --use-env-proxy supabase/scripts/sync-wikidata.mjs --candidates
 node supabase/scripts/sync-wikidata.mjs --candidates --source /tmp/catalogue.json   # replay a saved response
 ```
 
+**From the crawl (#367):** on a run page (`/app/admin/crawl/<id>`), "Send to show review" turns the findings marked right, of kind show, whose title doesn't already read as a show into candidates with `source = 'crawler'` (the source page and first theatre kept). Repeat sightings raise the count; a title also pulled from Wikidata raises that candidate's count instead of making a second; sent findings are marked so sending again does nothing. Apply `20261104180000_crawl_titles_to_review.sql` first.
+
 A second pull only raises each name's "seen" counter (and refreshes it while it is still pending); a decision already made is never undone, and a name already in `shows` by Wikidata id is skipped. The hosted run is the owner's.
 
 ## Theatres from OpenStreetMap (#290)
