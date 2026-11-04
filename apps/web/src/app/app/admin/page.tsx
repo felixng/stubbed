@@ -12,6 +12,11 @@ const PAGES = [
     title: "Reports",
     text: "Shows, comments and profiles people have reported. Hide them or dismiss the report.",
   },
+  {
+    href: "/app/admin/theatres",
+    title: "Theatres",
+    text: "Every theatre we hold, how often people log at it, and which have no website or what’s-on link.",
+  },
 ];
 
 // Admin pages (see lib/admin). Nothing in the rest of the app links here, so
