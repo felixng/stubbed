@@ -92,7 +92,7 @@ export function DraftCard({
 }) {
   const id = useId();
   // Entry links bring a back link to this import, admin's or everyone's.
-  const from = usePathname().startsWith("/app/admin") ? "admin-import" : "import";
+  const from = usePathname().startsWith("/app/backstage") ? "admin-import" : "import";
   const e = draft.reading.extracted;
   const conf = CONFIDENCE[e.confidence];
   const emails = draft.reading.sources.filter((s) => s.kind === "email");

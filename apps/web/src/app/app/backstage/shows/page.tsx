@@ -34,7 +34,7 @@ const n = (x: number) => x.toLocaleString("en-GB");
 // Read with the admin's session through admin_list_shows (admins only; counts,
 // never who logged what). Typed-in shows people have logged come first: those
 // are the names users see. Filters live in the query string.
-async function Shows({ searchParams }: Pick<PageProps<"/app/admin/shows">, "searchParams">) {
+async function Shows({ searchParams }: Pick<PageProps<"/app/backstage/shows">, "searchParams">) {
   const f = parseShowFilters(await searchParams);
   const { supabase } = await ownerContext();
   const args = showFilterArgs(f);
@@ -49,7 +49,7 @@ async function Shows({ searchParams }: Pick<PageProps<"/app/admin/shows">, "sear
 
   return (
     <>
-      <Link href="/app/admin/shows/candidates" className="rounded-md border border-separator bg-surface px-4 py-3 shadow-sm hover:bg-fill focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus">
+      <Link href="/app/backstage/shows/candidates" className="rounded-md border border-separator bg-surface px-4 py-3 shadow-sm hover:bg-fill focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus">
         <span className="block text-headline text-label">Show candidates</span>
         <span className="block text-footnote text-label-secondary">Names pulled from Wikidata, to review and add, one at a time or after checking a sample.</span>
       </Link>
@@ -94,7 +94,7 @@ async function Shows({ searchParams }: Pick<PageProps<"/app/admin/shows">, "sear
           <button type="submit" className={buttonClass("primary", "sm")}>
             Show shows
           </button>
-          <Link href="/app/admin/shows" className={buttonClass("ghost", "sm")}>
+          <Link href="/app/backstage/shows" className={buttonClass("ghost", "sm")}>
             Clear
           </Link>
         </div>
@@ -160,11 +160,11 @@ async function Shows({ searchParams }: Pick<PageProps<"/app/admin/shows">, "sear
   );
 }
 
-export default function AdminShowsPage({ searchParams }: PageProps<"/app/admin/shows">) {
+export default function AdminShowsPage({ searchParams }: PageProps<"/app/backstage/shows">) {
   return (
     <section className="flex flex-col gap-5">
       <div className="flex flex-col gap-1">
-        <BackLink href="/app/admin">Admin</BackLink>
+        <BackLink href="/app/backstage">Backstage</BackLink>
         <h1 className="text-title font-display text-label">Shows</h1>
         <p className="text-subheadline text-label-secondary">
           The show list users search. Paste titles to see what a user would get, or filter to typed-in shows people have logged.

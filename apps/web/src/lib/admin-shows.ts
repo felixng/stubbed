@@ -1,4 +1,4 @@
-// Filters for /app/admin/shows and the name check, shared with the page.
+// Filters for /app/backstage/shows and the name check, shared with the page.
 export const PAGE_SIZE = 50;
 
 export const SHOW_TYPES = ["musical", "play", "opera", "dance", "comedy", "other"] as const;
@@ -50,7 +50,7 @@ export function showsHref(f: ShowFilters, page = f.page): string {
   if (f.problems) p.set("problems", "1");
   if (page > 1) p.set("page", String(page));
   const s = p.toString();
-  return `/app/admin/shows${s ? `?${s}` : ""}`;
+  return `/app/backstage/shows${s ? `?${s}` : ""}`;
 }
 
 // What a pasted title comes to when a user types it into the search.

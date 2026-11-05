@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 type Found = { id: string; title: string; type: string; first_performed: number | null };
 type Props = { id: string; matchId: string | null; matchTitle: string | null; matchSame: boolean };
 
-// Add, Same as, or Not a show for one candidate on /app/admin/shows/candidates,
+// Add, Same as, or Not a show for one candidate on /app/backstage/shows/candidates,
 // through admin functions. Same as offers the closest existing show first, and
 // a search for any other.
 export function CandidateActions({ id, matchId, matchTitle, matchSame }: Props) {

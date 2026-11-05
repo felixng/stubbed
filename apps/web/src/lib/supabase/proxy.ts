@@ -9,7 +9,7 @@ import { safeNext } from "@/lib/safe-next";
 // Server Component reads it, and guards the owner app (#13): /app/* without a
 // session goes to /login, and the landing page, /login or /signup with a
 // session goes to /app. /reset-password needs the session its email link
-// gives. Admin pages (/app/admin/*) are a 404 for everyone else, before
+// gives. Admin pages (/app/backstage/*) are a 404 for everyone else, before
 // anything renders.
 // Signed-in users without a handle go to /welcome to set up their profile
 // first. This is a convenience, not the security boundary: RLS in Postgres

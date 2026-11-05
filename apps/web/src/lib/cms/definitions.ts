@@ -153,58 +153,6 @@ export const copyDefinitions = {
     "cardMixAlt": {"title": "cardMixAlt", "value": "Demo show-mix card for @sillyelphaba: 57 visits, comprising 44 musicals, 8 plays, 3 comedy and 2 stand-up visits.", "multiline": true}
   }
 },
-  "hero": {
-    "document": "landingPage",
-    "title": "Hero",
-    "fields": {
-      "yourTheatreLifeShared": {
-        "title": "Headline",
-        "value": "Your theatre life, shared.",
-        "multiline": false
-      },
-      "logTheShowsYouSeeRate": {
-        "title": "Introduction",
-        "value": "Log the shows you see. Rate them. Your diary, shared with the people who get it.",
-        "multiline": false
-      },
-      "signUpFree": {
-        "title": "Sign-up button",
-        "value": "Sign up free",
-        "multiline": false
-      },
-      "signIn": {
-        "title": "Sign-in button",
-        "value": "Sign in",
-        "multiline": false
-      },
-      "signUpWithAppleGoogleOr": {
-        "title": "Sign-up help",
-        "value": "Sign up with Apple, Google or your email.",
-        "multiline": false
-      },
-      "stubbedOnAnIPhoneTheHome": {
-        "title": "Screenshot accessibility description",
-        "value": "Stubbed on an iPhone: the Home feed, with @sillyelphaba’s photo from The Lost Boys at the Palace Theatre",
-        "multiline": true
-      }
-    }
-  },
-  "reminder": {
-    "document": "landingPage",
-    "title": "Final call to action",
-    "fields": {
-      "startYourTheatreDiary": {
-        "title": "Start your theatre diary.",
-        "value": "Start your theatre diary.",
-        "multiline": false
-      },
-      "signUpFree": {
-        "title": "Sign up free",
-        "value": "Sign up free",
-        "multiline": false
-      }
-    }
-  },
   "footer": {
     "document": "siteSettings",
     "title": "Navigation and footer",
@@ -2064,77 +2012,6 @@ export const copyDefinitions = {
         "multiline": false,
         "fieldset": "contact",
         "fieldsetTitle": "Contact"
-      }
-    }
-  },
-  "features": {
-    "document": "landingPage",
-    "title": "Features",
-    "fields": {
-      "heading": {
-        "title": "Heading",
-        "value": "How it works",
-        "multiline": false
-      },
-      "feature1Title": {
-        "title": "Feature1 Title",
-        "value": "Log every show",
-        "multiline": false
-      },
-      "feature1Body": {
-        "title": "Feature1 Body",
-        "value": "Every show you see, in one place: the venue, the date, your half-star rating and your thoughts about the show.",
-        "multiline": true
-      },
-      "feature1Alt": {
-        "title": "Feature1 Alt",
-        "value": "Logging The Lost Boys: a photo from the show, the show, the Palace Theatre, the date and four and a half stars",
-        "multiline": true
-      },
-      "feature2Title": {
-        "title": "Feature2 Title",
-        "value": "Share with your friends",
-        "multiline": false
-      },
-      "feature2Body": {
-        "title": "Feature2 Body",
-        "value": "Turn any show into a card for your Stories, with the show, your rating and your handle.",
-        "multiline": false
-      },
-      "feature2Alt": {
-        "title": "Feature2 Alt",
-        "value": "A share card for The Lost Boys: the photo, four and a half stars, the 8th show of 2026 and the handle @sillyelphaba",
-        "multiline": true
-      },
-      "feature3Title": {
-        "title": "Feature3 Title",
-        "value": "See your history",
-        "multiline": false
-      },
-      "feature3Body": {
-        "title": "Feature3 Body",
-        "value": "Every show you’ve seen in one diary. Bring past shows in from theatre photos.",
-        "multiline": false
-      },
-      "feature3Alt": {
-        "title": "Feature3 Alt",
-        "value": "A diary of shows seen, newest first, each with a photo, its theatre, date and star rating",
-        "multiline": false
-      },
-      "feature4Title": {
-        "title": "Feature4 Title",
-        "value": "Plan ahead",
-        "multiline": false
-      },
-      "feature4Body": {
-        "title": "Feature4 Body",
-        "value": "Group a trip or a festival’s shows together and keep track of what you want to see next.",
-        "multiline": false
-      },
-      "feature4Alt": {
-        "title": "Feature4 Alt",
-        "value": "A trip called Birthday weekend: 2 shows at 2 venues over 2 nights, Cabaret and Groundhog Day",
-        "multiline": true
       }
     }
   },

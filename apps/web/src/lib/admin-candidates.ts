@@ -1,7 +1,7 @@
 import { SHOW_TYPES } from "@/lib/admin-shows";
 import { UUID } from "@/lib/admin-crawl";
 
-// Filters and the bulk-add rule for /app/admin/shows/candidates.
+// Filters and the bulk-add rule for /app/backstage/shows/candidates.
 export const PAGE_SIZE = 25;
 export const BAR = 0.95; // share of a sample that must be right before adding the rest
 export const MIN_REVIEWED = 20;
@@ -43,7 +43,7 @@ export function candidateHref(f: CandidateFilters, page = f.page): string {
   if (f.sample) p.set("sample", f.sample);
   if (page > 1) p.set("page", String(page));
   const s = p.toString();
-  return `/app/admin/shows/candidates${s ? `?${s}` : ""}`;
+  return `/app/backstage/shows/candidates${s ? `?${s}` : ""}`;
 }
 
 export type SampleScore = { size: number; reviewed: number; good: number; bad: number; share: number | null };

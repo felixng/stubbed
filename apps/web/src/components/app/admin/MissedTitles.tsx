@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 
 type Missed = { id: string; title: string; note: string | null };
 
-// Titles a theatre has on that the run missed, on /app/admin/crawl/[id]:
+// Titles a theatre has on that the run missed, on /app/backstage/crawl/[id]:
 // added and removed through admin functions, counted in the run's score.
 export function MissedTitles({ runId, venueId, missed }: { runId: string; venueId: string | null; missed: Missed[] }) {
   const router = useRouter();

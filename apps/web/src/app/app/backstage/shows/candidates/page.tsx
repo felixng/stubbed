@@ -36,7 +36,7 @@ const FIELD =
   "min-h-11 rounded-md border border-separator bg-surface px-3 text-body text-label focus-visible:outline-2 focus-visible:outline-focus";
 const n = (x: number) => x.toLocaleString("en-GB");
 
-async function Candidates({ searchParams }: Pick<PageProps<"/app/admin/shows/candidates">, "searchParams">) {
+async function Candidates({ searchParams }: Pick<PageProps<"/app/backstage/shows/candidates">, "searchParams">) {
   const f = parseCandidateFilters(await searchParams);
   const { supabase } = await ownerContext();
   const [list, totals, score] = await Promise.all([
@@ -87,7 +87,7 @@ async function Candidates({ searchParams }: Pick<PageProps<"/app/admin/shows/can
           <button type="submit" className={buttonClass("primary", "sm")}>
             Show candidates
           </button>
-          <Link href="/app/admin/shows/candidates" className={buttonClass("ghost", "sm")}>
+          <Link href="/app/backstage/shows/candidates" className={buttonClass("ghost", "sm")}>
             Clear
           </Link>
         </div>
@@ -179,11 +179,11 @@ async function Candidates({ searchParams }: Pick<PageProps<"/app/admin/shows/can
   );
 }
 
-export default function AdminCandidatesPage({ searchParams }: PageProps<"/app/admin/shows/candidates">) {
+export default function AdminCandidatesPage({ searchParams }: PageProps<"/app/backstage/shows/candidates">) {
   return (
     <section className="flex flex-col gap-5">
       <div className="flex flex-col gap-1">
-        <BackLink href="/app/admin/shows">Shows</BackLink>
+        <BackLink href="/app/backstage/shows">Shows</BackLink>
         <h1 className="text-title font-display text-label">Show candidates</h1>
         <p className="text-subheadline text-label-secondary">
           Names from Wikidata and from crawled what’s-on pages that aren’t in the show list yet. Nothing here appears in search until you add it.

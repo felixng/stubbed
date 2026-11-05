@@ -4,6 +4,7 @@ import { presentationTool, defineLocations } from "sanity/presentation";
 import { copyDefinitions } from "./src/lib/cms/definitions";
 import { documents, defaultsFor, type ContentDocument, type CopySection } from "./src/lib/cms/model";
 import { apiVersion, dataset, projectId } from "./src/lib/cms/client";
+import { prefilledInput } from "./src/components/cms/prefilled-input";
 
 const documentIds = Object.keys(documents) as ContentDocument[];
 const sections = Object.keys(copyDefinitions) as CopySection[];
@@ -30,6 +31,7 @@ const schemaTypes = documentIds.map((id) => defineType({
         ...("fieldset" in field ? { fieldset: field.fieldset } : {}),
         title: field.title,
         description: field.value !== field.title ? `Original: ${field.value}` : undefined,
+        components: { input: prefilledInput(field.value) },
       };
       if (kind === "url") return defineField({
         ...shared, type: "url",
@@ -55,7 +57,7 @@ export default defineConfig({
   projectId: projectId || "unconfigured",
   dataset,
   apiVersion,
-  basePath: "/studio",
+  basePath: "/dressingroom",
   plugins: [
     structureTool({
       structure: (S) => S.list().title("Website copy").items(documentIds.map((id) =>

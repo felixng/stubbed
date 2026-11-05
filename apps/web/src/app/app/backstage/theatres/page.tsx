@@ -40,7 +40,7 @@ function Missing({ children }: { children: React.ReactNode }) {
 // Read with the admin's session through admin_list_venues (admins only; it
 // returns counts, never who logged what). Filters live in the query string, so
 // a filtered list is a link.
-async function Theatres({ searchParams }: Pick<PageProps<"/app/admin/theatres">, "searchParams">) {
+async function Theatres({ searchParams }: Pick<PageProps<"/app/backstage/theatres">, "searchParams">) {
   const f = parseTheatreFilters(await searchParams);
   const { supabase } = await ownerContext();
   const args = filterArgs(f);
@@ -98,7 +98,7 @@ async function Theatres({ searchParams }: Pick<PageProps<"/app/admin/theatres">,
           <button type="submit" className={buttonClass("primary", "sm")}>
             Show theatres
           </button>
-          <Link href="/app/admin/theatres" className={buttonClass("ghost", "sm")}>
+          <Link href="/app/backstage/theatres" className={buttonClass("ghost", "sm")}>
             Clear
           </Link>
         </div>
@@ -185,11 +185,11 @@ async function Theatres({ searchParams }: Pick<PageProps<"/app/admin/theatres">,
   );
 }
 
-export default function AdminTheatresPage({ searchParams }: PageProps<"/app/admin/theatres">) {
+export default function AdminTheatresPage({ searchParams }: PageProps<"/app/backstage/theatres">) {
   return (
     <section className="flex flex-col gap-5">
       <div className="flex flex-col gap-1">
-        <BackLink href="/app/admin">Admin</BackLink>
+        <BackLink href="/app/backstage">Backstage</BackLink>
         <h1 className="text-title font-display text-label">Theatres</h1>
         <p className="text-subheadline text-label-secondary">
           Every theatre we hold, the ones people log at first. Filter to “Website: Missing” to see what to fill in.

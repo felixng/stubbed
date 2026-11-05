@@ -118,7 +118,7 @@ async function Compare({ runId, otherId }: { runId: string; otherId: string }) {
   );
 }
 
-async function Run({ params, searchParams }: Pick<PageProps<"/app/admin/crawl/[id]">, "params" | "searchParams">) {
+async function Run({ params, searchParams }: Pick<PageProps<"/app/backstage/crawl/[id]">, "params" | "searchParams">) {
   const { id } = await params;
   if (!UUID.test(id)) notFound();
   const compareParam = (await searchParams).compare;
@@ -228,15 +228,15 @@ async function Run({ params, searchParams }: Pick<PageProps<"/app/admin/crawl/[i
   );
 }
 
-export default function AdminCrawlRunPage({ params, searchParams }: PageProps<"/app/admin/crawl/[id]">) {
+export default function AdminCrawlRunPage({ params, searchParams }: PageProps<"/app/backstage/crawl/[id]">) {
   return (
     <section className="flex flex-col gap-5">
       <div className="flex flex-col gap-1">
-        <BackLink href="/app/admin/crawl">Crawl runs</BackLink>
+        <BackLink href="/app/backstage/crawl">Crawl runs</BackLink>
         <h1 className="text-title font-display text-label">Crawl run</h1>
         <p className="text-subheadline text-label-secondary">
           Check each finding against its source page. Mark it right or wrong, and add the titles the run missed.{" "}
-          <Link href="/app/admin/crawl" className="text-tint-text">
+          <Link href="/app/backstage/crawl" className="text-tint-text">
             All runs
           </Link>
         </p>
