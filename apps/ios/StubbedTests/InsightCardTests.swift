@@ -52,7 +52,7 @@ struct InsightCardTests {
     #expect(historical.filenamePeriod(for: .bestWeekly) == "2024")
   }
 
-  @Test @MainActor func showSharingContainsAllEightWithTheirOwnContext() throws {
+  @Test @MainActor func showSharingContainsAllTenWithTheirOwnContext() throws {
     let photo = UIGraphicsImageRenderer(size: CGSize(width: 10, height: 10)).image { context in
       UIColor.blue.setFill()
       context.fill(CGRect(x: 0, y: 0, width: 10, height: 10))
@@ -61,7 +61,7 @@ struct InsightCardTests {
       year: 2025, rating: 1, showOfYear: 12, venueVisit: 0, timesSeen: 1, handle: "ios_test")
     let insights = InsightCardData(stats: stats(total: 0, weekly: 0), year: 2026, handle: "ios_test", currentYear: 2026)
     let cards = try ShareCards.showCards(entry, photo: photo, insights: insights)
-    #expect(cards.map(\.id) == ["stats", "name", "data", "encore", "show-number", "weekly-streak", "year-in-theatre", "show-mix"])
+    #expect(cards.map(\.id) == ["stats", "name", "data", "encore", "show-number", "overlay", "ticket", "weekly-streak", "year-in-theatre", "show-mix"])
     #expect(cards[3].name == "First visit")
     #expect(cards[3].file.lastPathComponent.contains("first-visit"))
     #expect(cards.filter(\.isInsights).map(\.id) == ["weekly-streak", "year-in-theatre", "show-mix"])
@@ -117,7 +117,7 @@ struct InsightCardTests {
     // Render every design, including daily streak, independently of eligibility.
     for design in InsightCardDesign.allCases {
       for appearance in ShareAppearance.variants {
-        let asset = try ShareCards.render(InsightCardView(design: design, data: data, appearance: appearance), name: design.id)
+        let asset = try ShareCards.render(InsightCardView(design: design, data: data, appearance: appearance), name: "\(design.id)-\(appearance.key)")
         #expect(asset.image.cgImage?.width == 1080)
         #expect(asset.image.cgImage?.height == 1080)
         #expect(coralPixelsInArtwork(asset.image) > 100, "\(design.id) must retain coral in \(appearance.key)")

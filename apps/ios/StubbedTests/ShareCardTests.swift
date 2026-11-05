@@ -1,5 +1,6 @@
 import Testing
 import UIKit
+import UniformTypeIdentifiers
 @testable import Stubbed
 
 struct ShareCardTests {
@@ -44,6 +45,17 @@ struct ShareCardTests {
     #expect(light.file != background.file)
     #expect(alpha(light.image, at: bodyPoint(light.image)) == 255)
     #expect(background.asset(for: .init(background: .light, ink: .dark)).file == light.file)
+  }
+
+  @Test @MainActor func copyImagePreservesPNGTransparency() throws {
+    let asset = try ShareCards.render(EntryCardView(design: .data, data: data, photo: nil,
+      appearance: .init(background: .transparent)), name: "copy-card")
+    let pasteboard = UIPasteboard.withUniqueName()
+    defer { UIPasteboard.remove(withName: pasteboard.name) }
+    try ShareCards.copyImage(asset, to: pasteboard)
+    let copied = try #require(pasteboard.data(forPasteboardType: UTType.png.identifier))
+    #expect(copied == (try Data(contentsOf: asset.file)))
+    #expect(alpha(try #require(UIImage(data: copied))) == 0)
   }
 
   @Test func onlyTransparentLetsTextColourChange() {

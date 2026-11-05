@@ -107,9 +107,9 @@ struct InsightCardView: View {
         switch design {
         case .year: year
         case .weekly, .daily, .bestWeekly, .bestDaily: streak
-        case .activity: ShareActivityCard(data: data, ink: ink, accent: accent)
-        case .repeats: ShareRepeatCard(data: data, ink: ink, accent: accent)
-        case .countries: ShareCountriesCard(data: data, ink: ink, accent: accent)
+        case .activity: ShareActivityCard(data: data, ink: ink, accent: accent, highContrast: appearance.background == .transparent)
+        case .repeats: ShareRepeatCard(data: data, ink: ink, accent: accent, highContrast: appearance.background == .transparent)
+        case .countries: ShareCountriesCard(data: data, ink: ink, accent: accent, highContrast: appearance.background == .transparent)
         case .mix: mix
         case .history: ShareHistoryCard(data: data, ink: ink, accent: accent)
         }
@@ -172,7 +172,7 @@ struct InsightCardView: View {
       Text("My show mix").font(.system(size: 32, weight: .bold))
       Text("\(data.period) · \(data.stats.total) visits").font(.system(size: 18))
       Spacer(minLength: 0)
-      ShareRadar(categories: data.stats.types, total: data.stats.total, ink: ink, accent: accent).frame(height: 310)
+      ShareRadar(categories: data.stats.types, total: data.stats.total, ink: ink, accent: accent, highContrast: appearance.background == .transparent).frame(height: 310)
     }
   }
 }
@@ -212,6 +212,7 @@ struct ShareRadar: View {
   let total: Int
   let ink: Color
   var accent: Color? = nil
+  var highContrast = false
   private var values: [Double] {
     ShowType.ordered.map { type in Double(categories.first { $0.type == type.rawValue }?.count ?? 0) }
   }
@@ -223,17 +224,24 @@ struct ShareRadar: View {
       ZStack {
         Canvas { context, _ in
           for level in 1...4 {
-            context.stroke(polygon(Array(repeating: Double(level) / 4, count: 7), center, radius), with: .color(ink.opacity(0.15)), lineWidth: 1)
+            context.stroke(polygon(Array(repeating: Double(level) / 4, count: 7), center, radius), with: .color(ink.opacity(highContrast ? 0.65 : 0.15)), lineWidth: highContrast ? 1.6 : 1)
           }
           for i in 0..<7 {
             var axis = Path()
             axis.move(to: center)
             axis.addLine(to: point(i, 1, center, radius))
-            context.stroke(axis, with: .color(ink.opacity(0.15)), lineWidth: 1)
+            context.stroke(axis, with: .color(ink.opacity(highContrast ? 0.65 : 0.15)), lineWidth: highContrast ? 1.6 : 1)
           }
           let shape = polygon(values.map { $0 / maximum }, center, radius)
-          context.fill(shape, with: .color((accent ?? ink).opacity(0.22)))
-          context.stroke(shape, with: .color(accent ?? ink), lineWidth: 2)
+          context.fill(shape, with: .color((accent ?? ink).opacity(highContrast ? 0.32 : 0.22)))
+          context.stroke(shape, with: .color(accent ?? ink), lineWidth: highContrast ? 3 : 2)
+          if highContrast {
+            for i in 0..<7 {
+              let vertex = point(i, values[i] / maximum, center, radius)
+              context.fill(Path(ellipseIn: CGRect(x: vertex.x - 3.5, y: vertex.y - 3.5, width: 7, height: 7)),
+                with: .color(accent ?? ink))
+            }
+          }
         }
         ForEach(Array(ShowType.ordered.enumerated()), id: \.offset) { i, type in
           VStack(spacing: 3) {

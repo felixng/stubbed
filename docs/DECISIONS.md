@@ -1030,3 +1030,5 @@ Owner couldn't edit all of two landing captions (the editor showed only half of 
 - Removed the ticket perforation dots and reclaimed the width for the title and yearly count. The outside branding stays centred beneath the ticket.
 
 - Tightened the plain overlay’s section spacing and restored “This year so far”. Simplified the ticket to an unlabelled show title followed immediately by the date, reclaiming the stub area and widening the counts.
+
+- No-photo sharing designs now start transparent, including Insights. The action order is Stories, Copy image, Download, Copy text, Link, More (where applicable). Copy preserves the selected PNG’s alpha on iOS and web, records `copy_image`, and reports clipboard failures without substituting text. Transparent charts use stronger grid/boundary lines, radar vertex markers, higher-opacity visited-country fills, and clearer calendar cells and separators; regular in-app charts retain their appearance.
