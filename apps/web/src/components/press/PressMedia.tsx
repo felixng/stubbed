@@ -111,13 +111,13 @@ export async function PressMedia() {
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
               <div className="flex aspect-[2/1] items-center justify-center rounded-xl bg-surface p-8 ring-1 ring-separator">
-                <Image src="/press/stubbed-logo.png" alt={copy.theStubbedLogoTheTicketMark} width={2141} height={500} sizes="(min-width: 640px) 300px, 80vw" className="h-auto w-full max-w-sm" />
+                <Image src="/press/stubbed-logo.png" alt="The Stubbed logo: the ticket mark and the stubbed wordmark" width={2141} height={500} sizes="(min-width: 640px) 300px, 80vw" className="h-auto w-full max-w-sm" />
               </div>
               <Download href="/press/stubbed-logo.png">{copy.pngForLightBackgrounds}</Download>
             </div>
             <div>
               <div className="flex aspect-[2/1] items-center justify-center rounded-xl bg-[#1c1c1e] p-8">
-                <Image src="/press/stubbed-logo-white.png" alt={copy.theStubbedLogoWithAWhite} width={2141} height={500} sizes="(min-width: 640px) 300px, 80vw" className="h-auto w-full max-w-sm" />
+                <Image src="/press/stubbed-logo-white.png" alt="The Stubbed logo with a white wordmark, on a dark background" width={2141} height={500} sizes="(min-width: 640px) 300px, 80vw" className="h-auto w-full max-w-sm" />
               </div>
               <Download href="/press/stubbed-logo-white.png">{copy.pngForDarkBackgrounds}</Download>
             </div>
@@ -175,7 +175,7 @@ export async function PressMedia() {
         <h3 className="font-display text-title-2 text-label">{copy.shareCard}</h3>
         <p className="mt-2 text-subheadline text-label-secondary">{copy.whatPeoplePostASquareCard}</p>
         <div className="mt-5 max-w-xs">
-          <Image src="/press/share-card.jpg" alt={copy.aStubbedShareCardForThe} width={1098} height={1098} sizes="320px" className="h-auto w-full rounded-xl" />
+          <Image src="/press/share-card.jpg" alt="A Stubbed share card for The Lost Boys at the Palace Theatre" width={1098} height={1098} sizes="320px" className="h-auto w-full rounded-xl" />
           <Download href="/press/share-card.jpg">{copy.jpg2}</Download>
         </div>
       </div>

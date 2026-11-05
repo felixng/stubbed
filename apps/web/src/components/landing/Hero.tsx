@@ -3,6 +3,7 @@ import { getCopy } from "@/lib/cms/content";
 import { Container } from "./Container";
 import Image from "next/image";
 import { LandingAction } from "./LandingAction";
+import { cardAlt } from "./alt-text";
 
 export async function Hero() {
   const copy = await getCopy("sharingLanding");
@@ -20,9 +21,9 @@ export async function Hero() {
         </div>
         <div className="landing-hero-fan" role="group" aria-label={copy.heroAsset}>
           {[
-            { id: "name-lost-boys", alt: copy.cardLostBoysRatingAlt, position: "landing-fan-left" },
-            { id: "activity", alt: copy.cardActivityAlt, position: "landing-fan-right" },
-            { id: "stats-mincemeat", alt: copy.cardPhotoDataAlt, position: "landing-fan-centre" },
+            { id: "name-lost-boys", alt: cardAlt["name-lost-boys"], position: "landing-fan-left" },
+            { id: "activity", alt: cardAlt.activity, position: "landing-fan-right" },
+            { id: "stats-mincemeat", alt: cardAlt["stats-mincemeat"], position: "landing-fan-centre" },
           ].map(card => (
             <div key={card.id} className={`landing-fan-card ${card.position} overflow-hidden rounded-md bg-surface`}>
               <Image src={`/landing/cards/${card.id}.webp`} alt={card.alt} width={1080} height={1080} sizes="(min-width: 1024px) 360px, (min-width: 640px) 400px, calc(100vw - 32px)" preload={card.position === "landing-fan-centre"} className="h-auto w-full" />

@@ -1,5 +1,6 @@
 import type { Copy } from "@/lib/cms/model";
 import Image from "next/image";
+import { storyAlt } from "./alt-text";
 import { Container } from "./Container";
 
 // Portrait stories (9:16) in the wild: the social half of "Share". The square
@@ -9,12 +10,12 @@ import { Container } from "./Container";
 //
 // The images in /landing/stories are placeholders (see the README there). Four
 // slots reuse two images so the rhythm is visible; swap in real stories and
-// give each its own alt text.
+// give each its own alt text in alt-text.ts.
 const stories = [
-  { id: "placeholder-1", width: 703, height: 1250, alt: "storyAlt1" },
-  { id: "placeholder-2", width: 335, height: 597, alt: "storyAlt2" },
-  { id: "placeholder-1", width: 703, height: 1250, alt: "storyAlt1" },
-  { id: "placeholder-2", width: 335, height: 597, alt: "storyAlt2" },
+  { id: "placeholder-1", width: 703, height: 1250 },
+  { id: "placeholder-2", width: 335, height: 597 },
+  { id: "placeholder-1", width: 703, height: 1250 },
+  { id: "placeholder-2", width: 335, height: 597 },
 ] as const;
 
 export function Stories({ copy }: { copy: Copy<"sharingLanding"> }) {
@@ -28,14 +29,14 @@ export function Stories({ copy }: { copy: Copy<"sharingLanding"> }) {
           </div>
           <p className="max-w-sm text-body leading-7 text-label-secondary">{copy.storiesBody}</p>
         </div>
-        <p className="mt-8 text-footnote text-label-secondary">{copy.storiesHelp} {copy.storiesCaption}</p>
+        <p className="mt-8 text-footnote text-label-secondary">{copy.storiesHelp}</p>
         <div role="region" aria-label={copy.storiesLabel} tabIndex={0} className="relative mt-4 flex snap-x snap-proximity gap-4 overflow-x-auto pb-5 [scrollbar-width:thin] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus sm:gap-6">
           {stories.map((story, index) => (
             <div key={`${story.id}-${index}`} className="w-[62%] shrink-0 snap-start sm:w-[38%] lg:w-[calc((100%-4.5rem)/4)]">
               <div className="relative aspect-[9/16] overflow-hidden rounded-lg border border-separator bg-fill shadow-sm">
                 <Image
                   src={`/landing/stories/${story.id}.webp`}
-                  alt={copy[story.alt]}
+                  alt={storyAlt[story.id]}
                   width={story.width}
                   height={story.height}
                   sizes="(min-width: 1024px) 300px, (min-width: 640px) 38vw, 62vw"

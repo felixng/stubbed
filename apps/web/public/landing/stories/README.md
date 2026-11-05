@@ -8,4 +8,4 @@ Real examples (demo data is fine, per the owner):
 
 - Portrait 9:16, around 1080×1920, WebP.
 - A real-looking story with a Stubbed card or stats text on top of a photo. No Instagram interface in the frame (no close button, text tools, caption bar or sticker tray).
-- Update `storyAlt1`, `storyAlt2` (and add more) in `src/lib/cms/definitions.ts`, and drop the "placeholder" wording from `storiesCaption`.
+- Update `storyAlt` (and add more) in `src/components/landing/alt-text.ts`, and drop the "placeholder" wording from `storiesHelp` in `src/lib/cms/definitions.ts`.
