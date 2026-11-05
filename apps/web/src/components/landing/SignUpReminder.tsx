@@ -1,24 +1,18 @@
 import { getCopy } from "@/lib/cms/content";
-import Link from "next/link";
+import { Container } from "./Container";
+import { LandingAction } from "./LandingAction";
 
-import { Container } from "@/components/landing/Container";
-
-// The landing page's last word: sign up. Secondary, not coral; the hero's
-// button stays the page's one coral fill.
 export async function SignUpReminder() {
-  const copy = await getCopy("reminder");
+  const copy = await getCopy("sharingLanding");
   return (
-    <section aria-labelledby="reminder-heading" className="pb-16 sm:pb-20">
-      <Container className="flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h2 id="reminder-heading" className="font-display text-title-2 text-label">
-          {copy.startYourTheatreDiary}
-        </h2>
-        <Link
-          href="/signup"
-          className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-pill bg-tint-fill px-4 text-subheadline font-semibold text-tint-text transition-colors hover:bg-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-        >
-          {copy.signUpFree}
-        </Link>
+    <section aria-labelledby="reminder-heading" className="border-y border-separator bg-surface py-16 sm:py-20">
+      <Container className="flex flex-col items-start justify-between gap-8 sm:flex-row sm:items-center">
+        <div>
+          <h2 id="reminder-heading" className="font-display text-[clamp(32px,3.5vw,48px)] leading-[1.1] font-bold tracking-[-0.03em] text-label">{copy.closingHeading}</h2>
+          <p className="mt-4 text-body text-label-secondary">{copy.closingBody}</p>
+          <p className="mt-6 text-footnote text-label-secondary"><a href="https://felix.ng" className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-label focus-visible:outline-2 focus-visible:outline-focus">{copy.maker}</a><span aria-hidden="true"> · </span>{copy.location}</p>
+        </div>
+        <div className="shrink-0"><LandingAction>{copy.signup}</LandingAction><p className="mt-3 text-footnote text-label-secondary">{copy.signupHelp}</p></div>
       </Container>
     </section>
   );

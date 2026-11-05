@@ -1,6 +1,197 @@
 // Repository defaults and the explicit allowlist of CMS-editable copy.
 // Asset paths, layouts and application behaviour stay in code.
 export const copyDefinitions = {
+  "sharingLanding": {
+  "document": "landingPage",
+  "title": "Card-led landing design",
+  "fields": {
+    "eyebrow": {
+      "title": "eyebrow",
+      "value": "Your theatre diary. Built for sharing.",
+      "multiline": false
+    },
+    "headline": {
+      "title": "headline",
+      "value": "Good shows deserve an encore.",
+      "multiline": false
+    },
+    "intro": {
+      "title": "intro",
+      "value": "Keep the nights you loved. Share the cards. See your theatre life take shape.",
+      "multiline": false
+    },
+    "signup": {
+      "title": "signup",
+      "value": "Sign up free",
+      "multiline": false
+    },
+    "signupHelp": {
+      "title": "signupHelp",
+      "value": "Sign up with Apple, Google or email.",
+      "multiline": false
+    },
+    "sampleLink": {
+      "title": "sampleLink",
+      "value": "Explore the diary",
+      "multiline": false
+    },
+    "handle": {
+      "title": "handle",
+      "value": "@stubbedapp",
+      "multiline": false
+    },
+    "placeholder": {
+      "title": "placeholder",
+      "value": "Screenshot placeholder",
+      "multiline": false
+    },
+    "heroAsset": {
+      "title": "heroAsset",
+      "value": "A card from your theatre diary",
+      "multiline": false
+    },
+    "shareEyebrow": {
+      "title": "shareEyebrow",
+      "value": "01 / Share",
+      "multiline": false
+    },
+    "shareHeading": {
+      "title": "shareHeading",
+      "value": "A night out. A card worth keeping.",
+      "multiline": false
+    },
+    "shareBody": {
+      "title": "shareBody",
+      "value": "Start with a photo and a show. Pick a card that tells your story, then share it wherever your friends are.",
+      "multiline": false
+    },
+    "galleryLabel": {
+      "title": "galleryLabel",
+      "value": "Share card designs",
+      "multiline": false
+    },
+    "galleryHelp": {
+      "title": "galleryHelp",
+      "value": "Swipe to explore, or choose a card below.",
+      "multiline": false
+    },
+    "card0": {
+      "title": "card0",
+      "value": "Data + Photo",
+      "multiline": false
+    },
+    "card1": {
+      "title": "card1",
+      "value": "Rating + Photo",
+      "multiline": false
+    },
+    "card2": {
+      "title": "card2",
+      "value": "Data",
+      "multiline": false
+    },
+    "card3": {
+      "title": "card3",
+      "value": "Encore",
+      "multiline": false
+    },
+    "card4": {
+      "title": "card4",
+      "value": "Show number",
+      "multiline": false
+    },
+    "card5": {
+      "title": "card5",
+      "value": "Weekly streak",
+      "multiline": false
+    },
+    "card6": {
+      "title": "card6",
+      "value": "Year in theatre",
+      "multiline": false
+    },
+    "card7": {
+      "title": "card7",
+      "value": "Show mix",
+      "multiline": false
+    },
+    "cardCta": {
+      "title": "cardCta",
+      "value": "Make your first card",
+      "multiline": false
+    },
+    "diaryEyebrow": {
+      "title": "diaryEyebrow",
+      "value": "02 / Look back",
+      "multiline": false
+    },
+    "diaryHeading": {
+      "title": "diaryHeading",
+      "value": "Keep more than the ticket.",
+      "multiline": false
+    },
+    "diaryBody": {
+      "title": "diaryBody",
+      "value": "Your photos, ratings and notes, together in your diary. Gather shows into trips and revisit the nights you still talk about.",
+      "multiline": false
+    },
+    "diaryAsset": {
+      "title": "diaryAsset",
+      "value": "Your diary and trips",
+      "multiline": false
+    },
+    "diaryCaption": {
+      "title": "diaryCaption",
+      "value": "A home for the shows you have seen.",
+      "multiline": false
+    },
+    "yearEyebrow": {
+      "title": "yearEyebrow",
+      "value": "03 / See your year",
+      "multiline": false
+    },
+    "yearHeading": {
+      "title": "yearHeading",
+      "value": "Your theatre life, in the round.",
+      "multiline": false
+    },
+    "yearBody": {
+      "title": "yearBody",
+      "value": "See your visits, streaks and show mix. Look back through the years, then share your Year in theatre.",
+      "multiline": false
+    },
+    "yearAsset": {
+      "title": "yearAsset",
+      "value": "Your theatre stats",
+      "multiline": false
+    },
+    "yearCard": {
+      "title": "yearCard",
+      "value": "Year in theatre card",
+      "multiline": false
+    },
+    "closingHeading": {
+      "title": "closingHeading",
+      "value": "Your next show is the start.",
+      "multiline": false
+    },
+    "closingBody": {
+      "title": "closingBody",
+      "value": "A diary to return to. A story to share.",
+      "multiline": false
+    },
+    "maker": {
+      "title": "maker",
+      "value": "Made by Felix",
+      "multiline": false
+    },
+    "location": {
+      "title": "location",
+      "value": "Built in London",
+      "multiline": false
+    }
+  }
+},
   "hero": {
     "document": "landingPage",
     "title": "Hero",
