@@ -17,13 +17,14 @@ export async function Hero() {
             <LandingAction>{copy.signup}</LandingAction>
             <Link href="#diary" className="inline-flex min-h-11 items-center gap-2 text-subheadline font-semibold text-label underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">{copy.sampleLink}<span aria-hidden="true">↗</span></Link>
           </div>
-          <p className="mt-3 text-footnote text-label-secondary">{copy.signupHelp}</p>
-          <a href="https://www.instagram.com/stubbedapp/" className="mt-5 inline-flex min-h-11 items-center text-subheadline text-label-secondary hover:text-label focus-visible:outline-2 focus-visible:outline-focus">{copy.handle}</a>
         </div>
-        <div className="mx-auto w-full max-w-[400px] rounded-lg border border-separator bg-surface p-4 shadow-sm sm:p-6">
-          <div className="flex aspect-[4/5] items-center rounded-md bg-[image:var(--sweep)] p-5 sm:p-7">
-            <div className="aspect-square w-full"><AssetPlaceholder label={copy.heroAsset} status={copy.placeholder} /></div>
-          </div>
+        {/* Placeholder identities and phone treatment remain provisional (#386). */}
+        <div className="relative isolate mx-auto aspect-[6/5] w-full max-w-[560px]" role="group" aria-label={copy.heroAsset}>
+          {[-1, 0, 1].map((position) => (
+            <div key={position} className={`absolute top-[15%] aspect-square w-[62%] rounded-md border border-separator bg-surface p-2 shadow-sm ${position === -1 ? "left-[3%] -rotate-12" : position === 1 ? "right-[3%] rotate-12" : "left-[19%] top-[10%] z-10"}`}>
+              <AssetPlaceholder label={copy.heroAsset} status={copy.placeholder} />
+            </div>
+          ))}
         </div>
       </Container>
     </section>

@@ -952,3 +952,11 @@ The maker note links to felix.ng and includes “Built in London”, the specifi
 This PR is a design pass for review, not completion of the epic: real assets, public sample content, Instagram in-app-browser auth verification and closure of superseded work remain separate.
 
 Validation: typecheck, ESLint and all 105 existing tests pass. The running page was reviewed at 390, 1440 and 2000px with no document horizontal overflow; desktop hero card and text are vertically centred. Mobile tabs show the next card, and End selects/scrolls to Show mix. The mobile header fits on one row. Preview uses dummy public Supabase configuration: no real account, database content, Instagram embedded browser or OAuth flow was tested.
+
+## 2026-11-05 — Owner review follow-up to #384 / PR #396
+
+Pulled the latest header CTA change before editing. Applied only the owner's two decisions in issue comment 6656624819 plus the requested footer/copy tweaks: a provisional three-card placeholder fan replaces the framed hero; the eight-card gallery is a labelled, keyboard-focusable native horizontal scroll region, without tabs, tab roles, layout names or selection state. Placeholder accessibility descriptions remain honest; real per-image alt text must arrive with #386 assets. Scrolling has no forced snapping so native keyboard arrows can move freely.
+
+Removed the hero Instagram handle and both sign-up-method lines. The shared footer now combines the maker/location note with the theatre-nerd sentence, links its first “theatre nerd” to the existing safe CMS creator Instagram URL, and has a separate labelled 44px Stubbed Instagram icon. A decorative purple heart is the owner's explicit exception to the no-emoji voice rule. New footer wording remains Sanity-backed. No live CMS documents were published.
+
+The specific fan cards and final phone composition, diary/stats visual treatment, on-page diary-link arrow and other unselected review findings remain open. No issues are closed and PR #396 must remain unmerged.

@@ -10,9 +10,8 @@ export async function SignUpReminder() {
         <div>
           <h2 id="reminder-heading" className="font-display text-[clamp(32px,3.5vw,48px)] leading-[1.1] font-bold tracking-[-0.03em] text-label">{copy.closingHeading}</h2>
           <p className="mt-4 text-body text-label-secondary">{copy.closingBody}</p>
-          <p className="mt-6 text-footnote text-label-secondary"><a href="https://felix.ng" className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-label focus-visible:outline-2 focus-visible:outline-focus">{copy.maker}</a><span aria-hidden="true"> · </span>{copy.location}</p>
         </div>
-        <div className="shrink-0"><LandingAction>{copy.signup}</LandingAction><p className="mt-3 text-footnote text-label-secondary">{copy.signupHelp}</p></div>
+        <div className="shrink-0"><LandingAction>{copy.signup}</LandingAction></div>
       </Container>
     </section>
   );

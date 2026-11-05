@@ -25,19 +25,9 @@ export const copyDefinitions = {
       "value": "Sign up free",
       "multiline": false
     },
-    "signupHelp": {
-      "title": "signupHelp",
-      "value": "Sign up with Apple, Google or email.",
-      "multiline": false
-    },
     "sampleLink": {
       "title": "sampleLink",
       "value": "Explore the diary",
-      "multiline": false
-    },
-    "handle": {
-      "title": "handle",
-      "value": "@stubbedapp",
       "multiline": false
     },
     "placeholder": {
@@ -72,47 +62,7 @@ export const copyDefinitions = {
     },
     "galleryHelp": {
       "title": "galleryHelp",
-      "value": "Swipe to explore, or choose a card below.",
-      "multiline": false
-    },
-    "card0": {
-      "title": "card0",
-      "value": "Data + Photo",
-      "multiline": false
-    },
-    "card1": {
-      "title": "card1",
-      "value": "Rating + Photo",
-      "multiline": false
-    },
-    "card2": {
-      "title": "card2",
-      "value": "Data",
-      "multiline": false
-    },
-    "card3": {
-      "title": "card3",
-      "value": "Encore",
-      "multiline": false
-    },
-    "card4": {
-      "title": "card4",
-      "value": "Show number",
-      "multiline": false
-    },
-    "card5": {
-      "title": "card5",
-      "value": "Weekly streak",
-      "multiline": false
-    },
-    "card6": {
-      "title": "card6",
-      "value": "Year in theatre",
-      "multiline": false
-    },
-    "card7": {
-      "title": "card7",
-      "value": "Show mix",
+      "value": "Scroll to explore the cards.",
       "multiline": false
     },
     "cardCta": {
@@ -180,16 +130,7 @@ export const copyDefinitions = {
       "value": "A diary to return to. A story to share.",
       "multiline": false
     },
-    "maker": {
-      "title": "maker",
-      "value": "Made by Felix",
-      "multiline": false
-    },
-    "location": {
-      "title": "location",
-      "value": "Built in London",
-      "multiline": false
-    }
+    "cardDescription": { "title": "Card placeholder description", "value": "Share card preview", "multiline": false }
   }
 },
   "hero": {
@@ -248,6 +189,11 @@ export const copyDefinitions = {
     "document": "siteSettings",
     "title": "Navigation and footer",
     "fields": {
+      "makerLocation": { "title": "Maker location", "value": "Made in London", "multiline": false },
+      "makerBy": { "title": "Maker prefix", "value": "by a", "multiline": false },
+      "makerLinkLabel": { "title": "Maker link", "value": "theatre nerd", "multiline": false },
+      "makerFor": { "title": "Maker suffix", "value": "for the theatre nerds.", "multiline": false },
+      "instagramLabel": { "title": "Instagram accessible label", "value": "Stubbed on Instagram", "multiline": false },
       "builtByATheatreRegularFor": {
         "title": "Built by a theatre regular, for the theatre regulars.",
         "value": "Built by a theatre regular, for the theatre regulars.",
