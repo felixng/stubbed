@@ -66,11 +66,6 @@ struct ActivityHeatmap: View {
           proxy.scrollTo(index, anchor: .trailing)
         }
       }
-      HStack {
-        Text("Mon–Sun · darker means more shows")
-          .font(.footnote).foregroundStyle(.secondary)
-        Spacer(minLength: 0)
-      }
     }
     .accessibilityElement(children: .ignore)
     .accessibilityLabel("Activity in \(year.formatted(.number.grouping(.never)))")
