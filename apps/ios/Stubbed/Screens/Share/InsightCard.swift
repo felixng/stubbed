@@ -260,7 +260,7 @@ struct ShareRadar: View {
 
 extension ShareCards {
   @MainActor static func showCards(_ data: EntryCardData, photo: UIImage?, insights: InsightCardData) throws -> [RenderedCard] {
-    // Keep the established eight-card show carousel; the expanded collection lives in Insights.
+    // Keep the show carousel focused; the expanded stats collection lives in Insights.
     try entryCards(data, photo: photo) + insightsCards(
       insights, includingEmpty: true, designs: [.weekly, .year, .mix])
   }

@@ -90,7 +90,14 @@ struct ShareCarousel: View {
   @ScaledMetric(relativeTo: .body) private var pickerHeightWithInk: CGFloat = 300
   @State private var active: String?
   @State private var retryCount = 0
-  @State private var appearance = ShareAppearance.standard
+  @State private var baseAppearance = ShareAppearance.standard
+  @State private var overlayAppearance = ShareAppearance(background: .transparent)
+  private var appearance: ShareAppearance {
+    get { selectedID == "overlay" ? overlayAppearance : baseAppearance }
+    nonmutating set {
+      if selectedID == "overlay" { overlayAppearance = newValue } else { baseAppearance = newValue }
+    }
+  }
   @State private var pickingBackground = false
   @State private var notice: String?
   @State private var sharing: SharePayload?
@@ -229,7 +236,7 @@ struct ShareCarousel: View {
     }
     .onChange(of: notice) { _, value in if let value { AccessibilityNotification.Announcement(value).post() } }
     .sheet(isPresented: $pickingBackground) {
-      BackgroundPicker(appearance: $appearance)
+      BackgroundPicker(appearance: Binding(get: { appearance }, set: { appearance = $0 }))
         .presentationDetents([.height(currentPickerHeight)])
         .presentationDragIndicator(.visible)
         // Solid, so the action row underneath doesn't show through.

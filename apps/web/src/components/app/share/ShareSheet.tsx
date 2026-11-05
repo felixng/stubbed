@@ -23,7 +23,8 @@ export function ShareSheet({ subject, slug, publicHref = null }: { subject: Shar
   const [drawn, setDrawn] = useState<{ subject: ShareSubject; cards: DrawnCard[] } | null>(null);
   const [error, setError] = useState<ShareSubject | null>(null);
   const [active, setActive] = useState<string | null>(null);
-  const [background, setBackground] = useState<ShareBackground>("solid");
+  const [baseBackground, setBaseBackground] = useState<ShareBackground>("solid");
+  const [overlayBackground, setOverlayBackground] = useState<ShareBackground>("transparent");
   const [ink, setInk] = useState<ShareInk>("light");
   const [notice, setNotice] = useState<string | null>(null);
   const [more, setMore] = useState(false);
@@ -33,6 +34,8 @@ export function ShareSheet({ subject, slug, publicHref = null }: { subject: Shar
   const resources = useRef(new Set<string>());
   const cards = drawn?.subject === subject ? drawn.cards : null;
   const current = cards?.find(c => c.design.id === active) ?? cards?.[0];
+  const background = current?.design.id === "overlay" ? overlayBackground : baseBackground;
+  const setBackground = current?.design.id === "overlay" ? setOverlayBackground : setBaseBackground;
   const key = current?.design.background ? background === "transparent" ? `transparent-${ink}` : background : "photo";
   const card = current?.variants[key];
   const storyCard = current?.story ?? card;

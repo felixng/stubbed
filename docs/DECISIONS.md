@@ -1016,3 +1016,9 @@ Owner couldn't edit all of two landing captions (the editor showed only half of 
 
 - **One field per visible text:** the gallery help and the diary caption were each two fields printed side by side. They are now one field each (`galleryHelp`, `diaryCaption`); `demoCaption` is gone. Rule: a sentence on the page is one editor field, never two joined in the component.
 - **Alt text is hard-coded:** all image descriptions (landing cards, trip and stats screenshots, press page images) moved out of the CMS into `components/landing/alt-text.ts` and the press components. They describe the artwork, so they change in code with it. Values already saved under the removed field names stay in the dataset and show as unknown fields, as with earlier removals.
+
+### 2026-11-05 — Current-show story overlay
+
+- Added a Show overlay design to entry sharing on iOS and web: centred show title, times seen, the visit’s ordinal show of its year, today’s local date, and the existing ticket mark plus wordmark in outline. It has no route graphic or user handle.
+- Starts transparent with light text, with the existing background and text-colour options. Its background choice is remembered separately so other sharing designs retain their chosen background.
+- Uses the existing entry-card stats; older entries name their recorded year rather than calling it “This Year”. Exports remain 1080×1080 PNGs, matching the sharing pipeline.

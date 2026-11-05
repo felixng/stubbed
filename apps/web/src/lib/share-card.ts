@@ -28,6 +28,7 @@ export const CARD_DESIGNS: CardDesign[] = [
   { id: "data", name: "Data", background: true },
   { id: "encore", name: "Encore", background: true },
   { id: "show-number", name: "Show number", background: true },
+  { id: "overlay", name: "Show overlay", background: true },
 ];
 export function availableEntryDesigns(data: CardData, photo: boolean) {
   return CARD_DESIGNS.filter(d => (!d.photo || photo) && (d.id !== "name" || data.rating != null)).map(d => d.id === "encore" && data.timesSeen === 1 ? { ...d, name: "First visit" } : d);
@@ -89,6 +90,17 @@ function loadMark() {
     img.src = MARK_SRC;
   });
   return markImage;
+}
+
+let outlineMarkImage: Promise<HTMLImageElement | null> | null = null;
+function loadOutlineMark() {
+  outlineMarkImage ??= new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = "/brand/stubbed-mark-outline.svg";
+  });
+  return outlineMarkImage;
 }
 
 export async function renderSquare(draw: (ctx: Ctx, mark: HTMLImageElement | null) => void): Promise<Blob> {
@@ -175,6 +187,7 @@ export async function renderCard(
 ) {
   const design = CARD_DESIGNS.find(d => d.id === designId);
   if (!design || !availableEntryDesigns(data, photo != null).some(d => d.id === designId)) throw new Error("This card needs a photo or rating");
+  const outlineMark = designId === "overlay" ? await loadOutlineMark() : null;
   return renderSquare((ctx, mark) => {
     const color = design.photo ? "#FFFFFF" : shareForeground(background, ink);
     const metrics = entryMetrics(data);
@@ -200,7 +213,10 @@ export async function renderCard(
       }
     } else {
       drawShareSurface(ctx, background);
-      if (designId === "data") {
+      if (designId === "overlay") {
+        drawShowOverlay(ctx, data, color, outlineMark);
+        return;
+      } else if (designId === "data") {
         const titleH = drawTopTitle(ctx, data.title, 28, color);
         const start = Math.max(138, 28 + titleH + 20);
         metrics.forEach((m, i) => {
@@ -221,6 +237,60 @@ export async function renderCard(
     }
     drawShareFooter(ctx, data.handle, color, mark);
   });
+}
+
+// A compact stack people can place over their own story photo. The year
+// ordinal is the selected visit's position, including for older diary entries.
+function drawShowOverlay(ctx: Ctx, data: CardData, color: string, mark: HTMLImageElement | null) {
+  ctx.fillStyle = color;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+  const label = (text: string, y: number) => {
+    setFont(ctx, 600, 17, TEXT, 0);
+    ctx.fillText(text, 270, y);
+  };
+  const value = (text: string, y: number) => {
+    setFont(ctx, 700, 36, DISPLAY, -0.5);
+    ctx.fillText(fit(ctx, text, 360), 270, y);
+  };
+  label("Show", 60);
+  let size = 36;
+  let lines: string[] = [];
+  for (; size >= 26; size -= 2) {
+    setFont(ctx, 700, size, DISPLAY, -0.5);
+    lines = wrap(ctx, data.title, 360);
+    if (lines.length <= 2) break;
+  }
+  if (lines.length > 2) lines = [lines[0], lines.slice(1).join(" ")];
+  lines.forEach((line, i) => ctx.fillText(fit(ctx, line, 360), 270, 86 + i * 40));
+  label("Seen", 192);
+  value(`${data.timesSeen} ${data.timesSeen === 1 ? "time" : "times"}`, 218);
+  const today = new Date();
+  label(data.year === today.getFullYear() ? "This Year So Far" : `${data.year} So Far`, 294);
+  value(`${ordinal(data.showOfYear)} show`, 320);
+  setFont(ctx, 500, 17, TEXT, 0);
+  ctx.fillText(new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" }).format(today), 270, 406);
+
+  // Tint the existing outline asset; source-in keeps its interior transparent.
+  if (mark) {
+    const tint = document.createElement("canvas");
+    tint.width = 160; tint.height = 132;
+    const tintCtx = tint.getContext("2d");
+    if (tintCtx) {
+      tintCtx.drawImage(mark, 0, 0, 160, 132);
+      tintCtx.globalCompositeOperation = "source-in";
+      tintCtx.fillStyle = color;
+      tintCtx.fillRect(0, 0, 160, 132);
+      ctx.drawImage(tint, 171, 462, 48, 40);
+    }
+  }
+  setFont(ctx, 800, 30, DISPLAY, -1.35);
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 0.9;
+  ctx.lineJoin = "round";
+  ctx.strokeText("stubbed", 227, 482);
 }
 
 // --- helpers ---------------------------------------------------------------

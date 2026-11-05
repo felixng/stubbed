@@ -15,7 +15,7 @@ struct EntryCardData: Hashable, Sendable {
 }
 
 enum EntryCardDesign: String, CaseIterable, Identifiable, Sendable {
-  case stats, name, data, encore
+  case stats, name, data, encore, overlay
   case number = "show-number"
   var id: String { rawValue }
   var name: String {
@@ -25,12 +25,13 @@ enum EntryCardDesign: String, CaseIterable, Identifiable, Sendable {
     case .data: "Data"
     case .encore: "Encore"
     case .number: "Show number"
+    case .overlay: "Show overlay"
     }
   }
   var isPhoto: Bool { self == .stats || self == .name }
   static func available(photo: Bool, rating: Double?, timesSeen: Int) -> [Self] {
     (photo ? [.stats] + (rating != nil ? [.name] : []) : [])
-      + [.data, .encore, .number]
+      + [.data, .encore, .number, .overlay]
   }
 }
 
@@ -78,52 +79,100 @@ struct EntryCardView: View {
           LinearGradient(colors: [.clear, .black.opacity(0.8)], startPoint: .top, endPoint: .bottom).frame(height: 180)
         }
       } else { ShareCardSurface(appearance: appearance) }
-      VStack(alignment: .leading, spacing: 0) {
-        if design == .stats {
-          HStack(alignment: .top, spacing: 12) {
+      if design == .overlay {
+        ShowOverlayCard(data: data, ink: ink)
+      } else {
+        VStack(alignment: .leading, spacing: 0) {
+          if design == .stats {
+            HStack(alignment: .top, spacing: 12) {
+              ForEach(Array(metrics.enumerated()), id: \.offset) { _, item in
+                VStack(spacing: 6) {
+                  Text(item.0).font(.system(size: 17, weight: .medium)).lineLimit(2).frame(height: 42)
+                  Text(item.1).font(.system(size: 28, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7)
+                }.frame(maxWidth: .infinity)
+              }
+            }
+            Spacer()
+          } else if design == .data {
+            CardTitle(text: data.title, size: 38, lineHeight: 42, width: 484, ink: ink)
+            Spacer(minLength: 20)
             ForEach(Array(metrics.enumerated()), id: \.offset) { _, item in
-              VStack(spacing: 6) {
-                Text(item.0).font(.system(size: 17, weight: .medium)).lineLimit(2).frame(height: 42)
-                Text(item.1).font(.system(size: 28, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7)
-              }.frame(maxWidth: .infinity)
+              VStack(alignment: .leading, spacing: 3) {
+                Text(item.0).font(.system(size: 18, weight: .medium)).lineLimit(2)
+                Text(item.1).font(.system(size: 42, weight: .bold)).lineLimit(1).minimumScaleFactor(0.65)
+              }.padding(.bottom, 20)
+            }
+            Spacer(minLength: 12)
+          } else if !design.isPhoto {
+            Text(design == .encore ? (data.timesSeen == 1 ? "First visit" : "Encore") : "My theatre year")
+              .font(.system(size: 22, weight: .medium))
+            Spacer(minLength: 0)
+            CardBadge(value: design == .encore ? "\(data.timesSeen)x" : ordinal(data.showOfYear))
+              .frame(maxWidth: .infinity)
+            Text(verbatim: design == .encore ? "\(ordinal(data.timesSeen)) time seeing this show" : "Show of \(data.year)")
+              .font(.system(size: 20, weight: .medium)).lineLimit(1).minimumScaleFactor(0.7)
+            Spacer(minLength: 0)
+            CardTitle(text: data.title, size: 30, lineHeight: 34, width: 484, ink: ink)
+              .padding(.bottom, 12)
+            Spacer(minLength: 0)
+          } else { Spacer() }
+          if design.isPhoto {
+            CardTitle(text: data.title, size: design == .stats ? 28 : 36, lineHeight: 40, width: 484, ink: ink).padding(.bottom, 12)
+            if design == .name, let rating = data.rating {
+              CardStars(value: rating, size: 30, gap: 4, outline: .white.opacity(0.75)).padding(.bottom, 16)
             }
           }
-          Spacer()
-        } else if design == .data {
-          CardTitle(text: data.title, size: 38, lineHeight: 42, width: 484, ink: ink)
-          Spacer(minLength: 20)
-          ForEach(Array(metrics.enumerated()), id: \.offset) { _, item in
-            VStack(alignment: .leading, spacing: 3) {
-              Text(item.0).font(.system(size: 18, weight: .medium)).lineLimit(2)
-              Text(item.1).font(.system(size: 42, weight: .bold)).lineLimit(1).minimumScaleFactor(0.65)
-            }.padding(.bottom, 20)
-          }
-          Spacer(minLength: 12)
-        } else if !design.isPhoto {
-          Text(design == .encore ? (data.timesSeen == 1 ? "First visit" : "Encore") : "My theatre year")
-            .font(.system(size: 22, weight: .medium))
-          Spacer(minLength: 0)
-          CardBadge(value: design == .encore ? "\(data.timesSeen)x" : ordinal(data.showOfYear))
-            .frame(maxWidth: .infinity)
-          Text(verbatim: design == .encore ? "\(ordinal(data.timesSeen)) time seeing this show" : "Show of \(data.year)")
-            .font(.system(size: 20, weight: .medium)).lineLimit(1).minimumScaleFactor(0.7)
-          Spacer(minLength: 0)
-          CardTitle(text: data.title, size: 30, lineHeight: 34, width: 484, ink: ink)
-            .padding(.bottom, 12)
-          Spacer(minLength: 0)
-        } else { Spacer() }
-        if design.isPhoto {
-          CardTitle(text: data.title, size: design == .stats ? 28 : 36, lineHeight: 40, width: 484, ink: ink).padding(.bottom, 12)
-          if design == .name, let rating = data.rating {
-            CardStars(value: rating, size: 30, gap: 4, outline: .white.opacity(0.75)).padding(.bottom, 16)
-          }
-        }
-        CardFooter(handle: data.handle, ink: ink)
-      }.foregroundStyle(ink).padding(28).cardTextShadow(design.isPhoto)
+          CardFooter(handle: data.handle, ink: ink)
+        }.foregroundStyle(ink).padding(28).cardTextShadow(design.isPhoto)
+      }
     }
     .frame(width: Self.size, height: Self.size)
     .clipShape(.rect(cornerRadius: 32))
     .environment(\.colorScheme, .dark)
+  }
+}
+
+/// A narrow, centred stack with no personal handle or route graphic.
+private struct ShowOverlayCard: View {
+  let data: EntryCardData
+  let ink: Color
+  private let today = Date()
+
+  var body: some View {
+    ZStack(alignment: .top) {
+      group("Show", value: data.title, top: 60, title: true)
+      group("Seen", value: "\(data.timesSeen) \(data.timesSeen == 1 ? "time" : "times")", top: 192)
+      group(data.year == Calendar.current.component(.year, from: today) ? "This Year So Far" : "\(data.year) So Far",
+        value: "\(ordinal(data.showOfYear)) show", top: 294)
+      Text(today, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated).year())
+        .font(.system(size: 17, weight: .medium)).padding(.top, 406)
+      HStack(spacing: 8) {
+        Image("BrandMarkOutline").renderingMode(.template).resizable().scaledToFit()
+          .frame(width: 48, height: 40)
+        Image(uiImage: outlineWordmark).resizable().frame(width: 142, height: 40)
+      }.padding(.top, 462)
+    }
+    .foregroundStyle(ink)
+    .frame(width: 540, height: 540, alignment: .top)
+    .environment(\.locale, Locale(identifier: "en_GB"))
+  }
+
+  private func group(_ label: String, value: String, top: CGFloat, title: Bool = false) -> some View {
+    VStack(spacing: 6) {
+      Text(label).font(.system(size: 17, weight: .semibold))
+      Text(value).font(.system(size: 36, weight: .bold)).tracking(-0.5)
+        .lineLimit(title ? 2 : 1).minimumScaleFactor(0.72)
+        .multilineTextAlignment(.center)
+    }.frame(width: 360).padding(.top, top)
+  }
+
+  private var outlineWordmark: UIImage {
+    UIGraphicsImageRenderer(size: CGSize(width: 142, height: 40)).image { _ in
+      ("stubbed" as NSString).draw(at: CGPoint(x: 1, y: 2), withAttributes: [
+        .font: UIFont.systemFont(ofSize: 30, weight: .heavy), .kern: -1.35,
+        .strokeColor: UIColor(ink), .strokeWidth: 3,
+      ])
+    }
   }
 }
 

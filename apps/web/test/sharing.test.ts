@@ -8,8 +8,8 @@ const insights: InsightCardData = { year: 2026, handle: "sillyelphaba", stats: {
   years: [{ year: 2026, count: 24 }], months: [{ month: "2025-01", count: 99 }, { month: "2026-10", count: 24 }],
   types: [{ type: "play", count: 6 }, { type: "musical", count: 12 }, { type: "opera", count: 2 }, { type: "comedy", count: 2 }, { type: "dance", count: 1 }, { type: "standup", count: 1 }] } };
 test("entry sharing separates photo eligibility, saved ratings and repeat visits", () => {
-  assert.deepEqual(availableEntryDesigns(entry, true).map(d => d.id), ["stats", "name", "data", "encore", "show-number"]);
-  assert.deepEqual(availableEntryDesigns({ ...entry, rating: null, timesSeen: 1 }, false).map(d => d.id), ["data", "encore", "show-number"]);
+  assert.deepEqual(availableEntryDesigns(entry, true).map(d => d.id), ["stats", "name", "data", "encore", "show-number", "overlay"]);
+  assert.deepEqual(availableEntryDesigns({ ...entry, rating: null, timesSeen: 1 }, false).map(d => d.id), ["data", "encore", "show-number", "overlay"]);
   assert.ok(!availableEntryDesigns({ ...entry, rating: null }, true).some(d => d.id === "name"));
   for (const design of availableEntryDesigns(entry, true)) assert.equal(cardBackground(design, "transparent"), design.background ? "transparent" : "photo");
 });
@@ -29,13 +29,13 @@ test("charts preserve monthly periods and canonical show-type order", () => {
   assert.deepEqual(radarShareValues(insights), [12, 6, 2, 1, 2, 1, 0]);
 });
 
-test("one show offers all eight designs and names the first count card truthfully", () => {
+test("one show offers all nine designs and names the first count card truthfully", () => {
   const designs = availableShowDesigns({ ...entry, timesSeen: 1, year: 2025 }, true, { ...insights, year: new Date().getFullYear() });
-  assert.equal(designs.length, 8);
+  assert.equal(designs.length, 9);
   assert.equal(designs.find(d => d.id === "encore")?.name, "First visit");
   assert.equal(availableEntryDesigns(entry, true).find(d => d.id === "encore")?.name, "Encore");
   assert.deepEqual(designs.filter(d => isInsightDesign(d.id)).map(d => d.id), ["weekly-streak", "year-in-theatre", "show-mix"]);
   const empty = { ...insights, year: new Date().getFullYear(), stats: { ...insights.stats, total: 0, streaks: { ...insights.stats.streaks, current_weekly: 0 } } };
-  assert.equal(availableShowDesigns(entry, true, empty).length, 8);
+  assert.equal(availableShowDesigns(entry, true, empty).length, 9);
   assert.equal(availableInsightDesigns(empty).length, 0);
 });
