@@ -70,6 +70,46 @@ export const copyDefinitions = {
       "value": "Make your first card",
       "multiline": false
     },
+    "storiesEyebrow": {
+      "title": "storiesEyebrow",
+      "value": "Seen on Stories",
+      "multiline": false
+    },
+    "storiesHeading": {
+      "title": "storiesHeading",
+      "value": "Your card, on your story.",
+      "multiline": false
+    },
+    "storiesBody": {
+      "title": "storiesBody",
+      "value": "Send a card to Stories in one tap, then place it over your own photo like any sticker.",
+      "multiline": false
+    },
+    "storiesLabel": {
+      "title": "storiesLabel",
+      "value": "Example Instagram Stories",
+      "multiline": false
+    },
+    "storiesHelp": {
+      "title": "storiesHelp",
+      "value": "Scroll to see more.",
+      "multiline": false
+    },
+    "storiesCaption": {
+      "title": "storiesCaption",
+      "value": "Placeholder stories from another app. Real Stubbed examples to come.",
+      "multiline": true
+    },
+    "storyAlt1": {
+      "title": "storyAlt1",
+      "value": "Placeholder story: a beach photo with running distance, pace and time in white text above a drawn route.",
+      "multiline": true
+    },
+    "storyAlt2": {
+      "title": "storyAlt2",
+      "value": "Placeholder story: a path at dusk with running distance, pace and duration in white text.",
+      "multiline": true
+    },
     "diaryEyebrow": {
       "title": "diaryEyebrow",
       "value": "02 / Look back",
