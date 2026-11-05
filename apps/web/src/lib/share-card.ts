@@ -263,23 +263,23 @@ function drawShowOverlay(ctx: Ctx, data: CardData, color: string, mark: HTMLImag
     { label: "Show", value: data.title },
     { label: "Date", value: shareDate(today) },
     { label: "Seen", value: `${data.timesSeen} ${data.timesSeen === 1 ? "time" : "times"}` },
-    { label: data.year === today.getFullYear() ? "This year" : String(data.year), value: `${ordinal(data.showOfYear)} show` },
+    { label: data.year === today.getFullYear() ? "This year so far" : `${data.year} so far`, value: `${ordinal(data.showOfYear)} show` },
   ];
   ctx.fillStyle = color; ctx.textAlign = "center"; ctx.textBaseline = "top";
   sections.forEach((section, index) => {
-    const top = 30 + index * 112;
+    const top = 48 + index * 96;
     setFont(ctx, 600, 17, TEXT, 0); ctx.fillText(section.label, 270, top);
     let lines: string[] = [];
     for (let size = 36; size >= 26; size -= 2) {
       setFont(ctx, 700, size, DISPLAY, -0.5);
       lines = wrap(ctx, section.value, 400);
-      if (lines.length <= (index === 0 ? 2 : 1)) break;
+      if (lines.length <= 1) break;
     }
     if (lines.length > 2) lines = [lines[0], lines.slice(1).join(" ")];
-    lines.slice(0, index === 0 ? 2 : 1).forEach((line, i) => ctx.fillText(fit(ctx, line, 400), 270, top + 26 + i * 40));
+    lines.slice(0, index === 0 ? 2 : 1).forEach((line, i) => ctx.fillText(fit(ctx, line, 400), 270, top + 22 + i * 30));
   });
   // Use the design system's original gradient Outline mark, with no wordmark.
-  if (mark) ctx.drawImage(mark, 241, 470, 58, 58 * 673 / 816);
+  if (mark) ctx.drawImage(mark, 241, 454, 58, 58 * 673 / 816);
 }
 
 function shareDate(date: Date) {
@@ -311,29 +311,23 @@ function drawTicketOverlay(ctx: Ctx, data: CardData, color: string, ticket: HTML
     }
   }
   ctx.fillStyle = color; ctx.textAlign = "left"; ctx.textBaseline = "top";
-  setFont(ctx, 600, 14, TEXT, 0); ctx.fillText("Show", 56, 40);
   let lines: string[] = [];
   for (let size = 30; size >= 22; size -= 2) {
     setFont(ctx, 700, size, DISPLAY, -0.4);
-    lines = wrap(ctx, data.title, 292);
+    lines = wrap(ctx, data.title, 368);
     if (lines.length <= 2) break;
   }
   if (lines.length > 2) lines = [lines[0], lines.slice(1).join(" ")];
-  lines.forEach((line, i) => ctx.fillText(fit(ctx, line, 292), 56, 66 + i * 35));
+  lines.forEach((line, i) => ctx.fillText(fit(ctx, line, 368), 56, 44 + i * 35));
   const today = new Date();
+  setFont(ctx, 500, 18, TEXT, 0);
+  ctx.fillText(shareDate(today), 56, 44 + lines.length * 35 + 14, 368);
   setFont(ctx, 600, 14, TEXT, 0);
   ctx.fillText("Seen", 56, 194);
-  ctx.fillText(data.year === today.getFullYear() ? "This year" : String(data.year), 214, 194);
+  ctx.fillText(data.year === today.getFullYear() ? "This year so far" : `${data.year} so far`, 246, 194);
   setFont(ctx, 700, 24, DISPLAY, -0.3);
-  ctx.fillText(`${data.timesSeen} ${data.timesSeen === 1 ? "time" : "times"}`, 56, 220, 124);
-  ctx.fillText(`${ordinal(data.showOfYear)} show`, 214, 220, 136);
-  ctx.textAlign = "center";
-  setFont(ctx, 600, 14, TEXT, 0); ctx.fillText("Date", 410, 46);
-  setFont(ctx, 500, 16, TEXT, 0);
-  ctx.fillText(new Intl.DateTimeFormat("en-GB", { weekday: "short" }).format(today), 410, 78);
-  setFont(ctx, 700, 21, DISPLAY, -0.3);
-  ctx.fillText(new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(today), 410, 104, 82);
-  setFont(ctx, 500, 16, TEXT, 0); ctx.fillText(String(today.getFullYear()), 410, 134);
+  ctx.fillText(`${data.timesSeen} ${data.timesSeen === 1 ? "time" : "times"}`, 56, 220, 148);
+  ctx.fillText(`${ordinal(data.showOfYear)} show`, 246, 220, 168);
   ctx.restore();
   drawTicketBrand(ctx, mark);
 }

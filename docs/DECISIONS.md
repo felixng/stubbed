@@ -1028,3 +1028,5 @@ Owner couldn't edit all of two landing captions (the editor showed only half of 
 - Refined the plain overlay to four equally spaced sections in this order: Show, Date, Seen, This year, with matching type sizes. It uses only the design system’s gradient Outline mark. The ticket layout places show and counts in the main area and date in the stub; branding moves outside below it, with the original Outline mark and a coral wordmark.
 
 - Removed the ticket perforation dots and reclaimed the width for the title and yearly count. The outside branding stays centred beneath the ticket.
+
+- Tightened the plain overlay’s section spacing and restored “This year so far”. Simplified the ticket to an unlabelled show title followed immediately by the date, reclaiming the stub area and widening the counts.

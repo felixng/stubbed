@@ -143,27 +143,27 @@ private struct ShowOverlayCard: View {
 
   var body: some View {
     ZStack(alignment: .top) {
-      VStack(spacing: 16) {
+      VStack(spacing: 8) {
         section("Show", value: data.title, title: true)
         section("Date", value: today.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).year().locale(Locale(identifier: "en_GB"))))
         section("Seen", value: "\(data.timesSeen) \(data.timesSeen == 1 ? "time" : "times")")
-        section(data.year == Calendar.current.component(.year, from: today) ? "This year" : String(data.year),
+        section(data.year == Calendar.current.component(.year, from: today) ? "This year so far" : "\(data.year) so far",
           value: "\(ordinal(data.showOfYear)) show")
-      }.padding(.top, 30)
+      }.padding(.top, 48)
       Image("BrandMarkOutline").renderingMode(.original).resizable().scaledToFit()
-        .frame(width: 58, height: 58 * 673 / 816).padding(.top, 470)
+        .frame(width: 58, height: 58 * 673 / 816).padding(.top, 454)
     }
     .foregroundStyle(ink)
     .frame(width: 540, height: 540, alignment: .top)
   }
 
   private func section(_ label: String, value: String, title: Bool = false) -> some View {
-    VStack(spacing: 6) {
+    VStack(spacing: 2) {
       Text(label).font(.system(size: 17, weight: .semibold))
       Text(value).font(.system(size: 36, weight: .bold)).tracking(-0.5)
         .lineLimit(title ? 2 : 1).minimumScaleFactor(0.72)
-        .multilineTextAlignment(.center)
-    }.frame(width: 400, height: 96, alignment: .top)
+        .multilineTextAlignment(.center).frame(height: 64, alignment: .top)
+    }.frame(width: 400, height: 88, alignment: .top)
   }
 }
 
@@ -177,23 +177,18 @@ private struct TicketOverlayCard: View {
       ZStack(alignment: .topLeading) {
         Image("ShareTicketOutline").renderingMode(.template).resizable()
           .frame(width: 480, height: 480 * 388 / 648)
-        VStack(alignment: .leading, spacing: 6) {
-          Text("Show").font(.system(size: 14, weight: .semibold))
+        VStack(alignment: .leading, spacing: 14) {
           Text(data.title).font(.system(size: 30, weight: .bold)).tracking(-0.4)
             .lineLimit(2).minimumScaleFactor(0.73)
             .fixedSize(horizontal: false, vertical: true)
-        }.frame(width: 292, alignment: .leading).offset(x: 56, y: 40)
-        stat("Seen", value: "\(data.timesSeen) \(data.timesSeen == 1 ? "time" : "times")", width: 124)
+          Text(today, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated).year())
+            .font(.system(size: 18, weight: .medium))
+        }.frame(width: 368, alignment: .leading).offset(x: 56, y: 44)
+        stat("Seen", value: "\(data.timesSeen) \(data.timesSeen == 1 ? "time" : "times")", width: 148)
           .offset(x: 56, y: 194)
-        stat(data.year == Calendar.current.component(.year, from: today) ? "This year" : String(data.year),
-          value: "\(ordinal(data.showOfYear)) show", width: 136).offset(x: 214, y: 194)
-        VStack(spacing: 10) {
-          Text("Date").font(.system(size: 14, weight: .semibold)).padding(.bottom, 4)
-          Text(today, format: .dateTime.weekday(.abbreviated)).font(.system(size: 16, weight: .medium))
-          Text(today, format: .dateTime.day().month(.abbreviated))
-            .font(.system(size: 21, weight: .bold)).tracking(-0.3).lineLimit(1).minimumScaleFactor(0.65)
-          Text(today, format: .dateTime.year()).font(.system(size: 16, weight: .medium))
-        }.frame(width: 82).offset(x: 369, y: 46)
+        stat(data.year == Calendar.current.component(.year, from: today) ? "This year so far" : "\(data.year) so far",
+          value: "\(ordinal(data.showOfYear)) show", width: 168).offset(x: 246, y: 194)
+
       }
       .foregroundStyle(ink)
       .frame(width: 480, height: 480 * 388 / 648)
