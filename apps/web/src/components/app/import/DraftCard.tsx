@@ -83,8 +83,10 @@ export function DraftCard({
   duplicateOf,
   emailText,
   onChange,
+  showSelection = true,
 }: {
   draft: Draft;
+  showSelection?: boolean;
   // An entry already in the diary for the same show and date.
   duplicateOf: string | null;
   emailText: (ref: string) => string | undefined;
@@ -177,7 +179,7 @@ export function DraftCard({
             </p>
           )}
         </div>
-        <label className="flex min-h-11 shrink-0 cursor-pointer items-center gap-2 text-subheadline font-semibold text-label">
+        {showSelection && <label className="flex min-h-11 shrink-0 cursor-pointer items-center gap-2 text-subheadline font-semibold text-label">
           <input
             type="checkbox"
             checked={draft.include}
@@ -186,7 +188,7 @@ export function DraftCard({
             className="size-5 accent-[var(--tint)]"
           />
           Save
-        </label>
+        </label>}
       </header>
 
       {missing.length > 0 && (
