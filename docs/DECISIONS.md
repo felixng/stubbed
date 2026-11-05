@@ -131,7 +131,7 @@ Owner's call: sharing should feel like Hevy. Saving a new entry now opens a shar
 ### 2026-10-13: Landing page SEO basics
 The landing page gets a canonical URL, full Open Graph/X tags with a generated 1200×630 preview image (`opengraph-image.tsx`), `WebSite` structured data, a sitemap, and a `Sitemap:` line in `robots.txt`. The public origin comes from `NEXT_PUBLIC_SITE_URL`, falling back to Vercel's production domain. `/login` is no longer disallowed in `robots.txt`: it's linked from the landing menu, and crawlers must fetch it to see its `noindex`. The preview image uses the regular-weight Geist that ships with `next/og`; a heavy font file would match the wordmark better.
 
-### 2026-10-13: Stubbed's Instagram account is @stubbedapp
+### 2026-10-13: Stubbed's Instagram account (superseded: use @getstubbed.app)
 Owner's info. The share screen's caption reads "Share your show · Tag @stubbedapp" (like Hevy's "Tag @hevyapp"), and the copied/shared text ends "Logged on Stubbed @stubbedapp". The handle is not drawn on the cards themselves; they carry the `stubbed` wordmark and the user's handle.
 
 ### 2026-10-13: Public profile at /@handle
@@ -320,7 +320,7 @@ Owner's call. GA4 is added to the public pages next to Vercel Web Analytics, whi
 Owner's call. The Collage card (`trip-collage`) shows the trip's shows, venues and nights as large accent-coloured numbers on the right of its header, with the label under each, matching the stat tiles on the trip page; the subtitle drops its "· N shows". The header keeps its height. `TripCardData` gains `nights`, the trip's length from its dates (end minus start, so 9–17 Oct is 8; hidden for a one-day trip), not the days with a logged show. The trip page's Nights tile, the public trip page and its link preview use the same number ("N shows in D nights"; a one-day trip drops the nights). The 7- and 8-show layouts are now two brick rows of 144×192 polaroids (were 110×146), overlapping sideways so four fit across. Other trip designs and iOS are unchanged.
 
 ### 2026-10-18: Domain under the wordmark on share cards
-Owner's call. Every share card (entry and trip, web and iOS) shows `@getstubbed.app` in small type under the `stubbed` wordmark, in the card's secondary colour, so a shared image leads back to the site. The handle stays on the right, level with the wordmark. The wordmark moves up a little and the domain uses some of the bottom padding, so the content area of each card is unchanged. The string lives in `CARD_DOMAIN` (`lib/share-card.ts`) and `cardDomain` (`EntryCard.swift`). The 2026-10 social-handle note above still holds: `@stubbedapp` is in the caption and shared text, not on the card.
+Owner's call. Every share card (entry and trip, web and iOS) shows `@getstubbed.app` in small type under the `stubbed` wordmark, in the card's secondary colour, so a shared image leads back to the site. The handle stays on the right, level with the wordmark. The wordmark moves up a little and the domain uses some of the bottom padding, so the content area of each card is unchanged. The string lives in `CARD_DOMAIN` (`lib/share-card.ts`) and `cardDomain` (`EntryCard.swift`). The social-handle note above was later superseded: use `@getstubbed.app` in captions, shared text and Instagram links.
 
 ### 2026-10-20: iOS screens follow the native guide; feed post cards stay custom
 Reviewed the iOS app against `docs/IOS_NATIVE_GUIDE.md`. List-like screens are now `List(.insetGrouped)` with system chevrons, swipe actions and context menus: Profile (bulk select is the system edit mode with Add to trip and Delete in the bottom bar, as Photos does), followers and following, Find people, public profile, public entry (comments are rows; swipe to delete) and public trip. First loads show grey placeholder rows (`PlaceholderRows`, `.redacted`) instead of a spinner. Custom button styles are replaced by `.borderedProminent` / `.bordered`; the log form's chips are a `Picker`, buttons and rows; rows that open a sheet have no chevron; stars scale with Dynamic Type; the card press uses the default animation.
@@ -964,3 +964,8 @@ The specific fan cards and final phone composition, diary/stats visual treatment
 ## 2026-11-05 — Separate the numbered landing sections
 
 Owner feedback: Look back (02) and See your year (03) merge into one grey band. Keep the numbered eyebrows; give 03 its own white surface, separator edges and full vertical padding, so Share → Look back → See your year alternates white → grey → white. The closing CTA returns to grey to preserve the next section boundary. Footer decoration now follows the requested order: UK flag, Made in London, separator, linked maker sentence, purple heart. Wording stays CMS-backed; emoji are decorative markup.
+
+
+## 2026-11-05 — Correct Instagram source of truth
+
+The owner confirmed the app Instagram handle is @getstubbed.app. Corrected the landing footer URL and PRODUCT.md, which still said @stubbedapp, and updated the Google Drive project brief. The older October decision is marked superseded; the share-card code already used the correct handle. Creator Instagram remains @hellofelix__, a separate account. Reserved profile handles and historical migrations retain stubbedapp intentionally.
