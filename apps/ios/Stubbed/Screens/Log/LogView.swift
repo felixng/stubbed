@@ -59,6 +59,9 @@ struct LogView: View {
   @State private var fromPhoto: Set<String> = []
   /// Bumped per photo, so a newer photo cancels the older one's results.
   @State private var run = 0
+  /// A picked photo is on its way (an iCloud original can take seconds to
+  /// download) and its thumbnail isn't ready yet.
+  @State private var loadingPhoto = false
 
   enum Detect: Equatable {
     case idle, reading, nearby, text
@@ -239,7 +242,11 @@ struct LogView: View {
     Section {
       HStack(alignment: .center, spacing: Space.l) {
         Group {
-          if let preview {
+          if loadingPhoto {
+            ProgressView()
+              .frame(maxWidth: .infinity, maxHeight: .infinity)
+              .background(Color(.tertiarySystemFill))
+          } else if let preview {
             Image(uiImage: preview).resizable().scaledToFill()
           } else if let existingPhoto {
             RemoteImage(url: existingPhoto)
@@ -451,8 +458,16 @@ struct LogView: View {
   }
 
   private func pickVenue(_ choice: VenueChoice) {
-    touchedVenue = true
-    fromPhoto.remove("venue")
+    // One of the photo's own candidates is still the photo's answer: a new
+    // photo replaces it and removing the photo clears it. A theatre found by
+    // searching is the user's own choice and stays.
+    if nearby.contains(choice) {
+      touchedVenue = false
+      fromPhoto.insert("venue")
+    } else {
+      touchedVenue = true
+      fromPhoto.remove("venue")
+    }
     venue = choice
   }
 
@@ -465,6 +480,7 @@ struct LogView: View {
   // MARK: - Photo detection
 
   private var detectStatus: (text: String, working: Bool)? {
+    if loadingPhoto { return ("Loading your photo…", true) }
     switch detect {
     case .idle: return nil
     case .reading: return ("Reading the photo…", true)
@@ -484,6 +500,7 @@ struct LogView: View {
     nearby = []
     place = (nil, nil)
     photoError = nil
+    loadingPhoto = false
     detect = .idle
   }
 
@@ -658,9 +675,11 @@ struct LogView: View {
   private func takePhoto(_ item: PhotosPickerItem) async {
     clearPhotoResults()
     started = true
+    let token = run
+    // Show the spinner at once: fetching the original can mean an iCloud download.
+    loadingPhoto = true
     do {
       guard let data = try await item.loadTransferable(type: Data.self) else { throw Photo.Failure.unreadable }
-      let token = run
       // Nearby and Vision start now; the encode below doesn't hold them up.
       let lookup = PhotoLookup(data: data)
       let jpeg = try await Task.detached(priority: .userInitiated) {
@@ -671,9 +690,13 @@ struct LogView: View {
       photo = jpeg
       preview = UIImage(data: jpeg)
       existingPhoto = nil
+      loadingPhoto = false
       // Detection reads the original (its EXIF); only the clean copy is stored.
       await detect(from: data, lookup: lookup)
     } catch {
+      // A newer photo owns the spinner now.
+      guard token == run else { return }
+      loadingPhoto = false
       photoError = "Couldn’t read that photo. Try another, or fill in the details below."
       detect = .idle
     }
@@ -684,6 +707,7 @@ struct LogView: View {
     guard photo == nil, preview == nil else { return }
     let token = run
     detect = .reading
+    loadingPhoto = true
     let prepared = await step.photo.value
     // The user picked another photo meanwhile: that one wins.
     guard token == run else { return }
@@ -696,12 +720,14 @@ struct LogView: View {
       guard token == run else { return }
     }
     guard let prepared, let jpeg = encoded else {
+      loadingPhoto = false
       photoError = "Couldn’t read this photo. Fill in the details below, or skip this show."
       detect = .idle
       return
     }
     photo = jpeg
     preview = UIImage(data: jpeg)
+    loadingPhoto = false
     await detect(from: prepared.original, lookup: prepared.lookup)
   }
 

@@ -54,7 +54,7 @@ export const FAQ_SECTIONS: readonly FaqSection[] = [
       {
         id: "log-a-show",
         question: "How do I log a show?",
-        answer: "On the website, open Log and pick a photo, or choose No photo? Fill in by hand. A photo can suggest the date, nearby theatre and show. Check the details, add an optional half-star rating, note and photo, choose Public or Private, then save. Suggestions can be wrong; you can change them before saving.",
+        answer: "On the website, open Log and pick a photo, or choose No photo? Fill in by hand. A photo can suggest the date and nearby theatre. Check the details, add an optional half-star rating, note and photo, choose Public or Private, then save. Suggestions can be wrong; you can change them before saving.",
         link: { href: "/app/log", label: "Log a show" },
       },
       {

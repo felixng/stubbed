@@ -8,7 +8,7 @@ import { REPORT_REASONS, sendReport, setBlocked, targetNoun, type ReportReason, 
 import { createClient } from "@/lib/supabase/client";
 
 // Report a show, a comment or a profile: a reason, optional details, and
-// "Also block @handle". Only admins read reports (/app/admin/reports). The
+// "Also block @handle". Only admins read reports (/app/backstage/reports). The
 // iOS app's ReportSheet asks the same. Mounted while open; a native modal
 // <dialog>, so Escape and the backdrop close it.
 export function ReportDialog({

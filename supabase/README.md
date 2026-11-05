@@ -42,6 +42,20 @@ supabase test db
 
 The source option accepts the script's combined SPARQL `results.bindings` JSON. Unit tests include synthetic edge cases and a small captured live response. SQL tests seed and roll back their own catalogue, covering the empty-catalogue workflow, grants, aliases, ranking and privacy-preserving merges.
 
+## Wider show names, for review (#366)
+
+`sync-wikidata.mjs --candidates` runs the wider Wikidata query (any play, musical, opera or ballet with an English Wikipedia article, about 13,500 names) and writes it to `show_candidates`, never to `shows`. Candidates are admin-only, aren't in `search_shows`, and are reviewed at `/app/backstage/shows/candidates`: **Add** (tidied like a typed-in show, Wikidata id kept), **Same as** (links an existing show and saves the name as a nickname) or **Not a show**; or review a random sample of a group and, once 95% of it is right (at least 20 reviewed), **Add the rest** (up to 2,000 a call). Apply `20261104170000_show_candidates.sql` first.
+
+```sh
+node --use-env-proxy supabase/scripts/sync-wikidata.mjs --candidates --dry-run   # same work in a rolled-back transaction
+node --use-env-proxy supabase/scripts/sync-wikidata.mjs --candidates
+node supabase/scripts/sync-wikidata.mjs --candidates --source /tmp/catalogue.json   # replay a saved response
+```
+
+**From the crawl (#367):** on a run page (`/app/backstage/crawl/<id>`), "Send to show review" turns the findings marked right, of kind show, whose title doesn't already read as a show into candidates with `source = 'crawler'` (the source page and first theatre kept). Repeat sightings raise the count; a title also pulled from Wikidata raises that candidate's count instead of making a second; sent findings are marked so sending again does nothing. Apply `20261104180000_crawl_titles_to_review.sql` first.
+
+A second pull only raises each name's "seen" counter (and refreshes it while it is still pending); a decision already made is never undone, and a name already in `shows` by Wikidata id is skipped. The hosted run is the owner's.
+
 ## Theatres from OpenStreetMap (#290)
 
 `scripts/sync-osm-venues.mjs` loads every named `amenity=theatre` in the UK and US from OpenStreetMap (ODbL) into `venues`, so photo detection answers from Postgres (#343). It queries QLever's public OpenStreetMap endpoint (no key), then calls `public.load_osm_venues`, which holds the import rules and is service-role only. Requires **Node 24+** and **psql**; apply `20261103140000_venue_catalogue.sql` first. West End and Broadway houses get `circuit` and `verified` from the reviewed Wikidata lists `scripts/west-end-theatres.json` and `scripts/broadway-theatres.json`.
@@ -62,6 +76,23 @@ Rules in `load_osm_venues`: a hand-added venue with no `osm_id` gets the id of t
 
 **For the hosted project, the owner runs it**: apply the migration, review a `--dry-run`, then run it for real without `--skip-cities`. Set `SUPABASE_DB_URL` as for the Wikidata sync. OpenStreetMap data is © OpenStreetMap contributors (ODbL); the terms already credit it.
 
+## Crawl pilot: what's on at theatre websites (#277, #291)
+
+`scripts/crawl/` reads each venue's `whats_on_url` into `crawl_runs` and `crawl_findings`, which only admins can read. Nothing it writes reaches users or show search: findings keep the raw title and link to no show. Requires **Node 24+** and **psql**; apply `20261104150000_crawl_tables.sql` first. `SUPABASE_DB_URL` is read as for the other scripts (default: local Supabase).
+
+```sh
+node supabase/scripts/crawl/index.mjs --venues <id>,<id> --dry-run   # fetch and report, write nothing
+node supabase/scripts/crawl/index.mjs --venues <id>,<id>             # creates a run and stores findings
+node supabase/scripts/crawl/index.mjs --run-id <uuid>                # a run created elsewhere (the admin page, #358)
+node --test supabase/scripts/crawl/crawl.test.mjs
+```
+
+A URL shared by several venues is fetched once. It honours `robots.txt` (including `Crawl-delay`), waits at least `--delay-ms` (default 2000) between requests to a host, sends an identifying User-Agent, and with `--cache file.json` sends `If-None-Match` / `If-Modified-Since`. A site that blocks us, fails or redirects elsewhere is recorded in the run's `summary` and skipped; each site is stored in its own transaction. Pages are never kept, only the findings and a short evidence snippet. How a page becomes findings is a chain of readers (`index.mjs` `READERS`): each returns findings or `null` to pass. (1) `sources/theatre-site.mjs` `structuredReader` reads schema.org `Event` JSON-LD by code, at no cost: title, dates (only real, plausible calendar dates), the stage matched to the theatres sharing the URL (unmatched stages are kept with no venue), confidence 0.9 with both dates, 0.8 with a start, 0.5 with none. (2) `modelReader` runs only for `--method rules_model` with a budget above 0 and `ANTHROPIC_API_KEY` set, only on pages with no structured data, and stops when the run's spend reaches its budget. It uses the run's model (default `claude-haiku-5-5`; models with no price in `MODEL_PRICES` are never called) and prompt (default `prompt.md`), asks for JSON by schema, and keeps a date only when the page's own date text names a day and a month; confidence 0.7 with dates, 0.5 with date text only, 0.4 otherwise. (3) the stub records the page title, so a page nothing could read still shows up as "nothing read". The report says for each site whether it was read from structured data, by the model, or not at all, with the model's cost.
+
+```sh
+ANTHROPIC_API_KEY=... node supabase/scripts/crawl/index.mjs --venues <id>,<id> --method rules_model --model claude-haiku-5-5 --budget 0.50 [--prompt-file my-prompt.md]
+```
+
 ## Local
 
 Requires Docker and the Supabase CLI (`npx supabase ...` works).
@@ -77,9 +108,13 @@ npx supabase test db      # run tests/ (also runs in CI)
 Nothing applies migrations to the hosted project automatically. When a PR adds a file under `migrations/`, apply it **before** merging, or the deployed app will call tables, functions or buckets that don't exist yet (this happened with `entry_photos`: saving failed until the bucket was created).
 
 ```bash
-npx supabase link --project-ref <project-ref>   # once
-npx supabase db push                            # applies migrations not yet on the hosted project
+# HOSTED_DB_URL = the hosted Postgres connection string (Session pooler). Keep it out of git,
+# e.g. in .claude/settings.local.json. No `supabase link` needed, so it works in any worktree.
+npx supabase db push --db-url "$HOSTED_DB_URL" --dry-run   # check the list first
+npx supabase db push --db-url "$HOSTED_DB_URL"             # applies migrations not yet on the hosted project
 ```
+
+Not `SUPABASE_DB_URL`: the admin scripts read that name and default to local Postgres when it is unset, so setting it globally would aim them at production. (Linking with `supabase link --project-ref <project-ref>` still works, but writes `supabase/.temp/`, which makes a later `supabase db reset` in that checkout pull the wrong image.)
 
 Check what's applied with `npx supabase migration list`.
 

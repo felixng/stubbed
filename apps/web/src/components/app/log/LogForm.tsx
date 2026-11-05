@@ -433,7 +433,7 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
           </svg>
           <span className="text-headline text-label">Start with a photo</span>
           <span className="max-w-[280px] text-subheadline text-label-secondary">
-            The curtain, the stage, the Playbill or your ticket. We’ll fill in what we can.
+            The curtain, the stage, the Playbill or your ticket. We’ll fill in the date and theatre if the photo has them.
           </span>
           <span className="mt-2 inline-flex min-h-[50px] items-center rounded-pill bg-tint px-6 text-headline text-on-tint shadow-btn">
             Choose photo

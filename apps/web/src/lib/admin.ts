@@ -4,10 +4,10 @@
 // signed session token, so checking it needs no extra query. A user can't
 // set it themselves: user_metadata is theirs to edit, app_metadata isn't.
 //
-// Being an admin only unlocks the admin pages under /app/admin and the
+// Being an admin only unlocks the admin pages under /app/backstage and the
 // testing options their routes accept. Everywhere else an admin sees exactly
 // what any other user sees.
-export const ADMIN_PATH = "/app/admin";
+export const ADMIN_PATH = "/app/backstage";
 
 export function isAdmin(claims: { app_metadata?: unknown } | null | undefined): boolean {
   const meta = claims?.app_metadata;

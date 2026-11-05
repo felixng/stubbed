@@ -80,7 +80,7 @@ export default function AdminReportsPage() {
   return (
     <section className="flex flex-col gap-5">
       <div className="flex flex-col gap-1">
-        <BackLink href="/app/admin">Admin</BackLink>
+        <BackLink href="/app/backstage">Backstage</BackLink>
         <h1 className="text-title font-display text-label">Reports</h1>
         <p className="text-subheadline text-label-secondary">
           Shows, comments and profiles people have reported. Act within a day: App Review expects it.

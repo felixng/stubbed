@@ -125,6 +125,282 @@ internal enum PublicSchema {
       case userId = "user_id"
     }
   }
+  internal struct CrawlFindingsSelect: Codable, Hashable, Sendable {
+    internal let confidence: Decimal
+    internal let createdAt: String
+    internal let dateText: String?
+    internal let endDate: String?
+    internal let evidence: String?
+    internal let id: UUID
+    internal let kind: String
+    internal let method: String
+    internal let rawTitle: String
+    internal let review: String?
+    internal let reviewNote: String?
+    internal let runId: UUID
+    internal let sentToReviewAt: String?
+    internal let sourceUrl: String
+    internal let stageText: String?
+    internal let startDate: String?
+    internal let venueId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case confidence = "confidence"
+      case createdAt = "created_at"
+      case dateText = "date_text"
+      case endDate = "end_date"
+      case evidence = "evidence"
+      case id = "id"
+      case kind = "kind"
+      case method = "method"
+      case rawTitle = "raw_title"
+      case review = "review"
+      case reviewNote = "review_note"
+      case runId = "run_id"
+      case sentToReviewAt = "sent_to_review_at"
+      case sourceUrl = "source_url"
+      case stageText = "stage_text"
+      case startDate = "start_date"
+      case venueId = "venue_id"
+    }
+  }
+  internal struct CrawlFindingsInsert: Codable, Hashable, Sendable {
+    internal let confidence: Decimal?
+    internal let createdAt: String?
+    internal let dateText: String?
+    internal let endDate: String?
+    internal let evidence: String?
+    internal let id: UUID?
+    internal let kind: String?
+    internal let method: String
+    internal let rawTitle: String
+    internal let review: String?
+    internal let reviewNote: String?
+    internal let runId: UUID
+    internal let sentToReviewAt: String?
+    internal let sourceUrl: String
+    internal let stageText: String?
+    internal let startDate: String?
+    internal let venueId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case confidence = "confidence"
+      case createdAt = "created_at"
+      case dateText = "date_text"
+      case endDate = "end_date"
+      case evidence = "evidence"
+      case id = "id"
+      case kind = "kind"
+      case method = "method"
+      case rawTitle = "raw_title"
+      case review = "review"
+      case reviewNote = "review_note"
+      case runId = "run_id"
+      case sentToReviewAt = "sent_to_review_at"
+      case sourceUrl = "source_url"
+      case stageText = "stage_text"
+      case startDate = "start_date"
+      case venueId = "venue_id"
+    }
+  }
+  internal struct CrawlFindingsUpdate: Codable, Hashable, Sendable {
+    internal let confidence: Decimal?
+    internal let createdAt: String?
+    internal let dateText: String?
+    internal let endDate: String?
+    internal let evidence: String?
+    internal let id: UUID?
+    internal let kind: String?
+    internal let method: String?
+    internal let rawTitle: String?
+    internal let review: String?
+    internal let reviewNote: String?
+    internal let runId: UUID?
+    internal let sentToReviewAt: String?
+    internal let sourceUrl: String?
+    internal let stageText: String?
+    internal let startDate: String?
+    internal let venueId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case confidence = "confidence"
+      case createdAt = "created_at"
+      case dateText = "date_text"
+      case endDate = "end_date"
+      case evidence = "evidence"
+      case id = "id"
+      case kind = "kind"
+      case method = "method"
+      case rawTitle = "raw_title"
+      case review = "review"
+      case reviewNote = "review_note"
+      case runId = "run_id"
+      case sentToReviewAt = "sent_to_review_at"
+      case sourceUrl = "source_url"
+      case stageText = "stage_text"
+      case startDate = "start_date"
+      case venueId = "venue_id"
+    }
+  }
+  internal struct CrawlMissedSelect: Codable, Hashable, Sendable {
+    internal let createdAt: String
+    internal let id: UUID
+    internal let note: String?
+    internal let runId: UUID
+    internal let title: String
+    internal let venueId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case createdAt = "created_at"
+      case id = "id"
+      case note = "note"
+      case runId = "run_id"
+      case title = "title"
+      case venueId = "venue_id"
+    }
+  }
+  internal struct CrawlMissedInsert: Codable, Hashable, Sendable {
+    internal let createdAt: String?
+    internal let id: UUID?
+    internal let note: String?
+    internal let runId: UUID
+    internal let title: String
+    internal let venueId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case createdAt = "created_at"
+      case id = "id"
+      case note = "note"
+      case runId = "run_id"
+      case title = "title"
+      case venueId = "venue_id"
+    }
+  }
+  internal struct CrawlMissedUpdate: Codable, Hashable, Sendable {
+    internal let createdAt: String?
+    internal let id: UUID?
+    internal let note: String?
+    internal let runId: UUID?
+    internal let title: String?
+    internal let venueId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case createdAt = "created_at"
+      case id = "id"
+      case note = "note"
+      case runId = "run_id"
+      case title = "title"
+      case venueId = "venue_id"
+    }
+  }
+  internal struct CrawlRunsSelect: Codable, Hashable, Sendable {
+    internal let branch: String?
+    internal let budgetUsd: Decimal
+    internal let commitSha: String?
+    internal let costUsd: Decimal
+    internal let createdAt: String
+    internal let createdBy: UUID?
+    internal let finishedAt: String?
+    internal let id: UUID
+    internal let kind: String
+    internal let logUrl: String?
+    internal let method: String
+    internal let model: String?
+    internal let prompt: String?
+    internal let startedAt: String?
+    internal let status: String
+    internal let summary: AnyJSON
+    internal let venueIds: [UUID]
+    internal enum CodingKeys: String, CodingKey {
+      case branch = "branch"
+      case budgetUsd = "budget_usd"
+      case commitSha = "commit_sha"
+      case costUsd = "cost_usd"
+      case createdAt = "created_at"
+      case createdBy = "created_by"
+      case finishedAt = "finished_at"
+      case id = "id"
+      case kind = "kind"
+      case logUrl = "log_url"
+      case method = "method"
+      case model = "model"
+      case prompt = "prompt"
+      case startedAt = "started_at"
+      case status = "status"
+      case summary = "summary"
+      case venueIds = "venue_ids"
+    }
+  }
+  internal struct CrawlRunsInsert: Codable, Hashable, Sendable {
+    internal let branch: String?
+    internal let budgetUsd: Decimal?
+    internal let commitSha: String?
+    internal let costUsd: Decimal?
+    internal let createdAt: String?
+    internal let createdBy: UUID?
+    internal let finishedAt: String?
+    internal let id: UUID?
+    internal let kind: String?
+    internal let logUrl: String?
+    internal let method: String?
+    internal let model: String?
+    internal let prompt: String?
+    internal let startedAt: String?
+    internal let status: String?
+    internal let summary: AnyJSON?
+    internal let venueIds: [UUID]?
+    internal enum CodingKeys: String, CodingKey {
+      case branch = "branch"
+      case budgetUsd = "budget_usd"
+      case commitSha = "commit_sha"
+      case costUsd = "cost_usd"
+      case createdAt = "created_at"
+      case createdBy = "created_by"
+      case finishedAt = "finished_at"
+      case id = "id"
+      case kind = "kind"
+      case logUrl = "log_url"
+      case method = "method"
+      case model = "model"
+      case prompt = "prompt"
+      case startedAt = "started_at"
+      case status = "status"
+      case summary = "summary"
+      case venueIds = "venue_ids"
+    }
+  }
+  internal struct CrawlRunsUpdate: Codable, Hashable, Sendable {
+    internal let branch: String?
+    internal let budgetUsd: Decimal?
+    internal let commitSha: String?
+    internal let costUsd: Decimal?
+    internal let createdAt: String?
+    internal let createdBy: UUID?
+    internal let finishedAt: String?
+    internal let id: UUID?
+    internal let kind: String?
+    internal let logUrl: String?
+    internal let method: String?
+    internal let model: String?
+    internal let prompt: String?
+    internal let startedAt: String?
+    internal let status: String?
+    internal let summary: AnyJSON?
+    internal let venueIds: [UUID]?
+    internal enum CodingKeys: String, CodingKey {
+      case branch = "branch"
+      case budgetUsd = "budget_usd"
+      case commitSha = "commit_sha"
+      case costUsd = "cost_usd"
+      case createdAt = "created_at"
+      case createdBy = "created_by"
+      case finishedAt = "finished_at"
+      case id = "id"
+      case kind = "kind"
+      case logUrl = "log_url"
+      case method = "method"
+      case model = "model"
+      case prompt = "prompt"
+      case startedAt = "started_at"
+      case status = "status"
+      case summary = "summary"
+      case venueIds = "venue_ids"
+    }
+  }
   internal struct EntriesSelect: Codable, Hashable, Sendable {
     internal let createdAt: String
     internal let date: String
@@ -995,6 +1271,114 @@ internal enum PublicSchema {
       case showId = "show_id"
     }
   }
+  internal struct ShowCandidatesSelect: Codable, Hashable, Sendable {
+    internal let aliases: [String]
+    internal let createdAt: String
+    internal let firstPerformed: Int16?
+    internal let id: UUID
+    internal let reviewedAt: String?
+    internal let sampleId: UUID?
+    internal let seenCount: Int32
+    internal let showId: UUID?
+    internal let source: String
+    internal let sourceRef: String
+    internal let sourceUrl: String?
+    internal let status: String
+    internal let title: String
+    internal let type: ShowType
+    internal let updatedAt: String
+    internal let venueId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case aliases = "aliases"
+      case createdAt = "created_at"
+      case firstPerformed = "first_performed"
+      case id = "id"
+      case reviewedAt = "reviewed_at"
+      case sampleId = "sample_id"
+      case seenCount = "seen_count"
+      case showId = "show_id"
+      case source = "source"
+      case sourceRef = "source_ref"
+      case sourceUrl = "source_url"
+      case status = "status"
+      case title = "title"
+      case type = "type"
+      case updatedAt = "updated_at"
+      case venueId = "venue_id"
+    }
+  }
+  internal struct ShowCandidatesInsert: Codable, Hashable, Sendable {
+    internal let aliases: [String]?
+    internal let createdAt: String?
+    internal let firstPerformed: Int16?
+    internal let id: UUID?
+    internal let reviewedAt: String?
+    internal let sampleId: UUID?
+    internal let seenCount: Int32?
+    internal let showId: UUID?
+    internal let source: String?
+    internal let sourceRef: String
+    internal let sourceUrl: String?
+    internal let status: String?
+    internal let title: String
+    internal let type: ShowType?
+    internal let updatedAt: String?
+    internal let venueId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case aliases = "aliases"
+      case createdAt = "created_at"
+      case firstPerformed = "first_performed"
+      case id = "id"
+      case reviewedAt = "reviewed_at"
+      case sampleId = "sample_id"
+      case seenCount = "seen_count"
+      case showId = "show_id"
+      case source = "source"
+      case sourceRef = "source_ref"
+      case sourceUrl = "source_url"
+      case status = "status"
+      case title = "title"
+      case type = "type"
+      case updatedAt = "updated_at"
+      case venueId = "venue_id"
+    }
+  }
+  internal struct ShowCandidatesUpdate: Codable, Hashable, Sendable {
+    internal let aliases: [String]?
+    internal let createdAt: String?
+    internal let firstPerformed: Int16?
+    internal let id: UUID?
+    internal let reviewedAt: String?
+    internal let sampleId: UUID?
+    internal let seenCount: Int32?
+    internal let showId: UUID?
+    internal let source: String?
+    internal let sourceRef: String?
+    internal let sourceUrl: String?
+    internal let status: String?
+    internal let title: String?
+    internal let type: ShowType?
+    internal let updatedAt: String?
+    internal let venueId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case aliases = "aliases"
+      case createdAt = "created_at"
+      case firstPerformed = "first_performed"
+      case id = "id"
+      case reviewedAt = "reviewed_at"
+      case sampleId = "sample_id"
+      case seenCount = "seen_count"
+      case showId = "show_id"
+      case source = "source"
+      case sourceRef = "source_ref"
+      case sourceUrl = "source_url"
+      case status = "status"
+      case title = "title"
+      case type = "type"
+      case updatedAt = "updated_at"
+      case venueId = "venue_id"
+    }
+  }
   internal struct ShowsSelect: Codable, Hashable, Sendable {
     internal let aliases: [String]
     internal let createdAt: String
@@ -1003,6 +1387,7 @@ internal enum PublicSchema {
     internal let id: UUID
     internal let searchText: String?
     internal let title: String
+    internal let titleLocked: Bool
     internal let type: ShowType
     internal let verified: Bool
     internal let wikidataId: String?
@@ -1014,6 +1399,7 @@ internal enum PublicSchema {
       case id = "id"
       case searchText = "search_text"
       case title = "title"
+      case titleLocked = "title_locked"
       case type = "type"
       case verified = "verified"
       case wikidataId = "wikidata_id"
@@ -1027,6 +1413,7 @@ internal enum PublicSchema {
     internal let id: UUID?
     internal let searchText: String?
     internal let title: String
+    internal let titleLocked: Bool?
     internal let type: ShowType?
     internal let verified: Bool?
     internal let wikidataId: String?
@@ -1038,6 +1425,7 @@ internal enum PublicSchema {
       case id = "id"
       case searchText = "search_text"
       case title = "title"
+      case titleLocked = "title_locked"
       case type = "type"
       case verified = "verified"
       case wikidataId = "wikidata_id"
@@ -1051,6 +1439,7 @@ internal enum PublicSchema {
     internal let id: UUID?
     internal let searchText: String?
     internal let title: String?
+    internal let titleLocked: Bool?
     internal let type: ShowType?
     internal let verified: Bool?
     internal let wikidataId: String?
@@ -1062,6 +1451,7 @@ internal enum PublicSchema {
       case id = "id"
       case searchText = "search_text"
       case title = "title"
+      case titleLocked = "title_locked"
       case type = "type"
       case verified = "verified"
       case wikidataId = "wikidata_id"
@@ -1082,6 +1472,7 @@ internal enum PublicSchema {
     internal let source: String
     internal let verified: Bool
     internal let website: String?
+    internal let whatsOnUrl: String?
     internal let wikidataId: String?
     internal enum CodingKeys: String, CodingKey {
       case circuit = "circuit"
@@ -1098,6 +1489,7 @@ internal enum PublicSchema {
       case source = "source"
       case verified = "verified"
       case website = "website"
+      case whatsOnUrl = "whats_on_url"
       case wikidataId = "wikidata_id"
     }
   }
@@ -1116,6 +1508,7 @@ internal enum PublicSchema {
     internal let source: String?
     internal let verified: Bool?
     internal let website: String?
+    internal let whatsOnUrl: String?
     internal let wikidataId: String?
     internal enum CodingKeys: String, CodingKey {
       case circuit = "circuit"
@@ -1132,6 +1525,7 @@ internal enum PublicSchema {
       case source = "source"
       case verified = "verified"
       case website = "website"
+      case whatsOnUrl = "whats_on_url"
       case wikidataId = "wikidata_id"
     }
   }
@@ -1150,6 +1544,7 @@ internal enum PublicSchema {
     internal let source: String?
     internal let verified: Bool?
     internal let website: String?
+    internal let whatsOnUrl: String?
     internal let wikidataId: String?
     internal enum CodingKeys: String, CodingKey {
       case circuit = "circuit"
@@ -1166,6 +1561,7 @@ internal enum PublicSchema {
       case source = "source"
       case verified = "verified"
       case website = "website"
+      case whatsOnUrl = "whats_on_url"
       case wikidataId = "wikidata_id"
     }
   }

@@ -59,5 +59,28 @@ select isnt((pg_temp.venues('glimmer', 51.5007, -0.1246))[1], 'Reglimmered Arts'
 select is((pg_temp.venues('glimmer', null, null))[4], 'Reglimmered Arts',
   'a mid-word venue match comes last');
 
+-- A whole-name match beats longer titles that start with it, ignoring
+-- ": The Musical", then equal matches prefer shows people have logged (#368).
+insert into auth.users (id, email) values
+  ('aaaaaaaa-0368-0000-0000-000000000001', 'ranking-368@example.com');
+insert into public.shows (id, title, type, first_performed) values
+  ('5a000368-0000-0000-0000-000000000001', 'Quillfern Characters in Search of an Author', 'play', 1921),
+  ('5a000368-0000-0000-0000-000000000002', 'Quillfern Degrees of Separation', 'play', 1990),
+  ('5a000368-0000-0000-0000-000000000003', 'Quillfern: The Musical', 'musical', 2017),
+  ('5a000368-0000-0000-0000-000000000004', 'Zorbel', 'musical', 1999),
+  ('5a000368-0000-0000-0000-000000000005', 'Zorbel', 'musical', 2015),
+  ('5a000368-0000-0000-0000-000000000006', 'Zorbel', 'musical', 2020);
+insert into public.entries (user_id, show_id, date, status, visibility) values
+  ('aaaaaaaa-0368-0000-0000-000000000001', '5a000368-0000-0000-0000-000000000004', '2026-01-01', 'logged', 'private');
+
+select is((select id from public.search_shows('Quillfern') limit 1), '5a000368-0000-0000-0000-000000000003'::uuid,
+  'a show whose main name is the search comes before longer titles starting with it');
+select is((select id from public.search_shows('quillfern the musical') limit 1), '5a000368-0000-0000-0000-000000000003'::uuid,
+  'typing the subtitle too still finds it first');
+select is((select array_agg(id order by ordinality) from public.search_shows('Zorbel') with ordinality),
+  array['5a000368-0000-0000-0000-000000000004', '5a000368-0000-0000-0000-000000000006',
+        '5a000368-0000-0000-0000-000000000005']::uuid[],
+  'equal matches: logged shows first, then the most recently first performed');
+
 select * from finish();
 rollback;

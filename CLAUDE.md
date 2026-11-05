@@ -45,7 +45,7 @@ Details and reasoning: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs
 - **No cloud AI in the apps** (#273): photo detection (#281) and email import (#282) are gone. The catalogue crawler keeps its own key as a GitHub Actions secret only.
 - **Share cards** are drawn on the device: Canvas 2D on web (`lib/share-card.ts`, `lib/share-card-trip.ts`), SwiftUI on iOS. Square 1080×1080. Card stats come from `entry_card_stats`.
 - **Design system:** Footlight Sweep (the app icon's magenta, coral and amber on system greys); tokens and mapping in `docs/DESIGN.md`. The app and sign-in are always light for now.
-- **Auth:** Apple, Google and email + password. Sign-ups are open (#149): email accounts confirm by a link or a 6-digit code (`supabase/templates/`, landing on `/auth/confirm`). Admins have `app_metadata.role = "admin"`; admin pages live under `/app/admin`.
+- **Auth:** Apple, Google and email + password. Sign-ups are open (#149): email accounts confirm by a link or a 6-digit code (`supabase/templates/`, landing on `/auth/confirm`). Admins have `app_metadata.role = "admin"`; admin pages live under `/app/backstage`.
 - **Running cost target:** $0/month on free tiers, plus the Apple Developer Program ($99/year).
 
 ### Data model (as built)
@@ -55,7 +55,7 @@ Details and reasoning: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs
 - `entries`: user_id, show_id, venue_id (nullable), date, status (`planned` | `logged`), rating (nullable, half-star steps, none when planned), note, `photo_path` (one photo), visibility.
 - `collections` (kind `trip` | `label`) and `entry_collections`: trips have required dates and hold only entries within them; labels are unused for now.
 - `follows` (status `pending` | `accepted`), `entry_likes`, `entry_comments` (≤ 500 characters).
-- `events` (write-only analytics: `entry_logged`, `card_shared`), `waitlist` (retired with the waitlist form; kept for the old list), `blocks` and `reports` (moderation; admins act at `/app/admin/reports`).
+- `events` (write-only analytics: `entry_logged`, `card_shared`), `waitlist` (retired with the waitlist form; kept for the old list), `blocks` and `reports` (moderation; admins act at `/app/backstage/reports`).
 - Storage: private `entry-photos` bucket (others can read a photo only while its entry is public), public `avatars` bucket.
 - Key functions: `search_shows`, `search_venues`, `public_profile_stats`, `own_profile_stats`, `entry_card_stats`, `feed_entries`, `entry_comment_previews`, `search_profiles`, `follow_counts`, `profile_is_visible`, `delete_my_account`.
 - Not yet: an `entry_photos` table for several photos per entry, and a per-user record of import runs. Both are open product decisions in the brief.

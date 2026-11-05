@@ -16,7 +16,12 @@ export const SHOW_TYPE_LABELS: Record<ShowType, string> = {
   other: "Other",
 };
 
-export type Show = { id: string; title: string; type: ShowType };
+export type Show = { id: string; title: string; type: ShowType; first_performed?: number | null };
+
+/** "Musical · 2017": the type, and the year when known, to tell same-named shows apart. */
+export function showSubtitle(show: Pick<Show, "type" | "first_performed">): string {
+  return show.first_performed ? `${SHOW_TYPE_LABELS[show.type]} · ${show.first_performed}` : SHOW_TYPE_LABELS[show.type];
+}
 
 export type Venue = {
   id: string;

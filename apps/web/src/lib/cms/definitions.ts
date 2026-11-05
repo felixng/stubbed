@@ -1,62 +1,147 @@
 // Repository defaults and the explicit allowlist of CMS-editable copy.
 // Asset paths, layouts and application behaviour stay in code.
 export const copyDefinitions = {
-  "hero": {
-    "document": "landingPage",
-    "title": "Hero",
-    "fields": {
-      "yourTheatreLifeShared": {
-        "title": "Headline",
-        "value": "Your theatre life, shared.",
-        "multiline": false
-      },
-      "logTheShowsYouSeeRate": {
-        "title": "Introduction",
-        "value": "Log the shows you see. Rate them. Your diary, shared with the people who get it.",
-        "multiline": false
-      },
-      "signUpFree": {
-        "title": "Sign-up button",
-        "value": "Sign up free",
-        "multiline": false
-      },
-      "signIn": {
-        "title": "Sign-in button",
-        "value": "Sign in",
-        "multiline": false
-      },
-      "signUpWithAppleGoogleOr": {
-        "title": "Sign-up help",
-        "value": "Sign up with Apple, Google or your email.",
-        "multiline": false
-      },
-      "stubbedOnAnIPhoneTheHome": {
-        "title": "Screenshot accessibility description",
-        "value": "Stubbed on an iPhone: the Home feed, with @sillyelphaba’s photo from The Lost Boys at the Palace Theatre",
-        "multiline": true
-      }
-    }
-  },
-  "reminder": {
-    "document": "landingPage",
-    "title": "Final call to action",
-    "fields": {
-      "startYourTheatreDiary": {
-        "title": "Start your theatre diary.",
-        "value": "Start your theatre diary.",
-        "multiline": false
-      },
-      "signUpFree": {
-        "title": "Sign up free",
-        "value": "Sign up free",
-        "multiline": false
-      }
-    }
-  },
+  "sharingLanding": {
+  "document": "landingPage",
+  "title": "Card-led landing design",
+  "fields": {
+    "eyebrow": {
+      "title": "eyebrow",
+      "value": "Your theatre diary. Built for sharing.",
+      "multiline": false
+    },
+    "headline": {
+      "title": "headline",
+      "value": "Good shows deserve an encore.",
+      "multiline": false
+    },
+    "intro": {
+      "title": "intro",
+      "value": "Keep the nights you loved. Share the cards. See your theatre life take shape.",
+      "multiline": false
+    },
+    "signup": {
+      "title": "signup",
+      "value": "Sign up free",
+      "multiline": false
+    },
+    "sampleLink": {
+      "title": "sampleLink",
+      "value": "Explore the diary",
+      "multiline": false
+    },
+    "placeholder": {
+      "title": "placeholder",
+      "value": "Screenshot placeholder",
+      "multiline": false
+    },
+    "heroAsset": {
+      "title": "heroAsset",
+      "value": "Theatre photo and stats sharing cards",
+      "multiline": false
+    },
+    "shareEyebrow": {
+      "title": "shareEyebrow",
+      "value": "01 / Share",
+      "multiline": false
+    },
+    "shareHeading": {
+      "title": "shareHeading",
+      "value": "A night out. A card worth keeping.",
+      "multiline": false
+    },
+    "shareBody": {
+      "title": "shareBody",
+      "value": "Start with a photo and a show. Pick a card that tells your story, then share it wherever your friends are.",
+      "multiline": false
+    },
+    "galleryLabel": {
+      "title": "galleryLabel",
+      "value": "Share card designs",
+      "multiline": false
+    },
+    "galleryHelp": {
+      "title": "galleryHelp",
+      "value": "Scroll to explore the cards. Demo diary: @sillyelphaba. Images and figures are illustrative.",
+      "multiline": false
+    },
+    "cardCta": {
+      "title": "cardCta",
+      "value": "Make your first card",
+      "multiline": false
+    },
+    "diaryEyebrow": {
+      "title": "diaryEyebrow",
+      "value": "02 / Look back",
+      "multiline": false
+    },
+    "diaryHeading": {
+      "title": "diaryHeading",
+      "value": "Keep more than the ticket.",
+      "multiline": false
+    },
+    "diaryBody": {
+      "title": "diaryBody",
+      "value": "Your photos, ratings and notes, together in your diary. Gather shows into trips and revisit the nights you still talk about.",
+      "multiline": false
+    },
+    "diaryAsset": {
+      "title": "diaryAsset",
+      "value": "Your diary and trips",
+      "multiline": false
+    },
+    "diaryCaption": {
+      "title": "diaryCaption",
+      "value": "A home for the shows you have seen. Demo diary: @sillyelphaba.",
+      "multiline": false
+    },
+    "yearEyebrow": {
+      "title": "yearEyebrow",
+      "value": "03 / See your year",
+      "multiline": false
+    },
+    "yearHeading": {
+      "title": "yearHeading",
+      "value": "Your theatre life, in the round.",
+      "multiline": false
+    },
+    "yearBody": {
+      "title": "yearBody",
+      "value": "See your visits, streaks and show mix. Look back through the years, then share your Year in theatre.",
+      "multiline": false
+    },
+    "yearAsset": {
+      "title": "yearAsset",
+      "value": "Your theatre stats",
+      "multiline": false
+    },
+    "yearCard": {
+      "title": "yearCard",
+      "value": "Year in theatre card",
+      "multiline": false
+    },
+    "closingHeading": {
+      "title": "closingHeading",
+      "value": "Your next show is the start.",
+      "multiline": false
+    },
+    "closingBody": {
+      "title": "closingBody",
+      "value": "A diary to return to. A story to share.",
+      "multiline": false
+    },
+    "screenshotDemoCaption": {"title": "screenshotDemoCaption", "value": "Demo diary: @sillyelphaba.", "multiline": true}
+  }
+},
   "footer": {
     "document": "siteSettings",
     "title": "Navigation and footer",
     "fields": {
+      "makerLocation": { "title": "Maker location", "value": "Made in London", "multiline": false },
+      "makerBy": { "title": "Maker prefix", "value": "by a", "multiline": false },
+      "makerLinkLabel": { "title": "Maker link", "value": "theatre nerd", "multiline": false },
+      "makerFor": { "title": "Maker suffix", "value": "for the theatre nerds", "multiline": false },
+      "instagramLabel": { "title": "Instagram accessible label", "value": "Stubbed on Instagram", "multiline": false },
       "builtByATheatreRegularFor": {
         "title": "Built by a theatre regular, for the theatre regulars.",
         "value": "Built by a theatre regular, for the theatre regulars.",
@@ -177,13 +262,6 @@ export const copyDefinitions = {
       "skipToContent": {
         "title": "Skip to content",
         "value": "Skip to content",
-        "multiline": false,
-        "fieldset": "introduction",
-        "fieldsetTitle": "Introduction"
-      },
-      "theStubbedAppIcon": {
-        "title": "Image description: The Stubbed app icon",
-        "value": "The Stubbed app icon",
         "multiline": false,
         "fieldset": "introduction",
         "fieldsetTitle": "Introduction"
@@ -469,19 +547,9 @@ export const copyDefinitions = {
         "value": "The mark and the wordmark, for headers and articles. Transparent PNG; use the white version on dark backgrounds.",
         "multiline": true
       },
-      "theStubbedLogoTheTicketMark": {
-        "title": "Image description: The Stubbed logo: the ticket mark and the stubbed wordm",
-        "value": "The Stubbed logo: the ticket mark and the stubbed wordmark",
-        "multiline": false
-      },
       "pngForLightBackgrounds": {
         "title": "PNG, for light backgrounds",
         "value": "PNG, for light backgrounds",
-        "multiline": false
-      },
-      "theStubbedLogoWithAWhite": {
-        "title": "Image description: The Stubbed logo with a white wordmark, on a dark backg",
-        "value": "The Stubbed logo with a white wordmark, on a dark background",
         "multiline": false
       },
       "pngForDarkBackgrounds": {
@@ -537,11 +605,6 @@ export const copyDefinitions = {
       "whatPeoplePostASquareCard": {
         "title": "What people post: a square card for each show, drawn by the app.",
         "value": "What people post: a square card for each show, drawn by the app.",
-        "multiline": false
-      },
-      "aStubbedShareCardForThe": {
-        "title": "Image description: A Stubbed share card for The Lost Boys at the Palace Th",
-        "value": "A Stubbed share card for The Lost Boys at the Palace Theatre",
         "multiline": false
       },
       "jpg2": {
@@ -930,8 +993,8 @@ export const copyDefinitions = {
         "fieldsetTitle": "What we collect and why"
       },
       "whenYouAddANewShow": {
-        "title": ": when you add a new show (whether you started from a photo, w…",
-        "value": ": when you add a new show (whether you started from a photo, whether we could work out the show, and whether you added a rating or a note, but not what they say), and when you share, save or copy a share card (which button and card design). This is stored with your account so we can see how many people keep tracking and sharing.",
+        "title": ": when you add a new show (whether you started from a photo, a…",
+        "value": ": when you add a new show (whether you started from a photo, and whether you added a rating or a note, but not what they say), and when you share, save or copy a share card (which button and card design). This is stored with your account so we can see how many people keep tracking and sharing.",
         "multiline": true,
         "fieldset": "collect",
         "fieldsetTitle": "What we collect and why"
@@ -1910,77 +1973,6 @@ export const copyDefinitions = {
       }
     }
   },
-  "features": {
-    "document": "landingPage",
-    "title": "Features",
-    "fields": {
-      "heading": {
-        "title": "Heading",
-        "value": "How it works",
-        "multiline": false
-      },
-      "feature1Title": {
-        "title": "Feature1 Title",
-        "value": "Log every show",
-        "multiline": false
-      },
-      "feature1Body": {
-        "title": "Feature1 Body",
-        "value": "Every show you see, in one place: the venue, the date, your half-star rating and your thoughts about the show.",
-        "multiline": true
-      },
-      "feature1Alt": {
-        "title": "Feature1 Alt",
-        "value": "Logging The Lost Boys: a photo from the show, the show, the Palace Theatre, the date and four and a half stars",
-        "multiline": true
-      },
-      "feature2Title": {
-        "title": "Feature2 Title",
-        "value": "Share with your friends",
-        "multiline": false
-      },
-      "feature2Body": {
-        "title": "Feature2 Body",
-        "value": "Turn any show into a card for your Stories, with the show, your rating and your handle.",
-        "multiline": false
-      },
-      "feature2Alt": {
-        "title": "Feature2 Alt",
-        "value": "A share card for The Lost Boys: the photo, four and a half stars, the 8th show of 2026 and the handle @sillyelphaba",
-        "multiline": true
-      },
-      "feature3Title": {
-        "title": "Feature3 Title",
-        "value": "See your history",
-        "multiline": false
-      },
-      "feature3Body": {
-        "title": "Feature3 Body",
-        "value": "Every show you’ve seen in one diary. Bring past shows in from theatre photos.",
-        "multiline": false
-      },
-      "feature3Alt": {
-        "title": "Feature3 Alt",
-        "value": "A diary of shows seen, newest first, each with a photo, its theatre, date and star rating",
-        "multiline": false
-      },
-      "feature4Title": {
-        "title": "Feature4 Title",
-        "value": "Plan ahead",
-        "multiline": false
-      },
-      "feature4Body": {
-        "title": "Feature4 Body",
-        "value": "Group a trip or a festival’s shows together and keep track of what you want to see next.",
-        "multiline": false
-      },
-      "feature4Alt": {
-        "title": "Feature4 Alt",
-        "value": "A trip called Birthday weekend: 2 shows at 2 venues over 2 nights, Cabaret and Groundhog Day",
-        "multiline": true
-      }
-    }
-  },
   "faqEntries": {
     "document": "faqPage",
     "title": "Questions and guides",
@@ -2099,7 +2091,7 @@ export const copyDefinitions = {
       },
       "logAShowAnswer": {
         "title": "Answer",
-        "value": "On the website, open Log and pick a photo, or choose No photo? Fill in by hand. A photo can suggest the date, nearby theatre and show. Check the details, add an optional half-star rating, note and photo, choose Public or Private, then save. Suggestions can be wrong; you can change them before saving.",
+        "value": "On the website, open Log and pick a photo, or choose No photo? Fill in by hand. A photo can suggest the date and nearby theatre. Check the details, add an optional half-star rating, note and photo, choose Public or Private, then save. Suggestions can be wrong; you can change them before saving.",
         "multiline": true,
         "fieldset": "logAShow",
         "fieldsetTitle": "How do I log a show?"

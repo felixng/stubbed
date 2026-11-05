@@ -208,3 +208,59 @@ body {
     transform: translateY(6px);
   }
 }
+
+/* Landing: larger cards; the phone spread reveals the rear cards above
+   the centre while the desktop spread uses its wider visual column. */
+.landing-hero-fan {
+  --fan-x: 17%;
+  --fan-y: -28%;
+  --fan-angle: 10deg;
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  max-width: 400px;
+  aspect-ratio: 1;
+  margin-inline: auto;
+}
+.landing-fan-card {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  aspect-ratio: 1;
+  transform-origin: 50% 85%;
+  box-shadow: 0 3px 8px rgb(20 20 30 / 12%), 0 16px 32px -12px rgb(20 20 30 / 28%);
+}
+.landing-fan-left {
+  display: none;
+  transform: translate(calc(-1 * var(--fan-x)), var(--fan-y)) rotate(calc(-1 * var(--fan-angle)));
+  animation: fan-left 750ms cubic-bezier(.22, .68, .28, 1) 350ms both;
+}
+.landing-fan-right {
+  display: none;
+  transform: translate(var(--fan-x), var(--fan-y)) rotate(var(--fan-angle));
+  animation: fan-right 750ms cubic-bezier(.22, .68, .28, 1) 550ms both;
+}
+.landing-fan-centre { z-index: 1; }
+@media (min-width: 1024px) {
+  .landing-hero-fan {
+    --fan-x: 48%;
+    --fan-y: -12%;
+    --fan-angle: 14deg;
+    max-width: none;
+    aspect-ratio: 1.15;
+  }
+  .landing-fan-card { width: 50%; left: 25%; top: 23%; }
+  .landing-fan-left, .landing-fan-right { display: block; }
+}
+@keyframes fan-left {
+  from { transform: translate(0, 5%) rotate(0); }
+  to { transform: translate(calc(-1 * var(--fan-x)), var(--fan-y)) rotate(calc(-1 * var(--fan-angle))); }
+}
+@keyframes fan-right {
+  from { transform: translate(0, 5%) rotate(0); }
+  to { transform: translate(var(--fan-x), var(--fan-y)) rotate(var(--fan-angle)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .landing-fan-left, .landing-fan-right { animation: none; }
+}

@@ -120,7 +120,10 @@ struct EntryCardView: View {
         }
         CardFooter(handle: data.handle, ink: ink)
       }.foregroundStyle(ink).padding(28).cardTextShadow(design.isPhoto)
-    }.frame(width: Self.size, height: Self.size).environment(\.colorScheme, .dark)
+    }
+    .frame(width: Self.size, height: Self.size)
+    .clipShape(.rect(cornerRadius: 32))
+    .environment(\.colorScheme, .dark)
   }
 }
 

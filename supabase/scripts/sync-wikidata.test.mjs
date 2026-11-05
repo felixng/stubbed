@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { mapCatalogue, normaliseTitle, sparql, fetchCatalogue, syncSql, detailQuery, parsePsqlOutput } from './sync-wikidata.mjs';
+import { mapCatalogue, normaliseTitle, sparql, fetchCatalogue, syncSql, detailQuery, candidateQuery, candidatesSql, CANDIDATE_SOURCES, SHOW_SOURCES, parsePsqlOutput } from './sync-wikidata.mjs';
 
 const fixture = JSON.parse(await readFile(new URL('./fixtures/mapping.json', import.meta.url)));
 
@@ -124,4 +124,37 @@ test('dry run uses a read-only transaction; write is atomic and only refreshes o
   assert.doesNotMatch(updates, /verified|created_by|website|ibdb/);
   assert.match(sql, /merge_into_catalogue/);
   assert.match(sql, /commit;$/);
+});
+
+test('the regular sync keeps its two sources and its typing; --candidates widens both', async () => {
+  assert.deepEqual(SHOW_SOURCES, ['ibdb', 'west-end']);
+  assert.deepEqual(CANDIDATE_SOURCES, ['ibdb', 'west-end', 'enwiki-form', 'enwiki-class']);
+  assert.doesNotMatch(detailQuery(['Q1']), /P7937/);
+  assert.match(detailQuery(['Q7775533'], { wide: true }), /wdt:P7937\/wdt:P279\* wd:Q25379/);
+  // Form "opera" never overrides a musical or a Broadway show (Jesus Christ Superstar, Q242667).
+  assert.match(detailQuery(['Q242667'], { wide: true }), /NOT EXISTS \{ \?item wdt:P7937 wd:Q2743 \}\s+&& NOT EXISTS \{ \?item wdt:P1219/);
+  for (const source of ['enwiki-form', 'enwiki-class']) {
+    assert.match(candidateQuery(0, source), /schema:isPartOf <https:\/\/en\.wikipedia\.org\/>/);
+  }
+  assert.throws(() => candidateQuery(0, 'nope'), /Unknown source/);
+  const calls = [];
+  await fetchCatalogue({ sleep: async () => {}, sources: CANDIDATE_SOURCES, wide: true, request: async query => {
+    calls.push(query);
+    if (query.includes('SELECT DISTINCT ?item WHERE')) return [{ item: { value: 'http://www.wikidata.org/entity/Q830581' } }];
+    return fixture.results.bindings.slice(0, 1);
+  } });
+  assert.equal(calls.length, 5);
+  assert.match(calls[2], /P7937/);
+  assert.match(calls[3], /wdt:P31 \?class/);
+  assert.match(calls[4], /P7937/);
+});
+
+test('--candidates writes through load_show_candidates and never names the shows table', () => {
+  const { rows } = mapCatalogue(fixture);
+  const live = candidatesSql(rows, false);
+  assert.match(live, /select public\.load_show_candidates\(/);
+  assert.match(live, /commit;\s*$/);
+  assert.doesNotMatch(live, /public\.shows|insert into|update /i);
+  assert.match(candidatesSql(rows, true), /rollback;\s*$/);
+  assert.throws(() => candidatesSql([], false), /refusing an empty pull/);
 });

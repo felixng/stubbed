@@ -1,56 +1,34 @@
-import { getCopy } from "@/lib/cms/content";
 import Link from "next/link";
-
-import { Container } from "@/components/landing/Container";
-import { Phone } from "@/components/landing/Screens";
+import { getCopy } from "@/lib/cms/content";
+import { Container } from "./Container";
+import Image from "next/image";
+import { LandingAction } from "./LandingAction";
+import { cardAlt } from "./alt-text";
 
 export async function Hero() {
-  const copy = await getCopy("hero");
+  const copy = await getCopy("sharingLanding");
   return (
-    <section className="overflow-hidden pt-8 pb-16 sm:pb-20">
-      <Container className="flex flex-col gap-12 lg:flex-row lg:items-start lg:gap-16">
-        <div className="flex min-w-0 flex-col gap-6 lg:flex-[1_1_520px]">
-          <h1 className="font-display text-[clamp(44px,7vw,76px)] leading-[1.02] font-extrabold tracking-[-0.03em] text-balance text-label">
-            {copy.yourTheatreLifeShared}
-          </h1>
-          <p className="max-w-[480px] text-[20px] leading-7 text-label-secondary">
-            {copy.logTheShowsYouSeeRate}
-          </p>
-          <div id="get-started" className="mt-2 flex scroll-mt-24 flex-col gap-3">
-            <div className="flex flex-wrap items-center gap-3">
-              <Link href="/signup" className="inline-flex min-h-[50px] items-center justify-center rounded-pill bg-tint px-6 font-sans text-headline font-semibold text-on-tint shadow-btn transition-colors hover:bg-tint-pressed focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
-                {copy.signUpFree}
-              </Link>
-              <Link
-                href="/login"
-                className="inline-flex min-h-[50px] items-center justify-center rounded-pill px-5 text-headline font-semibold text-tint-text transition-colors hover:bg-tint-fill focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus"
-              >
-                {copy.signIn}
-              </Link>
-            </div>
-            <p className="text-footnote text-label-secondary">
-              {copy.signUpWithAppleGoogleOr}
-            </p>
+    <section className="py-8 sm:py-12 lg:pb-20">
+      <Container className="grid items-center gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-12">
+        <div className="max-w-xl">
+          <p className="mb-5 text-subheadline font-semibold text-tint-text">{copy.eyebrow}</p>
+          <h1 className="font-display text-[clamp(40px,5.3vw,72px)] leading-[1.04] font-extrabold tracking-[-0.04em] text-balance text-label">{copy.headline}</h1>
+          <p className="mt-6 max-w-md text-[20px] leading-7 text-label-secondary">{copy.intro}</p>
+          <div id="get-started" className="mt-8 flex scroll-mt-24 flex-wrap items-center gap-x-6 gap-y-3">
+            <LandingAction>{copy.signup}</LandingAction>
+            <Link href="#diary" className="inline-flex min-h-11 items-center gap-2 text-subheadline font-semibold text-label underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">{copy.sampleLink}<span aria-hidden="true">↗</span></Link>
           </div>
         </div>
-
-        <div className="flex min-w-0 justify-center lg:flex-[1_1_400px]">
-          <div className="relative flex w-full max-w-[540px] justify-center">
-            {/* Decorative halo: a `glow` circle with a soft tint ring. */}
-            <div
-              aria-hidden="true"
-              className="absolute top-1/2 left-1/2 aspect-square w-[min(100%,520px)] -translate-1/2 rounded-full bg-glow shadow-[0_0_0_28px_color-mix(in_srgb,var(--tint)_16%,transparent)]"
-            />
-            <div className="relative">
-              <Phone
-                shot="hero"
-                label={copy.stubbedOnAnIPhoneTheHome}
-                sizes="(min-width: 640px) 320px, 72vw"
-                preload
-                className="w-[min(72vw,320px)]"
-              />
+        <div className="landing-hero-fan" role="group" aria-label={copy.heroAsset}>
+          {[
+            { id: "name-lost-boys", alt: cardAlt["name-lost-boys"], position: "landing-fan-left" },
+            { id: "activity", alt: cardAlt.activity, position: "landing-fan-right" },
+            { id: "stats-mincemeat", alt: cardAlt["stats-mincemeat"], position: "landing-fan-centre" },
+          ].map(card => (
+            <div key={card.id} className={`landing-fan-card ${card.position} overflow-hidden rounded-md bg-surface`}>
+              <Image src={`/landing/cards/${card.id}.webp`} alt={card.alt} width={1080} height={1080} sizes="(min-width: 1024px) 360px, (min-width: 640px) 400px, calc(100vw - 32px)" preload={card.position === "landing-fan-centre"} className="h-auto w-full" />
             </div>
-          </div>
+          ))}
         </div>
       </Container>
     </section>

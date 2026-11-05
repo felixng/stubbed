@@ -13,5 +13,5 @@ export const cmsClient = projectId ? createClient({
   timeout: 5000,
   maxRetries: 1,
   perspective: "published",
-  stega: { studioUrl: "/studio" },
+  stega: { studioUrl: "/dressingroom" },
 }) : null;

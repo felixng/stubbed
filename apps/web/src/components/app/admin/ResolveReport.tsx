@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { createClient } from "@/lib/supabase/client";
 
-// Hide or Dismiss on /app/admin/reports, through resolve_report (admins only).
+// Hide or Dismiss on /app/backstage/reports, through resolve_report (admins only).
 export function ResolveReport({ reportId, hideLabel }: { reportId: string; hideLabel: string }) {
   const router = useRouter();
   const [confirm, dialog] = useConfirm();
