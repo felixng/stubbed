@@ -189,17 +189,17 @@ private struct TicketOverlayCard: View {
         stat(data.year == Calendar.current.component(.year, from: today) ? "This year so far" : "\(data.year) so far",
           value: "\(ordinal(data.showOfYear)) show", width: 168).offset(x: 246, y: 194)
 
+        HStack(spacing: 8) {
+          Image("BrandMarkOutline").renderingMode(.original).resizable().scaledToFit()
+            .frame(width: 48, height: 48 * 673 / 816)
+          Text("stubbed").font(.system(size: 30, weight: .heavy)).tracking(-1.35)
+            .foregroundStyle(CardInk.coral)
+        }.frame(width: 480).offset(y: 306)
       }
       .foregroundStyle(ink)
       .frame(width: 480, height: 480 * 388 / 648)
       .rotationEffect(.degrees(-7))
       .padding(.top, 96)
-      HStack(spacing: 8) {
-        Image("BrandMarkOutline").renderingMode(.original).resizable().scaledToFit()
-          .frame(width: 48, height: 48 * 673 / 816)
-        Text("stubbed").font(.system(size: 30, weight: .heavy)).tracking(-1.35)
-          .foregroundStyle(CardInk.coral)
-      }.padding(.top, 464)
     }
     .frame(width: 540, height: 540, alignment: .top)
     .environment(\.locale, Locale(identifier: "en_GB"))

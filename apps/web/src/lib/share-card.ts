@@ -288,10 +288,10 @@ function shareDate(date: Date) {
 
 function drawTicketBrand(ctx: Ctx, mark: HTMLImageElement | null) {
   setFont(ctx, 800, 30, DISPLAY, -1.35);
-  const left = (540 - 48 - 8 - ctx.measureText("stubbed").width) / 2;
-  if (mark) ctx.drawImage(mark, left, 464, 48, 48 * 673 / 816);
+  const left = (480 - 48 - 8 - ctx.measureText("stubbed").width) / 2;
+  if (mark) ctx.drawImage(mark, left, 306, 48, 48 * 673 / 816);
   ctx.textAlign = "left"; ctx.textBaseline = "middle";
-  ctx.fillStyle = CORAL; ctx.fillText("stubbed", left + 56, 484);
+  ctx.fillStyle = CORAL; ctx.fillText("stubbed", left + 56, 326);
 }
 
 function drawTicketOverlay(ctx: Ctx, data: CardData, color: string, ticket: HTMLImageElement | null, mark: HTMLImageElement | null) {
@@ -328,8 +328,9 @@ function drawTicketOverlay(ctx: Ctx, data: CardData, color: string, ticket: HTML
   setFont(ctx, 700, 24, DISPLAY, -0.3);
   ctx.fillText(`${data.timesSeen} ${data.timesSeen === 1 ? "time" : "times"}`, 56, 220, 148);
   ctx.fillText(`${ordinal(data.showOfYear)} show`, 246, 220, 168);
-  ctx.restore();
+  // Keep the branding in the ticket’s coordinates: parallel, 19pt below it.
   drawTicketBrand(ctx, mark);
+  ctx.restore();
 }
 
 // --- helpers ---------------------------------------------------------------
