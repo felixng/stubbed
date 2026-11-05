@@ -1022,3 +1022,5 @@ Owner couldn't edit all of two landing captions (the editor showed only half of 
 - Added a Show overlay design to entry sharing on iOS and web: centred show title, times seen, the visit’s ordinal show of its year, today’s local date, and the existing ticket mark plus wordmark in outline. It has no route graphic or user handle.
 - Starts transparent with light text, with the existing background and text-colour options. Its background choice is remembered separately so other sharing designs retain their chosen background.
 - Uses the existing entry-card stats; older entries name their recorded year rather than calling it “This Year”. Exports remain 1080×1080 PNGs, matching the sharing pipeline.
+
+- Added a Ticket stub variant with the same information: show title in the main ticket, counts in the perforated stub, and today’s date and outlined logo in the main ticket’s footer. The outline is generated from the logo’s exact single-ticket geometry and keeps its front ticket’s −7° angle; it shares the transparent overlay appearance options.

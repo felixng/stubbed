@@ -15,7 +15,7 @@ struct EntryCardData: Hashable, Sendable {
 }
 
 enum EntryCardDesign: String, CaseIterable, Identifiable, Sendable {
-  case stats, name, data, encore, overlay
+  case stats, name, data, encore, overlay, ticket
   case number = "show-number"
   var id: String { rawValue }
   var name: String {
@@ -26,12 +26,13 @@ enum EntryCardDesign: String, CaseIterable, Identifiable, Sendable {
     case .encore: "Encore"
     case .number: "Show number"
     case .overlay: "Show overlay"
+    case .ticket: "Ticket stub"
     }
   }
   var isPhoto: Bool { self == .stats || self == .name }
   static func available(photo: Bool, rating: Double?, timesSeen: Int) -> [Self] {
     (photo ? [.stats] + (rating != nil ? [.name] : []) : [])
-      + [.data, .encore, .number, .overlay]
+      + [.data, .encore, .number, .overlay, .ticket]
   }
 }
 
@@ -79,7 +80,9 @@ struct EntryCardView: View {
           LinearGradient(colors: [.clear, .black.opacity(0.8)], startPoint: .top, endPoint: .bottom).frame(height: 180)
         }
       } else { ShareCardSurface(appearance: appearance) }
-      if design == .overlay {
+      if design == .ticket {
+        TicketOverlayCard(data: data, ink: ink)
+      } else if design == .overlay {
         ShowOverlayCard(data: data, ink: ink)
       } else {
         VStack(alignment: .leading, spacing: 0) {
@@ -146,11 +149,7 @@ private struct ShowOverlayCard: View {
         value: "\(ordinal(data.showOfYear)) show", top: 294)
       Text(today, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated).year())
         .font(.system(size: 17, weight: .medium)).padding(.top, 406)
-      HStack(spacing: 8) {
-        Image("BrandMarkOutline").renderingMode(.template).resizable().scaledToFit()
-          .frame(width: 48, height: 40)
-        Image(uiImage: outlineWordmark).resizable().frame(width: 142, height: 40)
-      }.padding(.top, 462)
+      OutlineCardLogo(ink: ink).padding(.top, 462)
     }
     .foregroundStyle(ink)
     .frame(width: 540, height: 540, alignment: .top)
@@ -164,6 +163,57 @@ private struct ShowOverlayCard: View {
         .lineLimit(title ? 2 : 1).minimumScaleFactor(0.72)
         .multilineTextAlignment(.center)
     }.frame(width: 360).padding(.top, top)
+  }
+
+}
+
+private struct TicketOverlayCard: View {
+  let data: EntryCardData
+  let ink: Color
+  private let today = Date()
+
+  var body: some View {
+    ZStack(alignment: .topLeading) {
+      Image("ShareTicketOutline").renderingMode(.template).resizable()
+        .frame(width: 480, height: 480 * 388 / 648)
+      VStack(alignment: .leading, spacing: 6) {
+        Text("Show").font(.system(size: 14, weight: .semibold))
+        Text(data.title).font(.system(size: 30, weight: .bold)).tracking(-0.4)
+          .lineLimit(2).minimumScaleFactor(0.73)
+          .fixedSize(horizontal: false, vertical: true)
+      }.frame(width: 276, alignment: .leading).offset(x: 44, y: 34)
+      Text(today, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated).year())
+        .font(.system(size: 14, weight: .medium)).offset(x: 44, y: 176)
+      OutlineCardLogo(ink: ink).scaleEffect(0.65, anchor: .topLeading).offset(x: 44, y: 224)
+      VStack(spacing: 6) {
+        Text("Seen").font(.system(size: 14, weight: .semibold))
+        Text("\(data.timesSeen) \(data.timesSeen == 1 ? "time" : "times")")
+          .font(.system(size: 21, weight: .bold)).tracking(-0.3)
+          .lineLimit(1).minimumScaleFactor(0.65)
+      }.frame(width: 82).offset(x: 369, y: 34)
+      VStack(spacing: 3) {
+        Text(data.year == Calendar.current.component(.year, from: today) ? "This Year" : String(data.year))
+        Text("So Far")
+        Text(ordinal(data.showOfYear)).font(.system(size: 28, weight: .bold))
+          .tracking(-0.3).lineLimit(1).minimumScaleFactor(0.65).padding(.top, 8)
+        Text("show").font(.system(size: 12, weight: .medium))
+      }.font(.system(size: 11, weight: .semibold)).frame(width: 82).offset(x: 369, y: 176)
+    }
+    .foregroundStyle(ink)
+    .frame(width: 480, height: 480 * 388 / 648)
+    .rotationEffect(.degrees(-7)) // Same angle as the logo's front ticket.
+    .environment(\.locale, Locale(identifier: "en_GB"))
+  }
+}
+
+private struct OutlineCardLogo: View {
+  let ink: Color
+  var body: some View {
+    HStack(spacing: 8) {
+      Image("BrandMarkOutline").renderingMode(.template).resizable().scaledToFit()
+        .frame(width: 48, height: 40)
+      Image(uiImage: outlineWordmark).resizable().frame(width: 142, height: 40)
+    }.foregroundStyle(ink)
   }
 
   private var outlineWordmark: UIImage {

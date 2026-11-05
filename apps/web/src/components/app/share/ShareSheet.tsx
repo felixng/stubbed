@@ -34,8 +34,8 @@ export function ShareSheet({ subject, slug, publicHref = null }: { subject: Shar
   const resources = useRef(new Set<string>());
   const cards = drawn?.subject === subject ? drawn.cards : null;
   const current = cards?.find(c => c.design.id === active) ?? cards?.[0];
-  const background = current?.design.id === "overlay" ? overlayBackground : baseBackground;
-  const setBackground = current?.design.id === "overlay" ? setOverlayBackground : setBaseBackground;
+  const background = (current?.design.id === "overlay" || current?.design.id === "ticket") ? overlayBackground : baseBackground;
+  const setBackground = (current?.design.id === "overlay" || current?.design.id === "ticket") ? setOverlayBackground : setBaseBackground;
   const key = current?.design.background ? background === "transparent" ? `transparent-${ink}` : background : "photo";
   const card = current?.variants[key];
   const storyCard = current?.story ?? card;

@@ -29,6 +29,7 @@ export const CARD_DESIGNS: CardDesign[] = [
   { id: "encore", name: "Encore", background: true },
   { id: "show-number", name: "Show number", background: true },
   { id: "overlay", name: "Show overlay", background: true },
+  { id: "ticket", name: "Ticket stub", background: true },
 ];
 export function availableEntryDesigns(data: CardData, photo: boolean) {
   return CARD_DESIGNS.filter(d => (!d.photo || photo) && (d.id !== "name" || data.rating != null)).map(d => d.id === "encore" && data.timesSeen === 1 ? { ...d, name: "First visit" } : d);
@@ -90,6 +91,17 @@ function loadMark() {
     img.src = MARK_SRC;
   });
   return markImage;
+}
+
+let ticketImage: Promise<HTMLImageElement | null> | null = null;
+function loadTicket() {
+  ticketImage ??= new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = "/brand/stubbed-share-ticket.svg";
+  });
+  return ticketImage;
 }
 
 let outlineMarkImage: Promise<HTMLImageElement | null> | null = null;
@@ -187,7 +199,8 @@ export async function renderCard(
 ) {
   const design = CARD_DESIGNS.find(d => d.id === designId);
   if (!design || !availableEntryDesigns(data, photo != null).some(d => d.id === designId)) throw new Error("This card needs a photo or rating");
-  const outlineMark = designId === "overlay" ? await loadOutlineMark() : null;
+  const outlineMark = (designId === "overlay" || designId === "ticket") ? await loadOutlineMark() : null;
+  const ticket = designId === "ticket" ? await loadTicket() : null;
   return renderSquare((ctx, mark) => {
     const color = design.photo ? "#FFFFFF" : shareForeground(background, ink);
     const metrics = entryMetrics(data);
@@ -213,7 +226,10 @@ export async function renderCard(
       }
     } else {
       drawShareSurface(ctx, background);
-      if (designId === "overlay") {
+      if (designId === "ticket") {
+        drawTicketOverlay(ctx, data, color, ticket, outlineMark);
+        return;
+      } else if (designId === "overlay") {
         drawShowOverlay(ctx, data, color, outlineMark);
         return;
       } else if (designId === "data") {
@@ -271,6 +287,10 @@ function drawShowOverlay(ctx: Ctx, data: CardData, color: string, mark: HTMLImag
   setFont(ctx, 500, 17, TEXT, 0);
   ctx.fillText(new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" }).format(today), 270, 406);
 
+  drawOutlineLogo(ctx, color, mark);
+}
+
+function drawOutlineLogo(ctx: Ctx, color: string, mark: HTMLImageElement | null) {
   // Tint the existing outline asset; source-in keeps its interior transparent.
   if (mark) {
     const tint = document.createElement("canvas");
@@ -291,6 +311,50 @@ function drawShowOverlay(ctx: Ctx, data: CardData, color: string, mark: HTMLImag
   ctx.lineWidth = 0.9;
   ctx.lineJoin = "round";
   ctx.strokeText("stubbed", 227, 482);
+}
+
+function drawTicketOverlay(ctx: Ctx, data: CardData, color: string, ticket: HTMLImageElement | null, mark: HTMLImageElement | null) {
+  ctx.save();
+  ctx.translate(270, 270);
+  ctx.rotate(-7 * Math.PI / 180); // The front ticket's angle in the Stubbed logo.
+  ctx.translate(-240, -144);
+  if (ticket) {
+    const tint = document.createElement("canvas");
+    tint.width = 1300; tint.height = 778;
+    const t = tint.getContext("2d");
+    if (t) {
+      t.drawImage(ticket, 0, 0, 1300, 778);
+      t.globalCompositeOperation = "source-in";
+      t.fillStyle = color; t.fillRect(0, 0, 1300, 778);
+      ctx.drawImage(tint, 0, 0, 480, 480 * 388 / 648);
+    }
+  }
+  ctx.fillStyle = color; ctx.textAlign = "left"; ctx.textBaseline = "top";
+  setFont(ctx, 600, 14, TEXT, 0); ctx.fillText("Show", 44, 34);
+  let lines: string[] = [];
+  for (let size = 30; size >= 22; size -= 2) {
+    setFont(ctx, 700, size, DISPLAY, -0.4);
+    lines = wrap(ctx, data.title, 276);
+    if (lines.length <= 2) break;
+  }
+  if (lines.length > 2) lines = [lines[0], lines.slice(1).join(" ")];
+  lines.forEach((line, i) => ctx.fillText(fit(ctx, line, 276), 44, 60 + i * 35));
+  const today = new Date();
+  setFont(ctx, 500, 14, TEXT, 0);
+  ctx.fillText(new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" }).format(today), 44, 176);
+  ctx.save(); ctx.translate(44, 224); ctx.scale(0.65, 0.65); ctx.translate(-171, -462);
+  drawOutlineLogo(ctx, color, mark); ctx.restore();
+  ctx.fillStyle = color; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  setFont(ctx, 600, 14, TEXT, 0); ctx.fillText("Seen", 410, 34);
+  setFont(ctx, 700, 21, DISPLAY, -0.3);
+  ctx.fillText(`${data.timesSeen} ${data.timesSeen === 1 ? "time" : "times"}`, 410, 59, 82);
+  setFont(ctx, 600, 11, TEXT, 0);
+  ctx.fillText(data.year === today.getFullYear() ? "This Year" : String(data.year), 410, 176);
+  ctx.fillText("So Far", 410, 191);
+  setFont(ctx, 700, 28, DISPLAY, -0.3);
+  ctx.fillText(ordinal(data.showOfYear), 410, 211, 82);
+  setFont(ctx, 500, 12, TEXT, 0); ctx.fillText("show", 410, 246);
+  ctx.restore();
 }
 
 // --- helpers ---------------------------------------------------------------

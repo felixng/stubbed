@@ -129,6 +129,14 @@ def mark_outline(line="url(#sweep)"):
     return svg(bounds(STROKE / 2 + 8), defs, body)
 
 
+def share_ticket():
+    """Single front-ticket geometry for transparent sharing overlays."""
+    body = (f'<path d="{T}" fill="none" stroke="#fff" stroke-width="3.5"/>'
+            '<line x1="170" y1="-145" x2="170" y2="145" stroke="#fff" '
+            'stroke-width="4" stroke-linecap="round" stroke-dasharray="0 14"/>')
+    return svg("-324 -194 648 388", "", body)
+
+
 if __name__ == "__main__":
     out = os.path.join(os.path.dirname(os.path.abspath(__file__)), "svg")
     os.makedirs(out, exist_ok=True)
@@ -136,6 +144,7 @@ if __name__ == "__main__":
         "stubbed-icon.svg": icon("url(#sweep)", "#fff"),
         "stubbed-mark.svg": mark(),
         "stubbed-mark-outline.svg": mark_outline(),
+        "stubbed-share-ticket.svg": share_ticket(),
         "favicon.svg": favicon(),
         # iOS 18+ appearances: dark keeps the gradient lines on black; tinted is
         # white on black, which iOS recolours with the person's tint.

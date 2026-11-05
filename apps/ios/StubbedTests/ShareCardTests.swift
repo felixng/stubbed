@@ -22,10 +22,13 @@ struct ShareCardTests {
         #expect(!card.isTransparent(appearance))
       }
     }
-    let overlay = try #require(cards.first { $0.id == "overlay" })
-    #expect(alpha(overlay.asset(for: .init(background: .transparent)).image) == 0)
-    #expect(overlay.asset(for: .init(background: .transparent, ink: .dark)).file
-      != overlay.asset(for: .init(background: .transparent)).file)
+    for id in ["overlay", "ticket"] {
+      let overlay = try #require(cards.first { $0.id == id })
+      let clear = overlay.asset(for: .init(background: .transparent))
+      #expect(alpha(clear.image) == 0)
+      #expect(alpha(clear.image, at: bodyPoint(clear.image)) == 0)
+      #expect(overlay.asset(for: .init(background: .transparent, ink: .dark)).file != clear.file)
+    }
     let background = try #require(cards.first { $0.id == "data" })
     let clear = background.asset(for: .init(background: .transparent))
     #expect(clear.image.cgImage?.width == 1080)
@@ -56,8 +59,8 @@ struct ShareCardTests {
     #expect(!EntryCardDesign.available(photo: true, rating: nil, timesSeen: 1).contains(.name))
     #expect(EntryCardDesign.available(photo: true, rating: 0.5, timesSeen: 1).contains(.name))
     #expect(EntryCardDesign.available(photo: true, rating: 5, timesSeen: 1).contains(.encore))
-    #expect(EntryCardDesign.available(photo: false, rating: nil, timesSeen: 2) == [.data, .encore, .number, .overlay])
-    #expect(EntryCardDesign.available(photo: true, rating: 1, timesSeen: 5) == [.stats, .name, .data, .encore, .number, .overlay])
+    #expect(EntryCardDesign.available(photo: false, rating: nil, timesSeen: 2) == [.data, .encore, .number, .overlay, .ticket])
+    #expect(EntryCardDesign.available(photo: true, rating: 1, timesSeen: 5) == [.stats, .name, .data, .encore, .number, .overlay, .ticket])
   }
 
   @Test @MainActor func repeatedRendersCannotOverwriteAnEarlierExport() throws {

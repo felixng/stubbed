@@ -93,9 +93,9 @@ struct ShareCarousel: View {
   @State private var baseAppearance = ShareAppearance.standard
   @State private var overlayAppearance = ShareAppearance(background: .transparent)
   private var appearance: ShareAppearance {
-    get { selectedID == "overlay" ? overlayAppearance : baseAppearance }
+    get { (selectedID == "overlay" || selectedID == "ticket") ? overlayAppearance : baseAppearance }
     nonmutating set {
-      if selectedID == "overlay" { overlayAppearance = newValue } else { baseAppearance = newValue }
+      if (selectedID == "overlay" || selectedID == "ticket") { overlayAppearance = newValue } else { baseAppearance = newValue }
     }
   }
   @State private var pickingBackground = false
