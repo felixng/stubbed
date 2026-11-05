@@ -130,7 +130,15 @@ export const copyDefinitions = {
       "value": "A diary to return to. A story to share.",
       "multiline": false
     },
-    "cardDescription": { "title": "Card placeholder description", "value": "Share card preview", "multiline": false }
+    "demoCaption": {"title": "demoCaption", "value": "Demo diary: @sillyelphaba. Images and figures are illustrative.", "multiline": true},
+    "cardPhotoDataAlt": {"title": "cardPhotoDataAlt", "value": "Demo card for @sillyelphaba: Wicked with a green theatre curtain photo, 57th show of 2026, 9th visit to Emerald Theatre and 7 times seen.", "multiline": true},
+    "cardPhotoRatingAlt": {"title": "cardPhotoRatingAlt", "value": "Demo card for @sillyelphaba: Wicked with a green theatre curtain photo and four and a half out of five stars.", "multiline": true},
+    "cardDataAlt": {"title": "cardDataAlt", "value": "Demo data card for @sillyelphaba: Wicked, 57th show of 2026, 9th visit to Emerald Theatre and 7 times seen.", "multiline": true},
+    "cardEncoreAlt": {"title": "cardEncoreAlt", "value": "Demo Encore card for @sillyelphaba: 7th time seeing Wicked, with a gold 7x badge.", "multiline": true},
+    "cardNumberAlt": {"title": "cardNumberAlt", "value": "Demo show-number card for @sillyelphaba: Wicked is the 57th show visit of 2026.", "multiline": true},
+    "cardStreakAlt": {"title": "cardStreakAlt", "value": "Demo weekly-streak card for @sillyelphaba: a show every week for 8 weeks.", "multiline": true},
+    "cardYearAlt": {"title": "cardYearAlt", "value": "Demo 2026 Year in theatre card for @sillyelphaba: 57 visits to 34 unique shows, with a monthly bar chart through early November.", "multiline": true},
+    "cardMixAlt": {"title": "cardMixAlt", "value": "Demo show-mix card for @sillyelphaba: 57 visits, comprising 44 musicals, 8 plays, 3 comedy and 2 stand-up visits.", "multiline": true}
   }
 },
   "hero": {

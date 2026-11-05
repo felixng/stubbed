@@ -969,3 +969,7 @@ Owner feedback: Look back (02) and See your year (03) merge into one grey band. 
 ## 2026-11-05 — Correct Instagram source of truth
 
 The owner confirmed the app Instagram handle is @getstubbed.app. Corrected the landing footer URL and PRODUCT.md, which still said @stubbedapp, and updated the Google Drive project brief. The older October decision is marked superseded; the share-card code already used the correct handle. Creator Instagram remains @hellofelix__, a separate account. Reserved profile handles and historical migrations retain stubbedapp intentionally.
+
+## 2026-11-05 — Section 01 demo card assets
+
+Owner approved synthetic @sillyelphaba cards targeting a frequent musical-theatre fan: 57 visits by early November (~67/year pace), 44 musicals, 8 plays, 3 comedy and 2 stand-up, 34 unique shows. Eight 1080px cards use the existing production Canvas renderers with one consistent dataset and an AI-generated fictional theatre photo. No app renderer changes or database writes. Static WebP exports replace only section 01 placeholders, served through Next Image. Each has CMS-backed descriptive alt text and the gallery explicitly identifies demo content. Reproduction/provenance is recorded with the assets; other image slots and outstanding findings remain open. PR stays unmerged.
