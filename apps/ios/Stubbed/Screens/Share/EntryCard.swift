@@ -182,11 +182,11 @@ private struct TicketOverlayCard: View {
           Text(data.title).font(.system(size: 30, weight: .bold)).tracking(-0.4)
             .lineLimit(2).minimumScaleFactor(0.73)
             .fixedSize(horizontal: false, vertical: true)
-        }.frame(width: 268, alignment: .leading).offset(x: 56, y: 40)
+        }.frame(width: 292, alignment: .leading).offset(x: 56, y: 40)
         stat("Seen", value: "\(data.timesSeen) \(data.timesSeen == 1 ? "time" : "times")", width: 124)
           .offset(x: 56, y: 194)
         stat(data.year == Calendar.current.component(.year, from: today) ? "This year" : String(data.year),
-          value: "\(ordinal(data.showOfYear)) show", width: 112).offset(x: 214, y: 194)
+          value: "\(ordinal(data.showOfYear)) show", width: 136).offset(x: 214, y: 194)
         VStack(spacing: 10) {
           Text("Date").font(.system(size: 14, weight: .semibold)).padding(.bottom, 4)
           Text(today, format: .dateTime.weekday(.abbreviated)).font(.system(size: 16, weight: .medium))

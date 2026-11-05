@@ -131,9 +131,7 @@ def mark_outline(line="url(#sweep)"):
 
 def share_ticket():
     """Single front-ticket geometry for transparent sharing overlays."""
-    body = (f'<path d="{T}" fill="none" stroke="#fff" stroke-width="3.5"/>'
-            '<line x1="170" y1="-145" x2="170" y2="145" stroke="#fff" '
-            'stroke-width="4" stroke-linecap="round" stroke-dasharray="0 14"/>')
+    body = f'<path d="{T}" fill="none" stroke="#fff" stroke-width="3.5"/>'
     return svg("-324 -194 648 388", "", body)
 
 

@@ -287,10 +287,11 @@ function shareDate(date: Date) {
 }
 
 function drawTicketBrand(ctx: Ctx, mark: HTMLImageElement | null) {
-  if (mark) ctx.drawImage(mark, 171, 464, 48, 48 * 673 / 816);
   setFont(ctx, 800, 30, DISPLAY, -1.35);
+  const left = (540 - 48 - 8 - ctx.measureText("stubbed").width) / 2;
+  if (mark) ctx.drawImage(mark, left, 464, 48, 48 * 673 / 816);
   ctx.textAlign = "left"; ctx.textBaseline = "middle";
-  ctx.fillStyle = CORAL; ctx.fillText("stubbed", 227, 484);
+  ctx.fillStyle = CORAL; ctx.fillText("stubbed", left + 56, 484);
 }
 
 function drawTicketOverlay(ctx: Ctx, data: CardData, color: string, ticket: HTMLImageElement | null, mark: HTMLImageElement | null) {
@@ -314,18 +315,18 @@ function drawTicketOverlay(ctx: Ctx, data: CardData, color: string, ticket: HTML
   let lines: string[] = [];
   for (let size = 30; size >= 22; size -= 2) {
     setFont(ctx, 700, size, DISPLAY, -0.4);
-    lines = wrap(ctx, data.title, 268);
+    lines = wrap(ctx, data.title, 292);
     if (lines.length <= 2) break;
   }
   if (lines.length > 2) lines = [lines[0], lines.slice(1).join(" ")];
-  lines.forEach((line, i) => ctx.fillText(fit(ctx, line, 268), 56, 66 + i * 35));
+  lines.forEach((line, i) => ctx.fillText(fit(ctx, line, 292), 56, 66 + i * 35));
   const today = new Date();
   setFont(ctx, 600, 14, TEXT, 0);
   ctx.fillText("Seen", 56, 194);
   ctx.fillText(data.year === today.getFullYear() ? "This year" : String(data.year), 214, 194);
   setFont(ctx, 700, 24, DISPLAY, -0.3);
   ctx.fillText(`${data.timesSeen} ${data.timesSeen === 1 ? "time" : "times"}`, 56, 220, 124);
-  ctx.fillText(`${ordinal(data.showOfYear)} show`, 214, 220, 112);
+  ctx.fillText(`${ordinal(data.showOfYear)} show`, 214, 220, 136);
   ctx.textAlign = "center";
   setFont(ctx, 600, 14, TEXT, 0); ctx.fillText("Date", 410, 46);
   setFont(ctx, 500, 16, TEXT, 0);
