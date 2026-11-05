@@ -1,6 +1,158 @@
 // Repository defaults and the explicit allowlist of CMS-editable copy.
 // Asset paths, layouts and application behaviour stay in code.
 export const copyDefinitions = {
+  "sharingLanding": {
+  "document": "landingPage",
+  "title": "Card-led landing design",
+  "fields": {
+    "eyebrow": {
+      "title": "eyebrow",
+      "value": "Your theatre diary. Built for sharing.",
+      "multiline": false
+    },
+    "headline": {
+      "title": "headline",
+      "value": "Good shows deserve an encore.",
+      "multiline": false
+    },
+    "intro": {
+      "title": "intro",
+      "value": "Keep the nights you loved. Share the cards. See your theatre life take shape.",
+      "multiline": false
+    },
+    "signup": {
+      "title": "signup",
+      "value": "Sign up free",
+      "multiline": false
+    },
+    "sampleLink": {
+      "title": "sampleLink",
+      "value": "Explore the diary",
+      "multiline": false
+    },
+    "placeholder": {
+      "title": "placeholder",
+      "value": "Screenshot placeholder",
+      "multiline": false
+    },
+    "heroAsset": {
+      "title": "heroAsset",
+      "value": "Theatre photo and stats sharing cards",
+      "multiline": false
+    },
+    "shareEyebrow": {
+      "title": "shareEyebrow",
+      "value": "01 / Share",
+      "multiline": false
+    },
+    "shareHeading": {
+      "title": "shareHeading",
+      "value": "A night out. A card worth keeping.",
+      "multiline": false
+    },
+    "shareBody": {
+      "title": "shareBody",
+      "value": "Start with a photo and a show. Pick a card that tells your story, then share it wherever your friends are.",
+      "multiline": false
+    },
+    "galleryLabel": {
+      "title": "galleryLabel",
+      "value": "Share card designs",
+      "multiline": false
+    },
+    "galleryHelp": {
+      "title": "galleryHelp",
+      "value": "Scroll to explore the cards.",
+      "multiline": false
+    },
+    "cardCta": {
+      "title": "cardCta",
+      "value": "Make your first card",
+      "multiline": false
+    },
+    "diaryEyebrow": {
+      "title": "diaryEyebrow",
+      "value": "02 / Look back",
+      "multiline": false
+    },
+    "diaryHeading": {
+      "title": "diaryHeading",
+      "value": "Keep more than the ticket.",
+      "multiline": false
+    },
+    "diaryBody": {
+      "title": "diaryBody",
+      "value": "Your photos, ratings and notes, together in your diary. Gather shows into trips and revisit the nights you still talk about.",
+      "multiline": false
+    },
+    "diaryAsset": {
+      "title": "diaryAsset",
+      "value": "Your diary and trips",
+      "multiline": false
+    },
+    "diaryCaption": {
+      "title": "diaryCaption",
+      "value": "A home for the shows you have seen.",
+      "multiline": false
+    },
+    "yearEyebrow": {
+      "title": "yearEyebrow",
+      "value": "03 / See your year",
+      "multiline": false
+    },
+    "yearHeading": {
+      "title": "yearHeading",
+      "value": "Your theatre life, in the round.",
+      "multiline": false
+    },
+    "yearBody": {
+      "title": "yearBody",
+      "value": "See your visits, streaks and show mix. Look back through the years, then share your Year in theatre.",
+      "multiline": false
+    },
+    "yearAsset": {
+      "title": "yearAsset",
+      "value": "Your theatre stats",
+      "multiline": false
+    },
+    "yearCard": {
+      "title": "yearCard",
+      "value": "Year in theatre card",
+      "multiline": false
+    },
+    "closingHeading": {
+      "title": "closingHeading",
+      "value": "Your next show is the start.",
+      "multiline": false
+    },
+    "closingBody": {
+      "title": "closingBody",
+      "value": "A diary to return to. A story to share.",
+      "multiline": false
+    },
+    "demoCaption": {"title": "demoCaption", "value": "Demo diary: @sillyelphaba. Images and figures are illustrative.", "multiline": true},
+    "cardPhotoDataAlt": {"title": "cardPhotoDataAlt", "value": "Demo card for @sillyelphaba: Operation Mincemeat with a curtain-call photo, 57th show of 2026, 9th visit to Fortune Theatre and 7 times seen.", "multiline": true},
+    "cardPhotoRatingAlt": {"title": "cardPhotoRatingAlt", "value": "Demo card for @sillyelphaba: Operation Mincemeat with a programme photo and four and a half out of five stars.", "multiline": true},
+    "cardDataAlt": {"title": "cardDataAlt", "value": "Demo data card for @sillyelphaba: Operation Mincemeat, 57th show of 2026, 9th visit to Fortune Theatre and 7 times seen.", "multiline": true},
+    "cardEncoreAlt": {"title": "cardEncoreAlt", "value": "Demo Encore card for @sillyelphaba: 7th time seeing Operation Mincemeat, with a gold 7x badge.", "multiline": true},
+    "cardNumberAlt": {"title": "cardNumberAlt", "value": "Demo show-number card for @sillyelphaba: Operation Mincemeat is the 57th show visit of 2026.", "multiline": true},
+    "cardStreakAlt": {"title": "cardStreakAlt", "value": "Demo weekly-streak card for @sillyelphaba: a show every week for 8 weeks.", "multiline": true},
+    "cardYearAlt": {"title": "cardYearAlt", "value": "Demo 2026 Year in theatre card for @sillyelphaba: 57 visits to 34 unique shows, with a monthly bar chart through early November.", "multiline": true},
+    "cardLostBoysDataAlt": {"title":"Lost Boys data photo alt", "value":"Demo card for @sillyelphaba: The Lost Boys programme photo, 56th show of 2026, 3rd Palace Theatre visit and 2 times seen.","multiline":true},
+    "cardLostBoysRatingAlt": {"title":"Lost Boys rating photo alt", "value":"Demo card for @sillyelphaba: The Lost Boys stage photo with four and a half out of five stars.","multiline":true},
+    "tripImageAlt": {"title": "tripImageAlt", "value": "Demo trip summary for @sillyelphaba: An encore getaway, 2\u20134 November 2026, with photos from The Lost Boys at Palace Theatre and Operation Mincemeat at Fortune Theatre.", "multiline": true},
+    "statsImageAlt": {"title": "statsImageAlt", "value": "Native Insights demo showing 57 visits to 34 unique shows in 2026, 66 shows in 2025, a daily activity grid and monthly attendance chart.", "multiline": true},
+    "screenshotDemoCaption": {"title": "screenshotDemoCaption", "value": "Demo diary: @sillyelphaba.", "multiline": true},
+    "cardActivityAlt": {"title": "cardActivityAlt", "value": "Demo theatre calendar for @sillyelphaba: 57 visits in 2026, shown in a daily activity grid and monthly bar chart.", "multiline": true},
+    "cardRepeatsAlt": {"title": "cardRepeatsAlt", "value": "Demo most-seen shows for @sillyelphaba: Operation Mincemeat 7 visits, Hadestown 5, Cabaret 4, Wicked 3 and The Lost Boys 2.", "multiline": true},
+    "cardTravelsAlt": {"title": "cardTravelsAlt", "value": "Demo theatre travels for @sillyelphaba: 49 visits in the United Kingdom and 8 in the United States, highlighted on a world map.", "multiline": true},
+    "cardHistoryAlt": {"title": "cardHistoryAlt", "value": "Demo theatre years for @sillyelphaba: 61 visits in 2024, 66 in 2025 and 57 so far in 2026.", "multiline": true},
+    "cardDailyAlt": {"title": "cardDailyAlt", "value": "Demo current daily streak for @sillyelphaba: 1 day.", "multiline": true},
+    "cardBestWeeklyAlt": {"title": "cardBestWeeklyAlt", "value": "Demo best weekly streak for @sillyelphaba: 12 weeks in 2026.", "multiline": true},
+    "cardBestDailyAlt": {"title": "cardBestDailyAlt", "value": "Demo best daily streak for @sillyelphaba: 3 consecutive days in 2026.", "multiline": true},
+    "cardMixAlt": {"title": "cardMixAlt", "value": "Demo show-mix card for @sillyelphaba: 57 visits, comprising 44 musicals, 8 plays, 3 comedy and 2 stand-up visits.", "multiline": true}
+  }
+},
   "hero": {
     "document": "landingPage",
     "title": "Hero",
@@ -57,6 +209,11 @@ export const copyDefinitions = {
     "document": "siteSettings",
     "title": "Navigation and footer",
     "fields": {
+      "makerLocation": { "title": "Maker location", "value": "Made in London", "multiline": false },
+      "makerBy": { "title": "Maker prefix", "value": "by a", "multiline": false },
+      "makerLinkLabel": { "title": "Maker link", "value": "theatre nerd", "multiline": false },
+      "makerFor": { "title": "Maker suffix", "value": "for the theatre nerds", "multiline": false },
+      "instagramLabel": { "title": "Instagram accessible label", "value": "Stubbed on Instagram", "multiline": false },
       "builtByATheatreRegularFor": {
         "title": "Built by a theatre regular, for the theatre regulars.",
         "value": "Built by a theatre regular, for the theatre regulars.",

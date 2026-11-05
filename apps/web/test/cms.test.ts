@@ -60,7 +60,7 @@ test("CMS contact links reject executable schemes, credentials and malformed ema
   for (const value of ["javascript:alert(1)", "data:text/html,test", "//example.com", "http://example.com", "https://user:password@example.com", "not a url"]) {
     assert.equal(safeWebUrl(value, fallback), fallback);
   }
-  assert.equal(safeWebUrl("https://www.instagram.com/stubbedapp/", fallback), "https://www.instagram.com/stubbedapp/");
+  assert.equal(safeWebUrl("https://www.instagram.com/getstubbed.app/", fallback), "https://www.instagram.com/getstubbed.app/");
   for (const value of ["invalid", "a@example.com?subject=injection", "a@example.com\nBcc:x@example.com"]) {
     assert.equal(safeEmail(value, "support@getstubbed.app"), "support@getstubbed.app");
   }

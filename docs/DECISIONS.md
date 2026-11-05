@@ -131,7 +131,7 @@ Owner's call: sharing should feel like Hevy. Saving a new entry now opens a shar
 ### 2026-10-13: Landing page SEO basics
 The landing page gets a canonical URL, full Open Graph/X tags with a generated 1200×630 preview image (`opengraph-image.tsx`), `WebSite` structured data, a sitemap, and a `Sitemap:` line in `robots.txt`. The public origin comes from `NEXT_PUBLIC_SITE_URL`, falling back to Vercel's production domain. `/login` is no longer disallowed in `robots.txt`: it's linked from the landing menu, and crawlers must fetch it to see its `noindex`. The preview image uses the regular-weight Geist that ships with `next/og`; a heavy font file would match the wordmark better.
 
-### 2026-10-13: Stubbed's Instagram account is @stubbedapp
+### 2026-10-13: Stubbed's Instagram account (superseded: use @getstubbed.app)
 Owner's info. The share screen's caption reads "Share your show · Tag @stubbedapp" (like Hevy's "Tag @hevyapp"), and the copied/shared text ends "Logged on Stubbed @stubbedapp". The handle is not drawn on the cards themselves; they carry the `stubbed` wordmark and the user's handle.
 
 ### 2026-10-13: Public profile at /@handle
@@ -320,7 +320,7 @@ Owner's call. GA4 is added to the public pages next to Vercel Web Analytics, whi
 Owner's call. The Collage card (`trip-collage`) shows the trip's shows, venues and nights as large accent-coloured numbers on the right of its header, with the label under each, matching the stat tiles on the trip page; the subtitle drops its "· N shows". The header keeps its height. `TripCardData` gains `nights`, the trip's length from its dates (end minus start, so 9–17 Oct is 8; hidden for a one-day trip), not the days with a logged show. The trip page's Nights tile, the public trip page and its link preview use the same number ("N shows in D nights"; a one-day trip drops the nights). The 7- and 8-show layouts are now two brick rows of 144×192 polaroids (were 110×146), overlapping sideways so four fit across. Other trip designs and iOS are unchanged.
 
 ### 2026-10-18: Domain under the wordmark on share cards
-Owner's call. Every share card (entry and trip, web and iOS) shows `@getstubbed.app` in small type under the `stubbed` wordmark, in the card's secondary colour, so a shared image leads back to the site. The handle stays on the right, level with the wordmark. The wordmark moves up a little and the domain uses some of the bottom padding, so the content area of each card is unchanged. The string lives in `CARD_DOMAIN` (`lib/share-card.ts`) and `cardDomain` (`EntryCard.swift`). The 2026-10 social-handle note above still holds: `@stubbedapp` is in the caption and shared text, not on the card.
+Owner's call. Every share card (entry and trip, web and iOS) shows `@getstubbed.app` in small type under the `stubbed` wordmark, in the card's secondary colour, so a shared image leads back to the site. The handle stays on the right, level with the wordmark. The wordmark moves up a little and the domain uses some of the bottom padding, so the content area of each card is unchanged. The string lives in `CARD_DOMAIN` (`lib/share-card.ts`) and `cardDomain` (`EntryCard.swift`). The social-handle note above was later superseded: use `@getstubbed.app` in captions, shared text and Instagram links.
 
 ### 2026-10-20: iOS screens follow the native guide; feed post cards stay custom
 Reviewed the iOS app against `docs/IOS_NATIVE_GUIDE.md`. List-like screens are now `List(.insetGrouped)` with system chevrons, swipe actions and context menus: Profile (bulk select is the system edit mode with Add to trip and Delete in the bottom bar, as Photos does), followers and following, Find people, public profile, public entry (comments are rows; swipe to delete) and public trip. First loads show grey placeholder rows (`PlaceholderRows`, `.redacted`) instead of a spinner. Custom button styles are replaced by `.borderedProminent` / `.bordered`; the log form's chips are a `Picker`, buttons and rows; rows that open a sheet have no chevron; stars scale with Dynamic Type; the card press uses the default animation.
@@ -938,3 +938,66 @@ Built #366 after the owner chose to pick it up on 4 November, though an earlier 
 
 ## 2026-11-04: Crawl titles reach show review only after a person marks them right
 `admin_send_findings_to_review(run)` takes findings the reviewer marked right (#359), of kind `show` (talks, concerts and other are left out), and creates `show_candidates` with `source = 'crawler'`, the source page and the first theatre it was seen at (`show_candidates.venue_id`). A title that already reads as a show is skipped: its normalised title or a nickname is an existing one, or `similar_shows` says it is the same. Repeat sightings raise `seen_count` on one row (the key is the normalised title), also across runs and across theatres; a title that is already a Wikidata candidate raises that candidate's count instead of making a second. A decision on a candidate is never undone by a new sighting (a rejected name stays rejected, but is counted). `crawl_findings.sent_to_review_at` marks what was sent, so sending a run twice counts nothing twice. Crawler candidates have no Wikidata id and their type is `other` (a finding carries no type, only a kind); "Add" creates the show with that type and the admin corrects it afterwards in the show editor. Bulk add stays Wikidata-only, so crawler names are added one at a time. `admin_list_candidates` was dropped and recreated to return the source and theatre (result columns can't change with create or replace); the already-deployed page keeps working with the extra columns.
+
+## 2026-11-05 — Card-led landing design, before asset production (#384)
+
+The first design pass follows the owner's latest issue comments: hero → Share → Look back → See your year → closing action. The old phone gallery and halo are removed. Neutral, explicitly labelled placeholders reserve square card, diary and stats image slots; actual app captures and the landing link-preview image remain asset work for #386. No generated images or sample attendance data are introduced.
+
+New copy uses the `sharingLanding` Sanity section, avoiding stale published hero/feature text overriding a different layout. Existing sections remain available for rollback. The headline is a provisional design line, editable in Studio; final wording is still the owner's decision. The hero links to the on-page diary preview until the hosted sample diary has public entries. No sign-up or public-page behavior changes.
+
+The eight-card gallery uses scroll snap, visible neighbours and labelled tabs with Left/Right/Home/End navigation. Selection persists on return because it is a browsing preference. All panels remain exposed as a gallery; selection controls focus and scroll, rather than hiding neighbouring cards.
+
+The maker note links to felix.ng and includes “Built in London”, the specific footer exception authorized in the issue comments. This does not change the general rule against launch-region copy. Marketing display sizes: 40–72px hero and 32–48px section headings, using the existing system display font and semantic colours.
+
+This PR is a design pass for review, not completion of the epic: real assets, public sample content, Instagram in-app-browser auth verification and closure of superseded work remain separate.
+
+Validation: typecheck, ESLint and all 105 existing tests pass. The running page was reviewed at 390, 1440 and 2000px with no document horizontal overflow; desktop hero card and text are vertically centred. Mobile tabs show the next card, and End selects/scrolls to Show mix. The mobile header fits on one row. Preview uses dummy public Supabase configuration: no real account, database content, Instagram embedded browser or OAuth flow was tested.
+
+## 2026-11-05 — Owner review follow-up to #384 / PR #396
+
+Pulled the latest header CTA change before editing. Applied only the owner's two decisions in issue comment 6656624819 plus the requested footer/copy tweaks: a provisional three-card placeholder fan replaces the framed hero; the eight-card gallery is a labelled, keyboard-focusable native horizontal scroll region, without tabs, tab roles, layout names or selection state. Placeholder accessibility descriptions remain honest; real per-image alt text must arrive with #386 assets. Scrolling has no forced snapping so native keyboard arrows can move freely.
+
+Removed the hero Instagram handle and both sign-up-method lines. The shared footer now combines the maker/location note with the theatre-nerd sentence, links its first “theatre nerd” to the existing safe CMS creator Instagram URL, and has a separate labelled 44px Stubbed Instagram icon. A decorative purple heart is the owner's explicit exception to the no-emoji voice rule. New footer wording remains Sanity-backed. No live CMS documents were published.
+
+The specific fan cards and final phone composition, diary/stats visual treatment, on-page diary-link arrow and other unselected review findings remain open. No issues are closed and PR #396 must remain unmerged.
+
+## 2026-11-05 — Separate the numbered landing sections
+
+Owner feedback: Look back (02) and See your year (03) merge into one grey band. Keep the numbered eyebrows; give 03 its own white surface, separator edges and full vertical padding, so Share → Look back → See your year alternates white → grey → white. The closing CTA returns to grey to preserve the next section boundary. Footer decoration now follows the requested order: UK flag, Made in London, separator, linked maker sentence, purple heart. Wording stays CMS-backed; emoji are decorative markup.
+
+
+## 2026-11-05 — Correct Instagram source of truth
+
+The owner confirmed the app Instagram handle is @getstubbed.app. Corrected the landing footer URL and PRODUCT.md, which still said @stubbedapp, and updated the Google Drive project brief. The older October decision is marked superseded; the share-card code already used the correct handle. Creator Instagram remains @hellofelix__, a separate account. Reserved profile handles and historical migrations retain stubbedapp intentionally.
+
+## 2026-11-05 — Section 01 demo card assets
+
+Owner approved synthetic @sillyelphaba cards targeting a frequent musical-theatre fan: 57 visits by early November (~67/year pace), 44 musicals, 8 plays, 3 comedy and 2 stand-up, 34 unique shows. Eight 1080px cards use the existing production Canvas renderers with one consistent dataset and an AI-generated fictional theatre photo. No app renderer changes or database writes. Static WebP exports replace only section 01 placeholders, served through Next Image. Each has CMS-backed descriptive alt text and the gallery explicitly identifies demo content. Reproduction/provenance is recorded with the assets; other image slots and outstanding findings remain open. PR stays unmerged.
+
+## 2026-11-05 — Owner photos replace generated gallery photo
+
+All four owner-supplied photos now appear as variants of the two photo layouts (ten gallery images across eight designs). Re-encoded, orientation-corrected WebP sources strip metadata. The generated curtain source is removed. Repeat-visit/data/badge cards now use Operation Mincemeat at Fortune Theatre, per the owner's West End correction. The Golden Theatre programme is restricted to the rating layout without printed venue counts; the Fortune curtain call supports the repeat-visit data card. Lost Boys photo variants use Palace Theatre and a separate demo entry. Figures remain synthetic; no database changes and PR remains unmerged.
+
+## 2026-11-05 — Animated hero and missing stats cards
+
+Owner requested less overlap and a Personal Best-style entrance. Hero now uses Mincemeat, Lost Boys and activity-grid exports instead of placeholders; sides expose roughly half their width and animate outward once over 750ms, staggered by 200ms. Transform-only CSS preserves layout and has no looping/floating effect. Reduced-motion disables animation while retaining the final spread. Global prefixed classes are used because the project's wildcard CSS Turbopack loader does not preserve CSS module exports. No animation dependency or client hydration is required.
+
+The web renderer offered only three stats cards, while iOS also offers calendar activity, most-seen shows, theatre travels, year-by-year history and three additional streak layouts. Added seven static exports from the native SwiftUI views using a local macOS ImageRenderer harness and the same synthetic @sillyelphaba totals. Production app renderers/data behavior remain unchanged. CMS alt descriptions cover all new images; provenance and regeneration instructions live beside assets. Hero checked at 390/1440/2000px without document overflow. PR stays unmerged; other pending review work remains open.
+
+## 2026-11-05 — Larger, borderless hero cards
+
+Owner requested 30–40% larger cards and removal of the white front-card border. Rebalanced the desktop hero columns to give the fan more room: cards measure 350px rather than 265px at 1440 (32% larger). Phone cards measure 222px rather than 165px (35% larger); rear cards rise above the centre with a narrower horizontal spread to keep the fan within 390px. Removed card borders and replaced the old shadow with a soft cool shadow, an explicit owner-directed exception to the border-with-shadow convention. Updated responsive image sizes. Entrance timing and reduced-motion behavior are retained. Verified final desktop and mobile states without document horizontal overflow; lint/typecheck pass. PR remains unmerged.
+
+## 2026-11-05 — One static hero card on phones
+
+Owner selected a single static Mincemeat card on mobile rather than a fan or auto-changing carousel; section 01 supplies browsing variety. Below 1024px the rear cards are display:none and the centre fills the visual column up to 400px; desktop retains the enlarged animated fan. Only the centre image is explicitly preloaded. Verified at 390px: card width 358px, both rear cards hidden, no document horizontal overflow. Lint/typecheck pass. PR remains unmerged.
+
+## 2026-11-05 — Fill Look back and See your year image slots
+
+Owner selected a trip summary and one Insights screenshot. Section 02 now shows the production photo-led trip recap for “An encore getaway”, two shows on 2–4 November, using the supplied Lost Boys and Mincemeat photos. Section 03 replaces the two placeholders with one uncropped portrait simulator screenshot of an offline native preview selecting the production overview/activity components. It shows the same 57 visits, 34 unique shows and previous-year 66, plus the actual activity grid and monthly chart. This is a demo preview, not a signed-in account capture; other Insights sections/navigation/network tasks are omitted from the preview, and production app code/data are unchanged.
+
+Both WebP images have CMS-backed alt text/demo captions and responsive Next Image sizing. Provenance is in `public/landing/SCREENSHOTS.md`; the trip dataset is retained with the other marketing fixtures. Reviewed desktop and mobile: both images loaded, 358px trip/314px portrait at 390px viewport, no document horizontal overflow. Lint/typecheck/build pass. PR stays unmerged.
+
+## 2026-11-05 — Four-show Broadway recap and compact stats crop
+
+Owner supplied four new photos and the exact title “Long weekend trip to Broadway”. Re-rendered the existing photo-grid trip layout with four demo visits; attachment order is preserved, sources are orientation-corrected/metadata-stripped, and the old two-show asset is removed. Dates are illustrative (30 Oct–2 Nov 2026); unconfirmed individual show names are not printed or inferred. Stats keeps the native screenshot source but displays it wider and shorter (480px maximum, 1:1.35 viewport), translated down to emphasise the 57-show total and grid, with a bottom gradient trimming the chart into the white background. No change to app/data behavior; PR remains unmerged.

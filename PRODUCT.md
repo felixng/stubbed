@@ -49,7 +49,7 @@ A purpose-built home for a behaviour theatregoers already have, with structure I
 
 ## Brand Commitments
 
-- Name: **Stubbed** in running text; wordmark **stubbed**, always lowercase. Instagram @stubbedapp; support support@getstubbed.app.
+- Name: **Stubbed** in running text; wordmark **stubbed**, always lowercase. Instagram @getstubbed.app; support support@getstubbed.app.
 - Voice: terse and confident, sentence case, no emoji, no exclamation marks. Button labels are verbs. Numbers are digits.
 - Ratings always appear as five stars, never a bare number.
 - Sample handle: `@sillyelphaba`; never a real person's name.
