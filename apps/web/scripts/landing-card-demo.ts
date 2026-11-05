@@ -38,12 +38,15 @@ export async function renderLandingDemoCards(photos: HTMLImageElement[]) {
   return cards;
 }
 
-// Photo-led trip recap used by section 02; uses owner photos 4 and 2.
+// Photo-led trip recap for section 02, using the owner's four attachments.
+// Titles/venues aren't printed by the photo layout; dates are demo values.
 export const demoTrip = {
-  name: "An encore getaway", dates: "2–4 Nov 2026", place: null,
-  cities: 0, handle: "sillyelphaba", venues: 2, nights: 2, average: 4.5,
+  name: "Long weekend trip to Broadway", dates: "30 Oct – 2 Nov 2026", place: null,
+  cities: 0, handle: "sillyelphaba", venues: 0, nights: 3, average: null,
   shows: [
-    { title: "The Lost Boys", venue: "Palace Theatre", day: "Mon 2 Nov", rating: 4.5 },
-    { title: "Operation Mincemeat", venue: "Fortune Theatre", day: "Wed 4 Nov", rating: 4.5 },
+    { title: "Show 1", venue: null, day: "Fri 30 Oct", rating: null },
+    { title: "The Lost Boys", venue: null, day: "Sat 31 Oct", rating: null },
+    { title: "Show 3", venue: null, day: "Sun 1 Nov", rating: null },
+    { title: "The 25th Annual Putnam County Spelling Bee", venue: null, day: "Mon 2 Nov", rating: null },
   ],
 };

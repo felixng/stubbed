@@ -7,7 +7,7 @@ export function DiaryAndStats({ copy }: { copy: Copy<"sharingLanding"> }) {
     <section id="diary" aria-labelledby="diary-heading" className="scroll-mt-8 py-16 sm:py-24">
       <Container className="grid items-center gap-8 lg:grid-cols-2 lg:gap-20">
         <div className="order-2 lg:order-1">
-          <Image src="/landing/trip-summary.webp" alt={copy.tripImageAlt} width={1080} height={1080} sizes="(min-width: 1024px) 560px, 100vw" className="h-auto w-full rounded-lg" />
+          <Image src="/landing/broadway-trip-summary.webp" alt={copy.tripImageAlt} width={1080} height={1080} sizes="(min-width: 1024px) 560px, 100vw" className="h-auto w-full rounded-lg" />
           <p className="mt-3 text-footnote text-label-secondary">{copy.diaryCaption} {copy.screenshotDemoCaption}</p>
         </div>
         <div className="order-1 max-w-md lg:order-2">
@@ -25,7 +25,10 @@ export function DiaryAndStats({ copy }: { copy: Copy<"sharingLanding"> }) {
           <p className="mt-5 text-body leading-7 text-label-secondary">{copy.yearBody}</p>
         </div>
         <figure className="flex flex-col items-center gap-4">
-          <Image src="/landing/insights-screen.webp" alt={copy.statsImageAlt} width={1206} height={2622} sizes="(min-width: 640px) 313px, 80vw" className="h-auto max-h-[680px] w-auto max-w-full rounded-lg border border-separator shadow-sm" />
+          <div className="relative aspect-[1/1.35] w-full max-w-[480px] overflow-hidden rounded-lg">
+            <Image src="/landing/insights-screen.webp" alt={copy.statsImageAlt} width={1206} height={2622} sizes="(min-width: 640px) 480px, 100vw" className="absolute top-0 left-0 h-auto w-full -translate-y-[28%]" />
+            <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[12%] bg-gradient-to-b from-transparent to-surface" />
+          </div>
           <figcaption className="text-center text-footnote text-label-secondary">{copy.screenshotDemoCaption}</figcaption>
         </figure>
       </Container>
