@@ -987,3 +987,7 @@ The web renderer offered only three stats cards, while iOS also offers calendar 
 ## 2026-11-05 — Larger, borderless hero cards
 
 Owner requested 30–40% larger cards and removal of the white front-card border. Rebalanced the desktop hero columns to give the fan more room: cards measure 350px rather than 265px at 1440 (32% larger). Phone cards measure 222px rather than 165px (35% larger); rear cards rise above the centre with a narrower horizontal spread to keep the fan within 390px. Removed card borders and replaced the old shadow with a soft cool shadow, an explicit owner-directed exception to the border-with-shadow convention. Updated responsive image sizes. Entrance timing and reduced-motion behavior are retained. Verified final desktop and mobile states without document horizontal overflow; lint/typecheck pass. PR remains unmerged.
+
+## 2026-11-05 — One static hero card on phones
+
+Owner selected a single static Mincemeat card on mobile rather than a fan or auto-changing carousel; section 01 supplies browsing variety. Below 1024px the rear cards are display:none and the centre fills the visual column up to 400px; desktop retains the enlarged animated fan. Only the centre image is explicitly preloaded. Verified at 390px: card width 358px, both rear cards hidden, no document horizontal overflow. Lint/typecheck pass. PR remains unmerged.

@@ -218,24 +218,26 @@ body {
   position: relative;
   isolation: isolate;
   width: 100%;
-  max-width: 620px;
+  max-width: 400px;
   aspect-ratio: 1;
   margin-inline: auto;
 }
 .landing-fan-card {
   position: absolute;
-  left: 19%;
-  top: 31%;
-  width: 62%;
+  left: 0;
+  top: 0;
+  width: 100%;
   aspect-ratio: 1;
   transform-origin: 50% 85%;
   box-shadow: 0 3px 8px rgb(20 20 30 / 12%), 0 16px 32px -12px rgb(20 20 30 / 28%);
 }
 .landing-fan-left {
+  display: none;
   transform: translate(calc(-1 * var(--fan-x)), var(--fan-y)) rotate(calc(-1 * var(--fan-angle)));
   animation: fan-left 750ms cubic-bezier(.22, .68, .28, 1) 350ms both;
 }
 .landing-fan-right {
+  display: none;
   transform: translate(var(--fan-x), var(--fan-y)) rotate(var(--fan-angle));
   animation: fan-right 750ms cubic-bezier(.22, .68, .28, 1) 550ms both;
 }
@@ -249,6 +251,7 @@ body {
     aspect-ratio: 1.15;
   }
   .landing-fan-card { width: 50%; left: 25%; top: 23%; }
+  .landing-fan-left, .landing-fan-right { display: block; }
 }
 @keyframes fan-left {
   from { transform: translate(0, 5%) rotate(0); }
