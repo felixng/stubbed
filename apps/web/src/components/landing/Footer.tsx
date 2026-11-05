@@ -20,7 +20,7 @@ export async function Footer() {
         <Wordmark size={24} mark />
         <p className="text-center leading-6">
           <span className="block whitespace-nowrap sm:inline"><span aria-hidden="true">🇬🇧</span> {copy.makerLocation}</span> <span aria-hidden="true" className="hidden sm:inline"> · </span><span className="inline-block">{copy.makerBy}{" "}
-          <a href={site.instagramUrl} className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">{copy.makerLinkLabel}</a>, {copy.makerFor} <span aria-hidden="true">💜</span></span>
+          <a href={site.instagramUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">{copy.makerLinkLabel}</a>, {copy.makerFor} <span aria-hidden="true">💜</span></span>
         </p>
         <div className="flex items-center gap-1">
           <nav aria-label="Footer" className="flex items-center">
@@ -34,7 +34,7 @@ export async function Footer() {
               </Link>
             ))}
           </nav>
-          <a href="https://www.instagram.com/getstubbed.app/" aria-label={copy.instagramLabel} className="inline-flex size-11 shrink-0 items-center justify-center rounded-sm hover:text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
+          <a href="https://www.instagram.com/getstubbed.app/" target="_blank" rel="noopener noreferrer" aria-label={copy.instagramLabel} className="inline-flex size-11 shrink-0 items-center justify-center rounded-sm hover:text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
             <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r="0.75" fill="currentColor" stroke="none" /></svg>
           </a>
           <p className="pl-1">&copy; Stubbed</p>
