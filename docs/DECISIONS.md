@@ -1024,3 +1024,5 @@ Owner couldn't edit all of two landing captions (the editor showed only half of 
 - Uses the existing entry-card stats; older entries name their recorded year rather than calling it “This Year”. Exports remain 1080×1080 PNGs, matching the sharing pipeline.
 
 - Added a Ticket stub variant with the same information: show title in the main ticket, counts in the perforated stub, and today’s date and outlined logo in the main ticket’s footer. The outline is generated from the logo’s exact single-ticket geometry and keeps its front ticket’s −7° angle; it shares the transparent overlay appearance options.
+
+- Refined the plain overlay to four equally spaced sections in this order: Show, Date, Seen, This year, with matching type sizes. It uses only the design system’s gradient Outline mark. The ticket layout places show and counts in the main area and date in the stub; branding moves outside below it, with the original Outline mark and a coral wordmark.

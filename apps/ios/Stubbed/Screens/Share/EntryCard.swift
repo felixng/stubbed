@@ -135,7 +135,7 @@ struct EntryCardView: View {
   }
 }
 
-/// A narrow, centred stack with no personal handle or route graphic.
+/// Four equally sized sections, followed by the design system's outline icon.
 private struct ShowOverlayCard: View {
   let data: EntryCardData
   let ink: Color
@@ -143,28 +143,28 @@ private struct ShowOverlayCard: View {
 
   var body: some View {
     ZStack(alignment: .top) {
-      group("Show", value: data.title, top: 60, title: true)
-      group("Seen", value: "\(data.timesSeen) \(data.timesSeen == 1 ? "time" : "times")", top: 192)
-      group(data.year == Calendar.current.component(.year, from: today) ? "This Year So Far" : "\(data.year) So Far",
-        value: "\(ordinal(data.showOfYear)) show", top: 294)
-      Text(today, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated).year())
-        .font(.system(size: 17, weight: .medium)).padding(.top, 406)
-      OutlineCardLogo(ink: ink).padding(.top, 462)
+      VStack(spacing: 16) {
+        section("Show", value: data.title, title: true)
+        section("Date", value: today.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).year().locale(Locale(identifier: "en_GB"))))
+        section("Seen", value: "\(data.timesSeen) \(data.timesSeen == 1 ? "time" : "times")")
+        section(data.year == Calendar.current.component(.year, from: today) ? "This year" : String(data.year),
+          value: "\(ordinal(data.showOfYear)) show")
+      }.padding(.top, 30)
+      Image("BrandMarkOutline").renderingMode(.original).resizable().scaledToFit()
+        .frame(width: 58, height: 58 * 673 / 816).padding(.top, 470)
     }
     .foregroundStyle(ink)
     .frame(width: 540, height: 540, alignment: .top)
-    .environment(\.locale, Locale(identifier: "en_GB"))
   }
 
-  private func group(_ label: String, value: String, top: CGFloat, title: Bool = false) -> some View {
+  private func section(_ label: String, value: String, title: Bool = false) -> some View {
     VStack(spacing: 6) {
       Text(label).font(.system(size: 17, weight: .semibold))
       Text(value).font(.system(size: 36, weight: .bold)).tracking(-0.5)
         .lineLimit(title ? 2 : 1).minimumScaleFactor(0.72)
         .multilineTextAlignment(.center)
-    }.frame(width: 360).padding(.top, top)
+    }.frame(width: 400, height: 96, alignment: .top)
   }
-
 }
 
 private struct TicketOverlayCard: View {
@@ -173,56 +173,49 @@ private struct TicketOverlayCard: View {
   private let today = Date()
 
   var body: some View {
-    ZStack(alignment: .topLeading) {
-      Image("ShareTicketOutline").renderingMode(.template).resizable()
-        .frame(width: 480, height: 480 * 388 / 648)
-      VStack(alignment: .leading, spacing: 6) {
-        Text("Show").font(.system(size: 14, weight: .semibold))
-        Text(data.title).font(.system(size: 30, weight: .bold)).tracking(-0.4)
-          .lineLimit(2).minimumScaleFactor(0.73)
-          .fixedSize(horizontal: false, vertical: true)
-      }.frame(width: 276, alignment: .leading).offset(x: 44, y: 34)
-      Text(today, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated).year())
-        .font(.system(size: 14, weight: .medium)).offset(x: 44, y: 176)
-      OutlineCardLogo(ink: ink).scaleEffect(0.65, anchor: .topLeading).offset(x: 44, y: 224)
-      VStack(spacing: 6) {
-        Text("Seen").font(.system(size: 14, weight: .semibold))
-        Text("\(data.timesSeen) \(data.timesSeen == 1 ? "time" : "times")")
-          .font(.system(size: 21, weight: .bold)).tracking(-0.3)
-          .lineLimit(1).minimumScaleFactor(0.65)
-      }.frame(width: 82).offset(x: 369, y: 34)
-      VStack(spacing: 3) {
-        Text(data.year == Calendar.current.component(.year, from: today) ? "This Year" : String(data.year))
-        Text("So Far")
-        Text(ordinal(data.showOfYear)).font(.system(size: 28, weight: .bold))
-          .tracking(-0.3).lineLimit(1).minimumScaleFactor(0.65).padding(.top, 8)
-        Text("show").font(.system(size: 12, weight: .medium))
-      }.font(.system(size: 11, weight: .semibold)).frame(width: 82).offset(x: 369, y: 176)
+    ZStack(alignment: .top) {
+      ZStack(alignment: .topLeading) {
+        Image("ShareTicketOutline").renderingMode(.template).resizable()
+          .frame(width: 480, height: 480 * 388 / 648)
+        VStack(alignment: .leading, spacing: 6) {
+          Text("Show").font(.system(size: 14, weight: .semibold))
+          Text(data.title).font(.system(size: 30, weight: .bold)).tracking(-0.4)
+            .lineLimit(2).minimumScaleFactor(0.73)
+            .fixedSize(horizontal: false, vertical: true)
+        }.frame(width: 268, alignment: .leading).offset(x: 56, y: 40)
+        stat("Seen", value: "\(data.timesSeen) \(data.timesSeen == 1 ? "time" : "times")", width: 124)
+          .offset(x: 56, y: 194)
+        stat(data.year == Calendar.current.component(.year, from: today) ? "This year" : String(data.year),
+          value: "\(ordinal(data.showOfYear)) show", width: 112).offset(x: 214, y: 194)
+        VStack(spacing: 10) {
+          Text("Date").font(.system(size: 14, weight: .semibold)).padding(.bottom, 4)
+          Text(today, format: .dateTime.weekday(.abbreviated)).font(.system(size: 16, weight: .medium))
+          Text(today, format: .dateTime.day().month(.abbreviated))
+            .font(.system(size: 21, weight: .bold)).tracking(-0.3).lineLimit(1).minimumScaleFactor(0.65)
+          Text(today, format: .dateTime.year()).font(.system(size: 16, weight: .medium))
+        }.frame(width: 82).offset(x: 369, y: 46)
+      }
+      .foregroundStyle(ink)
+      .frame(width: 480, height: 480 * 388 / 648)
+      .rotationEffect(.degrees(-7))
+      .padding(.top, 96)
+      HStack(spacing: 8) {
+        Image("BrandMarkOutline").renderingMode(.original).resizable().scaledToFit()
+          .frame(width: 48, height: 48 * 673 / 816)
+        Text("stubbed").font(.system(size: 30, weight: .heavy)).tracking(-1.35)
+          .foregroundStyle(CardInk.coral)
+      }.padding(.top, 464)
     }
-    .foregroundStyle(ink)
-    .frame(width: 480, height: 480 * 388 / 648)
-    .rotationEffect(.degrees(-7)) // Same angle as the logo's front ticket.
+    .frame(width: 540, height: 540, alignment: .top)
     .environment(\.locale, Locale(identifier: "en_GB"))
   }
-}
 
-private struct OutlineCardLogo: View {
-  let ink: Color
-  var body: some View {
-    HStack(spacing: 8) {
-      Image("BrandMarkOutline").renderingMode(.template).resizable().scaledToFit()
-        .frame(width: 48, height: 40)
-      Image(uiImage: outlineWordmark).resizable().frame(width: 142, height: 40)
-    }.foregroundStyle(ink)
-  }
-
-  private var outlineWordmark: UIImage {
-    UIGraphicsImageRenderer(size: CGSize(width: 142, height: 40)).image { _ in
-      ("stubbed" as NSString).draw(at: CGPoint(x: 1, y: 2), withAttributes: [
-        .font: UIFont.systemFont(ofSize: 30, weight: .heavy), .kern: -1.35,
-        .strokeColor: UIColor(ink), .strokeWidth: 3,
-      ])
-    }
+  private func stat(_ label: String, value: String, width: CGFloat) -> some View {
+    VStack(alignment: .leading, spacing: 6) {
+      Text(label).font(.system(size: 14, weight: .semibold))
+      Text(value).font(.system(size: 24, weight: .bold)).tracking(-0.3)
+        .lineLimit(1).minimumScaleFactor(0.65)
+    }.frame(width: width, alignment: .leading)
   }
 }
 
