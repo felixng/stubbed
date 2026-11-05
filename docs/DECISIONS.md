@@ -960,3 +960,7 @@ Pulled the latest header CTA change before editing. Applied only the owner's two
 Removed the hero Instagram handle and both sign-up-method lines. The shared footer now combines the maker/location note with the theatre-nerd sentence, links its first “theatre nerd” to the existing safe CMS creator Instagram URL, and has a separate labelled 44px Stubbed Instagram icon. A decorative purple heart is the owner's explicit exception to the no-emoji voice rule. New footer wording remains Sanity-backed. No live CMS documents were published.
 
 The specific fan cards and final phone composition, diary/stats visual treatment, on-page diary-link arrow and other unselected review findings remain open. No issues are closed and PR #396 must remain unmerged.
+
+## 2026-11-05 — Separate the numbered landing sections
+
+Owner feedback: Look back (02) and See your year (03) merge into one grey band. Keep the numbered eyebrows; give 03 its own white surface, separator edges and full vertical padding, so Share → Look back → See your year alternates white → grey → white. The closing CTA returns to grey to preserve the next section boundary. Footer decoration now follows the requested order: UK flag, Made in London, separator, linked maker sentence, purple heart. Wording stays CMS-backed; emoji are decorative markup.

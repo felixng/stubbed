@@ -192,7 +192,7 @@ export const copyDefinitions = {
       "makerLocation": { "title": "Maker location", "value": "Made in London", "multiline": false },
       "makerBy": { "title": "Maker prefix", "value": "by a", "multiline": false },
       "makerLinkLabel": { "title": "Maker link", "value": "theatre nerd", "multiline": false },
-      "makerFor": { "title": "Maker suffix", "value": "for the theatre nerds.", "multiline": false },
+      "makerFor": { "title": "Maker suffix", "value": "for the theatre nerds", "multiline": false },
       "instagramLabel": { "title": "Instagram accessible label", "value": "Stubbed on Instagram", "multiline": false },
       "builtByATheatreRegularFor": {
         "title": "Built by a theatre regular, for the theatre regulars.",

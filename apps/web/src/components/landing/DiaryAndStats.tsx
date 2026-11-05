@@ -17,7 +17,7 @@ export function DiaryAndStats({ copy }: { copy: Copy<"sharingLanding"> }) {
         </div>
       </Container>
     </section>
-    <section aria-labelledby="year-heading" className="pb-16 sm:pb-24">
+    <section aria-labelledby="year-heading" className="border-y border-separator bg-surface py-16 sm:py-24">
       <Container className="grid items-center gap-8 lg:grid-cols-2 lg:gap-20">
         <div className="max-w-md">
           <p className="mb-4 text-subheadline font-semibold text-tint-text">{copy.yearEyebrow}</p>

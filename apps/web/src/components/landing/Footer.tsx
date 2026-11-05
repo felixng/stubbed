@@ -19,8 +19,8 @@ export async function Footer() {
       <Container className="flex flex-col items-center justify-between gap-x-6 gap-y-3 py-8 text-footnote text-label-secondary lg:flex-row lg:flex-wrap">
         <Wordmark size={16} />
         <p className="text-center leading-6">
-          <span className="block whitespace-nowrap sm:inline">{copy.makerLocation} <span aria-hidden="true">💜</span></span> <span aria-hidden="true" className="hidden sm:inline"> · </span><span className="inline-block">{copy.makerBy}{" "}
-          <a href={site.instagramUrl} className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">{copy.makerLinkLabel}</a>, {copy.makerFor}</span>
+          <span className="block whitespace-nowrap sm:inline"><span aria-hidden="true">🇬🇧</span> {copy.makerLocation}</span> <span aria-hidden="true" className="hidden sm:inline"> · </span><span className="inline-block">{copy.makerBy}{" "}
+          <a href={site.instagramUrl} className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">{copy.makerLinkLabel}</a>, {copy.makerFor} <span aria-hidden="true">💜</span></span>
         </p>
         <div className="flex items-center gap-1">
           <nav aria-label="Footer" className="flex items-center">
