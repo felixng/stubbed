@@ -25,6 +25,7 @@ final class AppRouter {
     case followRequests
     case notificationSettings
     case editProfile
+    case importHub
     case privacySettings
     case insights
     case insightVisits(Insights.Filter)

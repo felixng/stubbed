@@ -15,7 +15,7 @@ struct ImportCallout: View {
       } icon: {
         Image(systemName: "photo.stack").foregroundStyle(Palette.tint)
       }
-      Text("Pick photos from shows you’ve been to: the curtain, the stage, the Playbill or your ticket. Stubbed sorts them by show and fills in what it can.")
+      Text("Pick photos from your shows. Coming from Mezzanine? Bring your diary over.")
         .font(.subheadline)
         .foregroundStyle(.secondary)
         .fixedSize(horizontal: false, vertical: true)
@@ -28,6 +28,10 @@ struct ImportCallout: View {
         }
         .buttonStyle(.borderedProminent)
         .accessibilityHint("Pick photos from several shows and log each show in turn.")
+        Button { router.open(.importHub) } label: {
+          Text("From Mezzanine").frame(maxWidth: .infinity)
+        }
+        .buttonStyle(.bordered)
         Button { router.startLog() } label: {
           Text("Log a show").frame(maxWidth: .infinity)
         }

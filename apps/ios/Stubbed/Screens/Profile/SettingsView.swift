@@ -1,4 +1,3 @@
-import PhotosUI
 import Supabase
 import SwiftUI
 
@@ -8,7 +7,6 @@ struct SettingsView: View {
   @Environment(AppRouter.self) private var router
   @State private var profile: Loadable<Profile> = .loading
   @State private var deleting = false
-  @State private var importItems: [PhotosPickerItem] = []
 
   var body: some View {
     Form {
@@ -34,11 +32,8 @@ struct SettingsView: View {
         }
       }
       Section("Your diary") {
-        PhotosPicker(
-          selection: $importItems, maxSelectionCount: PhotoImport.maxPhotos,
-          selectionBehavior: .ordered, matching: .images
-        ) {
-          Label("Import from photos", systemImage: "photo.stack")
+        NavigationLink(value: AppRouter.Route.importHub) {
+          Label("Import shows", systemImage: "square.and.arrow.down")
         }
       }
       Section("Help and information") {
@@ -73,11 +68,6 @@ struct SettingsView: View {
     .navigationTitle("Settings")
     .navigationBarTitleDisplayMode(.inline)
     .task(id: router.dataVersion) { await load() }
-    .onChange(of: importItems) { _, picked in
-      guard !picked.isEmpty else { return }
-      importItems = []
-      router.startImport(picked)
-    }
     .sheet(isPresented: $deleting) {
       if let profile = profile.value { DeleteAccountSheet(handle: profile.handle) }
     }

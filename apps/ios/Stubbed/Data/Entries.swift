@@ -101,6 +101,12 @@ enum Entries {
     return tidy ?? title.trimmingCharacters(in: .whitespacesAndNewlines)
   }
 
+  /// Country must be known before comparing exported city aliases with the catalogue.
+  static func canonicalCity(_ city: String, country: String) async throws -> String {
+    let city: String? = try await supabase.rpc("canonical_city", params: ["city": city, "country": country]).execute().value
+    return city ?? ""
+  }
+
   static func searchVenues(_ query: String, near: (lat: Double, lng: Double)? = nil) async throws -> [Venue] {
     struct Params: Encodable {
       let q: String

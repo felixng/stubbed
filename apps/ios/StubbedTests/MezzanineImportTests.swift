@@ -85,3 +85,31 @@ struct MezzanineImportTests {
     #expect(!MezzanineResolver.isDuplicate(show: show, date: "2026-10-02", existing: existing))
   }
 }
+
+@MainActor
+struct MezzanineReviewTests {
+  private func draft(_ city: String, country: String? = nil) -> MezzanineDraft {
+    MezzanineDraft(id: UUID(), source: MezzanineRow(show: "Synthetic Show", venue: "Example Theatre", city: city,
+      date: "2026-10-01", rating: 4.5, review: "Public review", invalidRating: false, planned: false),
+      show: ShowChoice(newTitle: "Synthetic Show"), venue: VenueChoice(name: "Example Theatre", city: city, country: country))
+  }
+  @Test func countriesApplyOncePerNormalisedCityAndSelectOnlyReadyRows() {
+    let model = MezzanineReviewModel()
+    model.rows = [draft("Test City"), draft(" test city "), draft("Another City")]
+    model.rows[1].source.date = nil
+    model.applyCountry("GB", city: "Test City")
+    #expect(model.rows[0].venue.country == "GB" && model.rows[0].selected)
+    #expect(model.rows[1].venue.country == "GB" && !model.rows[1].selected)
+    #expect(model.rows[2].venue.country == nil)
+    #expect(model.selected == 1)
+  }
+  @Test func countryChoiceNeverSelectsDuplicatesOrChangesMatchedVenues() {
+    let model = MezzanineReviewModel()
+    var duplicate = draft("Test City"); duplicate.duplicate = true
+    var matched = draft("Test City", country: "US"); matched.venue.id = UUID()
+    model.rows = [duplicate, matched]
+    model.applyCountry("GB", city: "Test City")
+    #expect(!model.rows[0].selected)
+    #expect(model.rows[1].venue.country == "US")
+  }
+}

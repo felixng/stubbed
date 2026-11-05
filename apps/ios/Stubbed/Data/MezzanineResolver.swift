@@ -51,7 +51,7 @@ enum MezzanineResolver {
       while true {
         let rows: [Existing] = try await supabase.from("entries").select("show_id,date")
           .eq("user_id", value: userId).in("show_id", values: batch)
-          .lte("created_at", value: before.ISO8601Format())
+          .lte("created_at", value: before.ISO8601Format(.init(includingFractionalSeconds: true)))
           .order("id").range(from: offset, to: offset + 499).execute().value
         result.formUnion(rows)
         if rows.count < 500 { break }
