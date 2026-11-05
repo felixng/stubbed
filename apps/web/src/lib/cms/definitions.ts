@@ -37,7 +37,7 @@ export const copyDefinitions = {
     },
     "heroAsset": {
       "title": "heroAsset",
-      "value": "A card from your theatre diary",
+      "value": "Theatre photo and stats sharing cards",
       "multiline": false
     },
     "shareEyebrow": {
@@ -140,6 +140,13 @@ export const copyDefinitions = {
     "cardYearAlt": {"title": "cardYearAlt", "value": "Demo 2026 Year in theatre card for @sillyelphaba: 57 visits to 34 unique shows, with a monthly bar chart through early November.", "multiline": true},
     "cardLostBoysDataAlt": {"title":"Lost Boys data photo alt", "value":"Demo card for @sillyelphaba: The Lost Boys programme photo, 56th show of 2026, 3rd Palace Theatre visit and 2 times seen.","multiline":true},
     "cardLostBoysRatingAlt": {"title":"Lost Boys rating photo alt", "value":"Demo card for @sillyelphaba: The Lost Boys stage photo with four and a half out of five stars.","multiline":true},
+    "cardActivityAlt": {"title": "cardActivityAlt", "value": "Demo theatre calendar for @sillyelphaba: 57 visits in 2026, shown in a daily activity grid and monthly bar chart.", "multiline": true},
+    "cardRepeatsAlt": {"title": "cardRepeatsAlt", "value": "Demo most-seen shows for @sillyelphaba: Operation Mincemeat 7 visits, Hadestown 5, Cabaret 4, Wicked 3 and The Lost Boys 2.", "multiline": true},
+    "cardTravelsAlt": {"title": "cardTravelsAlt", "value": "Demo theatre travels for @sillyelphaba: 49 visits in the United Kingdom and 8 in the United States, highlighted on a world map.", "multiline": true},
+    "cardHistoryAlt": {"title": "cardHistoryAlt", "value": "Demo theatre years for @sillyelphaba: 61 visits in 2024, 66 in 2025 and 57 so far in 2026.", "multiline": true},
+    "cardDailyAlt": {"title": "cardDailyAlt", "value": "Demo current daily streak for @sillyelphaba: 1 day.", "multiline": true},
+    "cardBestWeeklyAlt": {"title": "cardBestWeeklyAlt", "value": "Demo best weekly streak for @sillyelphaba: 12 weeks in 2026.", "multiline": true},
+    "cardBestDailyAlt": {"title": "cardBestDailyAlt", "value": "Demo best daily streak for @sillyelphaba: 3 consecutive days in 2026.", "multiline": true},
     "cardMixAlt": {"title": "cardMixAlt", "value": "Demo show-mix card for @sillyelphaba: 57 visits, comprising 44 musicals, 8 plays, 3 comedy and 2 stand-up visits.", "multiline": true}
   }
 },

@@ -16,6 +16,13 @@ export function Features({ copy }: { copy: Copy<"sharingLanding"> }) {
     { id: "weekly-streak", alt: copy.cardStreakAlt },
     { id: "year-in-theatre", alt: copy.cardYearAlt },
     { id: "show-mix", alt: copy.cardMixAlt },
+    { id: "activity", alt: copy.cardActivityAlt },
+    { id: "most-seen-shows", alt: copy.cardRepeatsAlt },
+    { id: "around-the-world", alt: copy.cardTravelsAlt },
+    { id: "year-by-year", alt: copy.cardHistoryAlt },
+    { id: "daily-streak", alt: copy.cardDailyAlt },
+    { id: "best-weekly-streak", alt: copy.cardBestWeeklyAlt },
+    { id: "best-daily-streak", alt: copy.cardBestDailyAlt },
   ];
   return (
     <section aria-labelledby="sharing-heading" className="border-y border-separator bg-surface py-16 sm:py-20">

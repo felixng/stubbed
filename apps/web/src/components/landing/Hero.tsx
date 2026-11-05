@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getCopy } from "@/lib/cms/content";
 import { Container } from "./Container";
-import { AssetPlaceholder } from "./AssetPlaceholder";
+import Image from "next/image";
 import { LandingAction } from "./LandingAction";
 
 export async function Hero() {
@@ -18,11 +18,14 @@ export async function Hero() {
             <Link href="#diary" className="inline-flex min-h-11 items-center gap-2 text-subheadline font-semibold text-label underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">{copy.sampleLink}<span aria-hidden="true">↗</span></Link>
           </div>
         </div>
-        {/* Placeholder identities and phone treatment remain provisional (#386). */}
-        <div className="relative isolate mx-auto aspect-[6/5] w-full max-w-[560px]" role="group" aria-label={copy.heroAsset}>
-          {[-1, 0, 1].map((position) => (
-            <div key={position} className={`absolute top-[15%] aspect-square w-[62%] rounded-md border border-separator bg-surface p-2 shadow-sm ${position === -1 ? "left-[3%] -rotate-12" : position === 1 ? "right-[3%] rotate-12" : "left-[19%] top-[10%] z-10"}`}>
-              <AssetPlaceholder label={copy.heroAsset} status={copy.placeholder} />
+        <div className="landing-hero-fan" role="group" aria-label={copy.heroAsset}>
+          {[
+            { id: "name-lost-boys", alt: copy.cardLostBoysRatingAlt, position: "landing-fan-left" },
+            { id: "activity", alt: copy.cardActivityAlt, position: "landing-fan-right" },
+            { id: "stats-mincemeat", alt: copy.cardPhotoDataAlt, position: "landing-fan-centre" },
+          ].map(card => (
+            <div key={card.id} className={`landing-fan-card ${card.position} overflow-hidden rounded-md border border-separator bg-surface shadow-sm`}>
+              <Image src={`/landing/cards/${card.id}.webp`} alt={card.alt} width={1080} height={1080} sizes="(min-width: 1024px) 280px, (min-width: 640px) 285px, 46vw" preload className="h-auto w-full" />
             </div>
           ))}
         </div>
