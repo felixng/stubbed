@@ -27,6 +27,11 @@ const PAGES = [
     title: "Crawl runs",
     text: "What the crawler read from theatre websites: check findings, mark them right or wrong, and compare runs.",
   },
+  {
+    href: "/dressingroom",
+    title: "Dressing room",
+    text: "Edit the words on the landing page, FAQ, press kit and other public pages.",
+  },
 ];
 
 // Admin pages (see lib/admin). Nothing in the rest of the app links here, so
@@ -43,8 +48,10 @@ export default function AdminPage() {
           <ul className="overflow-hidden rounded-md border border-separator bg-surface shadow-sm">
             {PAGES.map((p) => (
               <li key={p.href} className="border-b border-separator last:border-b-0">
+                {/* The editor is its own app outside /app, so it needs a full page load. */}
                 <Link
                   href={p.href}
+                  prefetch={p.href.startsWith("/app/")}
                   className="flex flex-col gap-0.5 px-4 py-3 hover:bg-fill focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus"
                 >
                   <span className="text-headline text-label">{p.title}</span>
