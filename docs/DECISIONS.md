@@ -1010,7 +1010,7 @@ Owner found the new landing section blank in the editor (Sanity's `initialValue`
 - **Removed:** the `hero`, `reminder` and `features` sections, unused since the card-led landing page. This supersedes "existing sections remain available for rollback" above; rolling back now means restoring the code. Values already saved under those names stay in the dataset and show as unknown fields in the editor, which offers to remove them.
 - **Renamed:** the Sanity editor is at `/dressingroom` (was `/studio`) and admin pages are under `/app/backstage` (was `/app/admin`). No redirects: the old admin URL stays a 404, and bookmarks to `/studio` need updating. Admin page labels read "Backstage". Code names (`lib/admin*`, `components/app/admin`, `isAdmin`) are unchanged. Older entries in this log keep the paths as they were written, apart from the admin ones above, which were updated in place.
 
-### 2026-11-05: Whole captions in the editor, alt text in code
+## 2026-11-05 — Whole captions in the editor, alt text in code
 
 Owner couldn't edit all of two landing captions (the editor showed only half of "Scroll to explore the cards. Demo diary: ... Images and figures are illustrative.") and said image descriptions weren't worth editing.
 
