@@ -37,3 +37,13 @@ export async function renderLandingDemoCards(photos: HTMLImageElement[]) {
   }
   return cards;
 }
+
+// Photo-led trip recap used by section 02; uses owner photos 4 and 2.
+export const demoTrip = {
+  name: "An encore getaway", dates: "2–4 Nov 2026", place: null,
+  cities: 0, handle: "sillyelphaba", venues: 2, nights: 2, average: 4.5,
+  shows: [
+    { title: "The Lost Boys", venue: "Palace Theatre", day: "Mon 2 Nov", rating: 4.5 },
+    { title: "Operation Mincemeat", venue: "Fortune Theatre", day: "Wed 4 Nov", rating: 4.5 },
+  ],
+};

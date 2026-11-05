@@ -991,3 +991,9 @@ Owner requested 30–40% larger cards and removal of the white front-card border
 ## 2026-11-05 — One static hero card on phones
 
 Owner selected a single static Mincemeat card on mobile rather than a fan or auto-changing carousel; section 01 supplies browsing variety. Below 1024px the rear cards are display:none and the centre fills the visual column up to 400px; desktop retains the enlarged animated fan. Only the centre image is explicitly preloaded. Verified at 390px: card width 358px, both rear cards hidden, no document horizontal overflow. Lint/typecheck pass. PR remains unmerged.
+
+## 2026-11-05 — Fill Look back and See your year image slots
+
+Owner selected a trip summary and one Insights screenshot. Section 02 now shows the production photo-led trip recap for “An encore getaway”, two shows on 2–4 November, using the supplied Lost Boys and Mincemeat photos. Section 03 replaces the two placeholders with one uncropped portrait simulator screenshot of an offline native preview selecting the production overview/activity components. It shows the same 57 visits, 34 unique shows and previous-year 66, plus the actual activity grid and monthly chart. This is a demo preview, not a signed-in account capture; other Insights sections/navigation/network tasks are omitted from the preview, and production app code/data are unchanged.
+
+Both WebP images have CMS-backed alt text/demo captions and responsive Next Image sizing. Provenance is in `public/landing/SCREENSHOTS.md`; the trip dataset is retained with the other marketing fixtures. Reviewed desktop and mobile: both images loaded, 358px trip/314px portrait at 390px viewport, no document horizontal overflow. Lint/typecheck/build pass. PR stays unmerged.
