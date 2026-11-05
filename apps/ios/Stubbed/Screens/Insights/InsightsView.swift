@@ -88,7 +88,12 @@ struct InsightsView: View {
           Spacer()
           shareButton(.overview, title: "overview", stats: stats)
         }
-        Text(verbatim: year.map { "Shows in \(String($0))" } ?? "Shows, all time").font(.headline)
+        HStack(spacing: Space.xs) {
+          Text(verbatim: year.map { "Shows in \(String($0))" } ?? "Shows, all time").font(.headline)
+          InsightInfoButton(
+            title: "Overview",
+            message: "Your logged shows, including private entries. Planned shows aren’t counted.")
+        }
         Text("\(stats.unique_shows) unique shows · repeat visits included")
           .font(.footnote).foregroundStyle(.secondary)
       }
@@ -96,8 +101,6 @@ struct InsightsView: View {
       if let year, let previous = stats.years.first(where: { $0.year == year - 1 }) {
         LabeledContent("Previous full year (\(String(year - 1)))", value: "\(previous.count) shows")
       }
-    } footer: {
-      Text("Your logged shows, including private entries. Planned shows aren’t counted.")
     }
   }
 
@@ -129,11 +132,9 @@ struct InsightsView: View {
         }
       }
     } header: {
-      sectionHeading("Most-seen shows", section: .repeats, stats: stats)
-    } footer: {
-      if !stats.repeated_shows.isEmpty {
-        Text("Ranked by visits in the selected period. Equal counts share a rank. Tap a show to see your visits.")
-      }
+      sectionHeading(
+        "Most-seen shows", section: .repeats, stats: stats,
+        info: "Ranked by visits in the selected period. Equal counts share a rank. Tap a show to see your visits.")
     }
   }
 
@@ -192,11 +193,9 @@ struct InsightsView: View {
       }
       .padding(.vertical, Space.s)
     } header: {
-      sectionHeading("Streaks", section: .streaks, stats: stats)
-    } footer: {
-      Text(
-        "A show each day or each Monday–Sunday week. An unfinished day or week doesn’t break your current streak. Best streaks are for the selected period."
-      )
+      sectionHeading(
+        "Streaks", section: .streaks, stats: stats,
+        info: "A show each day or each Monday–Sunday week. An unfinished day or week doesn’t break your current streak. Best streaks are for the selected period.")
     }
   }
 
@@ -232,11 +231,9 @@ struct InsightsView: View {
         }
       }
     } header: {
-      sectionHeading("Around the world", section: .countries, stats: stats)
-    } footer: {
-      Text(
-        "Darker countries mean more visits. \(stats.unlocated) shows have no country. Some small countries appear in the list only."
-      )
+      sectionHeading(
+        "Around the world", section: .countries, stats: stats,
+        info: "Darker countries mean more visits. \(stats.unlocated) shows have no country. Some small countries appear in the list only.")
     }
   }
 
@@ -264,11 +261,9 @@ struct InsightsView: View {
         }
       }
     } header: {
-      sectionHeading("Your show mix", section: .mix, stats: stats)
-    } footer: {
-      Text(
-        "Each visit counts once in its show’s category. The outer ring represents your most-seen type; percentages are listed above."
-      )
+      sectionHeading(
+        "Your show mix", section: .mix, stats: stats,
+        info: "Each visit counts once in its show’s category. The outer ring represents your most-seen type; percentages are listed in the tile.")
     }
   }
 
@@ -290,9 +285,12 @@ struct InsightsView: View {
     }
   }
 
-  private func sectionHeading(_ title: String, section: InsightShareSection, stats: InsightStats) -> some View {
-    HStack {
+  private func sectionHeading(
+    _ title: String, section: InsightShareSection, stats: InsightStats, info: String? = nil
+  ) -> some View {
+    HStack(spacing: Space.xs) {
       Text(title).fixedSize(horizontal: false, vertical: true)
+      if let info { InsightInfoButton(title: title, message: info) }
       Spacer(minLength: Space.s)
       shareButton(section, title: title, stats: stats)
     }
@@ -341,6 +339,36 @@ struct InsightsView: View {
       stats = result
     } catch is CancellationError {} catch {
       if !Task.isCancelled { self.error = "Check your connection and try again." }
+    }
+  }
+}
+
+private struct InsightInfoButton: View {
+  let title: String
+  let message: String
+  @State private var isPresented = false
+
+  var body: some View {
+    Button {
+      isPresented = true
+    } label: {
+      Image(systemName: "info.circle")
+        .font(.body)
+        .frame(minWidth: Space.touch, minHeight: Space.touch)
+        .contentShape(.rect)
+    }
+    .buttonStyle(.borderless)
+    .foregroundStyle(.secondary)
+    .textCase(nil)
+    .accessibilityLabel("About \(title)")
+    .popover(isPresented: $isPresented) {
+      ScrollView {
+        Text(message)
+          .font(.body)
+          .padding(Space.l)
+      }
+      .frame(idealWidth: 320, idealHeight: 200)
+      .presentationCompactAdaptation(.popover)
     }
   }
 }
