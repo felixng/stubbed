@@ -62,7 +62,7 @@ export const copyDefinitions = {
     },
     "galleryHelp": {
       "title": "galleryHelp",
-      "value": "Scroll to explore the cards.",
+      "value": "Scroll to explore the cards. Demo diary: @sillyelphaba. Images and figures are illustrative.",
       "multiline": false
     },
     "cardCta": {
@@ -92,7 +92,7 @@ export const copyDefinitions = {
     },
     "diaryCaption": {
       "title": "diaryCaption",
-      "value": "A home for the shows you have seen.",
+      "value": "A home for the shows you have seen. Demo diary: @sillyelphaba.",
       "multiline": false
     },
     "yearEyebrow": {
@@ -130,27 +130,7 @@ export const copyDefinitions = {
       "value": "A diary to return to. A story to share.",
       "multiline": false
     },
-    "demoCaption": {"title": "demoCaption", "value": "Demo diary: @sillyelphaba. Images and figures are illustrative.", "multiline": true},
-    "cardPhotoDataAlt": {"title": "cardPhotoDataAlt", "value": "Demo card for @sillyelphaba: Operation Mincemeat with a curtain-call photo, 57th show of 2026, 9th visit to Fortune Theatre and 7 times seen.", "multiline": true},
-    "cardPhotoRatingAlt": {"title": "cardPhotoRatingAlt", "value": "Demo card for @sillyelphaba: Operation Mincemeat with a programme photo and four and a half out of five stars.", "multiline": true},
-    "cardDataAlt": {"title": "cardDataAlt", "value": "Demo data card for @sillyelphaba: Operation Mincemeat, 57th show of 2026, 9th visit to Fortune Theatre and 7 times seen.", "multiline": true},
-    "cardEncoreAlt": {"title": "cardEncoreAlt", "value": "Demo Encore card for @sillyelphaba: 7th time seeing Operation Mincemeat, with a gold 7x badge.", "multiline": true},
-    "cardNumberAlt": {"title": "cardNumberAlt", "value": "Demo show-number card for @sillyelphaba: Operation Mincemeat is the 57th show visit of 2026.", "multiline": true},
-    "cardStreakAlt": {"title": "cardStreakAlt", "value": "Demo weekly-streak card for @sillyelphaba: a show every week for 8 weeks.", "multiline": true},
-    "cardYearAlt": {"title": "cardYearAlt", "value": "Demo 2026 Year in theatre card for @sillyelphaba: 57 visits to 34 unique shows, with a monthly bar chart through early November.", "multiline": true},
-    "cardLostBoysDataAlt": {"title":"Lost Boys data photo alt", "value":"Demo card for @sillyelphaba: The Lost Boys programme photo, 56th show of 2026, 3rd Palace Theatre visit and 2 times seen.","multiline":true},
-    "cardLostBoysRatingAlt": {"title":"Lost Boys rating photo alt", "value":"Demo card for @sillyelphaba: The Lost Boys stage photo with four and a half out of five stars.","multiline":true},
-    "tripImageAlt": {"title": "tripImageAlt", "value": "Demo trip summary for @sillyelphaba: An encore getaway, 2\u20134 November 2026, with photos from The Lost Boys at Palace Theatre and Operation Mincemeat at Fortune Theatre.", "multiline": true},
-    "statsImageAlt": {"title": "statsImageAlt", "value": "Native Insights demo showing 57 visits to 34 unique shows in 2026, 66 shows in 2025, a daily activity grid and monthly attendance chart.", "multiline": true},
-    "screenshotDemoCaption": {"title": "screenshotDemoCaption", "value": "Demo diary: @sillyelphaba.", "multiline": true},
-    "cardActivityAlt": {"title": "cardActivityAlt", "value": "Demo theatre calendar for @sillyelphaba: 57 visits in 2026, shown in a daily activity grid and monthly bar chart.", "multiline": true},
-    "cardRepeatsAlt": {"title": "cardRepeatsAlt", "value": "Demo most-seen shows for @sillyelphaba: Operation Mincemeat 7 visits, Hadestown 5, Cabaret 4, Wicked 3 and The Lost Boys 2.", "multiline": true},
-    "cardTravelsAlt": {"title": "cardTravelsAlt", "value": "Demo theatre travels for @sillyelphaba: 49 visits in the United Kingdom and 8 in the United States, highlighted on a world map.", "multiline": true},
-    "cardHistoryAlt": {"title": "cardHistoryAlt", "value": "Demo theatre years for @sillyelphaba: 61 visits in 2024, 66 in 2025 and 57 so far in 2026.", "multiline": true},
-    "cardDailyAlt": {"title": "cardDailyAlt", "value": "Demo current daily streak for @sillyelphaba: 1 day.", "multiline": true},
-    "cardBestWeeklyAlt": {"title": "cardBestWeeklyAlt", "value": "Demo best weekly streak for @sillyelphaba: 12 weeks in 2026.", "multiline": true},
-    "cardBestDailyAlt": {"title": "cardBestDailyAlt", "value": "Demo best daily streak for @sillyelphaba: 3 consecutive days in 2026.", "multiline": true},
-    "cardMixAlt": {"title": "cardMixAlt", "value": "Demo show-mix card for @sillyelphaba: 57 visits, comprising 44 musicals, 8 plays, 3 comedy and 2 stand-up visits.", "multiline": true}
+    "screenshotDemoCaption": {"title": "screenshotDemoCaption", "value": "Demo diary: @sillyelphaba.", "multiline": true}
   }
 },
   "footer": {
@@ -282,13 +262,6 @@ export const copyDefinitions = {
       "skipToContent": {
         "title": "Skip to content",
         "value": "Skip to content",
-        "multiline": false,
-        "fieldset": "introduction",
-        "fieldsetTitle": "Introduction"
-      },
-      "theStubbedAppIcon": {
-        "title": "Image description: The Stubbed app icon",
-        "value": "The Stubbed app icon",
         "multiline": false,
         "fieldset": "introduction",
         "fieldsetTitle": "Introduction"
@@ -574,19 +547,9 @@ export const copyDefinitions = {
         "value": "The mark and the wordmark, for headers and articles. Transparent PNG; use the white version on dark backgrounds.",
         "multiline": true
       },
-      "theStubbedLogoTheTicketMark": {
-        "title": "Image description: The Stubbed logo: the ticket mark and the stubbed wordm",
-        "value": "The Stubbed logo: the ticket mark and the stubbed wordmark",
-        "multiline": false
-      },
       "pngForLightBackgrounds": {
         "title": "PNG, for light backgrounds",
         "value": "PNG, for light backgrounds",
-        "multiline": false
-      },
-      "theStubbedLogoWithAWhite": {
-        "title": "Image description: The Stubbed logo with a white wordmark, on a dark backg",
-        "value": "The Stubbed logo with a white wordmark, on a dark background",
         "multiline": false
       },
       "pngForDarkBackgrounds": {
@@ -642,11 +605,6 @@ export const copyDefinitions = {
       "whatPeoplePostASquareCard": {
         "title": "What people post: a square card for each show, drawn by the app.",
         "value": "What people post: a square card for each show, drawn by the app.",
-        "multiline": false
-      },
-      "aStubbedShareCardForThe": {
-        "title": "Image description: A Stubbed share card for The Lost Boys at the Palace Th",
-        "value": "A Stubbed share card for The Lost Boys at the Palace Theatre",
         "multiline": false
       },
       "jpg2": {
