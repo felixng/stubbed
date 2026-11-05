@@ -115,8 +115,9 @@ export async function signPhotos(supabase: SupabaseClient, paths: (string | null
 export type SimilarShow = Show & { same: boolean };
 export type SimilarVenue = Venue & { distance_km: number | null; same: boolean };
 
-export async function similarShows(supabase: SupabaseClient, title: string): Promise<SimilarShow[]> {
-  const { data } = await supabase.rpc("similar_shows", { q: title });
+export async function similarShows(supabase: SupabaseClient, title: string, strict = false): Promise<SimilarShow[]> {
+  const { data, error } = await supabase.rpc("similar_shows", { q: title });
+  if (strict && error) throw error;
   return (data as SimilarShow[] | null) ?? [];
 }
 
@@ -125,13 +126,15 @@ export async function similarVenues(
   name: string,
   near: { lat: number; lng: number } | null,
   city: string | null | undefined,
+  strict = false,
 ): Promise<SimilarVenue[]> {
-  const { data } = await supabase.rpc("similar_venues", {
+  const { data, error } = await supabase.rpc("similar_venues", {
     q: name,
     near_lat: near?.lat ?? null,
     near_lng: near?.lng ?? null,
     in_city: city?.trim() || null,
   });
+  if (strict && error) throw error;
   return (data as SimilarVenue[] | null) ?? [];
 }
 
@@ -147,8 +150,9 @@ export const asVenue = ({ id, name, city, country, lat, lng, osm_id }: SimilarVe
 
 // "HAMILTON - Premium Orchestra" → "Hamilton". New shows are also tidied on
 // insert, so this is for showing the title before saving.
-export async function tidyShowTitle(supabase: SupabaseClient, title: string): Promise<string> {
-  const { data } = await supabase.rpc("tidy_show_title", { title });
+export async function tidyShowTitle(supabase: SupabaseClient, title: string, strict = false): Promise<string> {
+  const { data, error } = await supabase.rpc("tidy_show_title", { title });
+  if (strict && error) throw error;
   return (data as string | null) ?? title.trim();
 }
 
