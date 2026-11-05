@@ -973,3 +973,7 @@ The owner confirmed the app Instagram handle is @getstubbed.app. Corrected the l
 ## 2026-11-05 — Section 01 demo card assets
 
 Owner approved synthetic @sillyelphaba cards targeting a frequent musical-theatre fan: 57 visits by early November (~67/year pace), 44 musicals, 8 plays, 3 comedy and 2 stand-up, 34 unique shows. Eight 1080px cards use the existing production Canvas renderers with one consistent dataset and an AI-generated fictional theatre photo. No app renderer changes or database writes. Static WebP exports replace only section 01 placeholders, served through Next Image. Each has CMS-backed descriptive alt text and the gallery explicitly identifies demo content. Reproduction/provenance is recorded with the assets; other image slots and outstanding findings remain open. PR stays unmerged.
+
+## 2026-11-05 — Owner photos replace generated gallery photo
+
+All four owner-supplied photos now appear as variants of the two photo layouts (ten gallery images across eight designs). Re-encoded, orientation-corrected WebP sources strip metadata. The generated curtain source is removed. Repeat-visit/data/badge cards now use Operation Mincemeat at Fortune Theatre, per the owner's West End correction. The Golden Theatre programme is restricted to the rating layout without printed venue counts; the Fortune curtain call supports the repeat-visit data card. Lost Boys photo variants use Palace Theatre and a separate demo entry. Figures remain synthetic; no database changes and PR remains unmerged.

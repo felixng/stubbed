@@ -6,11 +6,13 @@ import { LandingAction } from "./LandingAction";
 
 export function Features({ copy }: { copy: Copy<"sharingLanding"> }) {
   const cards = [
-    { id: "stats", alt: copy.cardPhotoDataAlt },
-    { id: "name", alt: copy.cardPhotoRatingAlt },
-    { id: "data", alt: copy.cardDataAlt },
-    { id: "encore", alt: copy.cardEncoreAlt },
-    { id: "show-number", alt: copy.cardNumberAlt },
+    { id: "stats-mincemeat", alt: copy.cardPhotoDataAlt },
+    { id: "name-mincemeat", alt: copy.cardPhotoRatingAlt },
+    { id: "stats-lost-boys", alt: copy.cardLostBoysDataAlt },
+    { id: "name-lost-boys", alt: copy.cardLostBoysRatingAlt },
+    { id: "data-mincemeat", alt: copy.cardDataAlt },
+    { id: "encore-mincemeat", alt: copy.cardEncoreAlt },
+    { id: "show-number-mincemeat", alt: copy.cardNumberAlt },
     { id: "weekly-streak", alt: copy.cardStreakAlt },
     { id: "year-in-theatre", alt: copy.cardYearAlt },
     { id: "show-mix", alt: copy.cardMixAlt },
