@@ -8,9 +8,9 @@ test("parseCandidateFilters: defaults to pending, ignores junk", () => {
   assert.deepEqual(parseCandidateFilters({ type: "ballet", status: "x", sample: "nope", page: "0" }), { q: "", type: "", status: "pending", sample: "", page: 1 });
   const f = parseCandidateFilters({ q: " six ", type: "musical", status: "all", sample: "c0000000-0000-0000-0000-00000000000a", page: "3" });
   assert.deepEqual(f, { q: "six", type: "musical", status: "all", sample: "c0000000-0000-0000-0000-00000000000a", page: 3 });
-  assert.equal(candidateHref(f), "/app/admin/shows/candidates?q=six&type=musical&status=all&sample=c0000000-0000-0000-0000-00000000000a&page=3");
+  assert.equal(candidateHref(f), "/app/backstage/shows/candidates?q=six&type=musical&status=all&sample=c0000000-0000-0000-0000-00000000000a&page=3");
   assert.equal(candidateHref(f, 1).includes("page="), false);
-  assert.equal(candidateHref(parseCandidateFilters({})), "/app/admin/shows/candidates");
+  assert.equal(candidateHref(parseCandidateFilters({})), "/app/backstage/shows/candidates");
 });
 
 test("bulkStatus: needs 20 reviewed and 95% right", () => {

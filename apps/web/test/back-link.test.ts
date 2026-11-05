@@ -8,7 +8,7 @@ const trip = { id: "c0000000-0000-0000-0000-0000000000a1", name: "Summer in Lond
 test("entryBack: known sources", () => {
   assert.deepEqual(entryBack("home"), { href: "/app", label: "Home" });
   assert.deepEqual(entryBack("import"), { href: "/app/import", label: "Import" });
-  assert.deepEqual(entryBack("admin-import"), { href: "/app/admin/import", label: "Import" });
+  assert.deepEqual(entryBack("admin-import"), { href: "/app/backstage/import", label: "Import" });
   assert.deepEqual(entryBack(`trip-${trip.id}`, [trip]), { href: `/app/trips/${trip.id}`, label: trip.name });
 });
 

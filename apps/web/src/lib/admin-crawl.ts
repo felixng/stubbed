@@ -1,4 +1,4 @@
-// Helpers for the crawl pages under /app/admin/crawl.
+// Helpers for the crawl pages under /app/backstage/crawl.
 
 export type Score = { right: number; wrong: number; unsure: number; unreviewed: number; findings: number; missed: number };
 

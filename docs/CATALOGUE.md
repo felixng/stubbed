@@ -46,20 +46,20 @@ Launch is Journey 2: the user types the show (#353). Journey 1 pre-fills the sho
 - **#354 check.** Every log and import case on both apps, with no runs in the database.
 
 ### #363 Admin: see and fix our shows
-- **#364 list and name check.** Admin-only read function, page at `/app/admin/shows`. Pasting a list of titles runs each through `search_shows`, showing what a user would see.
+- **#364 list and name check.** Admin-only read function, page at `/app/backstage/shows`. Pasting a list of titles runs each through `search_shows`, showing what a user would see.
 - **#365 fix.** `admin_update_show`, `admin_merge_shows` (security definer, checks `public.is_admin()`). A corrected title must survive `sync-wikidata.mjs`.
 - **#366 pull and review.** `show_candidates` (admin only), filled by `sync-wikidata.mjs --candidates` using the wider query on branch `claude/wider-wikidata-catalogue`. Add, Same as, Not a show; review a sample, then bulk add. Nothing appears in show search until added.
 
 ### #355 Admin: see and fix our theatres
-- **#356 list.** Admin-only SQL read function: venues with entry counts (never who), paged and filterable by search, circuit, country and missing links, plus totals. Page at `/app/admin/theatres`.
+- **#356 list.** Admin-only SQL read function: venues with entry counts (never who), paged and filterable by search, circuit, country and missing links, plus totals. Page at `/app/backstage/theatres`.
 - **#357 edit.** `venues.whats_on_url`; `admin_update_venue(...)` (security definer, checks `public.is_admin()`). Venues sharing a site share a URL: the crawl fetches it once and matches stages to those venues. No crawl-target table.
 
 ### #289 Journey 1, step 1: crawl pilot and review tool
 Nothing here reaches users. Results stay in admin-only tables until a person publishes them.
 - **#277 core.** `crawl_runs` and `crawl_findings` (admin read, service-role write). `supabase/scripts/crawl/` with `index.mjs`, `fetch.mjs` (robots.txt, per-host rate limit, User-Agent, conditional requests), `load.mjs` (one transaction per theatre), `report.mjs`. Facts and short evidence only, never copies of pages. Parsers are pure functions tested with `node --test` on saved fixtures.
 - **#291 theatre sites.** Structured data (schema.org `Event`) by code first, then a model when the run allows it, with model and prompt taken from the `crawl_runs` row. Findings keep the raw title; no show matching here.
-- **#358 start from admin.** `/app/admin/crawl` creates a `crawl_runs` row and dispatches `.github/workflows/catalogue-crawl.yml` with a run id and branch. The crawl runs on GitHub Actions, so the model key stays out of Vercel and the app. The owner adds `SUPABASE_DB_URL` and `ANTHROPIC_API_KEY` as Actions secrets and a repository-scoped Actions token in Vercel.
-- **#359 review.** `/app/admin/crawl/[id]`: mark findings right or wrong, add missed titles, score per run and theatre, compare two runs and their settings.
+- **#358 start from admin.** `/app/backstage/crawl` creates a `crawl_runs` row and dispatches `.github/workflows/catalogue-crawl.yml` with a run id and branch. The crawl runs on GitHub Actions, so the model key stays out of Vercel and the app. The owner adds `SUPABASE_DB_URL` and `ANTHROPIC_API_KEY` as Actions secrets and a repository-scoped Actions token in Vercel.
+- **#359 review.** `/app/backstage/crawl/[id]`: mark findings right or wrong, add missed titles, score per run and theatre, compare two runs and their settings.
 - **#367 titles to show review.** Findings marked right with no `similar_shows` same-match become `show_candidates` (#366). Adds a show-name pull as a job on the crawl form.
 
 ### #272 Journey 1, step 2: runs and show suggestions

@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/client";
 
 type Result = { considered: number; already_shows: number; new_candidates: number; seen_again: number };
 
-// On /app/admin/crawl/[id]: send the findings marked right to show review
+// On /app/backstage/crawl/[id]: send the findings marked right to show review
 // (admin_send_findings_to_review). Talks, concerts, wrong and unmarked
 // findings stay out, and so do titles that already read as a show.
 export function SendToReview({ runId, waiting }: { runId: string; waiting: number }) {
@@ -47,7 +47,7 @@ export function SendToReview({ runId, waiting }: { runId: string; waiting: numbe
         <Button size="sm" variant="secondary" disabled={busy || refreshing || waiting === 0} onClick={send}>
           Send to show review
         </Button>
-        <Link href="/app/admin/shows/candidates" className="inline-flex min-h-11 items-center text-subheadline font-semibold text-tint-text">
+        <Link href="/app/backstage/shows/candidates" className="inline-flex min-h-11 items-center text-subheadline font-semibold text-tint-text">
           Open show candidates
         </Link>
       </div>

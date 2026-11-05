@@ -32,7 +32,7 @@ async function Runs() {
       {runs.map((r) => (
         <li key={r.id} className="border-b border-separator last:border-b-0">
           <Link
-            href={`/app/admin/crawl/${r.id}`}
+            href={`/app/backstage/crawl/${r.id}`}
             className="flex flex-col gap-0.5 px-4 py-3 hover:bg-fill focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus"
           >
             <span className="text-headline text-label">
@@ -53,7 +53,7 @@ export default function AdminCrawlPage() {
   return (
     <section className="flex flex-col gap-5">
       <div className="flex flex-col gap-1">
-        <BackLink href="/app/admin">Admin</BackLink>
+        <BackLink href="/app/backstage">Backstage</BackLink>
         <h1 className="text-title font-display text-label">Crawl runs</h1>
         <p className="text-subheadline text-label-secondary">
           What the crawler read from theatre websites. Nothing here reaches users. Open a run to check its findings.

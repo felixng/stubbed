@@ -1,6 +1,6 @@
 # Public website copy in Sanity
 
-The Next.js site keeps its design and assets. Sanity provides an authenticated browser editor at `/studio`, with seven singleton documents: Landing page, Press kit, About, FAQ and guides, Privacy policy, Terms of service, and Site settings. A public Stubbed account does not grant CMS access; Sanity project membership controls editing.
+The Next.js site keeps its design and assets. Sanity provides an authenticated browser editor at `/dressingroom`, with seven singleton documents: Landing page, Press kit, About, FAQ and guides, Privacy policy, Terms of service, and Site settings. A public Stubbed account does not grant CMS access; Sanity project membership controls editing.
 
 ## Ownership
 
@@ -28,7 +28,7 @@ This first version edits existing content slots. Adding a new layout, FAQ item, 
    - `SANITY_REVALIDATE_SECRET`: a generated random secret, also entered in the webhook configuration below.
 3. In Sanity project settings → API → CORS origins, allow `http://localhost:3000`, `https://getstubbed.app` and any exact Vercel preview origin used for Studio. Enable credentials for those origins so Studio can authenticate. Avoid wildcard credentialed origins.
 4. Create a temporary **Editor** API token for initial migration. Set it as `SANITY_API_WRITE_TOKEN` in your local shell, then run `pnpm --filter web cms:seed` from the repo root. The script reads `apps/web/.env.local` for the public project settings. It creates the seven missing published documents in one transaction and never overwrites existing documents. Remove/revoke the write token afterwards; the website does not need it.
-5. Deploy the branch, visit `/studio`, and log in with your Sanity account. If Sanity prompts you to register the Studio URL, register that exact deployed URL. Add other editors through Sanity project membership.
+5. Deploy the branch, visit `/dressingroom`, and log in with your Sanity account. If Sanity prompts you to register the Studio URL, register that exact deployed URL. Add other editors through Sanity project membership.
 6. Add a Sanity API webhook:
    - URL: `https://getstubbed.app/api/cms/revalidate`.
    - Method: POST; trigger on create, update and delete.
@@ -42,7 +42,7 @@ If Studio is disabled, check the public project ID and redeploy: `NEXT_PUBLIC_` 
 
 ## Editing
 
-1. Open `https://getstubbed.app/studio` and select the relevant page.
+1. Open `https://getstubbed.app/dressingroom` and select the relevant page.
 2. Expand the named section, change text, and inspect it in Presentation. Click-to-edit overlays connect rendered copy to its field. Preview changes are shown within Studio; no read token is sent to public browsers.
 3. Publish when ready. Previewing or saving drafts never publishes them.
 

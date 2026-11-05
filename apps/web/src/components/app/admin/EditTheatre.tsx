@@ -27,7 +27,7 @@ function TestLink({ url }: { url: string }) {
   );
 }
 
-// Edit on /app/admin/theatres, through admin_update_venue (admins only).
+// Edit on /app/backstage/theatres, through admin_update_venue (admins only).
 // Theatres on one site share a what's-on link. Saving refreshes the list, so
 // the new link shows at once, and closes the editor.
 export function EditTheatre({ id, website, whatsOn, circuit }: Props) {

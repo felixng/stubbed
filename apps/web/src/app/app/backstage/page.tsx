@@ -4,38 +4,38 @@ import { Suspense } from "react";
 
 import { AdminOnly } from "@/components/app/admin/AdminOnly";
 
-export const metadata: Metadata = { title: "Admin" };
+export const metadata: Metadata = { title: "Backstage" };
 
 const PAGES = [
   {
-    href: "/app/admin/reports",
+    href: "/app/backstage/reports",
     title: "Reports",
     text: "Shows, comments and profiles people have reported. Hide them or dismiss the report.",
   },
   {
-    href: "/app/admin/theatres",
+    href: "/app/backstage/theatres",
     title: "Theatres",
     text: "Every theatre we hold, how often people log at it, and which have no website or what’s-on link.",
   },
   {
-    href: "/app/admin/shows",
+    href: "/app/backstage/shows",
     title: "Shows",
     text: "The show list users search: check pasted titles against it, and spot typed-in shows that look wrong or duplicated.",
   },
   {
-    href: "/app/admin/crawl",
+    href: "/app/backstage/crawl",
     title: "Crawl runs",
     text: "What the crawler read from theatre websites: check findings, mark them right or wrong, and compare runs.",
   },
 ];
 
 // Admin pages (see lib/admin). Nothing in the rest of the app links here, so
-// an admin sees the app as any user does; open /app/admin directly.
+// an admin sees the app as any user does; open /app/backstage directly.
 export default function AdminPage() {
   return (
     <section className="flex flex-col gap-5">
       <div className="flex flex-col gap-1">
-        <h1 className="text-title font-display text-label">Admin</h1>
+        <h1 className="text-title font-display text-label">Backstage</h1>
         <p className="text-subheadline text-label-secondary">Only admins can open these pages. The rest of the app is the same for everyone.</p>
       </div>
       <Suspense fallback={<p className="text-subheadline text-label-secondary">Loading…</p>}>

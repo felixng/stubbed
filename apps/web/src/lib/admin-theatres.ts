@@ -1,4 +1,4 @@
-// Filters for /app/admin/theatres, read from the query string and passed to
+// Filters for /app/backstage/theatres, read from the query string and passed to
 // admin_list_venues / admin_venue_totals.
 export const PAGE_SIZE = 50;
 
@@ -65,5 +65,5 @@ export function theatresHref(f: TheatreFilters, page = f.page): string {
   if (f.whatsOn) p.set("whats_on", f.whatsOn);
   if (page > 1) p.set("page", String(page));
   const s = p.toString();
-  return `/app/admin/theatres${s ? `?${s}` : ""}`;
+  return `/app/backstage/theatres${s ? `?${s}` : ""}`;
 }

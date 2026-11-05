@@ -45,7 +45,7 @@ export function CandidateBulk({ q, type, sample, pendingInGroup, canAdd, scoreMe
     if (type) params.set("type", type);
     params.set("sample", String(data));
     setBusy(false);
-    router.push(`/app/admin/shows/candidates?${params.toString()}`);
+    router.push(`/app/backstage/shows/candidates?${params.toString()}`);
   }
 
   async function addRest() {

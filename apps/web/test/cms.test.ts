@@ -5,23 +5,23 @@ import { defaultsFor, documents, mergeCopy, safeEmail, safeWebUrl, seedDocuments
 import { FAQ_SECTIONS } from "../src/lib/faq";
 
 test("partial or malformed CMS content preserves repository copy and cannot introduce asset fields", () => {
-  const defaults = defaultsFor("hero");
+  const defaults = defaultsFor("sharingLanding");
   for (const invalid of [null, undefined, [], "copy", 1]) {
-    assert.deepEqual(mergeCopy("hero", invalid), defaults);
+    assert.deepEqual(mergeCopy("sharingLanding", invalid), defaults);
   }
-  assert.deepEqual(mergeCopy("hero", {
-    yourTheatreLifeShared: "A new headline",
-    signUpFree: " ",
-    signIn: { _type: "image", asset: "untrusted" },
-    logTheShowsYouSeeRate: "x".repeat(20_001),
+  assert.deepEqual(mergeCopy("sharingLanding", {
+    headline: "A new headline",
+    signup: " ",
+    placeholderImage: { _type: "image", asset: "untrusted" },
+    intro: "x".repeat(20_001),
     src: "https://example.com/replacement.jpg",
     __proto__: { hacked: true },
-  }), { ...defaults, yourTheatreLifeShared: "A new headline" });
+  }), { ...defaults, headline: "A new headline" });
 });
 
 test("copy is plain text; markup remains a string for React to escape", () => {
   const html = '<script>alert("test")</script>';
-  assert.equal(mergeCopy("hero", { yourTheatreLifeShared: html }).yourTheatreLifeShared, html);
+  assert.equal(mergeCopy("sharingLanding", { headline: html }).headline, html);
 });
 
 test("seed includes every singleton and only the explicitly editable fields", () => {
