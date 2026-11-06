@@ -41,6 +41,102 @@ internal enum PublicSchema {
     case `public` = "public"
     case `private` = "private"
   }
+  internal struct AppConfigSelect: Codable, Hashable, Sendable {
+    internal let key: String
+    internal let value: AnyJSON
+    internal enum CodingKeys: String, CodingKey {
+      case key = "key"
+      case value = "value"
+    }
+  }
+  internal struct AppConfigInsert: Codable, Hashable, Sendable {
+    internal let key: String
+    internal let value: AnyJSON
+    internal enum CodingKeys: String, CodingKey {
+      case key = "key"
+      case value = "value"
+    }
+  }
+  internal struct AppConfigUpdate: Codable, Hashable, Sendable {
+    internal let key: String?
+    internal let value: AnyJSON?
+    internal enum CodingKeys: String, CodingKey {
+      case key = "key"
+      case value = "value"
+    }
+  }
+  internal struct BillingCustomersSelect: Codable, Hashable, Sendable {
+    internal let createdAt: String
+    internal let revenuecatAppUserId: String
+    internal let userId: UUID
+    internal enum CodingKeys: String, CodingKey {
+      case createdAt = "created_at"
+      case revenuecatAppUserId = "revenuecat_app_user_id"
+      case userId = "user_id"
+    }
+  }
+  internal struct BillingCustomersInsert: Codable, Hashable, Sendable {
+    internal let createdAt: String?
+    internal let revenuecatAppUserId: String
+    internal let userId: UUID
+    internal enum CodingKeys: String, CodingKey {
+      case createdAt = "created_at"
+      case revenuecatAppUserId = "revenuecat_app_user_id"
+      case userId = "user_id"
+    }
+  }
+  internal struct BillingCustomersUpdate: Codable, Hashable, Sendable {
+    internal let createdAt: String?
+    internal let revenuecatAppUserId: String?
+    internal let userId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case createdAt = "created_at"
+      case revenuecatAppUserId = "revenuecat_app_user_id"
+      case userId = "user_id"
+    }
+  }
+  internal struct BillingEventsSelect: Codable, Hashable, Sendable {
+    internal let environment: String
+    internal let error: String?
+    internal let eventId: String
+    internal let processedAt: String?
+    internal let receivedAt: String
+    internal enum CodingKeys: String, CodingKey {
+      case environment = "environment"
+      case error = "error"
+      case eventId = "event_id"
+      case processedAt = "processed_at"
+      case receivedAt = "received_at"
+    }
+  }
+  internal struct BillingEventsInsert: Codable, Hashable, Sendable {
+    internal let environment: String
+    internal let error: String?
+    internal let eventId: String
+    internal let processedAt: String?
+    internal let receivedAt: String?
+    internal enum CodingKeys: String, CodingKey {
+      case environment = "environment"
+      case error = "error"
+      case eventId = "event_id"
+      case processedAt = "processed_at"
+      case receivedAt = "received_at"
+    }
+  }
+  internal struct BillingEventsUpdate: Codable, Hashable, Sendable {
+    internal let environment: String?
+    internal let error: String?
+    internal let eventId: String?
+    internal let processedAt: String?
+    internal let receivedAt: String?
+    internal enum CodingKeys: String, CodingKey {
+      case environment = "environment"
+      case error = "error"
+      case eventId = "event_id"
+      case processedAt = "processed_at"
+      case receivedAt = "received_at"
+    }
+  }
   internal struct BlocksSelect: Codable, Hashable, Sendable {
     internal let blockedId: UUID
     internal let blockerId: UUID
@@ -893,6 +989,30 @@ internal enum PublicSchema {
       case userId = "user_id"
     }
   }
+  internal struct FeatureAccessSelect: Codable, Hashable, Sendable {
+    internal let feature: String
+    internal let tier: String
+    internal enum CodingKeys: String, CodingKey {
+      case feature = "feature"
+      case tier = "tier"
+    }
+  }
+  internal struct FeatureAccessInsert: Codable, Hashable, Sendable {
+    internal let feature: String
+    internal let tier: String
+    internal enum CodingKeys: String, CodingKey {
+      case feature = "feature"
+      case tier = "tier"
+    }
+  }
+  internal struct FeatureAccessUpdate: Codable, Hashable, Sendable {
+    internal let feature: String?
+    internal let tier: String?
+    internal enum CodingKeys: String, CodingKey {
+      case feature = "feature"
+      case tier = "tier"
+    }
+  }
   internal struct FollowsSelect: Codable, Hashable, Sendable {
     internal let createdAt: String
     internal let followeeId: UUID
@@ -933,6 +1053,60 @@ internal enum PublicSchema {
       case followerId = "follower_id"
       case notificationGeneration = "notification_generation"
       case status = "status"
+    }
+  }
+  internal struct MembershipGrantsSelect: Codable, Hashable, Sendable {
+    internal let endsAt: String
+    internal let environment: String
+    internal let grantedBy: UUID?
+    internal let id: UUID
+    internal let reason: String
+    internal let startsAt: String
+    internal let userId: UUID
+    internal enum CodingKeys: String, CodingKey {
+      case endsAt = "ends_at"
+      case environment = "environment"
+      case grantedBy = "granted_by"
+      case id = "id"
+      case reason = "reason"
+      case startsAt = "starts_at"
+      case userId = "user_id"
+    }
+  }
+  internal struct MembershipGrantsInsert: Codable, Hashable, Sendable {
+    internal let endsAt: String
+    internal let environment: String
+    internal let grantedBy: UUID?
+    internal let id: UUID?
+    internal let reason: String
+    internal let startsAt: String
+    internal let userId: UUID
+    internal enum CodingKeys: String, CodingKey {
+      case endsAt = "ends_at"
+      case environment = "environment"
+      case grantedBy = "granted_by"
+      case id = "id"
+      case reason = "reason"
+      case startsAt = "starts_at"
+      case userId = "user_id"
+    }
+  }
+  internal struct MembershipGrantsUpdate: Codable, Hashable, Sendable {
+    internal let endsAt: String?
+    internal let environment: String?
+    internal let grantedBy: UUID?
+    internal let id: UUID?
+    internal let reason: String?
+    internal let startsAt: String?
+    internal let userId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case endsAt = "ends_at"
+      case environment = "environment"
+      case grantedBy = "granted_by"
+      case id = "id"
+      case reason = "reason"
+      case startsAt = "starts_at"
+      case userId = "user_id"
     }
   }
   internal struct NotificationCategoryPreferencesSelect: Codable, Hashable, Sendable {
@@ -1791,6 +1965,84 @@ internal enum PublicSchema {
       case type = "type"
       case verified = "verified"
       case wikidataId = "wikidata_id"
+    }
+  }
+  internal struct SubscriptionsSelect: Codable, Hashable, Sendable {
+    internal let environment: String
+    internal let id: UUID
+    internal let lastEventId: String?
+    internal let periodEnd: String
+    internal let productId: String
+    internal let provider: String
+    internal let status: String
+    internal let storeTransactionId: String
+    internal let updatedAt: String
+    internal let userId: UUID
+    internal let willRenew: Bool
+    internal enum CodingKeys: String, CodingKey {
+      case environment = "environment"
+      case id = "id"
+      case lastEventId = "last_event_id"
+      case periodEnd = "period_end"
+      case productId = "product_id"
+      case provider = "provider"
+      case status = "status"
+      case storeTransactionId = "store_transaction_id"
+      case updatedAt = "updated_at"
+      case userId = "user_id"
+      case willRenew = "will_renew"
+    }
+  }
+  internal struct SubscriptionsInsert: Codable, Hashable, Sendable {
+    internal let environment: String
+    internal let id: UUID?
+    internal let lastEventId: String?
+    internal let periodEnd: String
+    internal let productId: String
+    internal let provider: String
+    internal let status: String
+    internal let storeTransactionId: String
+    internal let updatedAt: String?
+    internal let userId: UUID
+    internal let willRenew: Bool
+    internal enum CodingKeys: String, CodingKey {
+      case environment = "environment"
+      case id = "id"
+      case lastEventId = "last_event_id"
+      case periodEnd = "period_end"
+      case productId = "product_id"
+      case provider = "provider"
+      case status = "status"
+      case storeTransactionId = "store_transaction_id"
+      case updatedAt = "updated_at"
+      case userId = "user_id"
+      case willRenew = "will_renew"
+    }
+  }
+  internal struct SubscriptionsUpdate: Codable, Hashable, Sendable {
+    internal let environment: String?
+    internal let id: UUID?
+    internal let lastEventId: String?
+    internal let periodEnd: String?
+    internal let productId: String?
+    internal let provider: String?
+    internal let status: String?
+    internal let storeTransactionId: String?
+    internal let updatedAt: String?
+    internal let userId: UUID?
+    internal let willRenew: Bool?
+    internal enum CodingKeys: String, CodingKey {
+      case environment = "environment"
+      case id = "id"
+      case lastEventId = "last_event_id"
+      case periodEnd = "period_end"
+      case productId = "product_id"
+      case provider = "provider"
+      case status = "status"
+      case storeTransactionId = "store_transaction_id"
+      case updatedAt = "updated_at"
+      case userId = "user_id"
+      case willRenew = "will_renew"
     }
   }
   internal struct VenuesSelect: Codable, Hashable, Sendable {

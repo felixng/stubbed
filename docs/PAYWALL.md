@@ -156,3 +156,26 @@ Old iOS builds (before step 2) keep working after step 4: they decode the same s
 | #260 | iOS: RevenueCat SDK, paywall, Profile callout, Show mix banner, locked periods, restore and manage, insight cards' locked state. |
 | #261 | Web: the same on Profile and Insights (with #226), Web Billing checkout and management. |
 | #262 | Sandbox matrix, support runbook, the rollout in section 8. |
+
+## Foundation implementation (#414)
+
+The first database slice is `20261106220746_membership_policy_foundation.sql`.
+`app_config.value` is JSONB (booleans are JSON booleans, names/environments JSON strings).
+`my_membership.source` is an array of `app_store`, `rc_web`, and/or `grant`;
+`manage` is an array of `app_store` and/or `web`. Free returns empty arrays,
+null expiry and false renewal/trial flags. Effective expiry is the latest valid
+subscription/grant end; `is_trial` is true only when every contributing subscription
+is a trial and there is no grant. Cancellation is represented by `cancelled` plus
+`will_renew=false`; configured grace uses its verified access deadline as `period_end`.
+
+Grants additionally require an environment and finite start/end. Billing event
+identity is `(event_id, environment)`. Both prevent sandbox facts affecting live
+membership. No grants are seeded. The server adapter must write verified facts
+with these fields and must not reassign an existing store transaction to another
+account. Provider reconciliation, customer deletion, refresh, scheduling and paid
+stats enforcement remain in #259; this migration alone does not implement them.
+
+The seed billing environment is sandbox. Before live billing verification, set
+`billing_environment` to the JSON string `"production"` using a trusted operator;
+leave both rollout flags false until the remaining integration and sandbox matrix
+are complete. No public sales or gates are activated by this foundation.
