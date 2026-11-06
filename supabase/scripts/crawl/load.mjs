@@ -78,7 +78,7 @@ export async function createRun({ venueIds, method, model, prompt, branch, commi
 
 export async function finishRun(runId, { status, summary, costUsd = 0 }, db = runPsql) {
   await db(`update public.crawl_runs set status = j->>'status', summary = j->'summary', cost_usd = (j->>'cost')::numeric,
-      started_at = coalesce(started_at, now()), finished_at = now()
+      started_at = coalesce(started_at, now()), finished_at = case when j->>'status' = 'running' then null else now() end
     from (select ${jsonLiteral({ status, summary, cost: costUsd })} as j) x
     where id = ${uuidLiteral(runId)}`);
 }

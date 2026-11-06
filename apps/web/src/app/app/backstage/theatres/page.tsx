@@ -20,6 +20,10 @@ type Venue = {
   website: string | null;
   whats_on_url: string | null;
   entry_count: number;
+  website_source: string | null;
+  whats_on_source: string | null;
+  crawl_error: string | null;
+  site_status: string | null;
 };
 
 type Totals = { venues: number; labelled: number; with_website: number; with_whats_on: number; logged_at: number };
@@ -45,7 +49,7 @@ async function Theatres({ searchParams }: Pick<PageProps<"/app/backstage/theatre
   const { supabase } = await ownerContext();
   const args = filterArgs(f);
   const [list, totals] = await Promise.all([
-    supabase.rpc("admin_list_venues", { ...args, page_size: PAGE_SIZE + 1, page_offset: (f.page - 1) * PAGE_SIZE }),
+    supabase.rpc("admin_list_crawl_venues", { ...args, only_attention: Boolean(f.attention), page_size: PAGE_SIZE + 1, page_offset: (f.page - 1) * PAGE_SIZE }),
     supabase.rpc("admin_venue_totals", args),
   ]);
   const rows = (list.data ?? []) as unknown as Venue[];
@@ -102,9 +106,10 @@ async function Theatres({ searchParams }: Pick<PageProps<"/app/backstage/theatre
             Clear
           </Link>
         </div>
+        <label className="flex min-h-11 items-center gap-2 text-subheadline"><input type="checkbox" name="attention" value="1" defaultChecked={f.attention ?? false}/>Only crawl sites needing attention</label>
       </form>
 
-      {t && (
+      {t && !f.attention && (
         <p className="text-subheadline text-label-secondary">
           <span className="font-semibold text-label">{t.venues.toLocaleString("en-GB")}</span> theatres ·{" "}
           {t.labelled.toLocaleString("en-GB")} with a circuit · {t.with_website.toLocaleString("en-GB")} with a website ·{" "}
@@ -129,6 +134,8 @@ async function Theatres({ searchParams }: Pick<PageProps<"/app/backstage/theatre
               <p className="text-footnote text-label-secondary">
                 {[v.city, v.country, CIRCUITS.find((c) => c.value === v.circuit)?.label].filter(Boolean).join(" · ") || "No location"}
               </p>
+              <p className="text-footnote text-label-secondary">Website source: {v.website_source ?? "none"} · What’s-on source: {v.whats_on_source ?? "none"}{v.site_status ? ` · ${v.site_status}` : ""}</p>
+              {v.crawl_error && <p className="text-footnote">Needs attention: {v.crawl_error}</p>}
               <div className="flex flex-wrap items-center gap-2">
                 {v.website ? (
                   <a

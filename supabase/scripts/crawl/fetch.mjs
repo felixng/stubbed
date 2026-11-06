@@ -89,7 +89,7 @@ async function readCapped(response) {
 }
 
 // fetchPage(url) -> { status: 'ok' | 'not_modified' | 'blocked' | 'failed', html?, etag?, lastModified?, error? }
-export function createFetcher({ fetchFn = fetch, minDelayMs = 2000, cache = {}, sleep = delay, now = Date.now } = {}) {
+export function createFetcher({ fetchFn = fetch, minDelayMs = 2000, cache = {}, conditional = true, sleep = delay, now = Date.now } = {}) {
   const lastRequest = new Map();   // host -> time of the last request
   const robots = new Map();        // origin -> rules
 
@@ -130,7 +130,7 @@ export function createFetcher({ fetchFn = fetch, minDelayMs = 2000, cache = {}, 
       const rules = await robotsFor(u);
       if (!isAllowed(rules, u.pathname + u.search)) return { status: 'blocked', error: 'Disallowed by robots.txt' };
       await wait(u.host, Math.max(minDelayMs, (rules.crawlDelay ?? 0) * 1000));
-      const known = cache[key] ?? {};
+      const known = conditional ? (cache[key] ?? {}) : {};
       const res = await get(key, {
         ...(known.etag ? { 'If-None-Match': known.etag } : {}),
         ...(known.lastModified ? { 'If-Modified-Since': known.lastModified } : {}),

@@ -1,5 +1,5 @@
 import { readPage } from './readers.mjs';
-import { readRules } from './rules.mjs';
+import { nextArchiveLink, readRules } from './rules.mjs';
 import { fingerprint, healthSignals, archiveQueue } from './state.mjs';
 
 // One bounded site visit. Save a page's facts before its cursor, so an
@@ -40,7 +40,7 @@ export async function crawlPersistentSite({ site, venues, run, spend, readers, f
       await store.page(site,{...previous,url,type,status:'failed',failures:(previous?.failures??0)+1});
       continue;
     }
-    const next=site.rules ? readRules({url,html:page.html},{rules:site.rules,venues}).next : null;
+    const next=(site.rules ? readRules({url,html:page.html},{rules:site.rules,venues}).next : null) ?? nextArchiveLink(page.html,url);
     await load(url,findings);
     await publish();
     findingsCount+=findings.length;
@@ -53,7 +53,7 @@ export async function crawlPersistentSite({ site, venues, run, spend, readers, f
     for(const title of health.titles) knownTitles.add(title);
   }
   archivePending=queue.some(p=>p.type==='archive');
-  const archive_status = site.archive_url ? (archiveFailed || archivePending ? 'in_progress':'done') : site.archive_status;
+  const archive_status = site.archive_url ? (archiveFailed || archivePending ? 'in_progress':'done') : 'done';
   await store.site(site,{archive_status,health:[...new Set(signals)]});
   return {url:site.whats_on_url,venues,status:signals.length?'failed':'ok',findings:findingsCount,methods:site.rules?['rules']:[],note:`${fetched} pages, ${unchanged} unchanged${signals.length?`; ${[...new Set(signals)].join(', ')}`:''}`};
 }

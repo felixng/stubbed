@@ -257,3 +257,38 @@ uses model findings. New table access is admin-only except public read-only `run
 Apply migrations with `supabase db push` before using these features. The owner
 requested skipping hosted runs until setup is complete; fixture tests cover the
 five specified Almeida archive titles, pagination, resume and repeat visits.
+
+### Crawl loop setup (#391)
+
+After applying migrations with `supabase db push`, configure repository variables:
+
+| Variable | Default | Meaning |
+| --- | --- | --- |
+| `CRAWL_LOOP_ENABLED` | off | Set exactly `true` to permit scheduled/manual loop jobs |
+| `CRAWL_MAX_SITES` | 25 | Maximum sites per daily batch (cap 100) |
+| `CRAWL_MAX_SEARCHES` | 20 | Maximum free website searches per batch (cap 100) |
+| `CRAWL_MAX_SPEND_USD` | 1 | Maximum reserved model spend per batch (cap 10) |
+| `CRAWL_SITE_SPEND_USD` | 0.20 | Per-site model spend cap (cap 1) |
+
+The schedule is daily at 04:23 UTC; each ready site's current page is due weekly,
+while unfinished archives resume in daily batches. A manual Actions dispatch with
+no run ID invokes the loop, still guarded by the switch. A run ID continues to
+invoke the existing saved manual crawl. All crawler jobs share a concurrency
+group. Turning the switch off prevents subsequent jobs; cancel an active job in
+Actions to stop it immediately. No model key is needed to read established sites;
+setup and repair wait during outages or when spend is exhausted. The script's
+own maximum runtime is 20 minutes, leaving headroom in the 30-minute Actions job.
+
+Backstage → Crawl runs shows aggregate progress/spend. Sites and archive status
+shows failures, reasons and rule versions; Try site again resets exhausted
+attempts. Restoring a retired rule proposes it for revalidation, never activates it
+blindly. Theatres shows link sources and an attention filter. Edit a theatre's
+links to resolve a discovery failure; human links are never overwritten.
+
+The owner confirmed the Actions secrets already exist and asked to skip live
+runs. **Remaining configuration: add `CRAWL_GITHUB_TOKEN` in Vercel**, a fine-grained
+GitHub token scoped to `felixng/stubbed` with Actions write permission, then
+redeploy. Keep the model key in Actions. Leave `CRAWL_LOOP_ENABLED` off until ready.
+No new paid search service or key is required. Search-provider failures are
+bounded and visible as unresolved venues. Fixture/model calls cost $0; live
+10-theatre accuracy/cost measurements remain deferred by the owner.

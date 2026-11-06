@@ -4,15 +4,18 @@ on:
     inputs:
       run_id:
         description: Saved crawl run ID
-        required: true
+        required: false
         type: string
+  schedule:
+    - cron: "23 4 * * *"
 permissions:
   contents: read
 concurrency:
-  group: catalogue-crawl-${{ inputs.run_id }}
+  group: catalogue-crawl
   cancel-in-progress: false
 jobs:
   crawl:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_id != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -31,4 +34,28 @@ jobs:
         run: node supabase/scripts/crawl/index.mjs --run-id "$CRAWL_RUN_ID"
       - name: Mark an interrupted run failed
         if: ${{ always() && (failure() || cancelled()) }}
+        run: node supabase/scripts/crawl/fail-run.mjs
+
+  loop:
+    if: ${{ (github.event_name == 'schedule' || inputs.run_id == '') && vars.CRAWL_LOOP_ENABLED == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      CRAWL_LOOP_ENABLED: ${{ vars.CRAWL_LOOP_ENABLED }}
+      CRAWL_MAX_SITES: ${{ vars.CRAWL_MAX_SITES || '25' }}
+      CRAWL_MAX_SEARCHES: ${{ vars.CRAWL_MAX_SEARCHES || '20' }}
+      CRAWL_MAX_SPEND_USD: ${{ vars.CRAWL_MAX_SPEND_USD || '1' }}
+      CRAWL_SITE_SPEND_USD: ${{ vars.CRAWL_SITE_SPEND_USD || '0.20' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --prefix supabase/scripts/crawl --ignore-scripts
+      - run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - run: node supabase/scripts/crawl/loop.mjs
+      - name: Mark an interrupted loop failed
+        if: ${{ always() && (failure() || cancelled()) && env.CRAWL_RUN_ID != '' }}
         run: node supabase/scripts/crawl/fail-run.mjs
