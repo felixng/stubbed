@@ -67,6 +67,17 @@ struct InsightCardTests {
     #expect(cards.filter(\.isInsights).map(\.id) == ["weekly-streak", "year-in-theatre", "show-mix"])
     #expect(cards.filter(\.isInsights).allSatisfy { $0.supportsBackground })
     #expect(cards.allSatisfy { $0.image.cgImage?.width == 1080 })
+    var venueEntry = entry
+    // Exercise long names in both fixed text regions of the venue export.
+    venueEntry.venue = "The Stephen Sondheim Theatre at the Harold Pinter"
+    venueEntry.title = "The Curious Incident of the Dog in the Night-Time"
+    venueEntry.venueVisit = 3
+    let withVenue = try ShareCards.showCards(venueEntry, photo: photo, insights: insights)
+    let venueIndex = try #require(withVenue.firstIndex { $0.id == "venue-visits" })
+    #expect(withVenue[venueIndex + 1].id == "year-in-theatre")
+    #expect(!withVenue[venueIndex].isInsights)
+    #expect(withVenue[venueIndex].supportsBackground)
+
   }
 
   @Test @MainActor func selectedCardPreparationIsCompleteAndCancellable() async throws {

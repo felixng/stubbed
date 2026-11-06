@@ -30,9 +30,10 @@ export const CARD_DESIGNS: CardDesign[] = [
   { id: "show-number", name: "Show number", background: true },
   { id: "overlay", name: "Show overlay", background: true },
   { id: "ticket", name: "Ticket stub", background: true },
+  { id: "venue-visits", name: "Venue visits", background: true },
 ];
 export function availableEntryDesigns(data: CardData, photo: boolean) {
-  return CARD_DESIGNS.filter(d => (!d.photo || photo) && (d.id !== "name" || data.rating != null)).map(d => d.id === "encore" && data.timesSeen === 1 ? { ...d, name: "First visit" } : d);
+  return CARD_DESIGNS.filter(d => (!d.photo || photo) && (d.id !== "name" || data.rating != null) && (d.id !== "venue-visits" || Boolean(data.venue?.trim() && data.venueVisit > 0))).map(d => d.id === "encore" && data.timesSeen === 1 ? { ...d, name: "First visit" } : d);
 }
 export function cardBackground(design: CardDesign, chosen: ShareBackground) {
   return design.background ? chosen : "photo";
@@ -40,9 +41,12 @@ export function cardBackground(design: CardDesign, chosen: ShareBackground) {
 export function entryMetrics(data: CardData) {
   return [
     { label: `Show of ${data.year}`, value: ordinal(data.showOfYear) },
-    ...(data.venue ? [{ label: data.venue, value: `${ordinal(data.venueVisit)} visit` }] : []),
-    { label: "Times seen", value: String(data.timesSeen) },
+    { label: "Seen", value: formatTimes(data.timesSeen) },
   ];
+}
+
+export function formatTimes(count: number) {
+  return `${count} ${count === 1 ? "time" : "times"}`;
 }
 
 export const CARD_SIZE = 1080;
@@ -232,6 +236,16 @@ export async function renderCard(
       } else if (designId === "overlay") {
         drawShowOverlay(ctx, data, color, outlineMark);
         return;
+      } else if (designId === "venue-visits") {
+        ctx.fillStyle = color; ctx.textBaseline = "top"; ctx.textAlign = "left";
+        setFont(ctx, 500, 18, TEXT, 0); ctx.fillText("Venue", 28, 28);
+        drawTopTitle(ctx, data.venue!, 58, color);
+        setFont(ctx, 500, 18, TEXT, 0); ctx.fillText("Visited", 28, 192);
+        ctx.fillStyle = background === "transparent" && ink === "dark" ? "#DC2F4F" : CORAL;
+        setFont(ctx, 800, 64, DISPLAY, -1); ctx.fillText(formatTimes(data.venueVisit), 28, 220, 484);
+        ctx.fillStyle = color;
+        setFont(ctx, 500, 18, TEXT, 0); ctx.fillText("Seeing", 28, 354);
+        drawTopTitle(ctx, data.title, 384, color, 28);
       } else if (designId === "data") {
         const titleH = drawTopTitle(ctx, data.title, 28, color);
         const start = Math.max(138, 28 + titleH + 20);
@@ -262,7 +276,7 @@ function drawShowOverlay(ctx: Ctx, data: CardData, color: string, mark: HTMLImag
   const sections = [
     { label: "Show", value: data.title },
     { label: "Date", value: shareDate(today) },
-    { label: "Seen", value: `${data.timesSeen} ${data.timesSeen === 1 ? "time" : "times"}` },
+    { label: "Seen", value: formatTimes(data.timesSeen) },
     { label: data.year === today.getFullYear() ? "This year so far" : `${data.year} so far`, value: `${ordinal(data.showOfYear)} show` },
   ];
   ctx.fillStyle = color; ctx.textAlign = "center"; ctx.textBaseline = "top";
@@ -326,7 +340,7 @@ function drawTicketOverlay(ctx: Ctx, data: CardData, color: string, ticket: HTML
   ctx.fillText("Seen", 56, 194);
   ctx.fillText(data.year === today.getFullYear() ? "This year so far" : `${data.year} so far`, 246, 194);
   setFont(ctx, 700, 24, DISPLAY, -0.3);
-  ctx.fillText(`${data.timesSeen} ${data.timesSeen === 1 ? "time" : "times"}`, 56, 220, 148);
+  ctx.fillText(formatTimes(data.timesSeen), 56, 220, 148);
   ctx.fillText(`${ordinal(data.showOfYear)} show`, 246, 220, 168);
   // Keep the branding in the ticket’s coordinates: parallel, 19pt below it.
   drawTicketBrand(ctx, mark);

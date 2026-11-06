@@ -2,7 +2,7 @@ import XCTest
 
 final class CombinedShareUITests: XCTestCase {
   override func setUp() { continueAfterFailure = false }
-  @MainActor func testAllTenCardsFromOneShow() throws {
+  @MainActor func testAllElevenCardsFromOneShow() throws {
     let app = launchApp()
     signOutIfNeeded(app)
     try signIn(app)
@@ -22,14 +22,14 @@ final class CombinedShareUITests: XCTestCase {
     func card(_ name: String) -> XCUIElement {
       app.images.matching(NSPredicate(format: "label CONTAINS %@", name)).firstMatch
     }
-    XCTAssertTrue(card("1 of 10").waitForExistence(timeout: 25))
+    XCTAssertTrue(card("1 of 11").waitForExistence(timeout: 25))
     XCTAssertFalse(app.buttons["Background"].isEnabled)
     card("data + photo").swipeLeft()
     XCTAssertTrue(card("rating + photo").waitForExistence(timeout: 5))
     XCTAssertFalse(app.buttons["Background"].isEnabled)
     card("rating + photo").swipeLeft()
-    XCTAssertTrue(card("3 of 10").waitForExistence(timeout: 5))
-    card("3 of 10").swipeLeft()
+    XCTAssertTrue(card("3 of 11").waitForExistence(timeout: 5))
+    card("3 of 11").swipeLeft()
     XCTAssertTrue(card("first visit").waitForExistence(timeout: 5))
     snapshot("combined-first-visit")
     card("first visit").swipeLeft()
@@ -53,12 +53,16 @@ final class CombinedShareUITests: XCTestCase {
     XCTAssertTrue(card("no background").waitForExistence(timeout: 5))
     snapshot("combined-weekly-streak")
     card("weekly streak").swipeLeft()
+    XCTAssertTrue(card("venue visits").waitForExistence(timeout: 5))
+    snapshot("combined-venue-visits")
+    card("venue visits").swipeLeft()
     XCTAssertTrue(card("year in theatre").waitForExistence(timeout: 5))
     card("year in theatre").swipeLeft()
     XCTAssertTrue(card("show mix").waitForExistence(timeout: 5))
     snapshot("combined-show-mix")
     card("show mix").swipeRight()
     card("year in theatre").swipeRight()
+    card("venue visits").swipeRight()
     card("weekly streak").swipeRight()
     card("ticket stub").swipeRight()
     card("show overlay").swipeRight()

@@ -17,6 +17,7 @@ struct EntryCardData: Hashable, Sendable {
 enum EntryCardDesign: String, CaseIterable, Identifiable, Sendable {
   case stats, name, data, encore, overlay, ticket
   case number = "show-number"
+  case venue = "venue-visits"
   var id: String { rawValue }
   var name: String {
     switch self {
@@ -27,12 +28,14 @@ enum EntryCardDesign: String, CaseIterable, Identifiable, Sendable {
     case .number: "Show number"
     case .overlay: "Show overlay"
     case .ticket: "Ticket stub"
+    case .venue: "Venue visits"
     }
   }
   var isPhoto: Bool { self == .stats || self == .name }
-  static func available(photo: Bool, rating: Double?, timesSeen: Int) -> [Self] {
+  static func available(photo: Bool, rating: Double?, timesSeen: Int, venue: String? = nil, venueVisit: Int = 0) -> [Self] {
     (photo ? [.stats] + (rating != nil ? [.name] : []) : [])
       + [.data, .encore, .number, .overlay, .ticket]
+      + (venue?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false && venueVisit > 0 ? [.venue] : [])
   }
 }
 
@@ -55,6 +58,10 @@ func ordinal(_ n: Int) -> String {
   }
 }
 
+func formatTimes(_ count: Int) -> String {
+  "\(count) \(count == 1 ? "time" : "times")"
+}
+
 struct EntryCardView: View {
   let design: EntryCardDesign
   let data: EntryCardData
@@ -63,10 +70,7 @@ struct EntryCardView: View {
   static let size: CGFloat = 540
   private var ink: Color { design.isPhoto ? .white : appearance.foreground }
   private var metrics: [(String, String)] {
-    var result = [("Show of \(data.year)", ordinal(data.showOfYear))]
-    if let venue = data.venue { result.append((venue, "\(ordinal(data.venueVisit)) visit")) }
-    result.append(("Times seen", String(data.timesSeen)))
-    return result
+    [("Show of \(data.year)", ordinal(data.showOfYear)), ("Seen", formatTimes(data.timesSeen))]
   }
   var body: some View {
     ZStack {
@@ -82,6 +86,8 @@ struct EntryCardView: View {
       } else { ShareCardSurface(appearance: appearance) }
       if design == .ticket {
         TicketOverlayCard(data: data, ink: ink)
+      } else if design == .venue {
+        VenueVisitCard(data: data, appearance: appearance)
       } else if design == .overlay {
         ShowOverlayCard(data: data, ink: ink)
       } else {
@@ -135,6 +141,29 @@ struct EntryCardView: View {
   }
 }
 
+/// Fixed regions keep long venue/show names clear of the count and footer.
+private struct VenueVisitCard: View {
+  let data: EntryCardData
+  let appearance: ShareAppearance
+  private var ink: Color { appearance.foreground }
+
+  var body: some View {
+    ZStack(alignment: .topLeading) {
+      Text("Venue").font(.system(size: 18, weight: .medium)).offset(x: 28, y: 28)
+      CardTitle(text: data.venue ?? "", size: 38, lineHeight: 42, width: 484, ink: ink)
+        .offset(x: 28, y: 58)
+      Text("Visited").font(.system(size: 18, weight: .medium)).offset(x: 28, y: 192)
+      Text(formatTimes(data.venueVisit)).font(.system(size: 64, weight: .heavy)).tracking(-1)
+        .foregroundStyle(appearance.statsAccent).lineLimit(1).minimumScaleFactor(0.6)
+        .frame(width: 484, alignment: .leading).offset(x: 28, y: 220)
+      Text("Seeing").font(.system(size: 18, weight: .medium)).offset(x: 28, y: 354)
+      CardTitle(text: data.title, size: 28, lineHeight: 32, width: 484, ink: ink)
+        .offset(x: 28, y: 384)
+      CardFooter(handle: data.handle, ink: ink).frame(width: 484).offset(x: 28, y: 472)
+    }.foregroundStyle(ink).frame(width: 540, height: 540, alignment: .topLeading)
+  }
+}
+
 /// Four equally sized sections, followed by the design system's outline icon.
 private struct ShowOverlayCard: View {
   let data: EntryCardData
@@ -146,7 +175,7 @@ private struct ShowOverlayCard: View {
       VStack(spacing: 8) {
         section("Show", value: data.title, title: true)
         section("Date", value: today.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).year().locale(Locale(identifier: "en_GB"))))
-        section("Seen", value: "\(data.timesSeen) \(data.timesSeen == 1 ? "time" : "times")")
+        section("Seen", value: formatTimes(data.timesSeen))
         section(data.year == Calendar.current.component(.year, from: today) ? "This year so far" : "\(data.year) so far",
           value: "\(ordinal(data.showOfYear)) show")
       }.padding(.top, 48)
@@ -184,7 +213,7 @@ private struct TicketOverlayCard: View {
           Text(today, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated).year())
             .font(.system(size: 18, weight: .medium))
         }.frame(width: 368, alignment: .leading).offset(x: 56, y: 44)
-        stat("Seen", value: "\(data.timesSeen) \(data.timesSeen == 1 ? "time" : "times")", width: 148)
+        stat("Seen", value: formatTimes(data.timesSeen), width: 148)
           .offset(x: 56, y: 194)
         stat(data.year == Calendar.current.component(.year, from: today) ? "This year so far" : "\(data.year) so far",
           value: "\(ordinal(data.showOfYear)) show", width: 168).offset(x: 246, y: 194)

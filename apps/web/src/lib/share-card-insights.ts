@@ -27,7 +27,14 @@ export function availableInsightDesigns(data: InsightCardData, currentYear = new
     : (data.stats.total > 0 || includingEmpty) && (design.id !== "year-in-theatre" || data.year != null));
 }
 export function availableShowDesigns(data: CardData, photo: boolean, insights: InsightCardData) {
-  return [...availableEntryDesigns(data, photo), ...availableInsightDesigns(insights, new Date().getFullYear(), true)];
+  const entries = availableEntryDesigns(data, photo);
+  const venue = entries.find(design => design.id === "venue-visits");
+  const designs = [...entries.filter(design => design.id !== "venue-visits"), ...availableInsightDesigns(insights, new Date().getFullYear(), true)];
+  if (venue) {
+    const year = designs.findIndex(design => design.id === "year-in-theatre");
+    designs.splice(year < 0 ? designs.length : year, 0, venue);
+  }
+  return designs;
 }
 export function isInsightDesign(id: string) {
   return INSIGHT_CARD_DESIGNS.some(design => design.id === id);

@@ -44,7 +44,7 @@ enum ShareCards {
     return parts.isEmpty ? "show" : parts.joined(separator: "-")
   }
   @MainActor static func entryCards(_ data: EntryCardData, photo: UIImage?) throws -> [RenderedCard] {
-    try EntryCardDesign.available(photo: photo != nil, rating: data.rating, timesSeen: data.timesSeen).map { design in
+    try EntryCardDesign.available(photo: photo != nil, rating: data.rating, timesSeen: data.timesSeen, venue: data.venue, venueVisit: data.venueVisit).map { design in
       let exportID = design == .encore && data.timesSeen == 1 ? "first-visit" : design.id
       let name = "stubbed-\(slug(data.title))-\(exportID)"
       let full = try render(EntryCardView(design: design, data: data, photo: photo), name: name)

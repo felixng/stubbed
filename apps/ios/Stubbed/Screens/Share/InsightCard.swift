@@ -269,8 +269,14 @@ struct ShareRadar: View {
 extension ShareCards {
   @MainActor static func showCards(_ data: EntryCardData, photo: UIImage?, insights: InsightCardData) throws -> [RenderedCard] {
     // Keep the show carousel focused; the expanded stats collection lives in Insights.
-    try entryCards(data, photo: photo) + insightsCards(
+    var cards = try entryCards(data, photo: photo) + insightsCards(
       insights, includingEmpty: true, designs: [.weekly, .year, .mix])
+    if let index = cards.firstIndex(where: { $0.id == EntryCardDesign.venue.id }) {
+      let venue = cards.remove(at: index)
+      let year = cards.firstIndex(where: { $0.id == InsightCardDesign.year.id }) ?? cards.endIndex
+      cards.insert(venue, at: year)
+    }
+    return cards
   }
   @MainActor static func insightsCards(
     _ data: InsightCardData, includingEmpty: Bool = false, designs: [InsightCardDesign]? = nil

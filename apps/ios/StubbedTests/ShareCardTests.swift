@@ -75,6 +75,19 @@ struct ShareCardTests {
     #expect(EntryCardDesign.available(photo: true, rating: 1, timesSeen: 5) == [.stats, .name, .data, .encore, .number, .overlay, .ticket])
   }
 
+  @Test func seenCountGrammarAndVenueEligibility() {
+    #expect(formatTimes(0) == "0 times")
+    #expect(formatTimes(1) == "1 time")
+    #expect(formatTimes(2) == "2 times")
+    func designs(_ venue: String?, _ count: Int) -> [EntryCardDesign] {
+      EntryCardDesign.available(photo: false, rating: nil, timesSeen: 1, venue: venue, venueVisit: count)
+    }
+    #expect(designs("Fortune Theatre", 3).contains(.venue))
+    #expect(!designs(nil, 3).contains(.venue))
+    #expect(!designs(" ", 3).contains(.venue))
+    #expect(!designs("Fortune Theatre", 0).contains(.venue))
+  }
+
   @Test @MainActor func repeatedRendersCannotOverwriteAnEarlierExport() throws {
     let first = try ShareCards.render(EntryCardView(design: .data, data: data, photo: nil), name: "same-show")
     var later = data
