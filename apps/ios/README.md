@@ -23,6 +23,20 @@ scripts/dev archive
 
 It archives a Release build (hosted Supabase, `Config/Release.xcconfig`), signs it with automatic signing and uploads it. The build number is the current date and time, so each upload is new. It shows up in TestFlight after a few minutes of processing.
 
+For unattended releases, put these settings in `~/.config/stubbed/app-store-connect.env`
+(outside the repository, mode `600`), or supply them in the CI environment:
+
+```sh
+ASC_KEY_PATH="/absolute/path/to/AuthKey_KEYID.p8"
+ASC_KEY_ID="KEYID"
+ASC_ISSUER_ID="your-team-issuer-uuid"
+```
+
+The archive command passes the API credentials to both signing and upload. Keep the
+`.p8` file private (mode `600`); never commit it. `ASC_CONFIG_FILE` overrides the local
+config path. Without API settings, the existing Xcode-account workflow remains available.
+Partial or unreadable API settings fail before archiving.
+
 Before the first external testers or App Review: fill in App Privacy in App Store Connect to match `Stubbed/PrivacyInfo.xcprivacy`, and finish the sign-in setup on #64.
 
 The app icon and the in-app mark come from `brand/` at the repo root: `python3 brand/make_logo.py && python3 brand/render.py` regenerates them (the icon in `Assets.xcassets/AppIcon.appiconset`, with dark and tinted versions for iOS 18+, and `BrandMark.imageset`).
