@@ -272,7 +272,7 @@ export function MezzanineImport() {
       </div>)}
       <p role="status" aria-live="polite" className="text-subheadline text-label-secondary">{countryNotice}</p>
     </section>}
-    {drafts.length > 0 && !finished && <p className="text-footnote text-label-secondary">Private notes aren’t imported.{drafts.some((d) => d.planned) && " Future dates become planned shows, without ratings."}</p>}
+    {!finished && drafts.some((d) => d.planned) && <p className="text-footnote text-label-secondary">Future dates become planned shows, without ratings.</p>}
     {!finished && drafts.length > 0 && drafts.every((d) => d.duplicate) && <p>Every show in this file is already in your diary.</p>}
     {groups.map((group) => group.rows.length > 0 && !(finished && group.id === "duplicates") && <section key={group.id} aria-labelledby={`group-${group.id}`} className="flex flex-col gap-2">
       <h2 ref={group.id === "needs-attention" ? attention : undefined} tabIndex={-1} id={`group-${group.id}`} className="scroll-mt-20 text-headline text-label focus-visible:outline-2 focus-visible:outline-focus">{finished && group.id === "needs-attention" ? `${group.rows.length} ${group.rows.length === 1 ? "show" : "shows"} to fix` : `${group.name} · ${group.rows.length}`}</h2>

@@ -1133,3 +1133,7 @@ The owner explicitly deferred live crawl/model acceptance runs until setup is
 complete. Local fixture/database integration covers discovery, rule validation,
 publication, moved-link/layout repair and a repeat visit with no AI. No hosted
 migrations, live model calls or enabling of the switch were performed.
+
+### 2026-11-06 — Import review owns the bottom toolbar
+
+Keep the native tab bar visible while reviewing Mezzanine imports. Place Import in the list for up to 10 shows, and in the native trailing navigation toolbar for larger files. Stop stays in the navigation toolbar during work; View diary is in the completed page. Avoid bottom inset materials that change the floating tab bar’s appearance. Back and all tabs remain navigation exits. Remove the private-notes notice from review and export help at the owner’s request; the parser continues excluding private notes. Render the small-phone regression inside a TabView so captures include the real container interaction.
