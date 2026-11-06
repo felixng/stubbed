@@ -212,15 +212,7 @@ export async function renderCard(
       verticalGradient(ctx, 360, 540, [[0, "rgba(0,0,0,0)"], [1, "rgba(0,0,0,0.8)"]]);
       textShadow(ctx);
       if (designId === "stats") {
-        const col = 484 / metrics.length;
-        metrics.forEach((m, i) => {
-          ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillStyle = color;
-          setFont(ctx, 500, 17, TEXT, -0.2);
-          const labels = wrap(ctx, m.label, col - 12).slice(0, 2);
-          labels.forEach((line, j) => ctx.fillText(fit(ctx, line, col - 12), 28 + col * (i + 0.5), 28 + j * 21));
-          setFont(ctx, 700, 28, DISPLAY, 0);
-          ctx.fillText(fit(ctx, m.value, col - 12), 28 + col * (i + 0.5), 76);
-        });
+        drawCornerMetrics(ctx, metrics, color, true);
         drawTitle(ctx, data.title, 28, 460, 484, 28, 40, 2);
       } else {
         drawTitle(ctx, data.title, 28, 414, 484, 36, 40, 2);
@@ -245,14 +237,8 @@ export async function renderCard(
         setFont(ctx, 500, 18, TEXT, 0); ctx.fillText("Seeing", 28, 354);
         drawTopTitle(ctx, data.title, 384, color, 28);
       } else if (designId === "data") {
-        const titleH = drawTopTitle(ctx, data.title, 28, color);
-        const start = Math.max(138, 28 + titleH + 20);
-        metrics.forEach((m, i) => {
-          const y = start + i * ((452 - start) / metrics.length);
-          ctx.fillStyle = color; ctx.textAlign = "left"; ctx.textBaseline = "top";
-          setFont(ctx, 500, 18, TEXT, 0); ctx.fillText(fit(ctx, m.label, 484), 28, y);
-          setFont(ctx, 700, 42, DISPLAY, 0); ctx.fillText(fit(ctx, m.value, 484), 28, y + 26);
-        });
+        drawCornerMetrics(ctx, metrics, color, false);
+        drawTitle(ctx, data.title, 28, 460, 484, 38, 42, 2, color);
       } else {
         ctx.fillStyle = color; ctx.textBaseline = "top"; ctx.textAlign = "left";
         setFont(ctx, 500, 22, TEXT, 0); ctx.fillText(designId === "encore" ? (data.timesSeen === 1 ? "First visit" : "Encore") : "My theatre year", 28, 28);
@@ -264,6 +250,21 @@ export async function renderCard(
       }
     }
     drawShareFooter(ctx, data.handle, color, mark);
+  });
+}
+
+// Keep the two stats anchored to the 28pt outer margins, independently of
+// their text widths. Used by both the photo and no-photo default cards.
+function drawCornerMetrics(ctx: Ctx, metrics: ReturnType<typeof entryMetrics>, color: string, photo: boolean) {
+  metrics.forEach((metric, index) => {
+    const x = index === 0 ? 28 : 512;
+    ctx.fillStyle = color; ctx.textBaseline = "top";
+    ctx.textAlign = index === 0 ? "left" : "right";
+    setFont(ctx, 500, photo ? 17 : 18, TEXT, photo ? -0.2 : 0);
+    const labels = wrap(ctx, metric.label, 230).slice(0, 2);
+    labels.forEach((line, row) => ctx.fillText(fit(ctx, line, 230), x, 28 + row * 21));
+    setFont(ctx, 700, photo ? 28 : 42, DISPLAY, 0);
+    ctx.fillText(metric.value, x, 76, 230);
   });
 }
 
