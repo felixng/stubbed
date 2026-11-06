@@ -1,6 +1,6 @@
 # Catalogue: shows, venues and runs
 
-How the catalogue is built, and what the remaining catalogue epics add. Read this before picking up an issue in #147, #353, #363, #355, #289, #272 or #314. Product decisions stay in the issues and `docs/DECISIONS.md`; this file is the technical map. Where they disagree, the decisions log is newer.
+How the catalogue is built, and what the remaining catalogue epics add. Read this before picking up an issue in #147, #353, #363, #355, #289, #387, #391, #272 or #314. Product decisions stay in the issues and `docs/DECISIONS.md`; this file is the technical map. Where they disagree, the decisions log is newer.
 
 ## 1. Rules that apply to every issue
 
@@ -10,6 +10,7 @@ How the catalogue is built, and what the remaining catalogue epics add. Read thi
 - **Venues are flat:** one row per auditorium (Olivier, Lyttelton and Dorfman are three venues). No parent or space column.
 - **Suggestions, never auto-save:** a strong match may fill an *empty* field; nothing overwrites a field the user has touched.
 - **Entries stay show + venue + date.** They store no run or production. A run is found by looking up those three, so older entries match new runs and deleting crawl data can't touch an entry. There is no `productions` table until a feature needs one; adding it then means the table plus a nullable `runs.production_id`.
+- **The routine crawl never uses AI.** Code reads pages using saved rules. AI only finds links and writes or repairs rules, and new rules go live only after code has checked them.
 - **Users never write catalogue facts** other than shows, venues and nicknames they add while logging. Runs, crawl data and show candidates are written by the service role or admin functions only.
 
 ## 2. As built
@@ -55,22 +56,31 @@ Launch is Journey 2: the user types the show (#353). Journey 1 pre-fills the sho
 - **#357 edit.** `venues.whats_on_url`; `admin_update_venue(...)` (security definer, checks `public.is_admin()`). Venues sharing a site share a URL: the crawl fetches it once and matches stages to those venues. No crawl-target table.
 
 ### #289 Journey 1, step 1: crawl pilot and review tool
-Nothing here reaches users. Results stay in admin-only tables until a person publishes them.
+Done apart from **#358**. Pilot results stay in admin-only tables; automatic publishing into runs is planned in #387 below.
 - **#277 core.** `crawl_runs` and `crawl_findings` (admin read, service-role write). `supabase/scripts/crawl/` with `index.mjs`, `fetch.mjs` (robots.txt, per-host rate limit, User-Agent, conditional requests), `load.mjs` (one transaction per theatre), `report.mjs`. Facts and short evidence only, never copies of pages. Parsers are pure functions tested with `node --test` on saved fixtures.
 - **#291 theatre sites.** Structured data (schema.org `Event`) by code first, then a model when the run allows it, with model and prompt taken from the `crawl_runs` row. Findings keep the raw title; no show matching here.
 - **#358 start from admin.** `/app/backstage/crawl` creates a `crawl_runs` row and dispatches `.github/workflows/catalogue-crawl.yml` with a run id and branch. The crawl runs on GitHub Actions, so the model key stays out of Vercel and the app. The owner adds `SUPABASE_DB_URL` and `ANTHROPIC_API_KEY` as Actions secrets and a repository-scoped Actions token in Vercel.
 - **#359 review.** `/app/backstage/crawl/[id]`: mark findings right or wrong, add missed titles, score per run and theatre, compare two runs and their settings.
 - **#367 titles to show review.** Findings marked right with no `similar_shows` same-match become `show_candidates` (#366). Adds a show-name pull as a job on the crawl form.
 
-### #272 Journey 1, step 2: runs and show suggestions
-#360 can ship any time. The rest starts only when the owner says the pilot passed.
-- **#360 entry suggestions.** `suggest_shows(venue_ids uuid[], on_date date)` returns `(show_id, title, venue_id, source, score)`, `source` in `community`, `yours`. `security definer` only if needed to count other people's public entries; it must return no user ids and must apply `profile_is_visible`, entry visibility and `blocks` (reuse the predicates used by `feed_entries`). `entry_logged` gains `show_source`.
-- **#276 runs.** `runs(venue_id, title, show_id nullable, start_date, end_date, source, source_url, confidence, last_seen_at)`, with an index on venue and `daterange(start_date, end_date, '[]')`. `publish_crawl_findings(run_id)` (admin) upserts findings marked right, linking `show_id` only when `similar_shows` says `same`. `merge_shows`/`merge_venues` move runs (`create or replace`).
-- **#278 run suggestions.** Adds the `run` source. A single run at confidence 0.8 or above, seen recently, at a single venue fills an empty show; the rest are chips. Tapping a run with no show goes through the "Did you mean…?" path, so crawl noise never enters show search.
-- **#288 schedule.** Weekly to start, for `venues.crawl_enabled` theatres only. Findings at confidence 0.8 or above publish automatically.
+### #387 Journey 1, step 2: read theatre sites with rules, into runs
+- **#388 rules reader.** `cheerio`, pinned, for the crawl scripts only. `crawl_sites` (one row per site) and `crawl_rules` (versions; JSON data, never code). A `rules` reader goes first in `READERS`; scheduled runs never use the `model` reader. A tested date parser never guesses: a form it can't read keeps `date_text` with no dates. Archive pages are followed and old dates kept. Every reader's findings must appear on the fetched page.
+- **#276 runs.** `runs(venue_id, title, show_id nullable, start_date, end_date, source, source_url, confidence, last_seen_at)`, with an index on venue and `daterange(start_date, end_date, '[]')`. `publish_crawl_findings(run_id)` upserts shows that passed the check, linking `show_id` only when `similar_shows` says `same`. `merge_shows`/`merge_venues` move runs. Entries don't reference runs.
+- **#389 state.** `crawl_pages`: fingerprint of the page's text, ETag and Last-Modified, last result, failures in a row, status. An archive is read once and resumes if interrupted; after that only the newest archive page is checked, because page numbers shift. Plain-code health signals feed #394. A bad run never overwrites good data.
+- **#390 diary score.** The admin's own entries compared with what was crawled at those venues, so misses are visible.
 
-### #314 Journey 1, step 3: more crawl sources (parked)
-Each is its own decision after step 2 shows real use: #361 Wikipedia, #287 IBDB and Playbill, #292 Wayback Machine. Each is one module under `supabase/scripts/crawl/sources/`, and goes through the review screen before it publishes.
+### #391 Journey 1, step 3: the crawl loop fills runs on its own
+- **#392 find links.** Websites from Wikidata `P856`, then a capped web search accepted only if the homepage names the venue. Code shortlists homepage links and Haiku picks. Links entered by hand are never overwritten.
+- **#393 write rules.** Haiku gets trimmed HTML and the rules schema, with no tools, and returns rules only. Code applies them and refuses any that fail. One retry on Sonnet, then "needs attention".
+- **#394 repair.** Health signals rerun #392 and #393. New rules must still find known shows. Attempts are limited per site, and good data stays in place.
+- **#288 the loop.** Daily batches until sites are filled, weekly what's-on checks, limits per run, and a progress page. Does nothing until repository variable `CRAWL_LOOP_ENABLED` is `true`, which is the owner's kick-off.
+
+### #272 Journey 1, step 4: suggest the show from runs
+- **#360 entry suggestions.** `suggest_shows(venue_ids uuid[], on_date date)` returns `(show_id, title, venue_id, source, score)`, `source` in `community`, `yours`. `security definer` only if needed to count other people's public entries; it must return no user ids and must apply `profile_is_visible`, entry visibility and `blocks` (reuse the predicates used by `feed_entries`). `entry_logged` gains `show_source`.
+- **#278 run suggestions.** Adds the `run` source. A single run at confidence 0.8 or above, seen recently, at a single venue fills an empty show; the rest are chips. Tapping a run with no show goes through the "Did you mean…?" path, so crawl noise never enters show search.
+
+### #314 Journey 1, later: more crawl sources (parked)
+Parked until the diary score and the loop's "needs attention" list show the gaps: #361 Wikipedia, #287 IBDB and Playbill, #292 Wayback Machine, and any search for show data on other websites.
 
 ## 4. SQL conventions and known traps
 
@@ -85,7 +95,7 @@ Each is its own decision after step 2 shows real use: #361 Wikipedia, #287 IBDB 
 
 ## 5. Scripts (admin, never the app)
 
-Follow `supabase/scripts/sync-wikidata.mjs`: Node 24+, **no npm packages**, `node:util` `parseArgs`, a descriptive User-Agent, retries with backoff on 429/5xx, `--dry-run` that runs SQL in a read-only transaction, the real run in one transaction, and psql spawned with the connection in `PGDATABASE` from `SUPABASE_DB_URL` (default local `postgresql://postgres:postgres@127.0.0.1:54322/postgres`), never in argv, and psql errors never echoed (they can contain credentials). Pure functions are exported and tested with `node --test`; each new test file is added to the `web` job in `.github/workflows/ci.yml`. Document usage in `supabase/README.md`. Hosted runs are the owner's.
+Follow `supabase/scripts/sync-wikidata.mjs`: Node 24+, **no npm packages** (the one exception is `cheerio` for the crawl scripts, the owner's call, #388), `node:util` `parseArgs`, a descriptive User-Agent, retries with backoff on 429/5xx, `--dry-run` that runs SQL in a read-only transaction, the real run in one transaction, and psql spawned with the connection in `PGDATABASE` from `SUPABASE_DB_URL` (default local `postgresql://postgres:postgres@127.0.0.1:54322/postgres`), never in argv, and psql errors never echoed (they can contain credentials). Pure functions are exported and tested with `node --test`; each new test file is added to the `web` job in `.github/workflows/ci.yml`. Document usage in `supabase/README.md`. Hosted runs are the owner's.
 
 ## 6. Order and why
 
@@ -94,9 +104,11 @@ Follow `supabase/scripts/sync-wikidata.mjs`: Node 24+, **no npm packages**, `nod
 | #353 Journey 2 (launch) | nothing | The launch logging flow |
 | #363 Admin: shows | nothing | Correct, findable show names |
 | #355 Admin: theatres | nothing | What's-on links, and where people actually log |
-| #289 Crawl pilot | #355 (and #366 for #367) | An answer on whether theatre sites can be read accurately, and the tools to tune it |
-| #272 Runs and suggestions | The pilot passing (#360 needs nothing) | Show pre-filled from venue and date |
-| #314 More sources | Step 2's analytics | Past shows, for older photos |
+| #289 Crawl pilot | #355 | Review tools, and the workflow the loop runs on |
+| #387 Rules into runs | #289 | Code fills `runs` for sites with rules, at no AI cost |
+| #391 Crawl loop | #387, #358 | The system fills `runs` on its own once the owner turns it on |
+| #272 Suggestions | Good data in `runs` (#360 needs nothing) | Show pre-filled from venue and date |
+| #314 More sources | The gaps the loop shows | Whatever theatres don't publish |
 
 **Measure of progress:** of photo logs with a known venue, the share whose show came from a suggestion rather than being typed (`entry_logged.show_source`). Add theatres in order of entries logged there.
 
