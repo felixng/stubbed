@@ -29,7 +29,8 @@ test('local database loop discovers, publishes, repairs and rereads without AI o
    offline=pass===2;
    const run=await createRun({venueIds:[id],method:'rules',budgetUsd:1});runIds.push(run.id);
    await store.setRunVenues(run.id,[id]);
-   const result=await runLoop({limits:loopLimits({CRAWL_LOOP_ENABLED:'true'}),deps:{work:async()=>[venue],loadSite:store.loadWorkSite,model,saveLinks:store.saveLinks,recordSite:store.recordSite,recordVenue:store.recordVenue,
+   assert.equal((await store.selectedWork([id]))[0].id,id,'manual selection includes theatres before discovery');
+   const result=await runLoop({limits:loopLimits({CRAWL_LOOP_ENABLED:'true'}),deps:{work:async()=>[venue],loadSite:store.loadWorkSite,model,claim:(siteId,owner)=>store.claim(siteId,run.id,owner),release:store.release,saveLinks:store.saveLinks,recordSite:store.recordSite,recordVenue:store.recordVenue,
     discover:args=>discoverLinks({...args,fetchPage,lookupWebsite:async()=>null,search:async()=>[]}),
     writeRules:async args=>writeRules({...args,fetchPage,proposed:await store.proposed(args.site),saveVersion:(r,a,c)=>store.saveVersion(args.site,r,a,c),activate:(r,c)=>store.activate(args.site,r,c)}),
     activatePrepared:(s,r)=>store.adoptVersion(s,r.ruleId,r.validation),
@@ -42,6 +43,14 @@ test('local database loop discovers, publishes, repairs and rereads without AI o
   const [venue]=await runPsql(`select to_jsonb(v) from public.venues v where id='${id}'`);assert.equal(venue.whats_on_url,`${origin}/moved`);assert.equal(venue.website,`${origin}/`);
   const [active]=await runPsql(`select to_jsonb(count(*)) from public.crawl_rules r join public.crawl_sites s on s.id=r.site_id where s.whats_on_url like '${origin}/%' and r.status='active'`);assert.equal(active,1);
   assert.ok((await store.progress()).runs>=5);
+  const owners=[randomUUID(),randomUUID()];
+  const claims=await Promise.all(owners.map(owner=>store.claim(venue.crawl_site_id,runIds.at(-1),owner)));
+  assert.equal(claims.filter(Boolean).length,1,'simultaneous database claims have exactly one winner');
+  const winner=owners[claims.findIndex(Boolean)];
+  await store.release(venue.crawl_site_id,owners[claims.findIndex(ok=>!ok)]);
+  assert.equal(await store.claim(venue.crawl_site_id,runIds.at(-1),randomUUID()),false,'other workers cannot release the winner');
+  await store.release(venue.crawl_site_id,winner);
+
  }finally{
   await runPsql(`delete from public.venues where id='${id}';delete from public.crawl_runs where id=any(array[${runIds.map(r=>`'${r}'::uuid`).join(',')}]);delete from public.crawl_sites where whats_on_url like '${origin}/%';`);
   if(previous===undefined)delete process.env.SUPABASE_DB_URL;else process.env.SUPABASE_DB_URL=previous;

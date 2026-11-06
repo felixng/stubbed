@@ -8,7 +8,8 @@
 import { readFile, writeFile, appendFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
-import { createFetcher, siteKey } from './fetch.mjs';
+import {mapFour} from './concurrent.mjs';
+import { createFetcher, createHostGate, siteKey } from './fetch.mjs';
 import { createRun, finishRun, loadSite, readRun, readVenues, startRun } from './load.mjs';
 import { readPage, stubReader } from './readers.mjs';
 import { renderReport, summarise } from './report.mjs';
@@ -39,14 +40,14 @@ export function groupBySite(venues) {
 // recorded and the run carries on.
 export async function crawlSites({ sites, fetchPage, load, readerList = READERS, run, spend = { usd: 0 }, readerContext = {}, log = () => {} }) {
   const results = [];
-  for (const site of sites) {
+  await mapFour(sites, async site => {
     const result = { url: site.url, venues: site.venues, status: 'failed', findings: 0, methods: [] };
     results.push(result);
     try {
       const page = await fetchPage(site.url);
       result.status = page.status;
       result.error = page.error;
-      if (page.status !== 'ok') { log(`${site.url}: ${page.status}${page.error ? ` (${page.error})` : ''}`); continue; }
+      if (page.status !== 'ok') { log(`${site.url}: ${page.status}${page.error ? ` (${page.error})` : ''}`); return; }
       const notes = [];
       const findings = await readPage({ url: site.url, html: page.html }, { venues: site.venues, run, spend, notes, ...readerContext }, readerList);
       if (notes.length) result.note = notes.join('; ');
@@ -59,7 +60,7 @@ export async function crawlSites({ sites, fetchPage, load, readerList = READERS,
       result.error = 'Could not read or store this site';
       log(`${site.url}: failed`);
     }
-  }
+  });
   return results;
 }
 
@@ -103,9 +104,9 @@ export async function main(args = process.argv.slice(2)) {
     else delete cache[p.url];
   }
   const spend = { usd: 0 };
-  const fetchPage = createFetcher({ cache, minDelayMs: Number(values['delay-ms'] ?? 2000) });
+  const fetchPage = createFetcher({ gate:createHostGate(), cache, minDelayMs: Number(values['delay-ms'] ?? 2000) });
   const results = [];
-  for (const group of sites) {
+  await mapFour(sites, async group => {
     const site = savedSites.find(s => siteKey(s.whats_on_url) === group.url);
     try {
       if (site) results.push(await crawlPersistentSite({
@@ -116,7 +117,7 @@ export async function main(args = process.argv.slice(2)) {
       }));
       else results.push(...await crawlSites({ sites:[group],fetchPage,run,spend,load:dryRun?null:(url,findings)=>loadSite(run.id,url,findings) }));
     } catch { results.push({url:group.url,venues:group.venues,status:'failed',findings:0,error:'Could not read or store this site'}); }
-  }
+  });
   if (values.cache) await writeFile(values.cache, JSON.stringify(cache, null, 2));
   const allFailed = results.length > 0 && results.every(r => r.status !== 'ok' && r.status !== 'not_modified');
   if (!dryRun) await finishRun(run.id, { status: allFailed ? 'failed' : 'done', summary: summarise(results, skipped), costUsd: spend.usd });

@@ -22,13 +22,16 @@ async function Runs() {
   const { supabase } = await ownerContext();
   const { data, error } = await supabase
     .from("crawl_runs")
-    .select("id, kind, status, method, model, prompt, branch, commit_sha, budget_usd, cost_usd, venue_ids, summary, created_at, log_url")
+    .select("id, pipeline, kind, status, method, model, prompt, branch, commit_sha, budget_usd, cost_usd, venue_ids, summary, created_at, log_url")
     .order("created_at", { ascending: false })
     .limit(50);
   if (error) return <p className="text-subheadline text-label-secondary">Couldn’t load runs: {error.message}</p>;
-  const { data: theatres } = await supabase.from("venues").select("id, name").not("whats_on_url", "is", null).order("name").limit(10000);
+  const { data: theatres } = await supabase.rpc("admin_list_crawl_venues", { page_size: 50, page_offset: 0 });
   const runs = (data ?? []) as unknown as Run[];
-  const names = new Map((theatres ?? []).map(t => [t.id, t.name]));
+  const ids = [...new Set(runs.flatMap(r => r.venue_ids))];
+  const batches = Array.from({ length: Math.ceil(ids.length / 100) }, (_, i) => ids.slice(i * 100, (i + 1) * 100));
+  const named = await Promise.all(batches.map(batch => supabase.from("venues").select("id,name").in("id", batch)));
+  const names = new Map(named.flatMap(result => result.data ?? []).map(t => [t.id, t.name]));
   return (
     <>
     <CrawlProgress />

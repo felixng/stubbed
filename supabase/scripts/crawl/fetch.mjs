@@ -88,8 +88,19 @@ async function readCapped(response) {
   return text;
 }
 
+// Shared by all four workers and all fetcher instances in a job. Requests to
+// one host wait for the previous response and preserve its minimum start gap.
+export function createHostGate({sleep=delay,now=Date.now}={}) {
+ const queues=new Map(),last=new Map();
+ return async(host,gap,fn)=>{
+  const previous=queues.get(host)??Promise.resolve();
+  const next=previous.catch(()=>{}).then(async()=>{const wait=(last.get(host)??-Infinity)+gap-now();if(wait>0)await sleep(wait);last.set(host,now());return fn();});
+  queues.set(host,next);try{return await next;}finally{if(queues.get(host)===next)queues.delete(host);}
+ };
+}
+
 // fetchPage(url) -> { status: 'ok' | 'not_modified' | 'blocked' | 'failed', html?, etag?, lastModified?, error? }
-export function createFetcher({ fetchFn = fetch, minDelayMs = 2000, cache = {}, conditional = true, sleep = delay, now = Date.now } = {}) {
+export function createFetcher({ fetchFn = fetch, minDelayMs = 2000, cache = {}, conditional = true, gate = null, sleep = delay, now = Date.now } = {}) {
   const lastRequest = new Map();   // host -> time of the last request
   const robots = new Map();        // origin -> rules
 
@@ -114,7 +125,7 @@ export function createFetcher({ fetchFn = fetch, minDelayMs = 2000, cache = {}, 
     let rules = { allow: [], disallow: [], crawlDelay: null };
     try {
       await wait(u.host, minDelayMs);
-      const res = await get(`${u.origin}/robots.txt`);
+      const res = gate ? await gate(u.host,minDelayMs,()=>get(`${u.origin}/robots.txt`)) : await get(`${u.origin}/robots.txt`);
       if (res.status === 401 || res.status === 403) rules = { allow: [], disallow: ['/'], crawlDelay: null };
       else if (res.ok) rules = parseRobots(await readCapped(res));
     } catch { /* no robots.txt we can read: allowed, but still polite */ }
@@ -131,10 +142,11 @@ export function createFetcher({ fetchFn = fetch, minDelayMs = 2000, cache = {}, 
       if (!isAllowed(rules, u.pathname + u.search)) return { status: 'blocked', error: 'Disallowed by robots.txt' };
       await wait(u.host, Math.max(minDelayMs, (rules.crawlDelay ?? 0) * 1000));
       const known = conditional ? (cache[key] ?? {}) : {};
-      const res = await get(key, {
+      const headers = {
         ...(known.etag ? { 'If-None-Match': known.etag } : {}),
         ...(known.lastModified ? { 'If-Modified-Since': known.lastModified } : {}),
-      });
+      };
+      const res = gate ? await gate(u.host,Math.max(minDelayMs,(rules.crawlDelay??0)*1000),()=>get(key,headers)) : await get(key,headers);
       if (res.status === 304) return { status: 'not_modified' };
       if (res.status === 401 || res.status === 403 || res.status === 429) return { status: 'blocked', error: `The site answered ${res.status}` };
       if (!res.ok) return { status: 'failed', error: `The site answered ${res.status}` };

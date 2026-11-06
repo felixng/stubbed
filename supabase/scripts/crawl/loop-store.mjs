@@ -40,3 +40,13 @@ export async function adoptVersion(site,id,validation,db=runPsql){
  update public.crawl_sites set archive_status='not_started' where id=${uuidLiteral(site.id)};
  commit;`);
 }
+
+export async function selectedWork(ids,db=runPsql){
+ const [rows]=await db(`select coalesce(jsonb_agg(to_jsonb(x) order by x.position),'[]'::jsonb) from (
+ select distinct on(coalesce(v.crawl_site_id,v.id)) v.*,array_position(array(select jsonb_array_elements_text(${jsonLiteral(ids)}))::uuid[],v.id) as position
+ from public.venues v where v.id=any(array(select jsonb_array_elements_text(${jsonLiteral(ids)}))::uuid[])
+ order by coalesce(v.crawl_site_id,v.id),position) x`);
+ return rows;
+}
+export async function claim(siteId,runId,owner,db=runPsql){const [ok]=await db(`select to_jsonb(public.claim_crawl_site(${uuidLiteral(siteId)},${uuidLiteral(runId)},${uuidLiteral(owner)}))`);return ok;}
+export async function release(siteId,owner,db=runPsql){await db(`select to_jsonb(public.release_crawl_site(${uuidLiteral(siteId)},${uuidLiteral(owner)}))`);}

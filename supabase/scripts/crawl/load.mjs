@@ -67,11 +67,11 @@ export async function readRun(runId, db = runPsql) {
   return run;
 }
 
-export async function createRun({ venueIds, method, model, prompt, branch, commitSha, budgetUsd }, db = runPsql) {
-  const [run] = await db(`insert into public.crawl_runs (status, venue_ids, method, model, prompt, branch, commit_sha, budget_usd, started_at)
+export async function createRun({ venueIds, method, model, prompt, branch, commitSha, budgetUsd, pipeline = 'legacy' }, db = runPsql) {
+  const [run] = await db(`insert into public.crawl_runs (status, venue_ids, method, model, prompt, branch, commit_sha, budget_usd, started_at, pipeline)
     select 'running', array(select jsonb_array_elements_text(j->'venue_ids'))::uuid[], j->>'method', j->>'model', j->>'prompt',
-           j->>'branch', j->>'commit_sha', coalesce((j->>'budget_usd')::numeric, 0), now()
-    from (select ${jsonLiteral({ venue_ids: venueIds, method, model: model ?? null, prompt: prompt ?? null, branch: branch ?? null, commit_sha: commitSha ?? null, budget_usd: budgetUsd ?? 0 })} as j) x
+           j->>'branch', j->>'commit_sha', coalesce((j->>'budget_usd')::numeric, 0), now(), j->>'pipeline'
+    from (select ${jsonLiteral({ pipeline, venue_ids: venueIds, method, model: model ?? null, prompt: prompt ?? null, branch: branch ?? null, commit_sha: commitSha ?? null, budget_usd: budgetUsd ?? 0 })} as j) x
     returning to_jsonb(crawl_runs)`);
   return run;
 }

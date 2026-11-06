@@ -1133,3 +1133,23 @@ The owner explicitly deferred live crawl/model acceptance runs until setup is
 complete. Local fixture/database integration covers discovery, rule validation,
 publication, moved-link/layout repair and a repeat visit with no AI. No hosted
 migrations, live model calls or enabling of the switch were performed.
+
+## 2026-11-06 — Select any theatre and run four sites concurrently
+
+The default Backstage crawl uses the discovery/setup/repair pipeline for any
+1–10 existing theatres, including those without a website or what's-on link.
+Search is server-side and paged, so the selector covers the whole catalogue;
+selected theatres remain visible when the search changes. Manual runs use their
+saved selection/budget and do not require enabling the automatic schedule.
+Reader comparisons remain an explicit advanced option requiring existing links.
+Old saved runs retain that legacy path.
+
+Manual and scheduled discovery jobs use the same four-worker pool. Completed
+slots pick up the next site until the batch/time limit is reached. The spending
+and search caps are shared by the whole run, not multiplied by four. Per-host
+request gates preserve polite spacing across workers. Known shared sites are
+deduplicated; owner-bound database leases prevent concurrent setup/publication
+when different selections resolve to the same site. Leases release in finally
+blocks and expire after 30 minutes if a worker crashes. Actions still serialises
+whole jobs, so manual and scheduled runs share the same four-site ceiling.
+Progress snapshots are serialised to prevent stale concurrent writes.

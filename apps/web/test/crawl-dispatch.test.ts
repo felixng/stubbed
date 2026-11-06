@@ -34,3 +34,8 @@ test("dispatch failures mark the saved run failed; successful dispatch returns i
   const success = await startCrawlRequest(request(), { ...deps, dispatch: async () => {} });
   assert.equal(success.status, 201); assert.deepEqual(await success.json(), { id: "saved-id" });
 });
+test("manual discovery accepts theatre IDs without a preconfigured link and validates its pipeline", () => {
+  assert.equal(crawlInput({ ...valid, pipeline: "discover" }).pipeline, "discover");
+  assert.equal(crawlInput({ ...valid, pipeline: "legacy" }).pipeline, "legacy");
+  assert.throws(() => crawlInput({ ...valid, pipeline: "unknown" }));
+});
