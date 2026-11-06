@@ -70,6 +70,31 @@ export const copyDefinitions = {
       "value": "Make your first card",
       "multiline": false
     },
+    "storiesEyebrow": {
+      "title": "storiesEyebrow",
+      "value": "Seen on Stories",
+      "multiline": false
+    },
+    "storiesHeading": {
+      "title": "storiesHeading",
+      "value": "Your card, on your story.",
+      "multiline": false
+    },
+    "storiesBody": {
+      "title": "storiesBody",
+      "value": "Send a card to Stories in one tap, then place it over your own photo like any sticker.",
+      "multiline": false
+    },
+    "storiesLabel": {
+      "title": "storiesLabel",
+      "value": "Example Instagram Stories",
+      "multiline": false
+    },
+    "storiesHelp": {
+      "title": "storiesHelp",
+      "value": "Scroll to see more. Placeholder stories from another app; real Stubbed examples to come.",
+      "multiline": true
+    },
     "diaryEyebrow": {
       "title": "diaryEyebrow",
       "value": "02 / Look back",

@@ -25,3 +25,9 @@ export type CardId = keyof typeof cardAlt;
 export const tripImageAlt = "Demo trip summary for @sillyelphaba: An encore getaway, 2–4 November 2026, with photos from The Lost Boys at Palace Theatre and Operation Mincemeat at Fortune Theatre.";
 
 export const statsImageAlt = "Native Insights demo showing 57 visits to 34 unique shows in 2026, 66 shows in 2025, a daily activity grid and monthly attendance chart.";
+
+// Placeholder stories (public/landing/stories); describe the real artwork when it replaces them.
+export const storyAlt = {
+  "placeholder-1": "Placeholder story: a beach photo with running distance, pace and time in white text above a drawn route.",
+  "placeholder-2": "Placeholder story: a path at dusk with running distance, pace and duration in white text.",
+} as const;
