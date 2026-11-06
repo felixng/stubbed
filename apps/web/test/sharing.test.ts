@@ -8,8 +8,8 @@ const insights: InsightCardData = { year: 2026, handle: "sillyelphaba", stats: {
   years: [{ year: 2026, count: 24 }], months: [{ month: "2025-01", count: 99 }, { month: "2026-10", count: 24 }],
   types: [{ type: "play", count: 6 }, { type: "musical", count: 12 }, { type: "opera", count: 2 }, { type: "comedy", count: 2 }, { type: "dance", count: 1 }, { type: "standup", count: 1 }] } };
 test("entry sharing separates photo eligibility, saved ratings and repeat visits", () => {
-  assert.deepEqual(availableEntryDesigns(entry, true).map(d => d.id), ["stats", "name", "data", "encore", "show-number", "overlay", "ticket", "venue-visits"]);
-  assert.deepEqual(availableEntryDesigns({ ...entry, rating: null, timesSeen: 1 }, false).map(d => d.id), ["data", "encore", "show-number", "overlay", "ticket", "venue-visits"]);
+  assert.deepEqual(availableEntryDesigns(entry, true).map(d => d.id), ["stats", "name", "show-number", "overlay", "data", "encore", "ticket", "venue-visits"]);
+  assert.deepEqual(availableEntryDesigns({ ...entry, rating: null, timesSeen: 1 }, false).map(d => d.id), ["show-number", "overlay", "data", "encore", "ticket", "venue-visits"]);
   assert.ok(!availableEntryDesigns({ ...entry, rating: null }, true).some(d => d.id === "name"));
   for (const design of availableEntryDesigns(entry, true)) assert.equal(cardBackground(design, "transparent"), design.background ? "transparent" : "photo");
 });

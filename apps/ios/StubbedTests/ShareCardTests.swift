@@ -71,8 +71,8 @@ struct ShareCardTests {
     #expect(!EntryCardDesign.available(photo: true, rating: nil, timesSeen: 1).contains(.name))
     #expect(EntryCardDesign.available(photo: true, rating: 0.5, timesSeen: 1).contains(.name))
     #expect(EntryCardDesign.available(photo: true, rating: 5, timesSeen: 1).contains(.encore))
-    #expect(EntryCardDesign.available(photo: false, rating: nil, timesSeen: 2) == [.data, .encore, .number, .overlay, .ticket])
-    #expect(EntryCardDesign.available(photo: true, rating: 1, timesSeen: 5) == [.stats, .name, .data, .encore, .number, .overlay, .ticket])
+    #expect(EntryCardDesign.available(photo: false, rating: nil, timesSeen: 2) == [.number, .overlay, .data, .encore, .ticket])
+    #expect(EntryCardDesign.available(photo: true, rating: 1, timesSeen: 5) == [.stats, .name, .number, .overlay, .data, .encore, .ticket])
   }
 
   @Test func seenCountGrammarAndVenueEligibility() {

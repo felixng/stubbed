@@ -37,7 +37,6 @@ final class SharePhotoUITests: XCTestCase {
     snapshot("share-photo-after-transparent")
     card("rating + photo").swipeLeft()
     XCTAssertTrue(app.buttons["Transparent"].isSelected)
-    card("no background").swipeLeft()
     XCTAssertTrue(card("show number").waitForExistence(timeout: 5))
     app.buttons["Gradient"].tap()
     snapshot("share-show-number")
@@ -60,6 +59,10 @@ final class SharePhotoUITests: XCTestCase {
     let first = app.images.matching(NSPredicate(format: "label BEGINSWITH %@", "Share card 1 of")).firstMatch
     XCTAssertTrue(first.waitForExistence(timeout: 20))
     first.swipeLeft()
+    XCTAssertTrue(card("show overlay").waitForExistence(timeout: 5))
+    card("show overlay").swipeLeft()
+    XCTAssertTrue(card("data, ").waitForExistence(timeout: 5))
+    card("data, ").swipeLeft()
     XCTAssertTrue(card("encore").waitForExistence(timeout: 5))
     app.buttons["Gradient"].tap()
     snapshot("share-encore")

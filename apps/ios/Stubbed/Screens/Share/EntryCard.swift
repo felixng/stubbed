@@ -34,7 +34,7 @@ enum EntryCardDesign: String, CaseIterable, Identifiable, Sendable {
   var isPhoto: Bool { self == .stats || self == .name }
   static func available(photo: Bool, rating: Double?, timesSeen: Int, venue: String? = nil, venueVisit: Int = 0) -> [Self] {
     (photo ? [.stats] + (rating != nil ? [.name] : []) : [])
-      + [.data, .encore, .number, .overlay, .ticket]
+      + [.number, .overlay, .data, .encore, .ticket]
       + (venue?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false && venueVisit > 0 ? [.venue] : [])
   }
 }
@@ -92,26 +92,19 @@ struct EntryCardView: View {
         ShowOverlayCard(data: data, ink: ink)
       } else {
         VStack(alignment: .leading, spacing: 0) {
-          if design == .stats {
-            HStack(alignment: .top, spacing: 12) {
-              ForEach(Array(metrics.enumerated()), id: \.offset) { _, item in
-                VStack(spacing: 6) {
-                  Text(item.0).font(.system(size: 17, weight: .medium)).lineLimit(2).frame(height: 42)
-                  Text(item.1).font(.system(size: 28, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7)
-                }.frame(maxWidth: .infinity)
+          if design == .stats || design == .data {
+            HStack(alignment: .top, spacing: 24) {
+              ForEach(Array(metrics.enumerated()), id: \.offset) { index, item in
+                VStack(alignment: index == 0 ? .leading : .trailing, spacing: 6) {
+                  Text(item.0).font(.system(size: design.isPhoto ? 17 : 18, weight: .medium))
+                    .lineLimit(2).multilineTextAlignment(index == 0 ? .leading : .trailing)
+                    .frame(height: 42, alignment: index == 0 ? .topLeading : .topTrailing)
+                  Text(item.1).font(.system(size: design.isPhoto ? 28 : 42, weight: .bold))
+                    .lineLimit(1).minimumScaleFactor(0.6)
+                }.frame(maxWidth: .infinity, alignment: index == 0 ? .leading : .trailing)
               }
             }
             Spacer()
-          } else if design == .data {
-            CardTitle(text: data.title, size: 38, lineHeight: 42, width: 484, ink: ink)
-            Spacer(minLength: 20)
-            ForEach(Array(metrics.enumerated()), id: \.offset) { _, item in
-              VStack(alignment: .leading, spacing: 3) {
-                Text(item.0).font(.system(size: 18, weight: .medium)).lineLimit(2)
-                Text(item.1).font(.system(size: 42, weight: .bold)).lineLimit(1).minimumScaleFactor(0.65)
-              }.padding(.bottom, 20)
-            }
-            Spacer(minLength: 12)
           } else if !design.isPhoto {
             Text(design == .encore ? (data.timesSeen == 1 ? "First visit" : "Encore") : "My theatre year")
               .font(.system(size: 22, weight: .medium))
@@ -125,8 +118,8 @@ struct EntryCardView: View {
               .padding(.bottom, 12)
             Spacer(minLength: 0)
           } else { Spacer() }
-          if design.isPhoto {
-            CardTitle(text: data.title, size: design == .stats ? 28 : 36, lineHeight: 40, width: 484, ink: ink).padding(.bottom, 12)
+          if design.isPhoto || design == .data {
+            CardTitle(text: data.title, size: design == .data ? 38 : design == .stats ? 28 : 36, lineHeight: design == .data ? 42 : 40, width: 484, ink: ink).padding(.bottom, 12)
             if design == .name, let rating = data.rating {
               CardStars(value: rating, size: 30, gap: 4, outline: .white.opacity(0.75)).padding(.bottom, 16)
             }
