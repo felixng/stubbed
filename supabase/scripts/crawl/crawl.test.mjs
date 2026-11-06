@@ -197,7 +197,7 @@ test('structured: one theatre, JSON-LD events with stages, kinds and dates', asy
   assert.equal(read(structuredReader, await fixture('plain-whats-on.html'), [venue]), null);
 });
 
-test('structured: a shared site matches stages to its theatres, keeps unmatched ones, drops repeats and implausible dates', async () => {
+test('structured: a shared site matches stages to its theatres, keeps unmatched ones, drops repeats and retains archive dates', async () => {
   const venues = [{ id: 'oli', name: 'Olivier' }, { id: 'lyt', name: 'Lyttelton' }, { id: 'dor', name: 'Dorfman' }];
   const found = read(structuredReader, await fixture('nt-jsonld.html'), venues);
   assert.deepEqual(found.map(f => [f.raw_title, f.venue_id, f.stage_text]), [
@@ -205,9 +205,9 @@ test('structured: a shared site matches stages to its theatres, keeps unmatched 
     ['Example Musical', 'lyt', 'The Lyttelton'],
     ['Backstage Tour', null, 'Riverside Foyer'],
   ]);
-  assert.equal(found[2].start_date, null, 'a 1999 date is dropped, the finding is kept');
+  assert.equal(found[2].start_date, '1999-01-01', 'archive dates are retained');
   assert.equal(found[2].kind, 'talk');
-  assert.equal(found[2].confidence, 0.5);
+  assert.equal(found[2].confidence, 0.8);
   assert.equal(matchStage('Studio', venues), null);
   assert.equal(matchStage(null, venues), null);
   assert.equal(matchStage('Anything', [venues[0]]), 'oli');
@@ -294,13 +294,13 @@ test('the full chain: structured first, model next, the stub last; the report sa
   const fetchFn = async (url, init) => (JSON.parse(init.body).messages[0].content.includes('Pantomime') ? answer(url, init) : apiFetch([])(url, init));
   const results = await crawlSites({ sites, fetchPage, run, spend, readerList: READERS, readerContext: { today: TODAY, apiKey: 'k', fetchFn } });
   assert.deepEqual(results.map(r => [r.status, r.methods, r.findings]), [
-    ['ok', ['structured'], 3], ['ok', ['model'], 1], ['ok', ['stub'], 1],
+    ['ok', ['structured'], 3], ['ok', [], 0], ['ok', [], 0],
   ]);
   assert.ok(spend.usd > 0);
   const text = renderReport({ run, sites: results, costUsd: spend.usd });
   assert.match(text, /\| structured data \|/);
-  assert.match(text, /\| model \|/);
-  assert.match(text, /nothing read \(title only\)/);
+  assert.match(text, /failed the page check/);
+
   assert.match(text, /Model cost: \$0\.00/);
   const noModel = await crawlSites({ sites: sites.slice(1, 2), fetchPage, run: { method: 'rules' }, readerList: READERS, readerContext: { today: TODAY } });
   assert.deepEqual(noModel[0].methods, ['stub'], 'rules only: a page with no structured data is the stub');

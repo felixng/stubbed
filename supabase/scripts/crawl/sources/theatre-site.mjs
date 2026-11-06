@@ -111,7 +111,7 @@ export function matchStage(stage, venues) {
   return hits.length === 1 ? hits[0].id : null;
 }
 
-export function structuredReader({ url, html }, { venues, today }) {
+export function structuredReader({ url, html }, { venues }) {
   const events = eventsFromJsonLd(jsonLdBlocks(html));
   if (events.length === 0) return null;
   const seen = new Set();
@@ -119,8 +119,8 @@ export function structuredReader({ url, html }, { venues, today }) {
   for (const e of events) {
     const title = text(e.name).slice(0, 300);
     if (!title) continue;
-    const start = plausibleDate(isoDate(e.startDate), today);
-    const end = plausibleDate(isoDate(e.endDate), today);
+    const start = isoDate(e.startDate);
+    const end = isoDate(e.endDate);
     const stage = locationNames(e).find(n => matchStage(n, venues)) ?? locationNames(e)[0] ?? null;
     const key = `${title.toLowerCase()}|${start}|${stage}`;
     if (seen.has(key)) continue;
@@ -179,8 +179,8 @@ export function findingsFromModel(events, { url, venues, today }) {
     if (!title) continue;
     const dateText = text(e.date_text).slice(0, 200) || null;
     const backed = explicitDateText(dateText);
-    const start = backed ? plausibleDate(isoDate(e.start_date), today) : null;
-    const end = backed ? plausibleDate(isoDate(e.end_date), today) : null;
+    const start = backed ? isoDate(e.start_date) : null;
+    const end = backed ? isoDate(e.end_date) : null;
     const stage = text(e.stage).slice(0, 200) || null;
     const key = `${title.toLowerCase()}|${start}|${stage}`;
     if (seen.has(key)) continue;

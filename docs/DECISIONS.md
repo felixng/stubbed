@@ -1079,3 +1079,24 @@ Both SQL and the route validate settings; manual budgets are capped at $10.
 Dispatch failures are recorded, and Actions records its revision and log URL
 and marks interrupted jobs failed. Unfinished form selections survive navigation;
 completed selections reset on return. Existing Backstage URLs are retained.
+
+## 2026-11-06 — Saved crawl rules, durable history and runs (#387)
+
+Reading rules are CSS selectors stored as JSON, never executable code. Cheerio
+1.2.0 is pinned in the crawler's own package and lockfile. Routine reads prefer
+active rules, then structured data; one-off manual comparisons may use a model.
+All readers pass the same title/date-text page check. Archive dates are retained;
+unsupported date forms keep their text without guessed dates.
+
+`crawl_pages` stores text fingerprints, response validators, next-page cursors,
+result titles and health counters, never HTML. Interrupted archives resume;
+completed archives inspect the newest page and follow only when new titles
+appear. Rule changes force a reread. A health failure preserves previous good
+page state and never publishes the failing page. Backstage can request an archive
+reread. Hand-authored Almeida rules are seeded without fetching any pages.
+
+`runs` has no relationship from entries. Publication upserts venue/title/start,
+links only same-match shows, and never creates shows. Automatic publication accepts
+page-checked structured data and active rules. Manual model publication additionally
+requires a Right review. Existing merge RPC response shapes are retained while
+moving runs. Diary scoring compares only the signed-in admin's logged visits.

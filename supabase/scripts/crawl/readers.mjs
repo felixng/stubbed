@@ -1,3 +1,4 @@
+import { checkFindings } from "./rules.mjs";
 // How a fetched page becomes findings. A reader is
 //   (page: { url, html }, ctx: { venues, run, spend, notes }) => findings | null | Promise of either
 // and the first reader to return an array wins. The real readers (structured
@@ -35,7 +36,12 @@ export const readers = [stubReader];
 export async function readPage(page, ctx, list = readers) {
   for (const reader of list) {
     const findings = await reader(page, ctx);
-    if (Array.isArray(findings)) return findings;
+    if (Array.isArray(findings)) {
+      const checked = checkFindings(page.html, findings);
+      const dropped = findings.length - checked.length;
+      if (dropped) ctx.notes?.push(`${dropped} findings failed the page check`);
+      return checked;
+    }
   }
   return [];
 }
