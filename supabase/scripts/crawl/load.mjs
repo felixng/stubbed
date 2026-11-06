@@ -30,20 +30,21 @@ export function cleanFinding(f, url) {
     end_date: f.end_date ?? null,
     date_text: clip(f.date_text, 200),
     kind: ['show', 'talk', 'concert', 'other'].includes(f.kind) ? f.kind : 'other',
-    method: ['stub', 'structured', 'model'].includes(f.method) ? f.method : 'stub',
+    method: ['stub', 'structured', 'model', 'rules'].includes(f.method) ? f.method : 'stub',
     confidence: Math.min(1, Math.max(0, Number(f.confidence) || 0)),
     evidence: clip(f.evidence, 400),
+    page_checked: f.page_checked === true, rule_id: f.rule_id ?? null, fetched_url: url,
   };
 }
 
 export function insertFindingsSql(runId, findings) {
   return `begin;
 insert into public.crawl_findings
-  (run_id, venue_id, source_url, raw_title, stage_text, start_date, end_date, date_text, kind, method, confidence, evidence)
+  (run_id, venue_id, source_url, raw_title, stage_text, start_date, end_date, date_text, kind, method, confidence, evidence, page_checked, rule_id, fetched_url)
 select ${uuidLiteral(runId)}, f.venue_id, f.source_url, f.raw_title, f.stage_text,
-       f.start_date, f.end_date, f.date_text, f.kind, f.method, f.confidence, f.evidence
+       f.start_date, f.end_date, f.date_text, f.kind, f.method, f.confidence, f.evidence, f.page_checked, f.rule_id, f.fetched_url
 from jsonb_to_recordset(${jsonLiteral(findings)}) as f(venue_id uuid, source_url text, raw_title text, stage_text text,
-  start_date date, end_date date, date_text text, kind text, method text, confidence numeric, evidence text);
+  start_date date, end_date date, date_text text, kind text, method text, confidence numeric, evidence text, page_checked boolean, rule_id uuid, fetched_url text);
 select jsonb_build_object('inserted', count(*)) from public.crawl_findings where run_id = ${uuidLiteral(runId)};
 commit;`;
 }

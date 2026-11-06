@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { CrawlAction } from "@/components/app/admin/CrawlAction";
+import { DiaryCrawlScore } from "@/components/app/admin/DiaryCrawlScore";
 import { RefreshCrawl } from "@/components/app/admin/StartCrawl";
 import { AdminOnly } from "@/components/app/admin/AdminOnly";
 import { MissedTitles } from "@/components/app/admin/MissedTitles";
@@ -152,6 +154,8 @@ async function Run({ params, searchParams }: Pick<PageProps<"/app/backstage/craw
         <p className="text-headline text-label">
           <time dateTime={run.created_at}>{WHEN.format(new Date(run.created_at))} UTC</time> · {run.status}
         </p>
+        <CrawlAction id={id} action="publish" />
+        <DiaryCrawlScore venueIds={run.venue_ids} />
         <RefreshCrawl active={run.status === "queued" || run.status === "running"} />
         <p className="text-footnote text-label-secondary">{settingsLine(run)}</p>
         {run.log_url && <a href={run.log_url} target="_blank" rel="noopener noreferrer" className="text-tint-text">Actions log</a>}

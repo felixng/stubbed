@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { DiaryCrawlScore } from "@/components/app/admin/DiaryCrawlScore";
 import { StartCrawl, RefreshCrawl } from "@/components/app/admin/StartCrawl";
 import { AdminOnly } from "@/components/app/admin/AdminOnly";
 import { BackLink } from "@/components/ui/BackLink";
@@ -29,6 +30,8 @@ async function Runs() {
   const names = new Map((theatres ?? []).map(t => [t.id, t.name]));
   return (
     <>
+    <Link href="/app/backstage/crawl/sites" className="text-tint-text">Sites and archive status</Link>
+    <DiaryCrawlScore venueIds={[...new Set(runs.flatMap(r => r.venue_ids))]} />
     <StartCrawl theatres={theatres ?? []} lastPrompt={runs.find(r => r.prompt)?.prompt ?? ""} />
     <RefreshCrawl active={runs.some(r => r.status === "queued" || r.status === "running")} />
     <ul className="overflow-hidden rounded-md border border-separator bg-surface shadow-sm">

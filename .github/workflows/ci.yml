@@ -24,6 +24,7 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: npm ci --prefix supabase/scripts/crawl --ignore-scripts
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test

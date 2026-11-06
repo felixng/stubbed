@@ -12,10 +12,13 @@ import { createFetcher, siteKey } from './fetch.mjs';
 import { createRun, finishRun, loadSite, readRun, readVenues, startRun } from './load.mjs';
 import { readPage, stubReader } from './readers.mjs';
 import { renderReport, summarise } from './report.mjs';
+import { crawlPersistentSite } from './persistent.mjs';
+import { readSite, savePage, saveSite, publish } from './site-store.mjs';
+import { rulesReader } from './rules.mjs';
 import { modelReader, structuredReader } from './sources/theatre-site.mjs';
 
 // Structured data first, a model if the run allows it, then the stub.
-export const READERS = [structuredReader, modelReader, stubReader];
+export const READERS = [rulesReader, structuredReader, modelReader, stubReader];
 
 // Venues grouped by what's-on URL: each URL is fetched once, however many
 // venues share it. Venues with no usable link are returned separately.
@@ -94,12 +97,26 @@ export async function main(args = process.argv.slice(2)) {
     await startRun(run.id);
   }
   const cache = await readCache(values.cache);
+  const savedSites = await readSite(venueIds);
+  for (const site of savedSites) for (const p of site.pages) {
+    if (p.status === 'ok' && p.rule_id === site.rule_id) cache[p.url] = {etag:p.etag,lastModified:p.last_modified};
+    else delete cache[p.url];
+  }
   const spend = { usd: 0 };
   const fetchPage = createFetcher({ cache, minDelayMs: Number(values['delay-ms'] ?? 2000) });
-  const results = await crawlSites({
-    sites, fetchPage, run, spend, log: message => console.error(message),
-    load: dryRun ? null : (url, findings) => loadSite(run.id, url, findings),
-  });
+  const results = [];
+  for (const group of sites) {
+    const site = savedSites.find(s => siteKey(s.whats_on_url) === group.url);
+    try {
+      if (site) results.push(await crawlPersistentSite({
+        site, venues:group.venues, run, spend, readers:READERS, fetchPage,
+        store: dryRun ? {page:async()=>{},site:async()=>{}} : {page:savePage,site:saveSite},
+        load: dryRun ? async()=>{} : (url,findings)=>loadSite(run.id,url,findings),
+        publish: dryRun ? async()=>{} : ()=>publish(run.id),
+      }));
+      else results.push(...await crawlSites({ sites:[group],fetchPage,run,spend,load:dryRun?null:(url,findings)=>loadSite(run.id,url,findings) }));
+    } catch { results.push({url:group.url,venues:group.venues,status:'failed',findings:0,error:'Could not read or store this site'}); }
+  }
   if (values.cache) await writeFile(values.cache, JSON.stringify(cache, null, 2));
   const allFailed = results.length > 0 && results.every(r => r.status !== 'ok' && r.status !== 'not_modified');
   if (!dryRun) await finishRun(run.id, { status: allFailed ? 'failed' : 'done', summary: summarise(results, skipped), costUsd: spend.usd });

@@ -1,0 +1,7 @@
+{
+  "item": ".c-event-card",
+  "title": ".c-event-card__title",
+  "dates": ".c-event-card__daterange",
+  "link": ".c-event-card__permalink",
+  "next": "a.next.page-numbers"
+}

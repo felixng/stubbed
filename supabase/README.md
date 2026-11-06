@@ -238,3 +238,22 @@ secrets. Add `CRAWL_GITHUB_TOKEN` in Vercel: a fine-grained token for this
 repository with Actions write permission. Do not put the model key in Vercel.
 Apply the migration with `supabase db push` before using the form. Rules-only
 runs do not need the model key. Budget is capped at $10 per manual run.
+
+### Rules, archives and runs (#387)
+
+Install crawler dependencies with `npm ci --prefix supabase/scripts/crawl
+--ignore-scripts`. `almeida-rules.json` documents the hand-authored selectors;
+the migration seeds the same active version for the Almeida what's-on and archive
+URLs. Set a theatre's what's-on link to that URL in Backstage to attach it.
+The CLI's existing `--venues` / `--run-id` forms now use persistent site/page
+state. `--dry-run` reads without changing findings, cursors or runs. Archives are
+bounded to 100 pages per visit and resume next time. Existing scripts still use
+`SUPABASE_DB_URL`; no model key is needed for rules/structured-data reads.
+
+Backstage → Crawl runs → Sites and archive status shows health and offers Read
+archive again. Run pages offer Publish checked findings (review AI findings Right
+first), and compare results against only your diary. Automatic publishing never
+uses model findings. New table access is admin-only except public read-only `runs`.
+Apply migrations with `supabase db push` before using these features. The owner
+requested skipping hosted runs until setup is complete; fixture tests cover the
+five specified Almeida archive titles, pagination, resume and repeat visits.

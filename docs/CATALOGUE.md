@@ -64,6 +64,7 @@ Launch is Journey 2: the user types the show (#353). Journey 1 pre-fills the sho
 - **#367 titles to show review.** Findings marked right with no `similar_shows` same-match become `show_candidates` (#366). Adds a show-name pull as a job on the crawl form.
 
 ### #387 Journey 1, step 2: read theatre sites with rules, into runs
+Implemented; live acceptance runs deferred by the owner until setup is complete.
 - **#388 rules reader.** `cheerio`, pinned, for the crawl scripts only. `crawl_sites` (one row per site) and `crawl_rules` (versions; JSON data, never code). A `rules` reader goes first in `READERS`; scheduled runs never use the `model` reader. A tested date parser never guesses: a form it can't read keeps `date_text` with no dates. Archive pages are followed and old dates kept. Every reader's findings must appear on the fetched page.
 - **#276 runs.** `runs(venue_id, title, show_id nullable, start_date, end_date, source, source_url, confidence, last_seen_at)`, with an index on venue and `daterange(start_date, end_date, '[]')`. `publish_crawl_findings(run_id)` upserts shows that passed the check, linking `show_id` only when `similar_shows` says `same`. `merge_shows`/`merge_venues` move runs. Entries don't reference runs.
 - **#389 state.** `crawl_pages`: fingerprint of the page's text, ETag and Last-Modified, last result, failures in a row, status. An archive is read once and resumes if interrupted; after that only the newest archive page is checked, because page numbers shift. Plain-code health signals feed #394. A bad run never overwrites good data.
