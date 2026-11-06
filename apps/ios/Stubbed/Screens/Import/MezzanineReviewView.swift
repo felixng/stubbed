@@ -92,32 +92,27 @@ struct MezzanineReviewView: View {
             }
           }
         }
+        if !model.busy && (model.finished || (!model.rows.isEmpty && model.rows.count <= 10)) {
+          Section {
+            importAction
+              .frame(maxWidth: .infinity)
+              .controlSize(.large)
+          }
+          .listRowBackground(Color.clear)
+        }
       }
       .listStyle(.insetGrouped)
+      .tabBarClearance()
       .onChange(of: model.finished) { _, finished in
         if finished { proxy.scrollTo("summary", anchor: .top); summaryFocused = true }
       }
     }
     .navigationTitle("Review import")
     .navigationBarTitleDisplayMode(.inline)
-    .safeAreaInset(edge: .bottom) {
-      Group {
-        if model.busy {
-          Button(model.stopRequested ? "Stopping…" : "Stop", action: model.requestStop)
-            .buttonStyle(.bordered).disabled(model.stopRequested)
-        } else if model.finished {
-          Button("View diary") { router.finishImport(logged: model.added) }
-            .buttonStyle(.borderedProminent)
-        } else if !model.rows.isEmpty {
-          Button("Import \(model.selected) \(model.selected == 1 ? "show" : "shows")", action: save)
-            .buttonStyle(.borderedProminent).disabled(model.selected == 0)
-        }
+    .toolbar {
+      if model.busy || (!model.finished && model.rows.count > 10) {
+        ToolbarItem(placement: .topBarTrailing) { importAction }
       }
-      .controlSize(.large)
-      .frame(maxWidth: .infinity)
-      .padding(.horizontal)
-      .padding(.vertical, 8)
-      .background(.bar)
     }
     .navigationBarBackButtonHidden(model.busy)
     .task {
@@ -136,6 +131,19 @@ struct MezzanineReviewView: View {
       if let city = countryCity {
         MezzanineCountrySheet(city: city) { code in model.applyCountry(code, city: city); countryCity = nil }
       }
+    }
+  }
+
+  @ViewBuilder private var importAction: some View {
+    if model.busy {
+      Button(model.stopRequested ? "Stopping…" : "Stop", action: model.requestStop)
+        .disabled(model.stopRequested)
+    } else if model.finished {
+      Button("View diary") { router.finishImport(logged: model.added) }
+        .buttonStyle(.borderedProminent)
+    } else {
+      Button("Import \(model.selected) \(model.selected == 1 ? "show" : "shows")", action: save)
+        .buttonStyle(.borderedProminent).disabled(model.selected == 0)
     }
   }
 
