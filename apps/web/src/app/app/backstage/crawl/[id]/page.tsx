@@ -70,7 +70,7 @@ function Pill({ children }: { children: React.ReactNode }) {
 async function Compare({ runId, otherId }: { runId: string; otherId: string }) {
   const { supabase } = await ownerContext();
   const [{ data: other }, { data, error }] = await Promise.all([
-    supabase.from("crawl_runs").select("id, method, model, prompt, branch, commit_sha, budget_usd, cost_usd, venue_ids, created_at").eq("id", otherId).maybeSingle(),
+    supabase.from("crawl_runs").select("id, pipeline, method, model, prompt, branch, commit_sha, budget_usd, cost_usd, venue_ids, created_at").eq("id", otherId).maybeSingle(),
     supabase.rpc("admin_compare_runs", { run_a: otherId, run_b: runId }),
   ]);
   if (!other) return <p className="text-subheadline text-label-secondary">That run doesn’t exist.</p>;
@@ -128,7 +128,7 @@ async function Run({ params, searchParams }: Pick<PageProps<"/app/backstage/craw
   const compareId = typeof compareParam === "string" && UUID.test(compareParam) && compareParam !== id ? compareParam : null;
   const { supabase } = await ownerContext();
   const [runRes, findingsRes, scoresRes, missedRes, othersRes, waitingRes] = await Promise.all([
-    supabase.from("crawl_runs").select("id, status, method, model, prompt, branch, commit_sha, budget_usd, cost_usd, venue_ids, created_at, log_url").eq("id", id).maybeSingle(),
+    supabase.from("crawl_runs").select("id, pipeline, status, method, model, prompt, branch, commit_sha, budget_usd, cost_usd, venue_ids, created_at, log_url").eq("id", id).maybeSingle(),
     supabase
       .from("crawl_findings")
       .select("id, venue_id, source_url, raw_title, stage_text, start_date, end_date, date_text, kind, method, confidence, evidence, review, review_note")
@@ -160,12 +160,14 @@ async function Run({ params, searchParams }: Pick<PageProps<"/app/backstage/craw
         <p className="text-footnote text-label-secondary">{settingsLine(run)}</p>
         {run.log_url && <a href={run.log_url} target="_blank" rel="noopener noreferrer" className="text-tint-text">Actions log</a>}
         <p className="text-subheadline text-label">{scoreLine(total)}</p>
+        {run.pipeline === "discover" ? <Link href="/app/backstage/crawl" className="text-tint-text">Choose theatres for another discovery run</Link> : <>
         <details className="text-footnote text-label-secondary">
           <summary className="min-h-11 cursor-pointer py-3">Run again with these settings</summary>
           <code className="block overflow-x-auto rounded-md bg-fill p-2 whitespace-pre-wrap break-all">{rerunCommand(run)}</code>
           {run.prompt && <pre className="mt-2 overflow-x-auto rounded-md bg-fill p-2 whitespace-pre-wrap">{run.prompt}</pre>}
-          <p className="mt-2">Save the prompt above to prompt.md first. The admin form that does this from here comes with #358.</p>
+          <p className="mt-2">Save the prompt above to prompt.md first. You can also start another run from the crawl form.</p>
         </details>
+        </>}
       </div>
 
       <SendToReview runId={id} waiting={waitingRes.count ?? 0} />

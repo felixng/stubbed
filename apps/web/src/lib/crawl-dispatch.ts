@@ -1,11 +1,12 @@
 import { UUID } from "./admin-crawl";
 
 export const CRAWL_MODELS = ["claude-haiku-5-5", "claude-sonnet-5-5", "claude-opus-5-5"] as const;
-export type CrawlInput = { venue_ids: string[]; method: "rules" | "rules_model"; model: string; prompt: string | null; budget_usd: number; branch: string; kind: "whats_on" | "show_names" };
+export type CrawlInput = { pipeline?: "discover" | "legacy"; venue_ids: string[]; method: "rules" | "rules_model"; model: string; prompt: string | null; budget_usd: number; branch: string; kind: "whats_on" | "show_names" };
 export function crawlInput(value: unknown): CrawlInput {
   if (!value || typeof value !== "object") throw new Error("Invalid settings");
   const v = value as Record<string, unknown>;
   if (!Array.isArray(v.venue_ids) || v.venue_ids.length < 1 || v.venue_ids.length > 10 || !v.venue_ids.every(id => typeof id === "string" && UUID.test(id)) || new Set(v.venue_ids).size !== v.venue_ids.length) throw new Error("Choose 1–10 different theatres");
+  if (v.pipeline != null && v.pipeline !== "discover" && v.pipeline !== "legacy") throw new Error("Invalid pipeline");
   if (v.method !== "rules" && v.method !== "rules_model") throw new Error("Invalid method");
   if (typeof v.model !== "string" || !(CRAWL_MODELS as readonly string[]).includes(v.model)) throw new Error("Invalid model");
   if (typeof v.budget_usd !== "number" || !Number.isFinite(v.budget_usd) || v.budget_usd < 0 || v.budget_usd > 10 || (v.method === "rules_model" && v.budget_usd === 0)) throw new Error("Budget must be between $0 and $10; model runs need a positive budget");

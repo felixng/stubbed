@@ -292,3 +292,24 @@ redeploy. Keep the model key in Actions. Leave `CRAWL_LOOP_ENABLED` off until re
 No new paid search service or key is required. Search-provider failures are
 bounded and visible as unresolved venues. Fixture/model calls cost $0; live
 10-theatre accuracy/cost measurements remain deferred by the owner.
+
+### Manual discovery and four-site concurrency
+
+In Backstage → Crawl runs, search for any theatre and select up to 10. The default
+Discover links and crawl path finds missing website/what's-on links, validates
+reading rules, reads current/archive listings and publishes eligible findings.
+No links need to be entered first. The search reads the complete catalogue in
+pages of 50 and retains selections across searches. Manual jobs work even while
+`CRAWL_LOOP_ENABLED` is off; that switch gates the scheduled loop only.
+
+Both manual discovery and scheduled batches keep at most four sites active.
+The batch limit still controls the total sites per run; budget/search caps apply
+to the entire batch. Requests to a shared host are spaced across all workers.
+Site leases prevent duplicate work and expire after 30 minutes following a
+crash. Existing saved jobs and Advanced: compare page readers retain their
+reader/model/prompt settings and require preconfigured links. These comparison
+jobs also process at most four sites concurrently.
+
+Apply `supabase db push` for the new pipeline column, manual selection validation
+and internal lease table before using this change. No live runs or hosted changes
+were performed during implementation.

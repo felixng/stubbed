@@ -31,7 +31,7 @@ jobs:
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
       - name: Read saved run settings and crawl
-        run: node supabase/scripts/crawl/index.mjs --run-id "$CRAWL_RUN_ID"
+        run: node supabase/scripts/crawl/dispatch-run.mjs
       - name: Mark an interrupted run failed
         if: ${{ always() && (failure() || cancelled()) }}
         run: node supabase/scripts/crawl/fail-run.mjs

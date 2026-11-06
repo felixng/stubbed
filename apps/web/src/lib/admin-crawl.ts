@@ -34,6 +34,7 @@ export function sumScores(rows: Score[]): Score {
 }
 
 export type RunSettings = {
+  pipeline?: string;
   id: string;
   method: string;
   model: string | null;
@@ -47,7 +48,7 @@ export type RunSettings = {
 
 // The settings of a run on one line, for the header and for comparing.
 export function settingsLine(r: RunSettings): string {
-  const parts = [r.method === "rules_model" ? "rules, then model" : "rules only"];
+  const parts = [r.pipeline === "discover" ? "discover links, prepare rules, then crawl" : r.method === "rules_model" ? "rules, then model" : "rules only"];
   if (r.method === "rules_model") parts.push(r.model || "default model");
   parts.push(r.prompt ? "custom prompt" : "default prompt");
   if (r.branch) parts.push(`branch ${r.branch}${r.commit_sha ? ` @ ${r.commit_sha.slice(0, 7)}` : ""}`);

@@ -468,6 +468,7 @@ internal enum PublicSchema {
     internal let logUrl: String?
     internal let method: String
     internal let model: String?
+    internal let pipeline: String
     internal let prompt: String?
     internal let startedAt: String?
     internal let status: String
@@ -486,6 +487,7 @@ internal enum PublicSchema {
       case logUrl = "log_url"
       case method = "method"
       case model = "model"
+      case pipeline = "pipeline"
       case prompt = "prompt"
       case startedAt = "started_at"
       case status = "status"
@@ -506,6 +508,7 @@ internal enum PublicSchema {
     internal let logUrl: String?
     internal let method: String?
     internal let model: String?
+    internal let pipeline: String?
     internal let prompt: String?
     internal let startedAt: String?
     internal let status: String?
@@ -524,6 +527,7 @@ internal enum PublicSchema {
       case logUrl = "log_url"
       case method = "method"
       case model = "model"
+      case pipeline = "pipeline"
       case prompt = "prompt"
       case startedAt = "started_at"
       case status = "status"
@@ -544,6 +548,7 @@ internal enum PublicSchema {
     internal let logUrl: String?
     internal let method: String?
     internal let model: String?
+    internal let pipeline: String?
     internal let prompt: String?
     internal let startedAt: String?
     internal let status: String?
@@ -562,11 +567,48 @@ internal enum PublicSchema {
       case logUrl = "log_url"
       case method = "method"
       case model = "model"
+      case pipeline = "pipeline"
       case prompt = "prompt"
       case startedAt = "started_at"
       case status = "status"
       case summary = "summary"
       case venueIds = "venue_ids"
+    }
+  }
+  internal struct CrawlSiteLeasesSelect: Codable, Hashable, Sendable {
+    internal let expiresAt: String
+    internal let owner: UUID
+    internal let runId: UUID
+    internal let siteId: UUID
+    internal enum CodingKeys: String, CodingKey {
+      case expiresAt = "expires_at"
+      case owner = "owner"
+      case runId = "run_id"
+      case siteId = "site_id"
+    }
+  }
+  internal struct CrawlSiteLeasesInsert: Codable, Hashable, Sendable {
+    internal let expiresAt: String
+    internal let owner: UUID
+    internal let runId: UUID
+    internal let siteId: UUID
+    internal enum CodingKeys: String, CodingKey {
+      case expiresAt = "expires_at"
+      case owner = "owner"
+      case runId = "run_id"
+      case siteId = "site_id"
+    }
+  }
+  internal struct CrawlSiteLeasesUpdate: Codable, Hashable, Sendable {
+    internal let expiresAt: String?
+    internal let owner: UUID?
+    internal let runId: UUID?
+    internal let siteId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case expiresAt = "expires_at"
+      case owner = "owner"
+      case runId = "run_id"
+      case siteId = "site_id"
     }
   }
   internal struct CrawlSitesSelect: Codable, Hashable, Sendable {
