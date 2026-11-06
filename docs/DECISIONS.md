@@ -1042,3 +1042,5 @@ Owner couldn't edit all of two landing captions (the editor showed only half of 
 ## 2026-11-06 — Default share-card stats at the corners
 
 The default photo and no-photo entry cards anchor show-of-year at the top-left margin and Seen / X time(s) at the top-right margin. The show title sits above the shared footer. Venue visits stay on their dedicated card, and the centred Show overlay and Ticket stub designs keep their existing compositions.
+
+Show number and Show overlay now follow the eligible photo cards, before Data and Encore. Filtering out unavailable photo/rating designs keeps this relative ordering on both platforms.

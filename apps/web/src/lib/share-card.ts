@@ -25,10 +25,10 @@ export type ShareInk = "light" | "dark";
 export const CARD_DESIGNS: CardDesign[] = [
   { id: "stats", name: "Data + Photo", photo: true },
   { id: "name", name: "Rating + Photo", photo: true },
-  { id: "data", name: "Data", background: true },
-  { id: "encore", name: "Encore", background: true },
   { id: "show-number", name: "Show number", background: true },
   { id: "overlay", name: "Show overlay", background: true },
+  { id: "data", name: "Data", background: true },
+  { id: "encore", name: "Encore", background: true },
   { id: "ticket", name: "Ticket stub", background: true },
   { id: "venue-visits", name: "Venue visits", background: true },
 ];

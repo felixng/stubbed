@@ -34,7 +34,7 @@ enum EntryCardDesign: String, CaseIterable, Identifiable, Sendable {
   var isPhoto: Bool { self == .stats || self == .name }
   static func available(photo: Bool, rating: Double?, timesSeen: Int, venue: String? = nil, venueVisit: Int = 0) -> [Self] {
     (photo ? [.stats] + (rating != nil ? [.name] : []) : [])
-      + [.data, .encore, .number, .overlay, .ticket]
+      + [.number, .overlay, .data, .encore, .ticket]
       + (venue?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false && venueVisit > 0 ? [.venue] : [])
   }
 }
