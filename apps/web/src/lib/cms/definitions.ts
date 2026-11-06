@@ -2189,17 +2189,24 @@ export const copyDefinitions = {
       },
       "theaterdiaryQuestion": {
         "title": "Question",
-        "value": "Can I import a TheaterDiary CSV?",
+        "value": "Can I import my Mezzanine diary?",
         "multiline": false,
         "fieldset": "theaterdiary",
-        "fieldsetTitle": "Can I import a TheaterDiary CSV?"
+        "fieldsetTitle": "Can I import my Mezzanine diary?"
+      },
+      "theaterdiaryLinkLabel": {
+        "title": "Link label",
+        "value": "Import from Mezzanine",
+        "multiline": false,
+        "fieldset": "theaterdiary",
+        "fieldsetTitle": "Can I import my Mezzanine diary?"
       },
       "theaterdiaryAnswer": {
         "title": "Answer",
-        "value": "Not yet. TheaterDiary CSV import isn’t available. You can add past shows by hand, or bring them in from theatre photos on the website.",
+        "value": "Yes. Open Import shows and choose Mezzanine export, then pick the CSV or JSON file Mezzanine made. Review your shows, choose any missing countries, and import. Shows, theatres, dates, ratings and reviews are supported. Private notes, photos, seats, tags and lists aren’t imported.",
         "multiline": true,
         "fieldset": "theaterdiary",
-        "fieldsetTitle": "Can I import a TheaterDiary CSV?"
+        "fieldsetTitle": "Can I import my Mezzanine diary?"
       },
       "exportQuestion": {
         "title": "Question",

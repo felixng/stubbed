@@ -30,7 +30,7 @@ final class SettingsUITests: XCTestCase {
     XCTAssertTrue(app.buttons["View public profile"].exists)
     XCTAssertTrue(app.buttons["Profile privacy"].exists)
     XCTAssertTrue(app.buttons["Blocked accounts"].exists)
-    XCTAssertTrue(app.buttons["Import from photos"].exists)
+    XCTAssertTrue(app.buttons["Import shows"].exists)
     XCTAssertTrue(app.buttons["Notifications"].exists)
     snapshot("settings-hub")
     app.buttons["Edit profile"].tap()
@@ -60,6 +60,20 @@ final class SettingsUITests: XCTestCase {
     scrollAndTap(app.buttons["Edit profile"], in: app)
     XCTAssertTrue(app.navigationBars["Edit profile"].waitForExistence(timeout: 10))
     snapshot("edit-profile-accessibility")
+  }
+
+
+  @MainActor
+  func testImportShowsHub() throws {
+    let app = try openSettings()
+    scrollAndTap(app.buttons["Import shows"], in: app)
+    XCTAssertTrue(app.navigationBars["Import shows"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Photos")).firstMatch.exists)
+    XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Mezzanine export")).firstMatch.exists)
+    snapshot("import-shows-hub")
+    app.buttons["How to export from Mezzanine"].tap()
+    XCTAssertTrue(app.navigationBars["Export from Mezzanine"].waitForExistence(timeout: 5))
+    snapshot("mezzanine-export-help")
   }
 
   @MainActor

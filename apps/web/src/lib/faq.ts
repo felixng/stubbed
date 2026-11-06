@@ -87,12 +87,13 @@ export const FAQ_SECTIONS: readonly FaqSection[] = [
         id: "import-photos",
         question: "How do I import theatre photos?",
         answer: "On the website, open Import shows and tap Choose photos. Pick curtain shots, programmes, Playbills or ticket photos. Stubbed uses the photos and available date and location details to suggest visits. Review every draft, fill in anything missing, untick unwanted entries, then tap Save. Each web import photo becomes a separate draft, so check for multiple photos from the same visit. An entry holds 1 photo.",
-        link: { href: "/app/import", label: "Import photos on the website" },
+        link: { href: "/app/import/photos", label: "Import photos on the website" },
       },
       {
         id: "theaterdiary",
-        question: "Can I import a TheaterDiary CSV?",
-        answer: "Not yet. TheaterDiary CSV import isn’t available. You can add past shows by hand, or bring them in from theatre photos on the website.",
+        question: "Can I import my Mezzanine diary?",
+        answer: "Yes. Open Import shows and choose Mezzanine export, then pick the CSV or JSON file Mezzanine made. Review your shows, choose any missing countries, and import. Shows, theatres, dates, ratings and reviews are supported. Private notes, photos, seats, tags and lists aren’t imported.",
+        link: { href: "/app/import/mezzanine", label: "Import from Mezzanine" },
       },
       {
         id: "export",

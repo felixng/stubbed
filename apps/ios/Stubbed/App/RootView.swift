@@ -71,6 +71,7 @@ struct RootView: View {
           case .followRequests: NotificationRequestsView()
           case .notificationSettings: NotificationSettingsView()
           case .editProfile: EditProfileView()
+          case .importHub: ImportHubView()
           case .privacySettings: PrivacySettingsView()
           case .insights: InsightsView()
           case .insightVisits(let filter): InsightVisitsView(filter: filter)

@@ -26,12 +26,14 @@ Names are fixed by a check constraint on `events.name`; adding one means a migra
 
 | Name | When | Props |
 |---|---|---|
-| `entry_logged` | A **new** entry is saved from the log form | `method` (`photo`/`manual`), `detection` (always `none` with a photo and `skipped` without one since photo detection was removed in #281; kept for one release), `rated`, `has_note`; `source: "photo_import"` for a show saved from the iOS photo import (#155) |
+| `entry_logged` | A **new** entry is saved from the log form or Mezzanine import | `method` (`photo`/`manual`/`mezzanine`), `detection` (always `none` with a photo and `skipped` without one since photo detection was removed in #281; kept for one release), `rated`, `has_note`; `source: "photo_import"` for a show saved from the iOS photo import (#155) |
 | `card_shared` | A share card is sent from the share screen | `action` (`stories`/`more`/`download`/`copy_image`/`copy_text`/`copy_link`), `design` (card design id), `background` (`photo`/`solid` (Dark)/`light`/`gradient`/`transparent`), `transparent`, `rating` (whether this design includes a rating) |
 
 `card_shared` is recorded once the share sheet completes (cancelling records nothing), or when the image is saved or copied, or the text or the public page's link copied. On browsers that can't share files, Stories and More save the image, and are recorded under the button tapped.
 
-Not recorded yet: entries saved from the web's bulk import screen (`/app/import`). Entries from it can still be counted from the `entries` table.
+Mezzanine file imports on web and iOS record one `entry_logged` event per saved entry with `method: "mezzanine"`.
+
+Not recorded yet: entries saved from the web's photo import screen (`/app/import/photos`). Entries from it can still be counted from the `entries` table.
 
 Rules (pgTAP: `supabase/tests/events_test.sql`):
 - Write-only: nobody reads events through the API. Query them in the Supabase dashboard SQL editor.

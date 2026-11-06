@@ -23,9 +23,11 @@ import type { Extracted, Place } from "./drafts";
 
 // The same existing show ("LES MIS - Dress Circle" is Les Misérables), or a
 // new one with a tidied title; the draft card then offers close matches (#146).
-export async function resolveShow(supabase: SupabaseClient, e: Extracted): Promise<Show | NewShow | null> {
+export async function resolveShow(supabase: SupabaseClient, e: Extracted, sequential = false): Promise<Show | NewShow | null> {
   if (!e.show_title) return null;
-  const [similar, title] = await Promise.all([similarShows(supabase, e.show_title), tidyShowTitle(supabase, e.show_title)]);
+  const [similar, title] = sequential
+    ? [await similarShows(supabase, e.show_title, true), await tidyShowTitle(supabase, e.show_title, true)]
+    : await Promise.all([similarShows(supabase, e.show_title), tidyShowTitle(supabase, e.show_title)]);
   const same = similar.find((s) => s.same);
   return same ? { id: same.id, title: same.title, type: same.type } : { title, type: e.show_type ?? "musical" };
 }
@@ -38,6 +40,7 @@ export async function resolveVenue(
   e: Extracted,
   nearby: NearbyVenue[],
   place: Place,
+  strict = false,
 ): Promise<VenueChoice | null> {
   const picked = nearby.find((c) => c.osm_id && c.osm_id === e.venue_osm_id);
   if (picked) return picked;
@@ -47,7 +50,7 @@ export async function resolveVenue(
   if (byName) return byName;
   const near = nearby[0]?.lat != null && nearby[0]?.lng != null ? { lat: nearby[0].lat, lng: nearby[0].lng } : null;
   const city = e.city ?? place.city;
-  const same = (await similarVenues(supabase, e.venue_name, near, city)).find((v) => v.same);
+  const same = (await similarVenues(supabase, e.venue_name, near, city, strict)).find((v) => v.same);
   if (same) return asVenue(same);
   return { name: e.venue_name, city, country: e.country ?? place.country };
 }
@@ -82,8 +85,9 @@ export async function saveDraft(
   supabase: SupabaseClient,
   userId: string,
   draft: ConfirmedDraft,
+  retryId?: string,
 ): Promise<{ id: string; photoFailed: boolean }> {
-  const id = crypto.randomUUID();
+  const id = retryId ?? crypto.randomUUID();
   let step = "show";
   try {
     const showId = await ensureShow(supabase, draft.show);
@@ -91,7 +95,7 @@ export async function saveDraft(
     const venueId = await ensureVenue(supabase, draft.venue);
     step = "entry";
     const planned = statusFor(draft.date, localToday()) === "planned";
-    const { error: write } = await supabase.from("entries").insert({
+    const fields = {
       id,
       show_id: showId,
       venue_id: venueId,
@@ -99,7 +103,10 @@ export async function saveDraft(
       status: planned ? "planned" : "logged",
       rating: planned ? null : draft.rating,
       note: draft.note?.trim() || null,
-    });
+    };
+    const table = supabase.from("entries");
+    // File imports retain their row id across retries, including a lost response.
+    const { error: write } = await (retryId ? table.upsert(fields) : table.insert(fields));
     if (write) throw write;
     step = "trips";
     if (draft.collectionIds.length) {
