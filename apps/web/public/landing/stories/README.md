@@ -1,11 +1,7 @@
-# Landing page stories (placeholders)
+# Landing story mockups (placeholders)
 
-`placeholder-1.webp` and `placeholder-2.webp` are **third-party screenshots of another app's Instagram Stories**, used only so the owner can see the layout of the "Seen on Stories" band (`src/components/landing/Stories.tsx`). They must be replaced before this ships: do not publish them.
+The Share gallery in `Features.tsx` combines one 9:16 mockup for each of the 17 cards with two interleaved Strava reference stories. Stubbed mockups place the original square exports over the existing theatre photos using CSS; replace these compositions with final story screenshots as they become available. No Instagram editing interface is imitated.
 
-`placeholder-1` is cropped to 9:16 to leave out Instagram's own interface (the top icon row and the caption bar). `placeholder-2` is already 9:16.
+`placeholder-1.webp` and `placeholder-2.webp` are third-party reference screenshots retained at the owner's request for layout review. Replace before release. Their descriptions live in `alt-text.ts`; the visible gallery caption identifies the placeholders.
 
-Real examples (demo data is fine, per the owner):
-
-- Portrait 9:16, around 1080×1920, WebP.
-- A real-looking story with a Stubbed card or stats text on top of a photo. No Instagram interface in the frame (no close button, text tools, caption bar or sticker tray).
-- Update `storyAlt` (and add more) in `src/components/landing/alt-text.ts`, and drop the "placeholder" wording from `storiesHelp` in `src/lib/cms/definitions.ts`.
+`../import-hub-placeholder.png` is the iOS import hub screenshot from PR #405 (`docs/screenshots/import-215/ios-hub-small.png`), copied as a temporary marketing asset. Replace when the import UI is final.

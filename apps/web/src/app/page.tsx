@@ -8,7 +8,7 @@ import { Footer } from "@/components/landing/Footer";
 import { Hero } from "@/components/landing/Hero";
 import { SignUpReminder } from "@/components/landing/SignUpReminder";
 import { SiteMenu } from "@/components/landing/SiteMenu";
-import { Stories } from "@/components/landing/Stories";
+import { ImportHistory } from "@/components/landing/ImportHistory";
 import { Wordmark } from "@/components/ui/Wordmark";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 
@@ -83,8 +83,8 @@ export default async function Home() {
       <main className="flex-auto">
         <Hero />
         <Features copy={featureCopy} />
-        <Stories copy={featureCopy} />
         <DiaryAndStats copy={featureCopy} />
+        <ImportHistory copy={featureCopy} />
         <SignUpReminder />
       </main>
       <Footer />

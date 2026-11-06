@@ -57,12 +57,12 @@ export const copyDefinitions = {
     },
     "galleryLabel": {
       "title": "galleryLabel",
-      "value": "Share card designs",
+      "value": "Example Instagram Stories",
       "multiline": false
     },
     "galleryHelp": {
       "title": "galleryHelp",
-      "value": "Scroll to explore the cards. Demo diary: @sillyelphaba. Images and figures are illustrative.",
+      "value": "Scroll to explore story mockups. Demo diary: @sillyelphaba. Includes two Strava reference stories; all images and figures are illustrative placeholders.",
       "multiline": false
     },
     "cardCta": {
@@ -70,31 +70,26 @@ export const copyDefinitions = {
       "value": "Make your first card",
       "multiline": false
     },
-    "storiesEyebrow": {
-      "title": "storiesEyebrow",
-      "value": "Seen on Stories",
+    "importEyebrow": {
+      "title": "importEyebrow",
+      "value": "04 / Bring your history",
       "multiline": false
-    },
-    "storiesHeading": {
-      "title": "storiesHeading",
-      "value": "Your card, on your story.",
+},
+    "importHeading": {
+      "title": "importHeading",
+      "value": "Your past shows belong here, too.",
       "multiline": false
-    },
-    "storiesBody": {
-      "title": "storiesBody",
-      "value": "Send a card to Stories in one tap, then place it over your own photo like any sticker.",
+},
+    "importBody": {
+      "title": "importBody",
+      "value": "Bring your theatre history into Stubbed. Start with photos, or import a Mezzanine export and review your shows before adding them to your diary.",
       "multiline": false
-    },
-    "storiesLabel": {
-      "title": "storiesLabel",
-      "value": "Example Instagram Stories",
+},
+    "importCaption": {
+      "title": "importCaption",
+      "value": "Import hub preview. Placeholder screenshot from the import work in progress.",
       "multiline": false
-    },
-    "storiesHelp": {
-      "title": "storiesHelp",
-      "value": "Scroll to see more. Placeholder stories from another app; real Stubbed examples to come.",
-      "multiline": true
-    },
+},
     "diaryEyebrow": {
       "title": "diaryEyebrow",
       "value": "02 / Look back",
