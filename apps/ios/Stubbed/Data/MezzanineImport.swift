@@ -13,10 +13,16 @@ struct MezzanineRow: Sendable, Equatable {
 }
 
 enum MezzanineImport {
+  static let maxFileBytes = 20 * 1024 * 1024
+
+  static func checkFileSize(_ bytes: Int) throws {
+    if bytes > maxFileBytes { throw Failure.tooLarge }
+  }
   enum Failure: LocalizedError {
-    case empty, unsupported
+    case empty, unsupported, tooLarge
     var errorDescription: String? {
       switch self {
+      case .tooLarge: "This file is too large. Choose a Mezzanine export smaller than 20 MB."
       case .empty: "No shows in this file."
       case .unsupported: "This doesn’t look like a Mezzanine export. Check that you picked the CSV or JSON file Mezzanine made."
       }

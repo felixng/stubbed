@@ -4,7 +4,9 @@ import type { Draft } from "@/components/app/import/DraftCard";
 import { isCountryCode } from "./countries";
 import type { Extracted } from "./drafts";
 import { mezzanineDay, type MezzanineRow } from "./mezzanine";
-import { resolveShow, resolveVenue, runPool } from "./resolve";
+import { resolveShow, resolveVenue } from "./resolve";
+
+export class MezzanineStopped extends Error {}
 
 export type MezzanineDraft = Draft & { invalidRating: boolean; planned: boolean; duplicate: boolean };
 export const normaliseImportName = (value: string) => value.trim().toLowerCase().replace(/\s+/g, " ");
@@ -24,10 +26,11 @@ export function mezzanineMissing(d: MezzanineDraft): string[] {
   if (d.invalidRating) out.push("rating");
   return out;
 }
-export async function existingMezzanineKeys(client: SupabaseClient, userId: string, shows: string[], before: string): Promise<Set<string>> {
+export async function existingMezzanineKeys(client: SupabaseClient, userId: string, shows: string[], before: string, shouldStop: () => boolean = () => false): Promise<Set<string>> {
   const keys = new Set<string>(); const ids = [...new Set(shows)].sort();
   for (let start = 0; start < ids.length; start += 100) {
     for (let offset = 0; ; offset += 500) {
+      if (shouldStop()) throw new MezzanineStopped();
       const { data, error } = await client.from("entries").select("show_id,date").eq("user_id", userId)
         .in("show_id", ids.slice(start, start + 100)).lte("created_at", before)
         .order("id").range(offset, offset + 499);
@@ -39,7 +42,7 @@ export async function existingMezzanineKeys(client: SupabaseClient, userId: stri
   return keys;
 }
 export async function resolveMezzanine(client: SupabaseClient, userId: string, rows: MezzanineRow[], before: string,
-  progress: (done: number, total: number) => void): Promise<{ drafts: MezzanineDraft[]; existing: Set<string> }> {
+  progress: (done: number, total: number) => void, shouldStop: () => boolean = () => false): Promise<{ drafts: MezzanineDraft[]; existing: Set<string> }> {
   const extracted = (row: MezzanineRow): Extracted => ({ show_title: row.show || null, show_type: null,
     venue_name: row.venue || null, venue_osm_id: null, city: row.city || null, country: null,
     date: row.date, time: null, seats: null, price: null, confidence: "high", reason: "Mezzanine export" });
@@ -56,8 +59,18 @@ export async function resolveMezzanine(client: SupabaseClient, userId: string, r
   }
   // Each job makes one request at a time, including title tidying.
   let done = 0;
-  await runPool(jobs, 3, async (job) => { await job(); progress(++done, jobs.length); });
-  const existing = await existingMezzanineKeys(client, userId, [...shows.values()].flatMap((s) => s?.id ? [s.id] : []), before);
+  for (let start = 0; start < jobs.length; start += 3) {
+    if (shouldStop()) throw new MezzanineStopped();
+    // Finish the in-flight batch before reporting Stop, retaining the parsed file.
+    const results = await Promise.allSettled(jobs.slice(start, start + 3).map(async (job) => {
+      await job(); progress(++done, jobs.length);
+    }));
+    const failure = results.find((result) => result.status === "rejected");
+    if (failure?.status === "rejected") throw failure.reason;
+  }
+  if (shouldStop()) throw new MezzanineStopped();
+  const existing = await existingMezzanineKeys(client, userId, [...shows.values()].flatMap((s) => s?.id ? [s.id] : []), before, shouldStop);
+  if (shouldStop()) throw new MezzanineStopped();
   const drafts = rows.map((row): MezzanineDraft => {
     const show = shows.get(normaliseImportName(row.show)) ?? null;
     const venue = venues.get(normaliseImportName(row.venue) + "\u001f" + normaliseImportName(row.city)) ?? null;

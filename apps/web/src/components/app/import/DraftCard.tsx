@@ -84,15 +84,18 @@ export function DraftCard({
   emailText,
   onChange,
   showSelection = true,
+  headingLevel = 2,
 }: {
   draft: Draft;
   showSelection?: boolean;
+  headingLevel?: 2 | 3;
   // An entry already in the diary for the same show and date.
   duplicateOf: string | null;
   emailText: (ref: string) => string | undefined;
   onChange: (patch: Partial<Draft>) => void;
 }) {
   const id = useId();
+  const Heading = headingLevel === 3 ? "h3" : "h2";
   // Entry links bring a back link to this import, admin's or everyone's.
   const from = usePathname().startsWith("/app/backstage") ? "admin-import" : "import";
   const e = draft.reading.extracted;
@@ -130,7 +133,7 @@ export function DraftCard({
       tabIndex={-1}
       aria-labelledby={`${id}-title`}
       className={`flex scroll-mt-4 flex-col gap-4 rounded-md border bg-surface p-4 shadow-sm focus:outline-none ${
-        missing.length ? "border-2 border-destructive" : draft.include ? "border-outline" : "border-separator opacity-80"
+        missing.length ? "border-2 border-destructive" : draft.include || !showSelection ? "border-outline" : "border-separator opacity-80"
       }`}
     >
       {/* Where it came from, and whether to save it */}
@@ -163,9 +166,9 @@ export function DraftCard({
           </span>
         )}
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <h2 id={`${id}-title`} className="text-headline text-label">
+          <Heading id={`${id}-title`} className="text-headline text-label">
             {e.show_title ?? (draft.unread ? "Add the show yourself" : "Unknown show")}
-          </h2>
+          </Heading>
           {emails.map((s) => (
             <p key={s.ref} className="truncate text-footnote text-label-secondary" title={s.subject ?? s.fileName}>
               {s.subject ?? s.fileName}

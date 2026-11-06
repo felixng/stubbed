@@ -28,7 +28,7 @@ export function ImportCallout() {
         <Link href="/app/import/mezzanine" className={`${buttonClass("secondary", "sm")} sm:flex-1`}>
           From Mezzanine
         </Link>
-        <Link href="/app/log" className={`${buttonClass("secondary", "sm")} sm:flex-1`}>
+        <Link href="/app/log" className="inline-flex min-h-11 items-center justify-center px-4 text-subheadline font-semibold text-tint-text underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-focus">
           Log a show
         </Link>
       </div>

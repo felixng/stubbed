@@ -113,3 +113,43 @@ struct MezzanineReviewTests {
     #expect(model.rows[1].venue.country == "US")
   }
 }
+
+@MainActor
+struct MezzanineBulkReviewTests {
+  private func row(_ index: Int) -> MezzanineDraft {
+    var row = MezzanineDraft(id: UUID(), source: MezzanineRow(show: "Show \(index)", venue: "Example Theatre", city: "Test City",
+      date: "2026-10-01", rating: nil, review: "", invalidRating: false, planned: false),
+      show: ShowChoice(newTitle: "Show \(index)"), venue: VenueChoice(id: UUID(), name: "Example Theatre", city: "Test City", country: "GB"))
+    row.selected = true
+    return row
+  }
+  @Test func bulkSelectionForThreeHundredRowsExcludesExceptionsAndDuplicates() {
+    let model = MezzanineReviewModel()
+    model.rows = (0..<300).map(row)
+    model.rows[0].source.date = nil; model.rows[0].selected = false
+    model.rows[1].duplicate = true; model.rows[1].selected = false
+    #expect(model.ready.count == 298 && model.needsAttention.count == 1 && model.duplicates.count == 1)
+    model.selectReady(false); #expect(model.selected == 0)
+    model.selectReady(true); #expect(model.selected == 298)
+    #expect(!model.rows[0].selected && !model.rows[1].selected)
+  }
+  @Test func stopKeepsPendingRowsAndResumeDoesNotSaveTheFirstTwice() async {
+    let model = MezzanineReviewModel(); model.rows = (0..<3).map(row)
+    var ids: [UUID] = []
+    await model.save(userId: UUID()) { draft, _ in ids.append(draft.id); model.requestStop() }
+    #expect(ids.count == 1 && model.added == 1 && model.stopped && model.remaining == 2)
+    #expect(model.selected == 2 && model.resultDetails == "2 left")
+    await model.save(userId: UUID()) { draft, _ in ids.append(draft.id) }
+    #expect(ids.count == 3 && Set(ids).count == 3 && model.added == 3 && model.remaining == 0)
+    #expect(model.resultDetails.isEmpty && model.resultTitle == "3 shows added to your diary")
+  }
+  @Test func invalidFileCannotBeRetriedAndLargeFileHasClearLimit() async throws {
+    let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".csv")
+    try Data("not a Mezzanine file".utf8).write(to: url)
+    defer { try? FileManager.default.removeItem(at: url) }
+    let model = MezzanineReviewModel(url: url)
+    await model.load(userId: UUID())
+    #expect(model.error != nil && !model.retryable)
+    #expect(throws: MezzanineImport.Failure.self) { try MezzanineImport.checkFileSize(MezzanineImport.maxFileBytes + 1) }
+  }
+}

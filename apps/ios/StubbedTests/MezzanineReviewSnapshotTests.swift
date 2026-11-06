@@ -63,4 +63,19 @@ final class MezzanineReviewSnapshotTests: XCTestCase {
     try await capture(NavigationStack { MezzanineReviewView(model: model, chooseAnother: {}) },
       name: "mezzanine-summary", size: CGSize(width: 402, height: 874))
   }
+  func testThreeHundredRowsStartWithExceptions() async throws {
+    let model = MezzanineReviewModel()
+    model.rows = (0..<300).map { i in
+      var row = MezzanineDraft(id: UUID(), source: MezzanineRow(show: "Synthetic Show \(i)", venue: "Example Theatre", city: "Test City",
+        date: i < 12 ? nil : "2026-10-01", rating: 4.5, review: "", invalidRating: false, planned: false),
+        show: ShowChoice(newTitle: "Synthetic Show \(i)"), venue: VenueChoice(name: "Example Theatre", city: "Test City", country: "GB"))
+      row.duplicate = i >= 248
+      row.selected = i >= 12 && !row.duplicate
+      return row
+    }
+    XCTAssertEqual(model.ready.count, 236)
+    try await capture(NavigationStack { MezzanineReviewView(model: model, chooseAnother: {}) },
+      name: "mezzanine-review-300", size: CGSize(width: 375, height: 667))
+  }
+
 }

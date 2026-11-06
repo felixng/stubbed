@@ -15,25 +15,16 @@ struct ImportHubView: View {
       Section {
         PhotosPicker(selection: $photos, maxSelectionCount: PhotoImport.maxPhotos,
                      selectionBehavior: .ordered, matching: .images) {
-          Label {
-            VStack(alignment: .leading) {
-              Text("Photos")
-              Text("Pick photos from your shows. Stubbed sorts them by show.").font(.subheadline).foregroundStyle(.secondary)
-            }
-          } icon: { Image(systemName: "photo.stack") }
+          sourceRow("Photos", subtitle: "Pick photos from your shows. Stubbed sorts them by show.", symbol: "photo.stack")
         }
+        .buttonStyle(.plain)
         Button { pickingFile = true } label: {
-          Label {
-            VStack(alignment: .leading) {
-              Text("Mezzanine export")
-              Text("Bring over your Mezzanine diary from a CSV or JSON file.").font(.subheadline).foregroundStyle(.secondary)
-            }
-          } icon: { Image(systemName: "doc.badge.arrow.up") }
+          sourceRow("Mezzanine export", subtitle: "Bring over your Mezzanine diary from a CSV or JSON file.", symbol: "doc.badge.arrow.up")
         }
-      }
-      Section {
+        .buttonStyle(.plain)
         Button("How to export from Mezzanine", systemImage: "questionmark.circle") { help = true }
       }
+
     }
     .listStyle(.insetGrouped)
     .tabBarClearance()
@@ -50,7 +41,7 @@ struct ImportHubView: View {
         review = true
       } else if case .failure(let error) = result {
         model = MezzanineReviewModel()
-        model.error = error.localizedDescription
+        model.error = "Couldn’t open that file. Choose it again."
         review = true
       }
     }
@@ -60,7 +51,7 @@ struct ImportHubView: View {
     .sheet(isPresented: $help) {
       NavigationStack {
         List {
-          Text("Open Mezzanine, find its export option, and export your diary as a CSV or JSON file. Save the file to Files, then choose it here.")
+          Text("Open Mezzanine, find its export option, and export your diary as a CSV or JSON file. Save the file, then choose it here.")
           Text("Your shows, theatres, dates, ratings and reviews can be imported. Private notes aren’t imported.").foregroundStyle(.secondary)
         }
         .navigationTitle("Export from Mezzanine")
@@ -69,4 +60,18 @@ struct ImportHubView: View {
       }
     }
   }
+
+  nonisolated private func sourceRow(_ title: String, subtitle: String, symbol: String) -> some View {
+    HStack {
+      Image(systemName: symbol).foregroundStyle(Palette.tintText)
+      VStack(alignment: .leading) {
+        Text(title).foregroundStyle(Color.primary)
+        Text(subtitle).font(.subheadline).foregroundStyle(Color.secondary)
+      }
+      Spacer()
+      Image(systemName: "chevron.right").font(.footnote).foregroundStyle(.tertiary)
+    }
+    .frame(minHeight: 44).contentShape(Rectangle())
+  }
+
 }

@@ -35,7 +35,8 @@ struct ImportCallout: View {
         Button { router.startLog() } label: {
           Text("Log a show").frame(maxWidth: .infinity)
         }
-        .buttonStyle(.bordered)
+        .buttonStyle(.plain)
+        .frame(minHeight: 44)
       }
       .controlSize(.large)
       .padding(.top, Space.xs)

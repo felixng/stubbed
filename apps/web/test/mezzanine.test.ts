@@ -128,3 +128,46 @@ test("file retry uses a stable entry id and profile visibility remains the datab
   await saveDraft(client as never, "owner", draft, "stable-row-id");
   assert.equal(writes.length, 2); assert.ok(writes.every((row) => row.id === "stable-row-id" && !("visibility" in row)));
 });
+
+test("Stop finishes the in-flight save and leaves later rows untouched", async () => {
+  const { runImportBatch } = await import("@/lib/import/mezzanine-review");
+  let stop = false;
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  const saved: number[] = [];
+  const batch = runImportBatch([1, 2, 3], {
+    shouldStop: () => stop,
+    save: async (row) => { saved.push(row); await gate; },
+    failed: () => assert.fail("Save should succeed"),
+  });
+  assert.deepEqual(saved, [1]); stop = true; release();
+  assert.deepEqual(await batch, { stopped: true, attempted: 1 });
+  assert.deepEqual(saved, [1]);
+});
+test("a row failure is retained without preventing later saves", async () => {
+  const { runImportBatch } = await import("@/lib/import/mezzanine-review");
+  const saved: number[] = [], failed: number[] = [];
+  const result = await runImportBatch([1, 2, 3], {
+    shouldStop: () => false,
+    save: async (row) => { if (row === 2) throw new Error("offline"); saved.push(row); },
+    failed: (row) => failed.push(row),
+  });
+  assert.deepEqual(saved, [1, 3]); assert.deepEqual(failed, [2]); assert.equal(result.stopped, false);
+});
+test("exports over 20 MB are rejected before reading, and attention copy names the fix", async () => {
+  const { checkMezzanineFileSize, MAX_MEZZANINE_FILE_BYTES, attentionCopy } = await import("@/lib/import/mezzanine-review");
+  assert.doesNotThrow(() => checkMezzanineFileSize(MAX_MEZZANINE_FILE_BYTES));
+  assert.throws(() => checkMezzanineFileSize(MAX_MEZZANINE_FILE_BYTES + 1), /smaller than 20 MB/);
+  assert.equal(attentionCopy(["country"]), "Needs a country.");
+  assert.equal(attentionCopy(["date", "rating"]), "Needs a valid date, a valid rating.");
+});
+test("Stop during matching does not start later batches or query diary entries", async () => {
+  const { resolveMezzanine, MezzanineStopped } = await import("@/lib/import/mezzanine-resolve");
+  const rows = Array.from({ length: 30 }, (_, i) => ({ ...parse(header + "\n" + csv())[0], show: `Synthetic ${i}` }));
+  let done = 0, requests = 0;
+  const client = { rpc: async (name: string, args: Record<string, string>) => {
+    requests++; return { error: null, data: name === "tidy_show_title" ? args.title : [] };
+  } };
+  await assert.rejects(resolveMezzanine(client as never, "owner", rows, "2026-11-06T00:00:00Z", (count) => { done = count; }, () => done >= 3), MezzanineStopped);
+  assert.equal(done, 3); assert.ok(requests <= 6);
+});

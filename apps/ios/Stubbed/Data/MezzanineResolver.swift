@@ -11,6 +11,11 @@ struct MezzanineDraft: Identifiable, Sendable {
   var saved = false
   var error: String?
 
+  var attentionMessage: String {
+    let names = ["show": "a show", "venue": "a venue", "city": "a city", "country": "a country", "date": "a valid date", "rating": "a valid rating"]
+    return missing.isEmpty ? "" : "Needs " + missing.map { names[$0] ?? $0 }.joined(separator: ", ") + "."
+  }
+
   var missing: [String] {
     var fields: [String] = []
     if show.title.isEmpty { fields.append("show") }
@@ -26,6 +31,7 @@ struct MezzanineDraft: Identifiable, Sendable {
 }
 
 enum MezzanineResolver {
+  struct Stopped: Error {}
   static func normalise(_ name: String) -> String {
     name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
       .split(whereSeparator: \.isWhitespace).joined(separator: " ")
@@ -42,13 +48,14 @@ enum MezzanineResolver {
   }
 
   /// Only the importing owner's rows, filtered and paged: never the API's first 1,000 entries.
-  static func existing(userId: UUID, shows: [UUID], before: Date) async throws -> Set<Existing> {
+  static func existing(userId: UUID, shows: [UUID], before: Date, shouldStop: @MainActor () -> Bool = { false }) async throws -> Set<Existing> {
     var result: Set<Existing> = []
     let ids = Array(Set(shows)).sorted { $0.uuidString < $1.uuidString }
     for start in stride(from: 0, to: ids.count, by: 50) {
       let batch = ids[start..<min(start + 50, ids.count)].map(\.uuidString)
       var offset = 0
       while true {
+        if await shouldStop() { throw Stopped() }
         let rows: [Existing] = try await supabase.from("entries").select("show_id,date")
           .eq("user_id", value: userId).in("show_id", values: batch)
           .lte("created_at", value: before.ISO8601Format(.init(includingFractionalSeconds: true)))
@@ -71,7 +78,8 @@ enum MezzanineResolver {
   }
 
   static func resolve(_ rows: [MezzanineRow], userId: UUID, before: Date,
-                      progress: @MainActor (Int, Int) -> Void) async throws -> [MezzanineDraft] {
+                      progress: @MainActor (Int, Int) -> Void,
+                      shouldStop: @MainActor () -> Bool = { false }) async throws -> [MezzanineDraft] {
     var jobs: [Lookup] = []
     var seenShows: Set<String> = [], seenVenues: Set<String> = []
     func venueKey(_ row: MezzanineRow) -> String { normalise(row.venue) + "\u{1f}" + normalise(row.city) }
@@ -85,6 +93,7 @@ enum MezzanineResolver {
     // Three network lookups at most; title tidying follows its show lookup.
     for start in stride(from: 0, to: jobs.count, by: 3) {
       try Task.checkCancellation()
+      if await shouldStop() { throw Stopped() }
       let matches = try await withThrowingTaskGroup(of: Match.self) { group in
         for job in jobs[start..<min(start + 3, jobs.count)] {
           group.addTask {
@@ -114,7 +123,8 @@ enum MezzanineResolver {
       }
       await progress(min(start + 3, jobs.count), jobs.count)
     }
-    let existing = try await existing(userId: userId, shows: shows.values.compactMap(\.id), before: before)
+    if await shouldStop() { throw Stopped() }
+    let existing = try await existing(userId: userId, shows: shows.values.compactMap(\.id), before: before, shouldStop: shouldStop)
     return rows.map { row in
       var draft = MezzanineDraft(id: UUID(), source: row,
         show: shows[normalise(row.show)] ?? ShowChoice(newTitle: row.show),
