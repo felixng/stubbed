@@ -59,9 +59,7 @@ export const CORAL = "#FF5A5A";
 // The icon's amber, which reads on the cards' dark ground.
 export const STAR = "#FFA040";
 export const SECONDARY = "#AEAEB2";
-// Stubbed's Instagram handle: the share screen asks you to tag it, and trip
-// cards show it under the wordmark. Entry cards leave it off (owner,
-// 2026-10-29).
+// Stubbed’s Instagram handle, shown in the share screen’s tag prompt.
 export const CARD_DOMAIN = "@getstubbed.app";
 // The ticket mark beside the wordmark (public/brand/stubbed-mark.svg).
 const MARK_SRC = "/brand/stubbed-mark.svg";

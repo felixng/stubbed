@@ -1036,3 +1036,5 @@ Owner couldn't edit all of two landing captions (the editor showed only half of 
 - Ticket branding now shares the ticket’s rotation and coordinate system, centred 19pt below its lower edge so the outline icon and coral wordmark sit parallel and close beneath it.
 
 - Default entry cards now prioritise show-of-year and Seen / X time(s), removing the venue-visit metric from both photo and data layouts. A separate Venue visits card makes the venue and its visit count primary, with the current show secondary. It appears immediately before Year in theatre and is omitted when the venue or a positive visit count is missing.
+
+- Refreshed all four trip recap layouts to use the single-show cards’ 38pt title, 18pt metadata, 28pt margins, shared icon/30pt wordmark/20pt handle footer and 32pt card corners. Removed the separate domain footer. Lists use larger readable rows with overflow counts when space runs out; grids reserve the shared footer area; collages scale to their rotated bounds so images cannot collide with the header or footer.

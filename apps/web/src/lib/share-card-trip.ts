@@ -6,7 +6,9 @@
 // match each other and the entry cards. Coordinates are in the designs'
 // 540px units, scaled up to 1080.
 import {
-  CARD_DOMAIN,
+  drawShareFooter,
+  drawTopTitle,
+  renderSquare,
   CORAL,
   type Ctx,
   DISPLAY,
@@ -53,17 +55,15 @@ const W = 540;
 const SCALE = 1080 / W;
 const PAD = 28;
 const INNER = W - PAD * 2;
-const RADIUS = 20;
-// The footer (wordmark and handle) is centred on this line on every card;
-// content sits between the header and FOOTER_TOP - GAP.
-const FOOTER_MID = W - PAD - 9;
-const FOOTER_TOP = FOOTER_MID - 9;
-const GAP = 16;
+const RADIUS = 32;
+// Reserve the same 40pt icon/wordmark/handle footer as entry cards.
+const FOOTER_TOP = 472;
+const GAP = 24;
 
 const DARK = {
-  ground: "#000000",
-  surface: "#1C1C1E",
-  fill: "#2C2C2E",
+  ground: "#1C1C1E",
+  surface: "#2C2C2E",
+  fill: "#38383A",
   label: "#FFFFFF",
   secondary: SECONDARY,
   separator: "#38383A",
@@ -71,7 +71,7 @@ const DARK = {
   accent: CORAL,
 };
 const LIGHT = {
-  ground: "#F2F2F7",
+  ground: "#FFFFFF",
   surface: "#FFFFFF",
   fill: "#E9E9EE",
   label: "#1C1C1E",
@@ -95,141 +95,93 @@ export async function renderTripCard(
   photos: (HTMLImageElement | null)[],
   { square = false } = {},
 ) {
-  const canvas = document.createElement("canvas");
-  canvas.width = canvas.height = W * SCALE;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas isn’t available");
-  ctx.scale(SCALE, SCALE);
-  const shows = data.shows.map((s, i) => ({ ...s, photo: photos[i] ?? null }));
-  const p = isLightTripCard(design) ? LIGHT : DARK;
-
-  const radius = square ? 0 : RADIUS;
-  roundRect(ctx, 0, 0, W, W, radius);
-  ctx.fillStyle = p.ground;
-  ctx.fill();
-  ctx.save();
-  ctx.clip();
-  if (design === "trip-grid") drawGrid(ctx, p, data, shows);
-  else if (design === "trip-collage") drawCollage(ctx, p, data, shows);
-  else if (design === "trip-square") drawSquare(ctx, p, data, shows);
-  else drawList(ctx, p, data, shows);
-  drawFooter(ctx, p, data.handle);
-  ctx.restore();
-  strokeRound(ctx, 0, 0, W, W, radius, p.separator);
-
-  return new Promise<Blob>((resolve, reject) =>
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error("Couldn’t make the image"))), "image/png"),
-  );
+  return renderSquare((ctx, mark) => {
+    const shows = data.shows.map((s, i) => ({ ...s, photo: photos[i] ?? null }));
+    const p = isLightTripCard(design) ? LIGHT : DARK;
+    roundRect(ctx, 0, 0, W, W, square ? 0 : RADIUS);
+    ctx.fillStyle = p.ground; ctx.fill();
+    ctx.save(); ctx.clip();
+    if (design === "trip-grid") drawGrid(ctx, p, data, shows);
+    else if (design === "trip-collage") drawCollage(ctx, p, data, shows);
+    else if (design === "trip-square") drawSquare(ctx, p, data, shows);
+    else drawList(ctx, p, data, shows);
+    drawShareFooter(ctx, data.handle, p.label, mark);
+    ctx.restore();
+  });
 }
 
 type Show = TripCardShow & { photo: HTMLImageElement | null };
 
 const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
-// Trip name, then "New York · 4–8 Oct 2026 · 4 shows" with the place in the
-// accent colour. Returns the header's bottom edge.
-//
-// With `stats`, the counts stand out on the right of the header, large in the
-// accent colour with a small label under each, and the subtitle drops its
-// "· N shows" since the stats already say it. The header keeps its height.
-type HeaderStat = { value: number; label: string };
-
-function drawHeader(ctx: Ctx, p: Palette, d: TripCardData, count: number, top = PAD, stats?: HeaderStat[]) {
-  ctx.textBaseline = "middle";
-  const subY = top + 34 + 2 + 9.5;
-
-  // Stats, right aligned, each column centred on its number and label.
-  let textW = INNER;
-  if (stats?.length) {
-    const colGap = 20;
-    let right = PAD + INNER;
-    ctx.textAlign = "center";
-    for (let i = stats.length - 1; i >= 0; i--) {
-      const s = stats[i];
-      const value = String(s.value);
-      setFont(ctx, 800, 34, DISPLAY, -1);
-      const vw = ctx.measureText(value).width;
-      setFont(ctx, 400, 12, TEXT, 0.06);
-      const w = Math.max(vw, ctx.measureText(s.label).width);
-      const cx = right - w / 2;
-      setFont(ctx, 800, 34, DISPLAY, -1);
-      ctx.fillStyle = p.accent;
-      ctx.fillText(value, cx, top + 17);
-      setFont(ctx, 400, 12, TEXT, 0.06);
-      ctx.fillStyle = p.secondary;
-      ctx.fillText(s.label, cx, subY);
-      right -= w + colGap;
-    }
-    ctx.textAlign = "left";
-    textW = right + colGap - PAD - 16;
-  }
-
-  setFont(ctx, 700, 30, DISPLAY, 0.36);
-  ctx.fillStyle = p.label;
-  ctx.fillText(fit(ctx, d.name, textW), PAD, top + 17);
-  let x = PAD;
-  if (d.place) {
-    setFont(ctx, 600, 14, TEXT, -0.17);
-    ctx.fillStyle = p.accent;
-    const place = fit(ctx, d.place, textW / 2);
-    ctx.fillText(place, x, subY);
-    x += ctx.measureText(place).width + 4;
-  }
-  setFont(ctx, 400, 14, TEXT, -0.17);
-  ctx.fillStyle = p.secondary;
-  const rest = `${d.place ? "· " : ""}${d.dates}${stats ? "" : ` · ${plural(count, "show")}`}`;
-  ctx.fillText(fit(ctx, rest, PAD + textW - x), x, subY);
-  return top + 34 + 2 + 19;
+// Same 38pt title, 18pt metadata and 28pt margins as single-show cards.
+function drawHeader(ctx: Ctx, p: Palette, d: TripCardData, count: number) {
+  const titleHeight = drawTopTitle(ctx, d.name, PAD, p.label);
+  setFont(ctx, 500, 18, TEXT, 0);
+  const subtitle = [d.place, d.dates, plural(count, "show")].filter(Boolean).join(" · ");
+  let lines = wrap(ctx, subtitle, INNER);
+  if (lines.length > 2) lines = [lines[0], fit(ctx, lines.slice(1).join(" "), INNER)];
+  ctx.fillStyle = p.secondary; ctx.textBaseline = "top"; ctx.textAlign = "left";
+  lines.forEach((line, i) => ctx.fillText(fit(ctx, line, INNER), PAD, PAD + titleHeight + 8 + i * 22));
+  return PAD + titleHeight + 8 + lines.length * 22;
 }
 
 // "Trip wrap · list", squared: the trip's shows as rows. Up to 4 shows get
-// photo rows; 5–6 compact rows; past 6, five rows and "+ N more shows".
+// photo rows when they fit, otherwise larger compact rows and an overflow count.
 function drawList(ctx: Ctx, p: Palette, d: TripCardData, shows: Show[]) {
   const top = drawHeader(ctx, p, d, shows.length) + GAP;
   const bottom = FOOTER_TOP - GAP;
 
-  const compact = shows.length > 4;
-  const rows = shows.length > 6 ? shows.slice(0, 5) : shows;
+  if (!shows.length) {
+    setFont(ctx, 500, 22, TEXT, 0); ctx.fillStyle = p.label;
+    ctx.fillText("No shows logged yet", PAD, top + 60);
+    return;
+  }
+  const available = bottom - top;
+  const compact = shows.length > 4 || shows.length * 80 + shows.length - 1 > available;
+  const rowH = compact ? 60 : 80;
+  let visible = Math.min(shows.length, shows.length > 6 ? 5 : 6, Math.floor((available + 1) / (rowH + 1)));
+  if (visible < shows.length) visible = Math.min(visible, Math.floor((available - 40) / (rowH + 1)));
+  const rows = shows.slice(0, Math.max(1, visible));
   const more = shows.length - rows.length;
-  const rowH = compact ? 56 : 72;
   const moreH = more ? 40 : 0;
-  const panelH = rows.length * rowH + (rows.length - 1) + (more ? 1 + moreH : 0);
-  const y0 = top + (bottom - top - panelH) / 2;
+  const panelH = rows.length * rowH + Math.max(0, rows.length - 1) + (more ? 1 + moreH : 0);
+  const y0 = top + (available - panelH) / 2;
 
   ctx.save();
   roundRect(ctx, PAD, y0, INNER, panelH, 12);
   ctx.fillStyle = p.surface;
   ctx.fill();
   ctx.clip();
-  const starsW = 5 * 13 + 4 * 2;
+  const starsW = 5 * 16 + 4 * 2;
   rows.forEach((s, i) => {
     const rowTop = y0 + i * (rowH + 1);
     if (i > 0) {
       ctx.fillStyle = p.separator;
-      ctx.fillRect(PAD + (compact ? 14 : 70), rowTop - 1, INNER, 1);
+      ctx.fillRect(PAD + (compact ? 16 : 80), rowTop - 1, INNER, 1);
     }
-    const textX = compact ? PAD + 14 : PAD + 14 + 42 + 14;
-    const rightEdge = PAD + INNER - 14;
+    const textX = compact ? PAD + 16 : PAD + 16 + 48 + 16;
+    const rightEdge = PAD + INNER - 16;
     const textW = rightEdge - textX - (s.rating != null ? starsW + 12 : 0);
-    if (!compact) drawThumb(ctx, p, s, PAD + 14, rowTop + 8, 42, 56);
-    const blockH = 20 + 2 + 18;
+    if (!compact) drawThumb(ctx, p, s, PAD + 16, rowTop + 8, 48, 64);
+    const blockH = 27 + 3 + 20;
     const ty = rowTop + (rowH - blockH) / 2;
     ctx.textBaseline = "middle";
-    setFont(ctx, 600, 16, TEXT, -0.32);
+    setFont(ctx, 600, 22, DISPLAY, -0.3);
     ctx.fillStyle = p.label;
-    ctx.fillText(fit(ctx, s.title, textW), textX, ty + 10);
-    setFont(ctx, 400, 13, TEXT, -0.08);
+    ctx.fillText(fit(ctx, s.title, textW), textX, ty + 13.5);
+    setFont(ctx, 500, 16, TEXT, 0);
     ctx.fillStyle = p.secondary;
-    ctx.fillText(fit(ctx, [s.venue, s.day].filter(Boolean).join(" · "), textW), textX, ty + 22 + 9);
-    if (s.rating != null) drawStars(ctx, s.rating, rightEdge - starsW, rowTop + (rowH - 13) / 2, 13, 2, p.outline);
+    ctx.fillText(fit(ctx, [s.venue, s.day].filter(Boolean).join(" · "), textW), textX, ty + 30 + 10);
+    if (s.rating != null) drawStars(ctx, s.rating, rightEdge - starsW, rowTop + (rowH - 16) / 2, 16, 2, p.outline);
   });
   if (more) {
     const moreTop = y0 + rows.length * (rowH + 1);
     ctx.fillStyle = p.separator;
     ctx.fillRect(PAD, moreTop - 1, INNER, 1);
-    setFont(ctx, 400, 14, TEXT, -0.17);
+    setFont(ctx, 500, 18, TEXT, 0);
     ctx.fillStyle = p.secondary;
-    ctx.fillText(`+ ${plural(more, "more show")}`, PAD + 14, moreTop + moreH / 2);
+    ctx.fillText(`+ ${plural(more, "more show")}`, PAD + 16, moreTop + moreH / 2);
   }
   ctx.restore();
   strokeRound(ctx, PAD, y0, INNER, panelH, 12, p.separator);
@@ -238,51 +190,26 @@ function drawList(ctx: Ctx, p: Palette, d: TripCardData, shows: Show[]) {
 // "Trip wrap · photo grid", squared: a big coral count with the trip's
 // stats beside it, then the photos.
 function drawGrid(ctx: Ctx, p: Palette, d: TripCardData, shows: Show[]) {
-  // Stats column, right aligned: place, theatres, average rating.
-  const stats: { value: string | number; label: string }[] = [];
-  if (d.place) stats.push({ value: d.place, label: d.cities > 1 ? "visited" : "city" });
-  if (d.venues) stats.push({ value: plural(d.venues, "theatre"), label: "visited" });
-  if (d.average != null) stats.push({ value: halfStep(d.average), label: "average rating" });
-  let sy = PAD;
-  let statsW = 0;
-  ctx.textAlign = "right";
-  ctx.textBaseline = "middle";
-  for (const s of stats) {
-    if (typeof s.value === "number") {
-      drawStars(ctx, s.value, PAD + INNER - 73, sy + 3.5, 13, 2, p.outline);
-      statsW = Math.max(statsW, 73);
-    } else {
-      setFont(ctx, 600, 15, TEXT, -0.24);
-      ctx.fillStyle = p.label;
-      const v = fit(ctx, s.value, 160);
-      statsW = Math.max(statsW, ctx.measureText(v).width);
-      ctx.fillText(v, PAD + INNER, sy + 10);
-    }
-    setFont(ctx, 400, 11, TEXT, 0.06);
-    ctx.fillStyle = p.secondary;
-    ctx.fillText(s.label, PAD + INNER, sy + 20 + 7);
-    sy += 20 + 14 + 4;
+  const top = drawHeader(ctx, p, d, shows.length) + GAP;
+  const columns = 1 + Number(d.venues > 0) + Number(d.average != null);
+  const col = INNER / columns;
+  ctx.fillStyle = p.label; ctx.textAlign = "left"; ctx.textBaseline = "top";
+  setFont(ctx, 500, 18, TEXT, 0); ctx.fillText("Shows", PAD, top);
+  setFont(ctx, 800, 64, DISPLAY, -1); ctx.fillStyle = p.accent;
+  ctx.fillText(String(shows.length), PAD, top + 26, col - 16);
+  let index = 1;
+  if (d.venues > 0) {
+    const x = PAD + col * index++;
+    ctx.fillStyle = p.label; setFont(ctx, 500, 18, TEXT, 0); ctx.fillText("Theatres", x, top);
+    setFont(ctx, 700, 42, DISPLAY, 0); ctx.fillText(String(d.venues), x, top + 26, col - 16);
   }
-  ctx.textAlign = "left";
-
-  // Count, top left.
-  const leftW = INNER - statsW - 16;
-  setFont(ctx, 400, 13, TEXT, -0.08);
-  ctx.fillStyle = p.secondary;
-  ctx.fillText(fit(ctx, `${d.name} · ${d.dates}`, leftW), PAD, PAD + 9);
-  setFont(ctx, 800, 72, DISPLAY, -2.16);
-  ctx.fillStyle = CORAL;
-  ctx.textBaseline = "alphabetic";
-  const count = String(shows.length);
-  const baseline = PAD + 18 + 62;
-  ctx.fillText(count, PAD, baseline);
-  const countW = ctx.measureText(count).width;
-  setFont(ctx, 400, 16, TEXT, -0.32);
-  ctx.fillStyle = p.secondary;
-  ctx.fillText(shows.length === 1 ? "show" : "shows", PAD + countW + 8, baseline);
-
-  const top = Math.max(PAD + 18 + 72, sy - 4) + GAP;
-  drawPhotoGrid(ctx, p, shows, PAD, top, INNER, FOOTER_TOP - GAP - top, false);
+  if (d.average != null) {
+    const x = PAD + col * index;
+    ctx.fillStyle = p.label; setFont(ctx, 500, 18, TEXT, 0); ctx.fillText("Average", x, top);
+    drawStars(ctx, halfStep(d.average), x, top + 40, 18, 2, p.outline);
+  }
+  const photosTop = top + 100 + GAP;
+  drawPhotoGrid(ctx, p, shows, PAD, photosTop, INNER, FOOTER_TOP - GAP - photosTop, false);
 }
 
 // Polaroid layouts from the canvas's "Trip collage" row, one per number of
@@ -373,27 +300,35 @@ const COLLAGES: Record<number, { size: typeof LARGE; at: Polaroid[] }> = {
 // shows, the 8-show layout prefers shows with photos and the last
 // polaroid reads "+N".
 function drawCollage(ctx: Ctx, p: Palette, d: TripCardData, shows: Show[]) {
-  const top =
-    drawHeader(ctx, p, d, shows.length, PAD, [
-      { value: shows.length, label: shows.length === 1 ? "show" : "shows" },
-      { value: d.venues, label: d.venues === 1 ? "venue" : "venues" },
-      ...(d.nights > 0 ? [{ value: d.nights, label: d.nights === 1 ? "night" : "nights" }] : []),
-    ]) + GAP;
-  const bottom = FOOTER_TOP - 12;
+  const top = drawHeader(ctx, p, d, shows.length) + GAP;
+  const bottom = FOOTER_TOP - GAP;
   let picks = shows;
   if (shows.length > 8) {
     const keep = new Set([...shows].sort((a, b) => Number(Boolean(b.photo)) - Number(Boolean(a.photo))).slice(0, 8));
     picks = shows.filter((s) => keep.has(s));
   }
   const more = shows.length - picks.length;
+  if (!picks.length) return;
   const { size, at } = COLLAGES[picks.length];
-  // Centre the layout in the space between header and footer.
-  const layoutH = Math.max(...at.map((a) => a.top + size.h));
-  const y0 = top + Math.max(0, (bottom - top - layoutH) / 2);
+  const corners = at.flatMap(spot => {
+    const angle = spot.rotate * Math.PI / 180;
+    return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sy]) => {
+      const dx = sx * size.w / 2, dy = sy * size.h / 2;
+      return [spot.left + size.w / 2 + Math.cos(angle) * dx - Math.sin(angle) * dy,
+        spot.top + size.h / 2 + Math.sin(angle) * dx + Math.cos(angle) * dy];
+    });
+  });
+  const minX = Math.min(...corners.map(p => p[0])), minY = Math.min(...corners.map(p => p[1]));
+  const width = Math.max(...corners.map(p => p[0])) - minX;
+  const height = Math.max(...corners.map(p => p[1])) - minY;
+  const scale = Math.min(1, INNER / width, (bottom - top) / height);
+  ctx.save();
+  ctx.translate(PAD + (INNER - width * scale) / 2 - minX * scale, top + (bottom - top - height * scale) / 2 - minY * scale);
+  ctx.scale(scale, scale);
   picks.forEach((s, i) => {
     const { left, top: y, rotate } = at[i];
     ctx.save();
-    ctx.translate(PAD + left + size.w / 2, y0 + y + size.h / 2);
+    ctx.translate(left + size.w / 2, y + size.h / 2);
     ctx.rotate((rotate * Math.PI) / 180);
     ctx.translate(-size.w / 2, -size.h / 2);
     softShadow(ctx);
@@ -407,6 +342,7 @@ function drawCollage(ctx: Ctx, p: Palette, d: TripCardData, shows: Show[]) {
     drawTile(ctx, p, s, inset, inset, size.w - inset * 2, size.h - inset * 2, 2, last ? more : 0, true);
     ctx.restore();
   });
+  ctx.restore();
 }
 
 // "Square · trip wrap": the trip's photos in a grid.
@@ -421,11 +357,11 @@ function drawSquare(ctx: Ctx, p: Palette, d: TripCardData, shows: Show[]) {
 const ROWS: Record<number, number[]> = { 1: [1], 2: [2], 3: [1, 2], 4: [2, 2], 5: [2, 3], 6: [3, 3] };
 
 function drawPhotoGrid(ctx: Ctx, p: Palette, all: Show[], x: number, y: number, w: number, h: number, shadow: boolean) {
-  const gap = 8;
+  const gap = 12;
   const shows = all.slice(0, 6);
   const more = all.length - shows.length;
   const rows = ROWS[shows.length] ?? [];
-  const rowH = (h - gap * (rows.length - 1)) / rows.length;
+  const rowH = (h - gap * Math.max(0, rows.length - 1)) / Math.max(1, rows.length);
   let i = 0;
   rows.forEach((count, r) => {
     const tileW = (w - gap * (count - 1)) / count;
@@ -470,12 +406,19 @@ function drawTile(
     ctx.fillRect(x, y, w, h);
     // Smaller tiles (the 7- and 8-show collages) get tighter type.
     const inset = w < 140 ? 8 : 16;
-    const size = Math.max(w < 140 ? 13 : 17, Math.min(28, w / 8));
+    let size = Math.max(w < 140 ? 16 : 20, Math.min(30, w / 7));
+    const tw = w - inset * 2;
+    let lines: string[] = [];
+    for (; size >= 14; size -= 1) {
+      setFont(ctx, 700, size, DISPLAY, size * -0.01);
+      lines = wrap(ctx, s.title, tw);
+      if (lines.length <= 3 && lines.every(line => ctx.measureText(line).width <= tw) && lines.length * size * 1.1 <= h - inset * 2) break;
+    }
+    size = Math.max(14, size);
     setFont(ctx, 700, size, DISPLAY, size * -0.01);
     const lh = size * 1.1;
-    const tw = w - inset * 2;
-    let lines = wrap(ctx, s.title, tw);
-    if (lines.length > 3) lines = [lines[0], lines[1], fit(ctx, lines.slice(2).join(" "), tw)];
+    const maxLines = Math.max(1, Math.min(3, Math.floor((h - inset * 2) / lh)));
+    if (lines.length > maxLines) lines = [...lines.slice(0, maxLines - 1), fit(ctx, lines.slice(maxLines - 1).join(" "), tw)];
     ctx.fillStyle = p.label;
     ctx.textBaseline = "middle";
     lines.forEach((line, i) => {
@@ -515,26 +458,6 @@ function drawThumb(ctx: Ctx, p: Palette, s: Show, x: number, y: number, w: numbe
     ctx.textAlign = "left";
   }
   ctx.restore();
-}
-
-// Wordmark left with the domain under it, handle right, at the same place
-// on every card. The pair sits around FOOTER_MID, using some of the gap
-// above and the padding below so the content area stays the same.
-function drawFooter(ctx: Ctx, p: Palette, handle: string | null) {
-  ctx.textBaseline = "middle";
-  setFont(ctx, 800, 18, DISPLAY, -0.81);
-  ctx.fillStyle = p.label;
-  ctx.fillText("stubbed", PAD, FOOTER_MID - 5);
-  setFont(ctx, 500, 10, TEXT, 0);
-  ctx.fillStyle = p.secondary;
-  ctx.fillText(CARD_DOMAIN, PAD, FOOTER_MID + 10);
-  if (handle) {
-    setFont(ctx, 400, 13, TEXT, -0.08);
-    ctx.fillStyle = p.secondary;
-    ctx.textAlign = "right";
-    ctx.fillText(`@${handle}`, W - PAD, FOOTER_MID - 5);
-    ctx.textAlign = "left";
-  }
 }
 
 // object-fit: cover, centred.
