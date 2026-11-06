@@ -26,7 +26,7 @@ The suggested Card, Notice and Disclosure primitives remain a separate design-sy
 
 ## Latest re-review
 
-Problem messages now describe state in plain red text; Fix is the only filled coral control in the row. The redundant result shortcut is removed, zero counts are hidden, short lists have no jump link, and bulk/country text actions align with headings. Native problem rows now use red warnings and a trailing chevron; hub icons have a fixed width. The screenshots below predate this final re-review polish.
+Problem messages now describe state in plain red text; Fix is the only filled coral control in the row. The redundant result shortcut is removed, zero counts are hidden, short lists have no jump link, and bulk/country text actions align with headings. Native problem rows now use red warnings and a trailing chevron; hub icons have a fixed width. The web screenshots and iOS review renders below were refreshed from commit `356a8e2` on 6 November after the final re-review polish. Web captures use the production build and synthetic local test data; iOS review captures come from the five passing rendering tests.
 
 ## Checks
 
