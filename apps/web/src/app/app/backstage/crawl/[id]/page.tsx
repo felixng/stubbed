@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
+import { RefreshCrawl } from "@/components/app/admin/StartCrawl";
 import { AdminOnly } from "@/components/app/admin/AdminOnly";
 import { MissedTitles } from "@/components/app/admin/MissedTitles";
 import { ReviewFinding } from "@/components/app/admin/ReviewFinding";
@@ -42,7 +43,7 @@ type Finding = {
 };
 type ScoreRow = { venue_id: string | null; venue_name: string | null; findings: number; right_count: number; wrong_count: number; unsure_count: number; unreviewed: number; missed: number };
 type Missed = { id: string; venue_id: string | null; title: string; note: string | null };
-type RunRow = RunSettings & { status: string; created_at: string };
+type RunRow = RunSettings & { status: string; created_at: string; log_url: string | null };
 type Compared = {
   status: "added" | "lost" | "changed" | "same";
   venue_name: string | null;
@@ -125,7 +126,7 @@ async function Run({ params, searchParams }: Pick<PageProps<"/app/backstage/craw
   const compareId = typeof compareParam === "string" && UUID.test(compareParam) && compareParam !== id ? compareParam : null;
   const { supabase } = await ownerContext();
   const [runRes, findingsRes, scoresRes, missedRes, othersRes, waitingRes] = await Promise.all([
-    supabase.from("crawl_runs").select("id, status, method, model, prompt, branch, commit_sha, budget_usd, cost_usd, venue_ids, created_at").eq("id", id).maybeSingle(),
+    supabase.from("crawl_runs").select("id, status, method, model, prompt, branch, commit_sha, budget_usd, cost_usd, venue_ids, created_at, log_url").eq("id", id).maybeSingle(),
     supabase
       .from("crawl_findings")
       .select("id, venue_id, source_url, raw_title, stage_text, start_date, end_date, date_text, kind, method, confidence, evidence, review, review_note")
@@ -151,7 +152,9 @@ async function Run({ params, searchParams }: Pick<PageProps<"/app/backstage/craw
         <p className="text-headline text-label">
           <time dateTime={run.created_at}>{WHEN.format(new Date(run.created_at))} UTC</time> · {run.status}
         </p>
+        <RefreshCrawl active={run.status === "queued" || run.status === "running"} />
         <p className="text-footnote text-label-secondary">{settingsLine(run)}</p>
+        {run.log_url && <a href={run.log_url} target="_blank" rel="noopener noreferrer" className="text-tint-text">Actions log</a>}
         <p className="text-subheadline text-label">{scoreLine(total)}</p>
         <details className="text-footnote text-label-secondary">
           <summary className="min-h-11 cursor-pointer py-3">Run again with these settings</summary>
