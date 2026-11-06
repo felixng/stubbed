@@ -1079,3 +1079,7 @@ Both SQL and the route validate settings; manual budgets are capped at $10.
 Dispatch failures are recorded, and Actions records its revision and log URL
 and marks interrupted jobs failed. Unfinished form selections survive navigation;
 completed selections reset on return. Existing Backstage URLs are retained.
+
+### 2026-11-06 — Infer import countries from catalogue evidence
+
+Owner direction supersedes #215's manual-country default: an unmatched theatre should not force a country choice when its city identifies the country. Web and iOS use the same invoker-rights RPC. It compares canonical city aliases (including New York City → New York), prefers exact theatre-name evidence in that city, then accepts a country only when the city evidence has one distinct country. Ambiguous/unknown places and failed lookups keep the existing country picker. No external geocoder, AI, country hard-coding or extra dependencies. Inference enriches a draft; nothing is saved until Import. Apply the database migration before releasing either client; older backends gracefully keep manual selection. Catalogue coverage limits confidence: absence of a second country is not proof of worldwide uniqueness.

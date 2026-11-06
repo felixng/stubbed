@@ -148,7 +148,7 @@ struct MezzanineReviewView: View {
           Text(notice).font(.footnote).foregroundStyle(.secondary).accessibilityAddTraits(.updatesFrequently)
         }
       } header: { Text("Countries") }
-        footer: { Text("Mezzanine doesn’t say which country a theatre is in. Choose one so your stats group correctly.") }
+        footer: { Text("We couldn’t identify this country from our theatre catalogue. Choose one so your stats group correctly.") }
       .disabled(model.busy)
     }
   }

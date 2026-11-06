@@ -261,7 +261,7 @@ export function MezzanineImport() {
       <p>{ready.length > 0 && <span>{ready.length} ready</span>}{needs.length > 0 && <>{ready.length > 0 && " · "}{drafts.length > 10 ? <button type="button" className="min-h-11 text-tint-text underline underline-offset-4" onClick={jumpToAttention}>{needs.length} need attention</button> : <span>{needs.length} {needs.length === 1 ? "needs" : "need"} attention</span>}</>}{duplicates.length > 0 && <>{(ready.length > 0 || needs.length > 0) && " · "}{duplicates.length} already in your diary</>}</p>
     </div>}
     {(cities.length > 0 || (!finished && countryNotice)) && <section aria-label="Countries" className="flex flex-col gap-3">
-      {cities.length > 0 && <p className="text-subheadline text-label-secondary">Mezzanine doesn’t say which country a theatre is in. Choose one so your stats group correctly.</p>}
+      {cities.length > 0 && <p className="text-subheadline text-label-secondary">We couldn’t identify this country from our theatre catalogue. Choose one so your stats group correctly.</p>}
       {cities.map((city, i) => <div key={city} className="flex flex-col gap-2">
         <label htmlFor={`city-${i}`} className="flex flex-col gap-2 text-body text-label">Where is {city}?
           <select id={`city-${i}`} disabled={busy} value="" onChange={(e) => country(city, e.target.value)} className={fieldClass}>
