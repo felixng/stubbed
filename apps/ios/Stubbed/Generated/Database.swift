@@ -408,6 +408,7 @@ internal enum PublicSchema {
     internal let rules: AnyJSON
     internal let siteId: UUID
     internal let status: String
+    internal let validation: AnyJSON?
     internal enum CodingKeys: String, CodingKey {
       case author = "author"
       case createdAt = "created_at"
@@ -415,6 +416,7 @@ internal enum PublicSchema {
       case rules = "rules"
       case siteId = "site_id"
       case status = "status"
+      case validation = "validation"
     }
   }
   internal struct CrawlRulesInsert: Codable, Hashable, Sendable {
@@ -424,6 +426,7 @@ internal enum PublicSchema {
     internal let rules: AnyJSON
     internal let siteId: UUID
     internal let status: String?
+    internal let validation: AnyJSON?
     internal enum CodingKeys: String, CodingKey {
       case author = "author"
       case createdAt = "created_at"
@@ -431,6 +434,7 @@ internal enum PublicSchema {
       case rules = "rules"
       case siteId = "site_id"
       case status = "status"
+      case validation = "validation"
     }
   }
   internal struct CrawlRulesUpdate: Codable, Hashable, Sendable {
@@ -440,6 +444,7 @@ internal enum PublicSchema {
     internal let rules: AnyJSON?
     internal let siteId: UUID?
     internal let status: String?
+    internal let validation: AnyJSON?
     internal enum CodingKeys: String, CodingKey {
       case author = "author"
       case createdAt = "created_at"
@@ -447,6 +452,7 @@ internal enum PublicSchema {
       case rules = "rules"
       case siteId = "site_id"
       case status = "status"
+      case validation = "validation"
     }
   }
   internal struct CrawlRunsSelect: Codable, Hashable, Sendable {
@@ -564,50 +570,92 @@ internal enum PublicSchema {
     }
   }
   internal struct CrawlSitesSelect: Codable, Hashable, Sendable {
+    internal let archiveSource: String?
     internal let archiveStatus: String
     internal let archiveUrl: String?
     internal let health: AnyJSON
     internal let id: UUID
+    internal let lastCrawledAt: String?
+    internal let linkSource: String?
+    internal let reason: String?
+    internal let repairAttempts: Int32
+    internal let status: String
     internal let updatedAt: String
+    internal let websiteUrl: String?
     internal let whatsOnUrl: String
     internal enum CodingKeys: String, CodingKey {
+      case archiveSource = "archive_source"
       case archiveStatus = "archive_status"
       case archiveUrl = "archive_url"
       case health = "health"
       case id = "id"
+      case lastCrawledAt = "last_crawled_at"
+      case linkSource = "link_source"
+      case reason = "reason"
+      case repairAttempts = "repair_attempts"
+      case status = "status"
       case updatedAt = "updated_at"
+      case websiteUrl = "website_url"
       case whatsOnUrl = "whats_on_url"
     }
   }
   internal struct CrawlSitesInsert: Codable, Hashable, Sendable {
+    internal let archiveSource: String?
     internal let archiveStatus: String?
     internal let archiveUrl: String?
     internal let health: AnyJSON?
     internal let id: UUID?
+    internal let lastCrawledAt: String?
+    internal let linkSource: String?
+    internal let reason: String?
+    internal let repairAttempts: Int32?
+    internal let status: String?
     internal let updatedAt: String?
+    internal let websiteUrl: String?
     internal let whatsOnUrl: String
     internal enum CodingKeys: String, CodingKey {
+      case archiveSource = "archive_source"
       case archiveStatus = "archive_status"
       case archiveUrl = "archive_url"
       case health = "health"
       case id = "id"
+      case lastCrawledAt = "last_crawled_at"
+      case linkSource = "link_source"
+      case reason = "reason"
+      case repairAttempts = "repair_attempts"
+      case status = "status"
       case updatedAt = "updated_at"
+      case websiteUrl = "website_url"
       case whatsOnUrl = "whats_on_url"
     }
   }
   internal struct CrawlSitesUpdate: Codable, Hashable, Sendable {
+    internal let archiveSource: String?
     internal let archiveStatus: String?
     internal let archiveUrl: String?
     internal let health: AnyJSON?
     internal let id: UUID?
+    internal let lastCrawledAt: String?
+    internal let linkSource: String?
+    internal let reason: String?
+    internal let repairAttempts: Int32?
+    internal let status: String?
     internal let updatedAt: String?
+    internal let websiteUrl: String?
     internal let whatsOnUrl: String?
     internal enum CodingKeys: String, CodingKey {
+      case archiveSource = "archive_source"
       case archiveStatus = "archive_status"
       case archiveUrl = "archive_url"
       case health = "health"
       case id = "id"
+      case lastCrawledAt = "last_crawled_at"
+      case linkSource = "link_source"
+      case reason = "reason"
+      case repairAttempts = "repair_attempts"
+      case status = "status"
       case updatedAt = "updated_at"
+      case websiteUrl = "website_url"
       case whatsOnUrl = "whats_on_url"
     }
   }
@@ -1749,6 +1797,9 @@ internal enum PublicSchema {
     internal let circuit: VenueCircuit?
     internal let city: String?
     internal let country: String?
+    internal let crawlAttemptAt: String?
+    internal let crawlAttempts: Int32
+    internal let crawlError: String?
     internal let crawlSiteId: UUID?
     internal let createdAt: String
     internal let createdBy: UUID?
@@ -1761,12 +1812,17 @@ internal enum PublicSchema {
     internal let source: String
     internal let verified: Bool
     internal let website: String?
+    internal let websiteSource: String?
+    internal let whatsOnSource: String?
     internal let whatsOnUrl: String?
     internal let wikidataId: String?
     internal enum CodingKeys: String, CodingKey {
       case circuit = "circuit"
       case city = "city"
       case country = "country"
+      case crawlAttemptAt = "crawl_attempt_at"
+      case crawlAttempts = "crawl_attempts"
+      case crawlError = "crawl_error"
       case crawlSiteId = "crawl_site_id"
       case createdAt = "created_at"
       case createdBy = "created_by"
@@ -1779,6 +1835,8 @@ internal enum PublicSchema {
       case source = "source"
       case verified = "verified"
       case website = "website"
+      case websiteSource = "website_source"
+      case whatsOnSource = "whats_on_source"
       case whatsOnUrl = "whats_on_url"
       case wikidataId = "wikidata_id"
     }
@@ -1787,6 +1845,9 @@ internal enum PublicSchema {
     internal let circuit: VenueCircuit?
     internal let city: String?
     internal let country: String?
+    internal let crawlAttemptAt: String?
+    internal let crawlAttempts: Int32?
+    internal let crawlError: String?
     internal let crawlSiteId: UUID?
     internal let createdAt: String?
     internal let createdBy: UUID?
@@ -1799,12 +1860,17 @@ internal enum PublicSchema {
     internal let source: String?
     internal let verified: Bool?
     internal let website: String?
+    internal let websiteSource: String?
+    internal let whatsOnSource: String?
     internal let whatsOnUrl: String?
     internal let wikidataId: String?
     internal enum CodingKeys: String, CodingKey {
       case circuit = "circuit"
       case city = "city"
       case country = "country"
+      case crawlAttemptAt = "crawl_attempt_at"
+      case crawlAttempts = "crawl_attempts"
+      case crawlError = "crawl_error"
       case crawlSiteId = "crawl_site_id"
       case createdAt = "created_at"
       case createdBy = "created_by"
@@ -1817,6 +1883,8 @@ internal enum PublicSchema {
       case source = "source"
       case verified = "verified"
       case website = "website"
+      case websiteSource = "website_source"
+      case whatsOnSource = "whats_on_source"
       case whatsOnUrl = "whats_on_url"
       case wikidataId = "wikidata_id"
     }
@@ -1825,6 +1893,9 @@ internal enum PublicSchema {
     internal let circuit: VenueCircuit?
     internal let city: String?
     internal let country: String?
+    internal let crawlAttemptAt: String?
+    internal let crawlAttempts: Int32?
+    internal let crawlError: String?
     internal let crawlSiteId: UUID?
     internal let createdAt: String?
     internal let createdBy: UUID?
@@ -1837,12 +1908,17 @@ internal enum PublicSchema {
     internal let source: String?
     internal let verified: Bool?
     internal let website: String?
+    internal let websiteSource: String?
+    internal let whatsOnSource: String?
     internal let whatsOnUrl: String?
     internal let wikidataId: String?
     internal enum CodingKeys: String, CodingKey {
       case circuit = "circuit"
       case city = "city"
       case country = "country"
+      case crawlAttemptAt = "crawl_attempt_at"
+      case crawlAttempts = "crawl_attempts"
+      case crawlError = "crawl_error"
       case crawlSiteId = "crawl_site_id"
       case createdAt = "created_at"
       case createdBy = "created_by"
@@ -1855,6 +1931,8 @@ internal enum PublicSchema {
       case source = "source"
       case verified = "verified"
       case website = "website"
+      case websiteSource = "website_source"
+      case whatsOnSource = "whats_on_source"
       case whatsOnUrl = "whats_on_url"
       case wikidataId = "wikidata_id"
     }

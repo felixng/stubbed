@@ -56,3 +56,10 @@ export function rulesReader(page, ctx) {
   if (!ctx.rules) return null;
   return readRules(page, ctx).findings;
 }
+
+// Structured-data sites can expose pagination without site-specific rules.
+export function nextArchiveLink(html,url) {
+ const $=load(html);const href=$('a[rel~="next"], a.next.page-numbers, .pagination a.next').first().attr('href');
+ if(!href)return null;
+ try{const next=new URL(href,url);return next.origin===new URL(url).origin&&/^https?:$/.test(next.protocol)?next.href:null;}catch{return null;}
+}

@@ -1104,3 +1104,32 @@ moving runs. Diary scoring compares only the signed-in admin's logged visits.
 ### 2026-11-06 — Infer import countries from catalogue evidence
 
 Owner direction supersedes #215's manual-country default: an unmatched theatre should not force a country choice when its city identifies the country. Web and iOS use the same invoker-rights RPC. It compares canonical city aliases (including New York City → New York), prefers exact theatre-name evidence in that city, then accepts a country only when the city evidence has one distinct country. Ambiguous/unknown places and failed lookups keep the existing country picker. No external geocoder, AI, country hard-coding or extra dependencies. Inference enriches a draft; nothing is saved until Import. Apply the database migration before releasing either client; older backends gracefully keep manual selection. Catalogue coverage limits confidence: absence of a second country is not proof of worldwide uniqueness.
+
+## 2026-11-06 — Bounded crawl setup, repair and scheduling (#391)
+
+The loop prioritises theatres with entries, then West End/Broadway, then the rest,
+with one work item per shared site. Existing websites are retained; missing ones
+use Wikidata P856, then a capped DuckDuckGo HTML search. Search results must name
+the theatre on the fetched homepage. Code shortlists same-site links; the model
+can only select from that list. Human-entered website, what's-on and archive
+links remain protected, including during repair.
+
+Haiku proposes selector JSON from trimmed HTML without tools; code checks at least
+two shows, 60% readable dates, non-junk titles, page backing and known shows before
+activation. One Sonnet retry is allowed. Invalid proposals remain inactive. A
+repair stages both links and rules before replacement; good runs remain intact.
+Three unsuccessful repair attempts require attention. Model outages and exhausted
+budgets defer setup/repair without exhausting repair attempts. Retired versions
+can be proposed for restoration, but must pass the current-page checks again.
+
+The daily Actions schedule is guarded by CRAWL_LOOP_ENABLED, default off. Default
+limits are 25 sites, 20 free searches, $1/run and $0.20/site. Model requests reserve
+a conservative maximum token bill before calling; an uncertain failed request
+keeps that reserve in recorded spend. Existing healthy rules/structured data read
+without AI. Each site is bounded by page/time limits; progress and spend are saved
+between sites. Backstage and the Actions summary show the same progress counts.
+
+The owner explicitly deferred live crawl/model acceptance runs until setup is
+complete. Local fixture/database integration covers discovery, rule validation,
+publication, moved-link/layout repair and a repeat visit with no AI. No hosted
+migrations, live model calls or enabling of the switch were performed.

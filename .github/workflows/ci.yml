@@ -41,6 +41,14 @@ jobs:
       # Only Postgres is needed: applies the migrations, then runs the pgTAP tests.
       - run: supabase db start
       - run: supabase test db
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --prefix supabase/scripts/crawl --ignore-scripts
+      - name: Verify crawl loop against database and fixture pages
+        run: node --test supabase/scripts/crawl/loop-integration.test.mjs
+        env:
+          CRAWL_INTEGRATION_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
       - name: Verify concurrent notification read snapshot
         run: bash supabase/scripts/test-notification-read-snapshot.sh
         env:

@@ -71,6 +71,7 @@ Implemented; live acceptance runs deferred by the owner until setup is complete.
 - **#390 diary score.** The admin's own entries compared with what was crawled at those venues, so misses are visible.
 
 ### #391 Journey 1, step 3: the crawl loop fills runs on its own
+Implemented with the switch off. The owner deferred live acceptance runs until configuration is complete.
 - **#392 find links.** Websites from Wikidata `P856`, then a capped web search accepted only if the homepage names the venue. Code shortlists homepage links and Haiku picks. Links entered by hand are never overwritten.
 - **#393 write rules.** Haiku gets trimmed HTML and the rules schema, with no tools, and returns rules only. Code applies them and refuses any that fail. One retry on Sonnet, then "needs attention".
 - **#394 repair.** Health signals rerun #392 and #393. New rules must still find known shows. Attempts are limited per site, and good data stays in place.

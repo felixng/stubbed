@@ -211,6 +211,11 @@ export async function modelReader({ url, html }, ctx) {
   if (!(budget > 0) || spend.usd >= budget) return note('budget used up, so the model was not used');
   const body = pageText(html);
   if (!body) return note('the page had no text');
+  const prompt = run.prompt || DEFAULT_PROMPT;
+  const prices = MODEL_PRICES[model];
+  const reserve = ((Buffer.byteLength(body + prompt + JSON.stringify(EVENTS_SCHEMA)) + 2048) * prices[0] + 8000 * prices[1]) / 1e6;
+  if (spend.usd + reserve > budget) return note('remaining budget cannot cover the maximum model response');
+  spend.usd += reserve;
   const res = await fetchFn(API_URL, {
     method: 'POST', signal: AbortSignal.timeout(120_000),
     headers: { 'content-type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': API_VERSION },
@@ -222,7 +227,7 @@ export async function modelReader({ url, html }, ctx) {
   });
   if (!res.ok) return note(`the model call failed (${res.status})`);
   const data = await res.json();
-  spend.usd += costUsd(model, data.usage);
+  if (data.usage) spend.usd += costUsd(model, data.usage) - reserve;
   const block = (data.content ?? []).find(b => b.type === 'text');
   let parsed;
   try { parsed = JSON.parse(block?.text ?? ''); } catch { return note('the model did not return valid JSON'); }

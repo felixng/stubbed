@@ -20,6 +20,7 @@ export type TheatreFilters = {
   website: "" | "has" | "lacks";
   whatsOn: "" | "has" | "lacks";
   page: number;
+  attention?: boolean;
 };
 
 function one(v: string | string[] | undefined): string {
@@ -35,6 +36,7 @@ export function parseTheatreFilters(params: Record<string, string | string[] | u
   const country = one(params.country).trim().toUpperCase();
   const page = Number.parseInt(one(params.page), 10);
   return {
+    ...(one(params.attention) === "1" ? {attention:true} : {}),
     q: one(params.q).trim().slice(0, 100),
     circuit: CIRCUITS.some((c) => c.value === circuit) ? circuit : "",
     country: /^[A-Z]{2}$/.test(country) ? country : "",
@@ -58,6 +60,7 @@ export function filterArgs(f: TheatreFilters) {
 // A link to the same filters on another page (or none).
 export function theatresHref(f: TheatreFilters, page = f.page): string {
   const p = new URLSearchParams();
+  if (f.attention) p.set("attention", "1");
   if (f.q) p.set("q", f.q);
   if (f.circuit) p.set("circuit", f.circuit);
   if (f.country) p.set("country", f.country);

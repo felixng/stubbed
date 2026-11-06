@@ -259,6 +259,10 @@ test('model reader: only when the run allows it, within budget, with a known pri
   const spent = await call({ method: 'rules_model', budget_usd: 1 }, { fetchFn: apiFetch(events), spend: { usd: 1 } });
   assert.equal(spent.found, null, 'a spent budget stops further calls');
 
+  const cappedFetch = apiFetch(events);
+  const capped = await call({ method: 'rules_model', budget_usd: 0.0001 }, { fetchFn: cappedFetch });
+  assert.equal(capped.found, null);
+  assert.equal(cappedFetch.calls.length, 0, 'reserve the maximum response bill before calling');
   const fetchFn = apiFetch(events);
   const ok = await call({ method: 'rules_model', budget_usd: 5, prompt: 'Custom prompt.' }, { fetchFn });
   assert.equal(ok.found[0].method, 'model');
