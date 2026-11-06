@@ -107,7 +107,12 @@ enum MezzanineResolver {
               if let same = try await Entries.similarVenues(name, near: nil, city: city).first(where: \.same) {
                 return .venue(key, VenueChoice(same.item))
               }
-              return .venue(key, VenueChoice(name: name, city: city, country: nil))
+              var country: String?
+              if !city.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                // Optional enrichment; a network failure leaves the manual picker available.
+                country = try? await supabase.rpc("infer_import_country", params: ["venue_name": name, "city_name": city]).execute().value
+              }
+              return .venue(key, VenueChoice(name: name, city: city, country: country))
             }
           }
         }
