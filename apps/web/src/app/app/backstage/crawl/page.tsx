@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 
+import { StartCrawl, RefreshCrawl } from "@/components/app/admin/StartCrawl";
 import { AdminOnly } from "@/components/app/admin/AdminOnly";
 import { BackLink } from "@/components/ui/BackLink";
 import { settingsLine, type RunSettings } from "@/lib/admin-crawl";
@@ -9,7 +10,7 @@ import { ownerContext } from "@/lib/supabase/data";
 
 export const metadata: Metadata = { title: "Crawl runs" };
 
-type Run = RunSettings & { status: string; kind: string; created_at: string; summary: { findings?: number } | null };
+type Run = RunSettings & { status: string; kind: string; created_at: string; summary: { findings?: number } | null; log_url: string | null };
 
 const WHEN = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" });
 
@@ -19,15 +20,16 @@ async function Runs() {
   const { supabase } = await ownerContext();
   const { data, error } = await supabase
     .from("crawl_runs")
-    .select("id, kind, status, method, model, prompt, branch, commit_sha, budget_usd, cost_usd, venue_ids, summary, created_at")
+    .select("id, kind, status, method, model, prompt, branch, commit_sha, budget_usd, cost_usd, venue_ids, summary, created_at, log_url")
     .order("created_at", { ascending: false })
     .limit(50);
   if (error) return <p className="text-subheadline text-label-secondary">Couldn’t load runs: {error.message}</p>;
+  const { data: theatres } = await supabase.from("venues").select("id, name").not("whats_on_url", "is", null).order("name").limit(10000);
   const runs = (data ?? []) as unknown as Run[];
-  if (runs.length === 0) {
-    return <p className="text-subheadline text-label-secondary">No runs yet. Start one with <code>node supabase/scripts/crawl/index.mjs --venues …</code> (see supabase/README.md).</p>;
-  }
   return (
+    <>
+    <StartCrawl theatres={theatres ?? []} lastPrompt={runs.find(r => r.prompt)?.prompt ?? ""} />
+    <RefreshCrawl active={runs.some(r => r.status === "queued" || r.status === "running")} />
     <ul className="overflow-hidden rounded-md border border-separator bg-surface shadow-sm">
       {runs.map((r) => (
         <li key={r.id} className="border-b border-separator last:border-b-0">
@@ -43,9 +45,11 @@ async function Runs() {
             </span>
             <span className="text-footnote text-label-secondary">{settingsLine(r)}</span>
           </Link>
+          {r.log_url && <a className="inline-flex min-h-11 items-center px-4 text-tint-text" href={r.log_url} target="_blank" rel="noopener noreferrer">Actions log</a>}
         </li>
       ))}
     </ul>
+    </>
   );
 }
 

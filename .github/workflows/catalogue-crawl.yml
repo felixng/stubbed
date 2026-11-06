@@ -1,0 +1,33 @@
+name: Catalogue crawl
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: Saved crawl run ID
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: catalogue-crawl-${{ inputs.run_id }}
+  cancel-in-progress: false
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      CRAWL_RUN_ID: ${{ inputs.run_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Read saved run settings and crawl
+        run: node supabase/scripts/crawl/index.mjs --run-id "$CRAWL_RUN_ID"
+      - name: Mark an interrupted run failed
+        if: ${{ always() && (failure() || cancelled()) }}
+        run: node supabase/scripts/crawl/fail-run.mjs

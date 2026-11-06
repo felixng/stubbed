@@ -222,3 +222,19 @@ node supabase/scripts/merge.mjs --venues FROM INTO --apply       # do it
 node supabase/scripts/merge.mjs --shows FROM INTO [--force] [--apply]   # --force merges across types
 ```
 
+
+### Start a crawl from Backstage (#358)
+
+Open `/app/backstage/crawl` as an admin, choose 1–10 theatres with what's-on
+links, and select settings. The POST route creates a queued run through an
+admin-only RPC and dispatches `catalogue-crawl.yml` on the selected branch.
+The branch must contain that workflow. Runs and their detail pages refresh
+while queued/running and link to the Actions log once started. Failed dispatches
+are marked failed; Actions also marks failed/interrupted jobs. A force-killed
+runner may require checking its Actions log before rerunning.
+
+Owner setup: add `SUPABASE_DB_URL` and `ANTHROPIC_API_KEY` as GitHub Actions
+secrets. Add `CRAWL_GITHUB_TOKEN` in Vercel: a fine-grained token for this
+repository with Actions write permission. Do not put the model key in Vercel.
+Apply the migration with `supabase db push` before using the form. Rules-only
+runs do not need the model key. Budget is capped at $10 per manual run.

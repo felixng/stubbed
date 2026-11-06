@@ -1069,3 +1069,13 @@ After saving a Mezzanine file, show a plain result block and only remaining acti
 The default photo and no-photo entry cards anchor show-of-year at the top-left margin and Seen / X time(s) at the top-right margin. The show title sits above the shared footer. Venue visits stay on their dedicated card, and the centred Show overlay and Ticket stub designs keep their existing compositions.
 
 Show number and Show overlay now follow the eligible photo cards, before Data and Encore. Filtering out unavailable photo/rating designs keeps this relative ordering on both platforms.
+
+## 2026-11-06 — Backstage starts saved crawl runs (#358)
+
+Manual crawls create queued runs through a session-bound admin RPC, then use
+`CRAWL_GITHUB_TOKEN` (repository Actions write only) to dispatch the saved run ID
+on the selected branch. No service-role or model key is needed in Vercel.
+Both SQL and the route validate settings; manual budgets are capped at $10.
+Dispatch failures are recorded, and Actions records its revision and log URL
+and marks interrupted jobs failed. Unfinished form selections survive navigation;
+completed selections reset on return. Existing Backstage URLs are retained.

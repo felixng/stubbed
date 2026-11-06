@@ -56,7 +56,7 @@ Launch is Journey 2: the user types the show (#353). Journey 1 pre-fills the sho
 - **#357 edit.** `venues.whats_on_url`; `admin_update_venue(...)` (security definer, checks `public.is_admin()`). Venues sharing a site share a URL: the crawl fetches it once and matches stages to those venues. No crawl-target table.
 
 ### #289 Journey 1, step 1: crawl pilot and review tool
-Done apart from **#358**. Pilot results stay in admin-only tables; automatic publishing into runs is planned in #387 below.
+**#358 is implemented**; the owner configures the Actions secrets and Vercel dispatch token before a live run. Pilot results stay in admin-only tables; automatic publishing into runs is planned in #387 below.
 - **#277 core.** `crawl_runs` and `crawl_findings` (admin read, service-role write). `supabase/scripts/crawl/` with `index.mjs`, `fetch.mjs` (robots.txt, per-host rate limit, User-Agent, conditional requests), `load.mjs` (one transaction per theatre), `report.mjs`. Facts and short evidence only, never copies of pages. Parsers are pure functions tested with `node --test` on saved fixtures.
 - **#291 theatre sites.** Structured data (schema.org `Event`) by code first, then a model when the run allows it, with model and prompt taken from the `crawl_runs` row. Findings keep the raw title; no show matching here.
 - **#358 start from admin.** `/app/backstage/crawl` creates a `crawl_runs` row and dispatches `.github/workflows/catalogue-crawl.yml` with a run id and branch. The crawl runs on GitHub Actions, so the model key stays out of Vercel and the app. The owner adds `SUPABASE_DB_URL` and `ANTHROPIC_API_KEY` as Actions secrets and a repository-scoped Actions token in Vercel.

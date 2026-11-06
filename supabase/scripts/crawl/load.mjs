@@ -83,5 +83,6 @@ export async function finishRun(runId, { status, summary, costUsd = 0 }, db = ru
 }
 
 export async function startRun(runId, db = runPsql) {
-  await db(`update public.crawl_runs set status = 'running', started_at = now() where id = ${uuidLiteral(runId)}`);
+  await db(`update public.crawl_runs set status = 'running', started_at = now(), branch = coalesce(j->>'branch', branch), commit_sha = coalesce(j->>'sha', commit_sha), log_url = j->>'log_url'
+    from (select ${jsonLiteral({ branch: process.env.GITHUB_REF_NAME ?? null, sha: process.env.GITHUB_SHA ?? null, log_url: process.env.GITHUB_RUN_ID ? `https://github.com/felixng/stubbed/actions/runs/${process.env.GITHUB_RUN_ID}` : null })} as j) x where id = ${uuidLiteral(runId)}`);
 }

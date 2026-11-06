@@ -1,0 +1,21 @@
+begin;
+select no_plan();
+insert into auth.users(id, email) values('dddddddd-1111-0000-0000-000000000000', 'dispatch@example.com');
+insert into public.venues(id, name, whats_on_url) values('a0000000-1111-0000-0000-000000000001', 'Dispatch Theatre', 'https://example.com/whats-on');
+create function pg_temp.settings() returns jsonb language sql as $$
+ select '{"venue_ids":["a0000000-1111-0000-0000-000000000001"],"method":"rules","model":"claude-haiku-5-5","budget_usd":0,"branch":"main","kind":"whats_on"}'::jsonb;
+$$;
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"dddddddd-1111-0000-0000-000000000000","role":"authenticated"}', true);
+select throws_ok($$select public.admin_create_crawl_run(pg_temp.settings())$$, '42501', 'Not allowed', 'non-admin cannot create runs');
+select throws_ok($$select public.admin_fail_crawl_dispatch(gen_random_uuid())$$, '42501', 'Not allowed', 'non-admin cannot fail runs');
+select set_config('request.jwt.claims', '{"sub":"dddddddd-1111-0000-0000-000000000000","role":"authenticated","app_metadata":{"role":"admin"}}', true);
+select throws_ok($$select public.admin_create_crawl_run(pg_temp.settings() || '{"model":"unknown"}')$$, 'P0001', 'Invalid settings', 'unknown models refused');
+select throws_ok($$select public.admin_create_crawl_run(pg_temp.settings() || jsonb_build_object('venue_ids', to_jsonb(array_fill('a0000000-1111-0000-0000-000000000001'::text, array[11]))))$$, 'P0001', 'Choose 1–10 different theatres with links', 'over-limit theatres refused');
+select throws_ok($$select public.admin_create_crawl_run(pg_temp.settings() || '{"venue_ids":["a0000000-1111-0000-0000-000000000002"]}')$$, 'P0001', 'Choose 1–10 different theatres with links', 'missing theatre refused');
+select lives_ok($$select public.admin_create_crawl_run(pg_temp.settings())$$, 'admin creates queued run');
+select is((select status from public.crawl_runs where created_by = auth.uid()), 'queued', 'run queued');
+select lives_ok($$select public.admin_fail_crawl_dispatch(id) from public.crawl_runs where created_by = auth.uid()$$, 'dispatch failure recorded');
+select is((select status from public.crawl_runs where created_by = auth.uid()), 'failed', 'run failed');
+select * from finish();
+rollback;

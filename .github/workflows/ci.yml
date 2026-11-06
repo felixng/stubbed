@@ -27,7 +27,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
-      - run: node --test supabase/scripts/sync-wikidata.test.mjs supabase/scripts/merge.test.mjs supabase/scripts/sync-osm-venues.test.mjs
+      - run: node --test supabase/scripts/sync-wikidata.test.mjs supabase/scripts/merge.test.mjs supabase/scripts/sync-osm-venues.test.mjs supabase/scripts/crawl/*.test.mjs
       - run: pnpm build
 
   db:
