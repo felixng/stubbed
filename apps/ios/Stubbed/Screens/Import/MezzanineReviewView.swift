@@ -100,9 +100,8 @@ struct MezzanineReviewView: View {
     }
     .navigationTitle("Review import")
     .navigationBarTitleDisplayMode(.inline)
-    .toolbar(.hidden, for: .tabBar)
-    .toolbar {
-      ToolbarItem(placement: .bottomBar) {
+    .safeAreaInset(edge: .bottom) {
+      Group {
         if model.busy {
           Button(model.stopRequested ? "Stopping…" : "Stop", action: model.requestStop)
             .buttonStyle(.bordered).disabled(model.stopRequested)
@@ -114,6 +113,11 @@ struct MezzanineReviewView: View {
             .buttonStyle(.borderedProminent).disabled(model.selected == 0)
         }
       }
+      .controlSize(.large)
+      .frame(maxWidth: .infinity)
+      .padding(.horizontal)
+      .padding(.vertical, 8)
+      .background(.bar)
     }
     .navigationBarBackButtonHidden(model.busy)
     .task {

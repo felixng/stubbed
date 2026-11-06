@@ -1136,4 +1136,4 @@ migrations, live model calls or enabling of the switch were performed.
 
 ### 2026-11-06 — Import review owns the bottom toolbar
 
-Hide the native tab bar while reviewing Mezzanine imports so its floating presentation cannot overlap the bottom Import/Stop/View diary toolbar. Back and View diary remain navigation exits. Remove the private-notes notice from review and export help at the owner’s request; the parser continues excluding private notes. Render the small-phone regression inside a TabView so captures include the real container interaction.
+Keep the native tab bar visible while reviewing Mezzanine imports. Place Import/Stop/View diary in a bottom safe-area inset above the tabs instead of a competing native bottom toolbar. Back and all tabs remain navigation exits. Remove the private-notes notice from review and export help at the owner’s request; the parser continues excluding private notes. Render the small-phone regression inside a TabView so captures include the real container interaction.
