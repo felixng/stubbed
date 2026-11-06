@@ -1153,3 +1153,7 @@ when different selections resolve to the same site. Leases release in finally
 blocks and expire after 30 minutes if a worker crashes. Actions still serialises
 whole jobs, so manual and scheduled runs share the same four-site ceiling.
 Progress snapshots are serialised to prevent stale concurrent writes.
+
+### 2026-11-06 — Import review owns the bottom toolbar
+
+Keep the native tab bar visible while reviewing Mezzanine imports. Place Import in the list for up to 10 shows, and in the native trailing navigation toolbar for larger files. Stop stays in the navigation toolbar during work; View diary is in the completed page. Avoid bottom inset materials that change the floating tab bar’s appearance. Back and all tabs remain navigation exits. Remove the private-notes notice from review and export help at the owner’s request; the parser continues excluding private notes. Render the small-phone regression inside a TabView so captures include the real container interaction.

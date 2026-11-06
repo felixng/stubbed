@@ -52,7 +52,7 @@ struct ImportHubView: View {
       NavigationStack {
         List {
           Text("Open Mezzanine, find its export option, and export your diary as a CSV or JSON file. Save the file, then choose it here.")
-          Text("Your shows, theatres, dates, ratings and reviews can be imported. Private notes aren’t imported.").foregroundStyle(.secondary)
+          Text("Your shows, theatres, dates, ratings and reviews can be imported.").foregroundStyle(.secondary)
         }
         .navigationTitle("Export from Mezzanine")
         .navigationBarTitleDisplayMode(.inline)

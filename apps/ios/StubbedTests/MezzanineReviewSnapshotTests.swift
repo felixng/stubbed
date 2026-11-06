@@ -46,8 +46,22 @@ final class MezzanineReviewSnapshotTests: XCTestCase {
   }
 
   func testReviewOnSmallPhone() async throws {
-    try await capture(NavigationStack { MezzanineReviewView(model: model(), chooseAnother: {}) },
+    try await capture(TabView {
+      NavigationStack { MezzanineReviewView(model: model(), chooseAnother: {}) }.tabItem { Label("Home", systemImage: "house") }
+      Color.clear.tabItem { Label("Log", systemImage: "plus.circle") }
+      Color.clear.tabItem { Label("Profile", systemImage: "person") }
+    },
       name: "mezzanine-review-small", size: CGSize(width: 375, height: 667))
+  }
+  func testTwoReadyShowsWithInlineImport() async throws {
+    let model = model()
+    model.rows = [model.rows[0], model.rows[2]]
+    for i in model.rows.indices { model.rows[i].duplicate = false; model.rows[i].selected = true }
+    try await capture(TabView {
+      NavigationStack { MezzanineReviewView(model: model, chooseAnother: {}) }.tabItem { Label("Home", systemImage: "house") }
+      Color.clear.tabItem { Label("Log", systemImage: "plus.circle") }
+      Color.clear.tabItem { Label("Profile", systemImage: "person") }
+    }, name: "mezzanine-inline-import", size: CGSize(width: 402, height: 874))
   }
   func testReviewInDarkModeAtLargestType() async throws {
     try await capture(NavigationStack { MezzanineReviewView(model: model(), chooseAnother: {}) },
