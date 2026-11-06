@@ -5,8 +5,8 @@ export function checkMezzanineFileSize(bytes: number) {
   if (bytes > MAX_MEZZANINE_FILE_BYTES) throw new Error("This file is too large. Choose a Mezzanine export smaller than 20 MB.");
 }
 export function attentionCopy(fields: string[]): string {
-  const names: Record<string, string> = { show: "a show", venue: "a venue", city: "a city", country: "a country", date: "a valid date", rating: "a valid rating" };
-  return fields.length ? `Needs ${fields.map((field) => names[field] ?? field).join(", ")}.` : "";
+  const actions: Record<string, string> = { show: "Choose a show", venue: "Add a theatre", city: "Add a city", country: "Choose a country", date: "Add a date", rating: "Check the rating" };
+  return fields.map((field) => actions[field] ?? `Check ${field}`).join(" · ");
 }
 export async function runImportBatch<T>(items: T[], options: {
   shouldStop: () => boolean;

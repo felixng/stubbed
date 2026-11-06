@@ -18,6 +18,9 @@ import { DraftCard, type Draft } from "./DraftCard";
 // Region labels are for display; values remain ISO alpha-2 for canonical_city.
 const names = new Intl.DisplayNames(["en"], { type: "region" });
 const countries = COUNTRY_CODES.map((code) => ({ code, name: names.of(code) ?? code })).sort((a, b) => a.name.localeCompare(b.name));
+const textAction = "inline-flex min-h-11 items-center text-subheadline font-semibold text-tint-text underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:opacity-40";
+const disclosureSummary = "flex min-h-[50px] cursor-pointer list-none items-center justify-between gap-3 px-4 text-subheadline font-semibold text-tint-text focus-visible:outline-2 focus-visible:outline-focus [&::-webkit-details-marker]:hidden";
+const chevron = <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" className="shrink-0 transition-transform group-open:rotate-180"><path d="m6 9 6 6 6-6" /></svg>;
 const fieldClass = "min-h-11 w-full rounded-md border border-outline bg-surface px-3 text-body text-label focus-visible:outline-2 focus-visible:outline-focus";
 
 export function MezzanineImport() {
@@ -66,7 +69,7 @@ export function MezzanineImport() {
       (count, total) => { if (!stopRequested.current) setProgress(`Matching shows and theatres: ${count} of ${total}`); }, () => stopRequested.current);
     existing.current = result.existing; setDrafts(result.drafts);
     setReadyExpanded(result.drafts.length <= 10);
-    setProgress(`${result.drafts.length} ${result.drafts.length === 1 ? "show" : "shows"} in this file.`);
+    setProgress("");
   }
   async function read(file: File) {
     if (busyRef.current) return;
@@ -176,7 +179,7 @@ export function MezzanineImport() {
   ];
   const ready = groups[1].rows, needs = groups[0].rows, duplicates = groups[2].rows;
   const left = drafts.filter((d) => d.status !== "saved" && !d.duplicate).length;
-  const details = [stopped && left ? `${left} left` : needs.length ? `${needs.length} to fix` : null,
+  const details = [stopped && left ? `${left} left` : needs.length ? `${needs.length} ${needs.length === 1 ? "needs" : "need"} a fix` : null,
     !stopped && ready.length ? `${ready.length} not imported` : null,
     duplicates.length ? `${duplicates.length} already in your diary` : null].filter(Boolean).join(" · ");
   function selectReady(include: boolean) {
@@ -185,31 +188,42 @@ export function MezzanineImport() {
   }
   function jumpToAttention() { attention.current?.focus(); attention.current?.scrollIntoView({ block: "start", behavior: "smooth" }); }
   function rowList(rows: MezzanineDraft[]) {
-    return <ul className="divide-y divide-separator rounded-md border border-separator bg-surface">
+    return <ul className="divide-y divide-separator rounded-md border border-separator bg-surface shadow-sm">
       {rows.map((d) => {
         const missing = mezzanineMissing(d);
+        const problem = missing.length > 0 || !!d.error;
         const title = d.show?.title || d.reading.extracted.show_title || "Untitled show";
         const when = d.date ? formatDate(d.date) : "date missing";
-        return <li key={d.key} className="flex flex-col gap-3 p-3">
+        const toggleEditor = () => setExpanded(expanded === d.key ? null : d.key);
+        const metadata = <span className="flex min-w-0 flex-col gap-1 break-words">
+          <span className="text-body font-semibold text-label">{title}</span>
+          <span className="text-footnote text-label-secondary">{[d.venue?.name || d.reading.extracted.venue_name, d.venue?.city].filter(Boolean).join(" · ")}</span>
+          {(d.date || d.rating != null) && <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-footnote text-label-secondary">
+            {d.date && <span>{when}</span>}{d.rating != null && <RatingStars value={d.rating} />}
+          </span>}
+          {d.duplicate && <span className="text-footnote text-label-secondary">Already in your diary</span>}
+        </span>;
+        return <li key={d.key} className="flex flex-col gap-3 p-4">
           <div className="flex items-start gap-3">
-            <label className="flex min-h-11 min-w-0 flex-1 items-start gap-3">
-              {missing.length ? <svg viewBox="0 0 24 24" width="20" height="20" role="img" aria-label="Needs attention" className="mt-1 shrink-0 text-label-secondary" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v6m0 3v1"/></svg>
-                : <input type="checkbox" checked={d.include} disabled={busy || d.status === "resolving" || !!d.error?.startsWith("Couldn’t check")}
-                  onChange={(e) => update(d.key, (row) => ({ ...row, include: e.target.checked }))} className="mt-1 size-5 shrink-0 cursor-pointer accent-tint" />}
-              <span className="flex min-w-0 flex-col gap-1 break-words">
-                <span className="text-body font-semibold text-label">{title}</span>
-                <span className="text-footnote text-label-secondary">{[d.venue?.name || d.reading.extracted.venue_name, d.venue?.city].filter(Boolean).join(", ")}</span>
-                <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-footnote text-label-secondary">
-                  {d.date && <span>{when}</span>}{d.rating != null && <RatingStars value={d.rating} />}
-                </span>
-                {missing.length > 0 && <span className="text-footnote text-destructive">{attentionCopy(missing)}</span>}
-                {d.duplicate && <span className="text-footnote">Already in your diary</span>}
-              </span>
-            </label>
-            <Button variant="ghost" size="sm" disabled={busy} aria-label={`Edit ${title}, ${when}`} aria-expanded={expanded === d.key}
-              onClick={() => setExpanded(expanded === d.key ? null : d.key)}>Edit</Button>
+            {problem ? <>
+              <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" className="mt-1 shrink-0 text-destructive" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="9"/><path d="M12 7v6m0 3v1"/></svg>
+              <div className="min-w-0 flex-1">
+                {metadata}
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                  {missing.length > 0 && <span className="rounded-pill bg-tint-fill px-3 py-1 text-footnote text-destructive">{attentionCopy(missing)}</span>}
+                  <button type="button" className={textAction} disabled={busy} aria-label={`Fix ${title}, ${when}`} aria-expanded={expanded === d.key} onClick={toggleEditor}>Fix</button>
+                </div>
+                {d.error && <p role="alert" className="text-subheadline text-destructive">{d.error}</p>}
+              </div>
+            </> : <>
+              <label className="flex min-h-11 min-w-0 flex-1 items-start gap-3">
+                <input type="checkbox" checked={d.include} disabled={busy || d.status === "resolving"}
+                  onChange={(e) => update(d.key, (row) => ({ ...row, include: e.target.checked }))} className="mt-1 size-5 shrink-0 cursor-pointer accent-tint" />
+                {metadata}
+              </label>
+              <button type="button" className={textAction} disabled={busy} aria-label={`Edit ${title}, ${when}`} aria-expanded={expanded === d.key} onClick={toggleEditor}>Edit</button>
+            </>}
           </div>
-          {d.error && <p role="alert" className="text-subheadline text-destructive">{d.error}</p>}
           {expanded === d.key && <fieldset disabled={busy} className="min-w-0 [&_.border-separator]:border-outline"><DraftCard draft={d} headingLevel={3} showSelection={false} duplicateOf={null} emailText={() => undefined} onChange={(patches) => void patch(d, patches)} /></fieldset>}
           {expanded === d.key && d.invalidRating && <Button variant="secondary" disabled={busy} onClick={() => void patch(d, { rating: null })}>Clear invalid rating</Button>}
         </li>;
@@ -217,33 +231,37 @@ export function MezzanineImport() {
     </ul>;
   }
   return <div className="flex flex-col gap-5 pb-24">
-    <div role="group" aria-label="Choose or drop a Mezzanine export" onDragOver={(e) => e.preventDefault()}
+    <input ref={input} type="file" accept=".csv,.json" className="sr-only" tabIndex={-1} aria-label="Mezzanine export file" disabled={busy}
+      onChange={(e) => { const file = e.target.files?.[0]; if (file) void read(file); e.target.value = ""; }} />
+    {!finished && <div role="group" aria-label="Choose or drop a Mezzanine export" onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => { e.preventDefault(); const file = e.dataTransfer.files[0]; if (file) void read(file); }}
-      className="flex flex-col items-start gap-3 rounded-md border border-dashed border-outline bg-surface p-5">
-      <p className="text-body text-label">Choose or drop your Mezzanine CSV or JSON file. You review every show before importing.</p>
-      <p id="file-limit" className="text-footnote text-label-secondary">CSV or JSON, up to 20 MB.</p>
-      <input ref={input} type="file" accept=".csv,.json" className="sr-only" tabIndex={-1} aria-label="Mezzanine export file" disabled={busy}
-        onChange={(e) => { const file = e.target.files?.[0]; if (file) void read(file); e.target.value = ""; }} />
-      <Button variant="secondary" aria-describedby="file-limit" disabled={busy} onClick={() => input.current?.click()}>{error || drafts.length ? "Choose another file" : "Choose a file"}</Button>
-    </div>
-    <details className="rounded-md border border-separator bg-surface p-4">
-      <summary className="min-h-11 cursor-pointer text-body font-medium text-label">How to export from Mezzanine</summary>
-      <p className="text-subheadline text-label-secondary">{MEZZANINE_EXPORT_HELP}</p>
-    </details>
-    <p role="status" aria-live="polite" className="text-subheadline text-label-secondary">{progress}</p>
+      className="overflow-hidden rounded-md border border-separator bg-surface shadow-sm">
+      <div className="flex flex-col items-start gap-3 p-4">
+        {parsed ? <p className="text-body text-label">{parsed.length} {parsed.length === 1 ? "show" : "shows"} in this file</p>
+          : <><p className="text-body text-label">Choose or drop your Mezzanine CSV or JSON file. You review every show before importing.</p>
+            <p id="file-limit" className="text-footnote text-label-secondary">CSV or JSON, up to 20 MB.</p></>}
+        <Button variant="secondary" aria-describedby={parsed ? undefined : "file-limit"} disabled={busy} onClick={() => input.current?.click()}>{error || parsed ? "Choose another file" : "Choose a file"}</Button>
+        {progress && <p className="text-subheadline text-label-secondary">{progress}</p>}
+      </div>
+      {!parsed && <details className="group border-t border-separator">
+        <summary className={disclosureSummary}>How to export from Mezzanine{chevron}</summary>
+        <p className="border-t border-separator p-4 text-subheadline text-label-secondary">{MEZZANINE_EXPORT_HELP}</p>
+      </details>}
+    </div>}
+    <p role="status" aria-live="polite" className="sr-only">{progress}</p>
     {error && <div role="alert" className="flex flex-col items-start gap-3"><p>{error}</p>{parsed && <Button variant="secondary" disabled={busy} onClick={retryResolve}>Try again</Button>}</div>}
     {matchingStopped && <Button variant="secondary" disabled={busy} onClick={retryResolve}>Resume matching</Button>}
-    {finished && <section ref={summary} tabIndex={-1} aria-labelledby="import-result" className="scroll-mt-20 rounded-md border border-separator bg-surface p-5 focus-visible:outline-2 focus-visible:outline-focus">
-      <h2 id="import-result" className="text-title font-display text-label">{added ? `${added} ${added === 1 ? "show" : "shows"} added to your diary` : "No shows added to your diary"}</h2>
+    {finished && <section ref={summary} tabIndex={-1} aria-labelledby="import-result" className="scroll-mt-20 focus-visible:outline-2 focus-visible:outline-focus">
+      <h2 id="import-result" className="text-title font-display text-label">{added ? `${added} ${added === 1 ? "show" : "shows"} added` : "No shows added"}</h2>
       {details && <p className="mt-2 text-subheadline text-label-secondary">{details}</p>}
-      {needs.length > 0 && <Button variant="ghost" size="sm" className="mt-2" onClick={jumpToAttention}>Fix {needs.length} {needs.length === 1 ? "show" : "shows"}</Button>}
+      {needs.length > 0 && <button type="button" className={`${textAction} mt-2`} onClick={jumpToAttention}>Fix {needs.length} {needs.length === 1 ? "show" : "shows"}</button>}
       {selection.length > 0 && <Button variant="secondary" className="mt-3" disabled={busy} onClick={save}>{stopped ? "Continue importing" : "Import selected shows"}</Button>}
+      {needs.length === 0 && ready.length === 0 && <button type="button" className={`${textAction} mt-2`} onClick={() => input.current?.click()}>Import another file</button>}
     </section>}
     {drafts.length > 0 && !finished && <div className="flex flex-col gap-2 text-subheadline text-label-secondary">
-      <p>{ready.length} ready · {needs.length} {needs.length === 1 ? "needs" : "need"} attention · {duplicates.length} already in your diary</p>
-      {needs.length > 0 && <Button variant="ghost" size="sm" className="self-start" onClick={jumpToAttention}>{needs.length} {needs.length === 1 ? "needs" : "need"} attention</Button>}
+      <p>{ready.length} ready · {needs.length > 0 ? <button type="button" className="min-h-11 text-tint-text underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-focus" onClick={jumpToAttention}>{needs.length} {needs.length === 1 ? "needs" : "need"} attention</button> : "0 need attention"} · {duplicates.length} already in your diary</p>
     </div>}
-    {(cities.length > 0 || countryNotice) && <section aria-label="Countries" className="flex flex-col gap-3">
+    {(cities.length > 0 || (!finished && countryNotice)) && <section aria-label="Countries" className="flex flex-col gap-3">
       {cities.length > 0 && <p className="text-subheadline text-label-secondary">Mezzanine doesn’t say which country a theatre is in. Choose one so your stats group correctly.</p>}
       {cities.map((city, i) => <div key={city} className="flex flex-col gap-2">
         <label htmlFor={`city-${i}`} className="flex flex-col gap-2 text-body text-label">Where is {city}?
@@ -255,16 +273,16 @@ export function MezzanineImport() {
       </div>)}
       <p role="status" aria-live="polite" className="text-subheadline text-label-secondary">{countryNotice}</p>
     </section>}
-    {drafts.length > 0 && <p className="text-footnote text-label-secondary">Private notes aren’t imported.{drafts.some((d) => d.planned) && " Future dates become planned shows, without ratings."}</p>}
-    {drafts.length > 0 && drafts.every((d) => d.duplicate) && <p>Every show in this file is already in your diary.</p>}
-    {groups.map((group) => group.rows.length > 0 && <section key={group.id} aria-labelledby={`group-${group.id}`} className="flex flex-col gap-2">
-      <h2 ref={group.id === "needs-attention" ? attention : undefined} tabIndex={-1} id={`group-${group.id}`} className="scroll-mt-20 text-headline text-label focus-visible:outline-2 focus-visible:outline-focus">{group.name} · {group.rows.length}</h2>
+    {drafts.length > 0 && !finished && <p className="text-footnote text-label-secondary">Private notes aren’t imported.{drafts.some((d) => d.planned) && " Future dates become planned shows, without ratings."}</p>}
+    {!finished && drafts.length > 0 && drafts.every((d) => d.duplicate) && <p>Every show in this file is already in your diary.</p>}
+    {groups.map((group) => group.rows.length > 0 && !(finished && group.id === "duplicates") && <section key={group.id} aria-labelledby={`group-${group.id}`} className="flex flex-col gap-2">
+      <h2 ref={group.id === "needs-attention" ? attention : undefined} tabIndex={-1} id={`group-${group.id}`} className="scroll-mt-20 text-headline text-label focus-visible:outline-2 focus-visible:outline-focus">{finished && group.id === "needs-attention" ? `${group.rows.length} ${group.rows.length === 1 ? "show" : "shows"} to fix` : `${group.name} · ${group.rows.length}`}</h2>
       {group.id === "ready" && <Button variant="ghost" size="sm" className="self-start" disabled={busy}
         onClick={() => selectReady(!ready.every((d) => d.include))}>{ready.every((d) => d.include) ? "Untick all ready shows" : "Select all ready shows"}</Button>}
-      {group.id === "needs-attention" ? rowList(group.rows) : <details open={group.id === "ready" ? readyExpanded : duplicatesExpanded}
+      {group.id === "needs-attention" ? rowList(group.rows) : <details className="group overflow-hidden rounded-md border border-separator bg-surface shadow-sm" open={group.id === "ready" ? readyExpanded : duplicatesExpanded}
         onToggle={(e) => group.id === "ready" ? setReadyExpanded(e.currentTarget.open) : setDuplicatesExpanded(e.currentTarget.open)}>
-        <summary className="min-h-11 cursor-pointer text-subheadline font-medium text-tint-text">{group.id === "ready" ? "Review ready shows" : "Review existing visits"}</summary>
-        {rowList(group.rows)}
+        <summary className={disclosureSummary}>{group.id === "ready" ? "Review ready shows" : "Review existing visits"}{chevron}</summary>
+        <div className="border-t border-separator [&>ul]:rounded-none [&>ul]:border-0 [&>ul]:shadow-none">{rowList(group.rows)}</div>
       </details>}
     </section>)}
     {(drafts.length > 0 || busy) && <div className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom))] z-10 -mx-4 border-t border-separator bg-surface p-4 md:bottom-0 md:mx-0">

@@ -14,6 +14,16 @@ The PR design review's five priority findings are addressed on both platforms:
 
 Also addressed: named Edit accessibility actions, h3 editor headings inside h2 groups, control outlines, 20 MB pre-read limit, distinct invalid-file and retryable network errors, shared export-help wording, less prominent Log a show shortcut, and Apply for iOS row edits. The web Choose a file button remains the keyboard equivalent of drag-and-drop. No new share-card or share-extension flow was added from the review's exploratory questions.
 
+## Web result and container follow-up, 6 November 2026
+
+The latest review is addressed in the web screens: completion replaces the chooser/help/notes with a plain result block, short heading and non-zero detail counts. View diary remains the only primary action. Remaining problems appear under “N shows to fix”, with a flush text shortcut; a clean completion offers Import another file. Finished progress is announced only to screen readers. Stopped and unselected rows remain available to continue importing.
+
+Problem rows pair a warning-coloured icon with an action-oriented Coral Wash pill and a named Fix link. The count line itself jumps to problems, removing the repeated shortcut. Export help lives in the chooser footer with the trip disclosure pattern, and the chosen file shows its row count and replacement action. Containers follow 16px padding, 12px corners, hairline borders and shadow-sm.
+
+Browser verification covered partial completion, result focus, the Fix shortcut, opening the named repair editor, correcting a date by keyboard, clearing an invalid rating, importing the repaired row, clean completion and choosing another file. Updated mobile and desktop result captures and the integrated help are below. Web checks were rerun: all 125 tests, lint, typecheck and production build pass. iOS is unchanged by this follow-up.
+
+The suggested Card, Notice and Disclosure primitives remain a separate design-system follow-up; this PR does not migrate unrelated screens.
+
 ## Checks
 
 - Web: 125 tests, lint, typecheck and production build pass.
@@ -27,6 +37,9 @@ Before release: check a real Mezzanine file through the iOS system picker, the e
 
 ![Web completion, mobile](web-summary-mobile.jpg)
 ![Web completion, desktop](web-summary-desktop.jpg)
+![Web completion without exceptions](web-summary-complete-mobile.jpg)
+![Web review with a problem row](web-review-mobile.jpg)
+![File chooser with integrated export help](web-file-help-mobile.jpg)
 ![300-row count summary](web-bulk-top-mobile.jpg)
 ![Collapsed Ready section and bulk controls](web-bulk-controls-mobile.jpg)
 ![Wrong-file error](web-wrong-file-mobile.jpg)
