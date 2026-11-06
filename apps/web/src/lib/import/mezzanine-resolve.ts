@@ -54,7 +54,14 @@ export async function resolveMezzanine(client: SupabaseClient, userId: string, r
       scheduled.add("s" + sk); jobs.push(async () => { shows.set(sk, await resolveShow(client, extracted(row), true)); });
     }
     if (row.venue && !scheduled.has("v" + vk)) {
-      scheduled.add("v" + vk); jobs.push(async () => { venues.set(vk, await resolveVenue(client, extracted(row), [], { city: null, country: null }, true)); });
+      scheduled.add("v" + vk); jobs.push(async () => { const venue = await resolveVenue(client, extracted(row), [], { city: null, country: null }, true);
+        if (venue && !venue.id && !venue.country && row.city.trim()) {
+          try {
+            const { data, error } = await client.rpc("infer_import_country", { venue_name: row.venue, city_name: row.city });
+            if (!error && typeof data === "string" && isCountryCode(data)) venue.country = data;
+          } catch { /* Optional enrichment: keep the manual picker when inference is unavailable. */ }
+        }
+        venues.set(vk, venue); });
     }
   }
   // Each job makes one request at a time, including title tidying.

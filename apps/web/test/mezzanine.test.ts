@@ -171,3 +171,15 @@ test("Stop during matching does not start later batches or query diary entries",
   await assert.rejects(resolveMezzanine(client as never, "owner", rows, "2026-11-06T00:00:00Z", (count) => { done = count; }, () => done >= 3), MezzanineStopped);
   assert.equal(done, 3); assert.ok(requests <= 6);
 });
+
+test("catalogue country inference makes unmatched theatres ready and keeps unknown countries fixable", async () => {
+  const { resolveMezzanine, mezzanineMissing } = await import("@/lib/import/mezzanine-resolve");
+  for (const country of ["US", null]) {
+    const client = { rpc: async (name: string, args: Record<string, string>) => ({ error: null,
+      data: name === "infer_import_country" ? country : name === "tidy_show_title" ? args.title : [] }) };
+    const rows = parse(header + "\n" + csv());
+    const result = await resolveMezzanine(client as never, "owner", rows, "2026-11-06T00:00:00Z", () => {});
+    assert.equal(result.drafts[0].venue?.country ?? null, country);
+    assert.equal(mezzanineMissing(result.drafts[0]).includes("country"), country === null);
+  }
+});
