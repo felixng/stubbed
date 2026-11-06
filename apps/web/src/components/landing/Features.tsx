@@ -23,8 +23,7 @@ export function Features({ copy }: { copy: Copy<"sharingLanding"> }) {
           </div>
           <p className="max-w-sm text-body leading-7 text-label-secondary">{copy.shareBody}</p>
         </div>
-        <p className="mt-8 text-footnote text-label-secondary">{copy.galleryHelp}</p>
-        <div role="region" aria-label={copy.galleryLabel} tabIndex={0} className="relative mt-4 flex snap-x snap-proximity gap-4 overflow-x-auto pb-5 [scrollbar-width:thin] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus sm:gap-6">
+        <div role="region" aria-label={copy.galleryLabel} tabIndex={0} className="relative mt-8 flex snap-x snap-proximity gap-4 overflow-x-auto pb-5 [scrollbar-width:thin] focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-focus sm:gap-6">
           {stories.map((story, index) => (
             <div key={story} className="w-[62%] shrink-0 snap-start sm:w-[38%] lg:w-[calc((100%-4.5rem)/4)]">
               <div className="relative aspect-[9/16] overflow-hidden rounded-lg border border-separator bg-fill shadow-sm">

@@ -1027,6 +1027,6 @@ Owner couldn't edit all of two landing captions (the editor showed only half of 
 
 ## 2026-11-06 — Combine Share and Stories; add Bring your history
 
-Owner feedback on PR #399 supersedes the separate Stories band above. Share now shows all 17 cards once as consistent 9:16 photo-backed story mockups, with the two Strava references interleaved. This is a provisional composition gallery for later screenshot replacement. The separate Stories component and CMS copy are removed. The gallery caption identifies the reference placeholders.
+Owner feedback on PR #399 supersedes the separate Stories band above. Share now shows all 17 cards once as consistent 9:16 photo-backed story mockups, with the two Strava references interleaved. This is a provisional composition gallery for later screenshot replacement. The separate Stories component and CMS copy are removed. The owner subsequently requested removal of the gallery and section image captions; placeholder provenance remains in the asset README.
 
 The four feature sections are 01 / Share, 02 / Look back, 03 / See your year and 04 / Bring your history, alternating white and grey. The fourth section uses a labelled placeholder capture of the import hub from PR #405, with CMS-editable copy. The closing sign-up band returns to white to continue the alternation. Existing hosted CMS text can override repository defaults; no hosted content was changed.

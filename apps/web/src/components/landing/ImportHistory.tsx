@@ -8,7 +8,6 @@ export function ImportHistory({ copy }: { copy: Copy<"sharingLanding"> }) {
       <Container className="grid items-center gap-8 lg:grid-cols-2 lg:gap-20">
         <figure className="order-2 flex flex-col items-center gap-4 lg:order-1">
           <Image src="/landing/import-hub-placeholder.png" alt="Work-in-progress Import shows hub with options to add shows from photos or a Mezzanine export." width={750} height={1334} sizes="(min-width: 640px) 340px, 80vw" className="h-auto w-full max-w-[340px] rounded-lg border border-separator shadow-sm" />
-          <figcaption className="text-center text-footnote text-label-secondary">{copy.importCaption}</figcaption>
         </figure>
         <div className="order-1 max-w-md lg:order-2">
           <p className="mb-4 text-subheadline font-semibold text-tint-text">{copy.importEyebrow}</p>
