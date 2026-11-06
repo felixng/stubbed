@@ -21,7 +21,7 @@ const FIELD =
 const describe = (s: Side) =>
   `“${s.title}” (${s.type}, ${s.wikidata_id ? "Wikidata" : "typed in"}, ${s.entries} ${s.entries === 1 ? "entry" : "entries"}, ${s.aliases} ${s.aliases === 1 ? "nickname" : "nicknames"})`;
 
-// Fix a show on /app/admin/shows: title and type (kept through the Wikidata
+// Fix a show on /app/backstage/shows: title and type (kept through the Wikidata
 // sync), a nickname, or merge it into another show. Every call is an
 // admins-only function; merging asks first, naming both shows and what moves.
 export function EditShow({ id, title, type, otherId, otherTitle }: Props) {

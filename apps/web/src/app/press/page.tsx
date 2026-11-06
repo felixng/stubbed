@@ -49,7 +49,7 @@ export default async function PressPage() {
         <Container className="pb-16 sm:pb-24">
           <div className="mx-auto max-w-[720px] space-y-14 pt-6 sm:space-y-16 sm:pt-10">
             <div>
-              <Image src="/press/app-icon.png" alt={copy.theStubbedAppIcon} width={1024} height={1024} sizes="88px" preload className="mb-8 h-20 w-20 rounded-[22%] shadow-sm ring-1 ring-black/5 sm:h-[88px] sm:w-[88px]" />
+              <Image src="/press/app-icon.png" alt="The Stubbed app icon" width={1024} height={1024} sizes="88px" preload className="mb-8 h-20 w-20 rounded-[22%] shadow-sm ring-1 ring-black/5 sm:h-[88px] sm:w-[88px]" />
               <h1 className="font-display text-[clamp(44px,7vw,76px)] leading-[1.02] font-extrabold tracking-[-0.03em] text-balance text-label">{pageCopy.title}</h1>
               <p className="mt-5 text-lg leading-relaxed text-label-secondary">{copy.youreEncouragedToUseAnythingYou}</p>
 

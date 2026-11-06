@@ -1,27 +1,13 @@
 import type { Metadata } from "next";
-
-import { ImportTool } from "@/components/app/import/ImportTool";
+import { Group, SettingsLink } from "@/components/app/SettingsGroup";
 import { BackLink } from "@/components/ui/BackLink";
-
-export const metadata: Metadata = { title: "Import" };
-
-// Bulk import from photos (#17, #18; email import paused in #282), as every user
-// gets it. The steps live in lib/import so a mobile-first flow can reuse them.
+export const metadata: Metadata = { title: "Import shows" };
 export default function ImportPage() {
-  return (
-    <section className="flex flex-col gap-5">
-      <div className="flex flex-col gap-1">
-        {/* On phones Import sits under the Log tab, which links to it. From
-            md it's an item of its own in the sidebar, so there's no "up". */}
-        <BackLink href="/app/log" className="md:hidden">
-          Log
-        </BackLink>
-        <h1 className="text-title font-display text-label">Import</h1>
-        <p className="text-subheadline text-label-secondary">
-          Bring in past shows from theatre photos. You check every one before it’s saved.
-        </p>
-      </div>
-      <ImportTool />
-    </section>
-  );
+  return <section className="flex flex-col gap-5">
+    <div><BackLink href="/app/log">Log</BackLink><h1 className="text-title font-display text-label">Import shows</h1></div>
+    <Group title="Bring in your shows">
+      <SettingsLink href="/app/import/photos"><span><span className="block font-medium">Photos</span><span className="text-subheadline text-label-secondary">Pick photos from your shows. Stubbed sorts them by show.</span></span></SettingsLink>
+      <SettingsLink href="/app/import/mezzanine"><span><span className="block font-medium">Mezzanine export</span><span className="text-subheadline text-label-secondary">Bring over your Mezzanine diary from a CSV or JSON file.</span></span></SettingsLink>
+    </Group>
+  </section>;
 }

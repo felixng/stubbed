@@ -15,7 +15,13 @@ final class ShareUITests: XCTestCase {
     XCTAssertTrue(card.waitForExistence(timeout: 20))
     XCTAssertFalse(app.buttons["Rating shown"].exists)
     XCTAssertFalse(app.buttons["Rating hidden"].exists)
-    snapshot("share-data-solid")
+    XCTAssertTrue(card.label.contains("no background"))
+    XCTAssertTrue(app.buttons["Copy"].exists)
+    XCTAssertGreaterThan(app.buttons["Copy"].frame.minX, app.buttons["Stories"].frame.minX)
+    XCTAssertGreaterThan(app.buttons["More"].frame.minX, app.buttons["Download"].frame.minX)
+    app.buttons["Copy"].tap()
+    XCTAssertTrue(app.staticTexts["Image copied. Paste it into your story."].waitForExistence(timeout: 5))
+    snapshot("share-data-default-transparent")
     app.buttons["Background"].tap()
     let sheetTitle = app.staticTexts["Pick a background"]
     XCTAssertTrue(sheetTitle.waitForExistence(timeout: 5))
@@ -26,7 +32,7 @@ final class ShareUITests: XCTestCase {
       XCTAssertLessThanOrEqual(shown.frame.maxY, sheetTitle.frame.minY, "The sheet covers the card")
     }
     cardClearOfSheet()
-    XCTAssertFalse(app.buttons["Dark text"].exists, "Text colour is only for transparent cards")
+    XCTAssertTrue(app.buttons["Dark text"].exists, "No-photo cards start transparent")
     app.buttons["Light"].tap()
     sleep(1)
     snapshot("share-data-light")

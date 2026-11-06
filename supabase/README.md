@@ -44,7 +44,7 @@ The source option accepts the script's combined SPARQL `results.bindings` JSON. 
 
 ## Wider show names, for review (#366)
 
-`sync-wikidata.mjs --candidates` runs the wider Wikidata query (any play, musical, opera or ballet with an English Wikipedia article, about 13,500 names) and writes it to `show_candidates`, never to `shows`. Candidates are admin-only, aren't in `search_shows`, and are reviewed at `/app/admin/shows/candidates`: **Add** (tidied like a typed-in show, Wikidata id kept), **Same as** (links an existing show and saves the name as a nickname) or **Not a show**; or review a random sample of a group and, once 95% of it is right (at least 20 reviewed), **Add the rest** (up to 2,000 a call). Apply `20261104170000_show_candidates.sql` first.
+`sync-wikidata.mjs --candidates` runs the wider Wikidata query (any play, musical, opera or ballet with an English Wikipedia article, about 13,500 names) and writes it to `show_candidates`, never to `shows`. Candidates are admin-only, aren't in `search_shows`, and are reviewed at `/app/backstage/shows/candidates`: **Add** (tidied like a typed-in show, Wikidata id kept), **Same as** (links an existing show and saves the name as a nickname) or **Not a show**; or review a random sample of a group and, once 95% of it is right (at least 20 reviewed), **Add the rest** (up to 2,000 a call). Apply `20261104170000_show_candidates.sql` first.
 
 ```sh
 node --use-env-proxy supabase/scripts/sync-wikidata.mjs --candidates --dry-run   # same work in a rolled-back transaction
@@ -52,7 +52,7 @@ node --use-env-proxy supabase/scripts/sync-wikidata.mjs --candidates
 node supabase/scripts/sync-wikidata.mjs --candidates --source /tmp/catalogue.json   # replay a saved response
 ```
 
-**From the crawl (#367):** on a run page (`/app/admin/crawl/<id>`), "Send to show review" turns the findings marked right, of kind show, whose title doesn't already read as a show into candidates with `source = 'crawler'` (the source page and first theatre kept). Repeat sightings raise the count; a title also pulled from Wikidata raises that candidate's count instead of making a second; sent findings are marked so sending again does nothing. Apply `20261104180000_crawl_titles_to_review.sql` first.
+**From the crawl (#367):** on a run page (`/app/backstage/crawl/<id>`), "Send to show review" turns the findings marked right, of kind show, whose title doesn't already read as a show into candidates with `source = 'crawler'` (the source page and first theatre kept). Repeat sightings raise the count; a title also pulled from Wikidata raises that candidate's count instead of making a second; sent findings are marked so sending again does nothing. Apply `20261104180000_crawl_titles_to_review.sql` first.
 
 A second pull only raises each name's "seen" counter (and refreshes it while it is still pending); a decision already made is never undone, and a name already in `shows` by Wikidata id is skipped. The hosted run is the owner's.
 

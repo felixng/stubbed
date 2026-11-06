@@ -10,9 +10,9 @@ test("parseShowFilters: defaults, junk and each filter", () => {
   const f = parseShowFilters({ q: " six ", type: "musical", source: "typed", entries: "has", problems: "1", page: "2" });
   assert.deepEqual(f, { q: "six", type: "musical", source: "typed", entries: "has", problems: true, page: 2 });
   assert.deepEqual(showFilterArgs(f), { q: "six", in_type: "musical", in_source: "typed", in_entries: "has", only_problems: true });
-  assert.equal(showsHref(f), "/app/admin/shows?q=six&type=musical&source=typed&entries=has&problems=1&page=2");
-  assert.equal(showsHref(f, 1), "/app/admin/shows?q=six&type=musical&source=typed&entries=has&problems=1");
-  assert.equal(showsHref(parseShowFilters({})), "/app/admin/shows");
+  assert.equal(showsHref(f), "/app/backstage/shows?q=six&type=musical&source=typed&entries=has&problems=1&page=2");
+  assert.equal(showsHref(f, 1), "/app/backstage/shows?q=six&type=musical&source=typed&entries=has&problems=1");
+  assert.equal(showsHref(parseShowFilters({})), "/app/backstage/shows");
 });
 
 test("nameVerdict", () => {

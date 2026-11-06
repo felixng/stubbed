@@ -32,7 +32,7 @@ export function entryBack(
   if (typeof from !== "string") return PROFILE_BACK;
   if (from === "home") return { href: "/app", label: "Home" };
   if (from === "import") return { href: "/app/import", label: "Import" };
-  if (from === "admin-import") return { href: "/app/admin/import", label: "Import" };
+  if (from === "admin-import") return { href: "/app/backstage/import", label: "Import" };
   if (from.startsWith("trip-")) {
     const id = from.slice(5);
     const trip = UUID.test(id) ? trips.find((t) => t.id === id) : undefined;

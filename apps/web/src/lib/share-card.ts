@@ -25,12 +25,15 @@ export type ShareInk = "light" | "dark";
 export const CARD_DESIGNS: CardDesign[] = [
   { id: "stats", name: "Data + Photo", photo: true },
   { id: "name", name: "Rating + Photo", photo: true },
+  { id: "show-number", name: "Show number", background: true },
+  { id: "overlay", name: "Show overlay", background: true },
   { id: "data", name: "Data", background: true },
   { id: "encore", name: "Encore", background: true },
-  { id: "show-number", name: "Show number", background: true },
+  { id: "ticket", name: "Ticket stub", background: true },
+  { id: "venue-visits", name: "Venue visits", background: true },
 ];
 export function availableEntryDesigns(data: CardData, photo: boolean) {
-  return CARD_DESIGNS.filter(d => (!d.photo || photo) && (d.id !== "name" || data.rating != null)).map(d => d.id === "encore" && data.timesSeen === 1 ? { ...d, name: "First visit" } : d);
+  return CARD_DESIGNS.filter(d => (!d.photo || photo) && (d.id !== "name" || data.rating != null) && (d.id !== "venue-visits" || Boolean(data.venue?.trim() && data.venueVisit > 0))).map(d => d.id === "encore" && data.timesSeen === 1 ? { ...d, name: "First visit" } : d);
 }
 export function cardBackground(design: CardDesign, chosen: ShareBackground) {
   return design.background ? chosen : "photo";
@@ -38,9 +41,12 @@ export function cardBackground(design: CardDesign, chosen: ShareBackground) {
 export function entryMetrics(data: CardData) {
   return [
     { label: `Show of ${data.year}`, value: ordinal(data.showOfYear) },
-    ...(data.venue ? [{ label: data.venue, value: `${ordinal(data.venueVisit)} visit` }] : []),
-    { label: "Times seen", value: String(data.timesSeen) },
+    { label: "Seen", value: formatTimes(data.timesSeen) },
   ];
+}
+
+export function formatTimes(count: number) {
+  return `${count} ${count === 1 ? "time" : "times"}`;
 }
 
 export const CARD_SIZE = 1080;
@@ -53,9 +59,7 @@ export const CORAL = "#FF5A5A";
 // The icon's amber, which reads on the cards' dark ground.
 export const STAR = "#FFA040";
 export const SECONDARY = "#AEAEB2";
-// Stubbed's Instagram handle: the share screen asks you to tag it, and trip
-// cards show it under the wordmark. Entry cards leave it off (owner,
-// 2026-10-29).
+// Stubbed’s Instagram handle, shown in the share screen’s tag prompt.
 export const CARD_DOMAIN = "@getstubbed.app";
 // The ticket mark beside the wordmark (public/brand/stubbed-mark.svg).
 const MARK_SRC = "/brand/stubbed-mark.svg";
@@ -89,6 +93,28 @@ function loadMark() {
     img.src = MARK_SRC;
   });
   return markImage;
+}
+
+let ticketImage: Promise<HTMLImageElement | null> | null = null;
+function loadTicket() {
+  ticketImage ??= new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = "/brand/stubbed-share-ticket.svg";
+  });
+  return ticketImage;
+}
+
+let outlineMarkImage: Promise<HTMLImageElement | null> | null = null;
+function loadOutlineMark() {
+  outlineMarkImage ??= new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = "/brand/stubbed-mark-outline.svg";
+  });
+  return outlineMarkImage;
 }
 
 export async function renderSquare(draw: (ctx: Ctx, mark: HTMLImageElement | null) => void): Promise<Blob> {
@@ -175,6 +201,8 @@ export async function renderCard(
 ) {
   const design = CARD_DESIGNS.find(d => d.id === designId);
   if (!design || !availableEntryDesigns(data, photo != null).some(d => d.id === designId)) throw new Error("This card needs a photo or rating");
+  const outlineMark = (designId === "overlay" || designId === "ticket") ? await loadOutlineMark() : null;
+  const ticket = designId === "ticket" ? await loadTicket() : null;
   return renderSquare((ctx, mark) => {
     const color = design.photo ? "#FFFFFF" : shareForeground(background, ink);
     const metrics = entryMetrics(data);
@@ -184,15 +212,7 @@ export async function renderCard(
       verticalGradient(ctx, 360, 540, [[0, "rgba(0,0,0,0)"], [1, "rgba(0,0,0,0.8)"]]);
       textShadow(ctx);
       if (designId === "stats") {
-        const col = 484 / metrics.length;
-        metrics.forEach((m, i) => {
-          ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillStyle = color;
-          setFont(ctx, 500, 17, TEXT, -0.2);
-          const labels = wrap(ctx, m.label, col - 12).slice(0, 2);
-          labels.forEach((line, j) => ctx.fillText(fit(ctx, line, col - 12), 28 + col * (i + 0.5), 28 + j * 21));
-          setFont(ctx, 700, 28, DISPLAY, 0);
-          ctx.fillText(fit(ctx, m.value, col - 12), 28 + col * (i + 0.5), 76);
-        });
+        drawCornerMetrics(ctx, metrics, color, true);
         drawTitle(ctx, data.title, 28, 460, 484, 28, 40, 2);
       } else {
         drawTitle(ctx, data.title, 28, 414, 484, 36, 40, 2);
@@ -200,15 +220,25 @@ export async function renderCard(
       }
     } else {
       drawShareSurface(ctx, background);
-      if (designId === "data") {
-        const titleH = drawTopTitle(ctx, data.title, 28, color);
-        const start = Math.max(138, 28 + titleH + 20);
-        metrics.forEach((m, i) => {
-          const y = start + i * ((452 - start) / metrics.length);
-          ctx.fillStyle = color; ctx.textAlign = "left"; ctx.textBaseline = "top";
-          setFont(ctx, 500, 18, TEXT, 0); ctx.fillText(fit(ctx, m.label, 484), 28, y);
-          setFont(ctx, 700, 42, DISPLAY, 0); ctx.fillText(fit(ctx, m.value, 484), 28, y + 26);
-        });
+      if (designId === "ticket") {
+        drawTicketOverlay(ctx, data, color, ticket, outlineMark);
+        return;
+      } else if (designId === "overlay") {
+        drawShowOverlay(ctx, data, color, outlineMark);
+        return;
+      } else if (designId === "venue-visits") {
+        ctx.fillStyle = color; ctx.textBaseline = "top"; ctx.textAlign = "left";
+        setFont(ctx, 500, 18, TEXT, 0); ctx.fillText("Venue", 28, 28);
+        drawTopTitle(ctx, data.venue!, 58, color);
+        setFont(ctx, 500, 18, TEXT, 0); ctx.fillText("Visited", 28, 192);
+        ctx.fillStyle = background === "transparent" && ink === "dark" ? "#DC2F4F" : CORAL;
+        setFont(ctx, 800, 64, DISPLAY, -1); ctx.fillText(formatTimes(data.venueVisit), 28, 220, 484);
+        ctx.fillStyle = color;
+        setFont(ctx, 500, 18, TEXT, 0); ctx.fillText("Seeing", 28, 354);
+        drawTopTitle(ctx, data.title, 384, color, 28);
+      } else if (designId === "data") {
+        drawCornerMetrics(ctx, metrics, color, false);
+        drawTitle(ctx, data.title, 28, 460, 484, 38, 42, 2, color);
       } else {
         ctx.fillStyle = color; ctx.textBaseline = "top"; ctx.textAlign = "left";
         setFont(ctx, 500, 22, TEXT, 0); ctx.fillText(designId === "encore" ? (data.timesSeen === 1 ? "First visit" : "Encore") : "My theatre year", 28, 28);
@@ -221,6 +251,99 @@ export async function renderCard(
     }
     drawShareFooter(ctx, data.handle, color, mark);
   });
+}
+
+// Keep the two stats anchored to the 28pt outer margins, independently of
+// their text widths. Used by both the photo and no-photo default cards.
+function drawCornerMetrics(ctx: Ctx, metrics: ReturnType<typeof entryMetrics>, color: string, photo: boolean) {
+  metrics.forEach((metric, index) => {
+    const x = index === 0 ? 28 : 512;
+    ctx.fillStyle = color; ctx.textBaseline = "top";
+    ctx.textAlign = index === 0 ? "left" : "right";
+    setFont(ctx, 500, photo ? 17 : 18, TEXT, photo ? -0.2 : 0);
+    const labels = wrap(ctx, metric.label, 230).slice(0, 2);
+    labels.forEach((line, row) => ctx.fillText(fit(ctx, line, 230), x, 28 + row * 21));
+    setFont(ctx, 700, photo ? 28 : 42, DISPLAY, 0);
+    ctx.fillText(metric.value, x, 76, 230);
+  });
+}
+
+// A compact stack people can place over their own story photo. The year
+// ordinal is the selected visit's position, including for older diary entries.
+function drawShowOverlay(ctx: Ctx, data: CardData, color: string, mark: HTMLImageElement | null) {
+  const today = new Date();
+  const sections = [
+    { label: "Show", value: data.title },
+    { label: "Date", value: shareDate(today) },
+    { label: "Seen", value: formatTimes(data.timesSeen) },
+    { label: data.year === today.getFullYear() ? "This year so far" : `${data.year} so far`, value: `${ordinal(data.showOfYear)} show` },
+  ];
+  ctx.fillStyle = color; ctx.textAlign = "center"; ctx.textBaseline = "top";
+  sections.forEach((section, index) => {
+    const top = 48 + index * 96;
+    setFont(ctx, 600, 17, TEXT, 0); ctx.fillText(section.label, 270, top);
+    let lines: string[] = [];
+    for (let size = 36; size >= 26; size -= 2) {
+      setFont(ctx, 700, size, DISPLAY, -0.5);
+      lines = wrap(ctx, section.value, 400);
+      if (lines.length <= 1) break;
+    }
+    if (lines.length > 2) lines = [lines[0], lines.slice(1).join(" ")];
+    lines.slice(0, index === 0 ? 2 : 1).forEach((line, i) => ctx.fillText(fit(ctx, line, 400), 270, top + 22 + i * 30));
+  });
+  // Use the design system's original gradient Outline mark, with no wordmark.
+  if (mark) ctx.drawImage(mark, 241, 454, 58, 58 * 673 / 816);
+}
+
+function shareDate(date: Date) {
+  return new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" }).format(date);
+}
+
+function drawTicketBrand(ctx: Ctx, mark: HTMLImageElement | null) {
+  setFont(ctx, 800, 30, DISPLAY, -1.35);
+  const left = (480 - 48 - 8 - ctx.measureText("stubbed").width) / 2;
+  if (mark) ctx.drawImage(mark, left, 306, 48, 48 * 673 / 816);
+  ctx.textAlign = "left"; ctx.textBaseline = "middle";
+  ctx.fillStyle = CORAL; ctx.fillText("stubbed", left + 56, 326);
+}
+
+function drawTicketOverlay(ctx: Ctx, data: CardData, color: string, ticket: HTMLImageElement | null, mark: HTMLImageElement | null) {
+  ctx.save();
+  ctx.translate(270, 240);
+  ctx.rotate(-7 * Math.PI / 180); // The front ticket's angle in the Stubbed logo.
+  ctx.translate(-240, -144);
+  if (ticket) {
+    const tint = document.createElement("canvas");
+    tint.width = 1300; tint.height = 778;
+    const t = tint.getContext("2d");
+    if (t) {
+      t.drawImage(ticket, 0, 0, 1300, 778);
+      t.globalCompositeOperation = "source-in";
+      t.fillStyle = color; t.fillRect(0, 0, 1300, 778);
+      ctx.drawImage(tint, 0, 0, 480, 480 * 388 / 648);
+    }
+  }
+  ctx.fillStyle = color; ctx.textAlign = "left"; ctx.textBaseline = "top";
+  let lines: string[] = [];
+  for (let size = 30; size >= 22; size -= 2) {
+    setFont(ctx, 700, size, DISPLAY, -0.4);
+    lines = wrap(ctx, data.title, 368);
+    if (lines.length <= 2) break;
+  }
+  if (lines.length > 2) lines = [lines[0], lines.slice(1).join(" ")];
+  lines.forEach((line, i) => ctx.fillText(fit(ctx, line, 368), 56, 44 + i * 35));
+  const today = new Date();
+  setFont(ctx, 500, 18, TEXT, 0);
+  ctx.fillText(shareDate(today), 56, 44 + lines.length * 35 + 14, 368);
+  setFont(ctx, 600, 14, TEXT, 0);
+  ctx.fillText("Seen", 56, 194);
+  ctx.fillText(data.year === today.getFullYear() ? "This year so far" : `${data.year} so far`, 246, 194);
+  setFont(ctx, 700, 24, DISPLAY, -0.3);
+  ctx.fillText(formatTimes(data.timesSeen), 56, 220, 148);
+  ctx.fillText(`${ordinal(data.showOfYear)} show`, 246, 220, 168);
+  // Keep the branding in the ticket’s coordinates: parallel, 19pt below it.
+  drawTicketBrand(ctx, mark);
+  ctx.restore();
 }
 
 // --- helpers ---------------------------------------------------------------

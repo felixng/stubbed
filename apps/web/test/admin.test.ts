@@ -15,10 +15,10 @@ test("isAdmin: only app_metadata.role admin", () => {
   assert.equal(isAdmin({ user_metadata: { role: "admin" } } as { app_metadata?: unknown }), false);
 });
 
-test("isAdminPath: /app/admin and below only", () => {
-  assert.equal(isAdminPath("/app/admin"), true);
-  assert.equal(isAdminPath("/app/admin/import"), true);
-  assert.equal(isAdminPath("/app/administer"), false);
+test("isAdminPath: /app/backstage and below only", () => {
+  assert.equal(isAdminPath("/app/backstage"), true);
+  assert.equal(isAdminPath("/app/backstage/import"), true);
+  assert.equal(isAdminPath("/app/backstager"), false);
   assert.equal(isAdminPath("/app/import"), false);
   assert.equal(isAdminPath("/app"), false);
 });

@@ -54,17 +54,16 @@ struct TripCardView: View {
   private static let w: CGFloat = 540
   private static let pad: CGFloat = 28
   private static let inner = w - pad * 2
-  private static let footerMid = w - pad - 9
-  private static let footerTop = footerMid - 9
-  private static let gap: CGFloat = 16
+  private static let footerTop: CGFloat = 472
+  private static let gap: CGFloat = 24
 
   struct Ink {
     let ground, surface, fill, label, secondary, separator, outline, accent: Color
     static let dark = Ink(
-      ground: .black, surface: rgb(0x1C1C1E), fill: rgb(0x2C2C2E), label: .white, secondary: rgb(0xAEAEB2),
+      ground: CardInk.ground, surface: rgb(0x2C2C2E), fill: rgb(0x38383A), label: .white, secondary: rgb(0xAEAEB2),
       separator: rgb(0x38383A), outline: rgb(0x7C7C82), accent: CardInk.coral)
     static let light = Ink(
-      ground: rgb(0xF2F2F7), surface: .white, fill: rgb(0xE9E9EE), label: rgb(0x1C1C1E), secondary: rgb(0x6C6C70),
+      ground: .white, surface: .white, fill: rgb(0xE9E9EE), label: rgb(0x1C1C1E), secondary: rgb(0x6C6C70),
       separator: rgb(0xE0E0E5), outline: rgb(0x8E8E93), accent: rgb(0xC4234A))
   }
 
@@ -83,110 +82,95 @@ struct TripCardView: View {
       footer
     }
     .frame(width: Self.w, height: Self.w)
-    .clipShape(.rect(cornerRadius: 20))
-    .overlay(RoundedRectangle(cornerRadius: 20).strokeBorder(ink.separator, lineWidth: 1))
+    .clipShape(.rect(cornerRadius: 32))
   }
 
   // MARK: - Shared header and footer
 
-  /// Trip name, then "New York · 4–8 Oct 2026 · 4 shows" with the place in
-  /// the accent colour. 55pt tall from the top padding.
+  private var subtitle: String {
+    [data.place, data.dates, plural(shows.count, "show")].compactMap { $0 }.joined(separator: " · ")
+  }
+  private var titleHeight: CGFloat {
+    let size = CardTitle.fit(data.name, size: 38, width: Self.inner)
+    let lines = min(2, CardTitle.lines(data.name, font: .systemFont(ofSize: size, weight: .bold), width: Self.inner))
+    return CGFloat(lines) * size * 42 / 38
+  }
+  private var subtitleHeight: CGFloat {
+    CGFloat(min(2, CardTitle.lines(subtitle, font: .systemFont(ofSize: 18, weight: .medium), width: Self.inner))) * 22
+  }
+  private var headerBottom: CGFloat { Self.pad + titleHeight + 8 + subtitleHeight }
+
   private var header: some View {
-    VStack(alignment: .leading, spacing: 2) {
-      Text(data.name)
-        .font(.system(size: 30, weight: .bold))
-        .tracking(0.36)
-        .foregroundStyle(ink.label)
-        .lineLimit(1)
-        .frame(height: 34, alignment: .leading)
-      (Text(data.place.map { "\($0) " } ?? "").font(.system(size: 14, weight: .semibold)).foregroundStyle(ink.accent)
-        + Text("\(data.place != nil ? "· " : "")\(data.dates) · \(plural(shows.count, "show"))")
-        .font(.system(size: 14)).foregroundStyle(ink.secondary))
-        .tracking(-0.17)
-        .lineLimit(1)
-        .frame(height: 19, alignment: .leading)
+    ZStack(alignment: .topLeading) {
+      CardTitle(text: data.name, size: 38, lineHeight: 42, width: Self.inner, ink: ink.label)
+      Text(subtitle).font(.system(size: 18, weight: .medium)).foregroundStyle(ink.secondary)
+        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+        .frame(width: Self.inner, alignment: .leading).offset(y: titleHeight + 8)
     }
-    .frame(width: Self.inner, alignment: .leading)
+    .frame(width: Self.inner, alignment: .topLeading)
     .offset(x: Self.pad, y: Self.pad)
   }
 
-  private static let headerBottom = pad + 34 + 2 + 19
-
-  /// Wordmark with the domain under it, around `footerMid` (the web's
-  /// `drawFooter`), so the content area stays the same.
   private var footer: some View {
-    VStack(alignment: .leading, spacing: 0) {
-      HStack {
-        Text(verbatim: "stubbed")
-          .font(.system(size: 18, weight: .heavy))
-          .tracking(-0.81)
-          .foregroundStyle(ink.label)
-        Spacer()
-        if let handle = data.handle {
-          Text(verbatim: "@\(handle)")
-            .font(.system(size: 13))
-            .tracking(-0.08)
-            .foregroundStyle(ink.secondary)
-        }
-      }
-      .frame(height: 18)
-      Text(verbatim: cardDomain)
-        .font(.system(size: 10, weight: .medium))
-        .foregroundStyle(ink.secondary)
-        .frame(height: 12)
-    }
-    .frame(width: Self.inner, alignment: .leading)
-    .offset(x: Self.pad, y: Self.footerMid - 14)
+    CardFooter(handle: data.handle, ink: ink.label)
+      .frame(width: Self.inner).offset(x: Self.pad, y: Self.footerTop)
   }
 
   // MARK: - List
 
   /// Up to 4 shows get photo rows; 5–6 compact rows; past 6, five rows and
-  /// "+ N more shows".
+  /// "+ N more shows" when larger rows would run into the footer.
   private var list: some View {
-    let top = Self.headerBottom + Self.gap
+    let top = headerBottom + Self.gap
     let bottom = Self.footerTop - Self.gap
-    let compact = shows.count > 4
-    let rows = shows.count > 6 ? Array(shows.prefix(5)) : shows
+    let available = bottom - top
+    let compact = shows.count > 4 || CGFloat(shows.count * 80 + max(0, shows.count - 1)) > available
+    let rowH: CGFloat = compact ? 60 : 80
+    var visible = min(shows.count, shows.count > 6 ? 5 : 6, Int((available + 1) / (rowH + 1)))
+    if visible < shows.count { visible = min(visible, Int((available - 40) / (rowH + 1))) }
+    let rows = Array(shows.prefix(max(1, visible)))
     let more = shows.count - rows.count
-    let rowH: CGFloat = compact ? 56 : 72
     let moreH: CGFloat = more > 0 ? 40 : 0
-    let panelH = CGFloat(rows.count) * rowH + CGFloat(rows.count - 1) + (more > 0 ? 1 + moreH : 0)
-    let y0 = top + (bottom - top - panelH) / 2
+    let panelH = CGFloat(rows.count) * rowH + CGFloat(max(0, rows.count - 1)) + (more > 0 ? 1 + moreH : 0)
+    let y0 = top + (available - panelH) / 2
 
     return ZStack(alignment: .topLeading) {
       header
+      if shows.isEmpty {
+        Text("No shows logged yet").font(.system(size: 22, weight: .medium)).foregroundStyle(ink.label)
+          .offset(x: Self.pad, y: top + 60)
+      }
       VStack(alignment: .leading, spacing: 0) {
         ForEach(Array(rows.enumerated()), id: \.offset) { i, show in
-          if i > 0 { ink.separator.frame(height: 1).padding(.leading, compact ? 14 : 70) }
-          HStack(spacing: 14) {
+          if i > 0 { ink.separator.frame(height: 1).padding(.leading, compact ? 16 : 80) }
+          HStack(spacing: 16) {
             if !compact { thumb(show) }
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 3) {
               Text(show.title)
-                .font(.system(size: 16, weight: .semibold))
-                .tracking(-0.32)
+                .font(.system(size: 22, weight: .semibold))
+                .tracking(-0.3)
                 .foregroundStyle(ink.label)
                 .lineLimit(1)
               Text([show.venue, show.day].compactMap { $0 }.joined(separator: " · "))
-                .font(.system(size: 13))
+                .font(.system(size: 16, weight: .medium))
                 .tracking(-0.08)
                 .foregroundStyle(ink.secondary)
                 .lineLimit(1)
             }
             Spacer(minLength: 12)
             if let rating = show.rating {
-              CardStars(value: rating, size: 13, gap: 2, outline: ink.outline)
+              CardStars(value: rating, size: 16, gap: 2, outline: ink.outline)
             }
           }
-          .padding(.horizontal, 14)
+          .padding(.horizontal, 16)
           .frame(height: rowH)
         }
         if more > 0 {
           ink.separator.frame(height: 1)
           Text("+ \(plural(more, "more show"))")
-            .font(.system(size: 14))
+            .font(.system(size: 18, weight: .medium))
             .foregroundStyle(ink.secondary)
-            .padding(.horizontal, 14)
+            .padding(.horizontal, 16)
             .frame(height: moreH)
         }
       }
@@ -210,7 +194,7 @@ struct TripCardView: View {
           .background(ink.fill)
       }
     }
-    .frame(width: 42, height: 56)
+    .frame(width: 48, height: 64)
     .clipShape(.rect(cornerRadius: 8))
   }
 
@@ -218,75 +202,42 @@ struct TripCardView: View {
 
   /// A big coral count with the trip's stats beside it, then the photos.
   private var grid: some View {
-    var stats: [(value: String?, rating: Double?, label: String)] = []
-    if let place = data.place { stats.append((place, nil, data.cities > 1 ? "visited" : "city")) }
-    if data.venues > 0 { stats.append((plural(data.venues, "theatre"), nil, "visited")) }
-    if let average = data.average { stats.append((nil, average, "average rating")) }
-    let statsBottom = Self.pad + CGFloat(stats.count) * 38 - 4
-    let top = max(Self.pad + 18 + 72, statsBottom) + Self.gap
-
+    let top = headerBottom + Self.gap
     return ZStack(alignment: .topLeading) {
-      VStack(alignment: .trailing, spacing: 4) {
-        ForEach(Array(stats.enumerated()), id: \.offset) { _, stat in
-          VStack(alignment: .trailing, spacing: 0) {
-            if let value = stat.value {
-              Text(value)
-                .font(.system(size: 15, weight: .semibold))
-                .tracking(-0.24)
-                .foregroundStyle(ink.label)
-                .lineLimit(1)
-                .frame(maxWidth: 160, alignment: .trailing)
-                .frame(height: 20)
-            } else if let rating = stat.rating {
-              CardStars(value: rating, size: 13, gap: 2, outline: ink.outline).frame(height: 20)
-            }
-            Text(stat.label)
-              .font(.system(size: 11))
-              .tracking(0.06)
-              .foregroundStyle(ink.secondary)
-              .frame(height: 14)
-          }
+      header
+      HStack(alignment: .top, spacing: 16) {
+        VStack(alignment: .leading, spacing: 6) {
+          Text("Shows").font(.system(size: 18, weight: .medium))
+          Text(String(shows.count)).font(.system(size: 64, weight: .heavy)).tracking(-1)
+            .foregroundStyle(ink.accent).lineLimit(1).minimumScaleFactor(0.6)
+        }.frame(maxWidth: .infinity, alignment: .leading)
+        if data.venues > 0 {
+          VStack(alignment: .leading, spacing: 6) {
+            Text("Theatres").font(.system(size: 18, weight: .medium))
+            Text(String(data.venues)).font(.system(size: 42, weight: .bold))
+          }.frame(maxWidth: .infinity, alignment: .leading)
         }
-      }
-      .frame(width: Self.inner, alignment: .trailing)
-      .offset(x: Self.pad, y: Self.pad)
-
-      VStack(alignment: .leading, spacing: 0) {
-        Text("\(data.name) · \(data.dates)")
-          .font(.system(size: 13))
-          .tracking(-0.08)
-          .foregroundStyle(ink.secondary)
-          .lineLimit(1)
-          .frame(height: 18, alignment: .leading)
-        HStack(alignment: .firstTextBaseline, spacing: 8) {
-          Text("\(shows.count)")
-            .font(.system(size: 72, weight: .heavy))
-            .tracking(-2.16)
-            .foregroundStyle(CardInk.coral)
-          Text(shows.count == 1 ? "show" : "shows")
-            .font(.system(size: 16))
-            .tracking(-0.32)
-            .foregroundStyle(ink.secondary)
+        if let average = data.average {
+          VStack(alignment: .leading, spacing: 20) {
+            Text("Average").font(.system(size: 18, weight: .medium))
+            CardStars(value: average, size: 18, gap: 2, outline: ink.outline)
+          }.frame(maxWidth: .infinity, alignment: .leading)
         }
-        .frame(height: 72)
-      }
-      .frame(width: Self.inner - 176, alignment: .leading)
-      .offset(x: Self.pad, y: Self.pad)
-
-      photoGrid(top: top, shadow: false)
+      }.foregroundStyle(ink.label).frame(width: Self.inner).offset(x: Self.pad, y: top)
+      photoGrid(top: top + 100 + Self.gap, shadow: false)
     }
   }
 
   private var squareGrid: some View {
     ZStack(alignment: .topLeading) {
       header
-      photoGrid(top: Self.headerBottom + Self.gap, shadow: true)
+      photoGrid(top: headerBottom + Self.gap, shadow: true)
     }
   }
 
   /// Rows of tiles: 1, 2, 1+2, 2+2, 2+3, 3+3; past 6 the last reads "+N".
   private func photoGrid(top: CGFloat, shadow: Bool) -> some View {
-    let gap: CGFloat = 8
+    let gap: CGFloat = 12
     let tiles = Array(shows.prefix(6))
     let more = shows.count - tiles.count
     let rows: [Int] = [1: [1], 2: [2], 3: [1, 2], 4: [2, 2], 5: [2, 3], 6: [3, 3]][tiles.count] ?? []
@@ -337,7 +288,7 @@ struct TripCardView: View {
   private static let large = Frame(w: 200, h: 267, pad: 4)
   private static let medium = Frame(w: 168, h: 224, pad: 4)
   private static let small4 = Frame(w: 152, h: 202, pad: 4)
-  private static let small = Frame(w: 110, h: 146, pad: 3)
+  private static let small = Frame(w: 144, h: 192, pad: 4)
 
   /// The canvas's "Trip collage" layouts, one per number of shows (1–8).
   private static let collages: [Int: (Frame, [Polaroid])] = [
@@ -368,17 +319,19 @@ struct TripCardView: View {
     7: (
       small,
       [
-        .init(left: 76, top: 0, rotate: -4), .init(left: 274, top: 8, rotate: 3), .init(left: 38, top: 121, rotate: -2),
-        .init(left: 187, top: 111, rotate: 4), .init(left: 336, top: 121, rotate: -3), .init(left: 76, top: 224, rotate: 2),
-        .init(left: 274, top: 226, rotate: -5),
+        .init(left: 0, top: 0, rotate: -4), .init(left: 113, top: 8, rotate: 3),
+        .init(left: 227, top: 0, rotate: -2), .init(left: 340, top: 6, rotate: 4),
+        .init(left: 57, top: 178, rotate: -3), .init(left: 170, top: 184, rotate: 2),
+        .init(left: 283, top: 178, rotate: -5),
       ]
     ),
     8: (
       small,
       [
-        .init(left: 38, top: 0, rotate: -4), .init(left: 187, top: 8, rotate: 3), .init(left: 336, top: 0, rotate: -2),
-        .init(left: 100, top: 121, rotate: 4), .init(left: 298, top: 111, rotate: -3), .init(left: 38, top: 224, rotate: 2),
-        .init(left: 187, top: 226, rotate: -5), .init(left: 336, top: 224, rotate: 3),
+        .init(left: 0, top: 0, rotate: -4), .init(left: 113, top: 8, rotate: 3),
+        .init(left: 227, top: 0, rotate: -2), .init(left: 340, top: 6, rotate: 4),
+        .init(left: 0, top: 180, rotate: 2), .init(left: 113, top: 176, rotate: -5),
+        .init(left: 227, top: 184, rotate: 3), .init(left: 340, top: 178, rotate: -3),
       ]
     ),
   ]
@@ -386,8 +339,8 @@ struct TripCardView: View {
   /// A layout per number of shows, in date order. Past 8, the 8-show layout
   /// prefers shows with photos and the last polaroid reads "+N".
   private var collage: some View {
-    let top = Self.headerBottom + Self.gap
-    let bottom = Self.footerTop - 12
+    let top = headerBottom + Self.gap
+    let bottom = Self.footerTop - Self.gap
     var picks = shows
     if shows.count > 8 {
       let keep = Set(shows.indices.sorted { (shows[$0].photo != nil ? 0 : 1) < (shows[$1].photo != nil ? 0 : 1) }.prefix(8))
@@ -395,26 +348,45 @@ struct TripCardView: View {
     }
     let more = shows.count - picks.count
     let (frame, at) = Self.collages[max(1, picks.count)] ?? Self.collages[1]!
-    let layoutH = at.map { $0.top + frame.h }.max() ?? 0
-    let y0 = top + max(0, (bottom - top - layoutH) / 2)
+    let bounds = Self.collageBounds(frame, at)
+    let scale = min(1, Self.inner / bounds.width, (bottom - top) / bounds.height)
+    let x0 = Self.pad + (Self.inner - bounds.width * scale) / 2
+    let y0 = top + (bottom - top - bounds.height * scale) / 2
 
     return ZStack(alignment: .topLeading) {
       header
-      ForEach(Array(picks.enumerated()), id: \.offset) { i, show in
-        let spot = at[i]
-        tile(show, radius: 2, more: i == picks.count - 1 ? more : 0, titleTop: true)
-          .padding(frame.pad)
-          .frame(width: frame.w, height: frame.h)
-          // The shadow goes on the frame only, so titles stay crisp.
-          .background {
-            RoundedRectangle(cornerRadius: 4).fill(ink.surface)
-              .shadow(color: Palette.shadow.opacity(0.28), radius: 11, y: 10)
-          }
-          .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(ink.separator, lineWidth: 1))
-          .rotationEffect(.degrees(spot.rotate))
-          .offset(x: Self.pad + spot.left, y: y0 + spot.top)
+      ZStack(alignment: .topLeading) {
+        ForEach(Array(picks.enumerated()), id: \.offset) { i, show in
+          let spot = at[i]
+          tile(show, radius: 2, more: i == picks.count - 1 ? more : 0, titleTop: true)
+            .padding(frame.pad)
+            .frame(width: frame.w, height: frame.h)
+            // The shadow goes on the frame only, so titles stay crisp.
+            .background {
+              RoundedRectangle(cornerRadius: 4).fill(ink.surface)
+                .shadow(color: Palette.shadow.opacity(0.28), radius: 11, y: 10)
+            }
+            .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(ink.separator, lineWidth: 1))
+            .rotationEffect(.degrees(spot.rotate))
+            .offset(x: spot.left - bounds.minX, y: spot.top - bounds.minY)
+        }
+      }.frame(width: bounds.width, height: bounds.height, alignment: .topLeading)
+        .scaleEffect(scale, anchor: .topLeading).offset(x: x0, y: y0)
+    }
+  }
+
+  private static func collageBounds(_ frame: Frame, _ spots: [Polaroid]) -> CGRect {
+    var bounds = CGRect.null
+    for spot in spots {
+      let angle = spot.rotate * .pi / 180
+      for (sx, sy) in [(-1.0, -1.0), (1, -1), (1, 1), (-1, 1)] {
+        let dx = sx * frame.w / 2, dy = sy * frame.h / 2
+        let point = CGPoint(x: spot.left + frame.w / 2 + cos(angle) * dx - sin(angle) * dy,
+          y: spot.top + frame.h / 2 + sin(angle) * dx + cos(angle) * dy)
+        bounds = bounds.union(CGRect(origin: point, size: CGSize(width: 0.001, height: 0.001)))
       }
     }
+    return bounds
   }
 
   // MARK: - Tiles
@@ -426,7 +398,7 @@ struct TripCardView: View {
     GeometryReader { geo in
       let small = geo.size.width < 140
       let inset: CGFloat = small ? 8 : 16
-      let size = max(small ? 13 : 17, min(28, geo.size.width / 8))
+      let size = max(small ? 16 : 20, min(30, geo.size.width / 7))
       ZStack(alignment: titleTop ? .topLeading : .bottomLeading) {
         if let photo = show.photo {
           Image(uiImage: photo)
@@ -440,7 +412,7 @@ struct TripCardView: View {
             .font(.system(size: size, weight: .bold))
             .tracking(size * -0.01)
             .foregroundStyle(ink.label)
-            .lineLimit(3)
+            .lineLimit(3).minimumScaleFactor(0.65)
             .lineSpacing(size * 0.1 - size * 0.2)
             .padding(inset)
         }

@@ -15,4 +15,4 @@ pnpm dev                     # from the repo root, or here
 
 ## Public copy editor
 
-Sanity Studio lives at `/studio`. Copy is editable; screenshots, logos, icons, routes and downloads stay in the repository. See [CMS setup and editing](../../docs/CMS.md) for project configuration, seeding and previews. With no Sanity configuration, the site uses repository defaults.
+Sanity Studio lives at `/dressingroom`. Copy is editable; screenshots, logos, icons, routes and downloads stay in the repository. See [CMS setup and editing](../../docs/CMS.md) for project configuration, seeding and previews. With no Sanity configuration, the site uses repository defaults.

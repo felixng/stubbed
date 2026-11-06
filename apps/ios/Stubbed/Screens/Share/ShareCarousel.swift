@@ -2,6 +2,7 @@ import Photos
 import Supabase
 import SwiftUI
 import UIKit
+import UniformTypeIdentifiers
 
 let stubbedInstagram = cardDomain
 typealias ShareAsset = (file: URL, image: UIImage)
@@ -21,6 +22,10 @@ struct RenderedCard: Identifiable {
   func isTransparent(_ appearance: ShareAppearance) -> Bool { supportsBackground && appearance.background == .transparent }
 }
 enum ShareCards {
+  /// Copy PNG bytes rather than UIImage, preserving transparent pixels.
+  @MainActor static func copyImage(_ asset: ShareAsset, to pasteboard: UIPasteboard = .general) throws {
+    pasteboard.setData(try Data(contentsOf: asset.file), forPasteboardType: UTType.png.identifier)
+  }
   @MainActor static func render<V: View>(_ view: V, name: String) throws -> ShareAsset {
     let renderer = ImageRenderer(content: view)
     renderer.scale = 2
@@ -39,7 +44,7 @@ enum ShareCards {
     return parts.isEmpty ? "show" : parts.joined(separator: "-")
   }
   @MainActor static func entryCards(_ data: EntryCardData, photo: UIImage?) throws -> [RenderedCard] {
-    try EntryCardDesign.available(photo: photo != nil, rating: data.rating, timesSeen: data.timesSeen).map { design in
+    try EntryCardDesign.available(photo: photo != nil, rating: data.rating, timesSeen: data.timesSeen, venue: data.venue, venueVisit: data.venueVisit).map { design in
       let exportID = design == .encore && data.timesSeen == 1 ? "first-visit" : design.id
       let name = "stubbed-\(slug(data.title))-\(exportID)"
       let full = try render(EntryCardView(design: design, data: data, photo: photo), name: name)
@@ -90,7 +95,14 @@ struct ShareCarousel: View {
   @ScaledMetric(relativeTo: .body) private var pickerHeightWithInk: CGFloat = 300
   @State private var active: String?
   @State private var retryCount = 0
-  @State private var appearance = ShareAppearance.standard
+  @State private var baseAppearance = ShareAppearance(background: .transparent)
+  @State private var overlayAppearance = ShareAppearance(background: .transparent)
+  private var appearance: ShareAppearance {
+    get { (selectedID == "overlay" || selectedID == "ticket") ? overlayAppearance : baseAppearance }
+    nonmutating set {
+      if (selectedID == "overlay" || selectedID == "ticket") { overlayAppearance = newValue } else { baseAppearance = newValue }
+    }
+  }
   @State private var pickingBackground = false
   @State private var notice: String?
   @State private var sharing: SharePayload?
@@ -192,8 +204,9 @@ struct ShareCarousel: View {
             Task { await shareToStories() }
           }
           .disabled(current == nil)
-          action("More", systemImage: "square.and.arrow.up") { share(withText: true) }
+          action("Copy", systemImage: "doc.on.doc") { copyImage() }
             .disabled(current == nil)
+            .accessibilityHint("Copy the selected card image")
           action("Download", systemImage: "arrow.down.to.line") { Task { await download() } }
             .disabled(current == nil)
           if !currentText.isEmpty {
@@ -210,6 +223,8 @@ struct ShareCarousel: View {
               notice = "Link copied."
             }
           }
+          action("More", systemImage: "square.and.arrow.up") { share(withText: true) }
+            .disabled(current == nil)
         }
         .padding(.horizontal, Space.l)
       }
@@ -229,7 +244,7 @@ struct ShareCarousel: View {
     }
     .onChange(of: notice) { _, value in if let value { AccessibilityNotification.Announcement(value).post() } }
     .sheet(isPresented: $pickingBackground) {
-      BackgroundPicker(appearance: $appearance)
+      BackgroundPicker(appearance: Binding(get: { appearance }, set: { appearance = $0 }))
         .presentationDetents([.height(currentPickerHeight)])
         .presentationDragIndicator(.visible)
         // Solid, so the action row underneath doesn't show through.
@@ -327,6 +342,14 @@ struct ShareCarousel: View {
     notice = nil
     let items: [Any] = withText && !currentText.isEmpty ? [asset.file, currentText] : [asset.file]
     sharing = SharePayload(items: items, action: withText ? "more" : "stories")
+  }
+  private func copyImage() {
+    guard let asset = currentAsset else { return }
+    do {
+      try ShareCards.copyImage(asset)
+      record("copy_image")
+      notice = "Image copied. Paste it into your story."
+    } catch { notice = "Couldn’t copy the image. Try Download instead." }
   }
   private func download() async {
     guard let file = currentAsset?.file else { return }

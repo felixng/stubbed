@@ -2,6 +2,7 @@ import { getCopy, getSiteCopy } from "@/lib/cms/content";
 import type { Metadata, Viewport } from "next";
 
 import { Container } from "@/components/landing/Container";
+import { DiaryAndStats } from "@/components/landing/DiaryAndStats";
 import { Features } from "@/components/landing/Features";
 import { Footer } from "@/components/landing/Footer";
 import { Hero } from "@/components/landing/Hero";
@@ -29,7 +30,7 @@ export const viewport: Viewport = { themeColor: "#f2f2f7" };
 // Public landing page: hero with sign-up, and features (#9, #149). The header
 // button links to /login, or the app when signed in.
 export default async function Home() {
-  const [site, featureCopy] = await Promise.all([getSiteCopy(), getCopy("features")]);
+  const [site, featureCopy] = await Promise.all([getSiteCopy(), getCopy("sharingLanding")]);
   const JSON_LD = {
   "@context": "https://schema.org",
   "@graph": [
@@ -69,7 +70,7 @@ export default async function Home() {
       />
       <header>
         <Container className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-6 sm:py-8">
-          <Wordmark size={28} href="/" mark />
+          <Wordmark size={24} href="/" mark />
           <div className="ml-auto flex items-center gap-2">
             <p className="hidden min-h-7 items-center rounded-pill bg-fill px-3 text-footnote font-medium text-label lg:inline-flex">
               {site.betaLabel}
@@ -81,6 +82,7 @@ export default async function Home() {
       <main className="flex-auto">
         <Hero />
         <Features copy={featureCopy} />
+        <DiaryAndStats copy={featureCopy} />
         <SignUpReminder />
       </main>
       <Footer />

@@ -27,7 +27,14 @@ export function availableInsightDesigns(data: InsightCardData, currentYear = new
     : (data.stats.total > 0 || includingEmpty) && (design.id !== "year-in-theatre" || data.year != null));
 }
 export function availableShowDesigns(data: CardData, photo: boolean, insights: InsightCardData) {
-  return [...availableEntryDesigns(data, photo), ...availableInsightDesigns(insights, new Date().getFullYear(), true)];
+  const entries = availableEntryDesigns(data, photo);
+  const venue = entries.find(design => design.id === "venue-visits");
+  const designs = [...entries.filter(design => design.id !== "venue-visits"), ...availableInsightDesigns(insights, new Date().getFullYear(), true)];
+  if (venue) {
+    const year = designs.findIndex(design => design.id === "year-in-theatre");
+    designs.splice(year < 0 ? designs.length : year, 0, venue);
+  }
+  return designs;
 }
 export function isInsightDesign(id: string) {
   return INSIGHT_CARD_DESIGNS.some(design => design.id === id);
@@ -43,7 +50,7 @@ function text(ctx: Ctx, value: string, x: number, y: number, size: number, weigh
   setFont(ctx, weight, size, weight >= 700 ? DISPLAY : TEXT, 0);
   ctx.fillText(fit(ctx, value, max), x, y);
 }
-function radar(ctx: Ctx, data: InsightCardData, ink: string) {
+function radar(ctx: Ctx, data: InsightCardData, ink: string, highContrast: boolean, accent: string) {
   const values = radarShareValues(data), max = Math.max(1, ...values), cx = 270, cy = 282, radius = 104;
   const point = (i: number, fraction: number, r = radius) => {
     const a = i * 2 * Math.PI / 7 - Math.PI / 2;
@@ -54,11 +61,16 @@ function radar(ctx: Ctx, data: InsightCardData, ink: string) {
     fractions.forEach((f, i) => { const [x, y] = point(i, f); if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y); });
     ctx.closePath();
   };
-  ctx.save(); ctx.strokeStyle = ink; ctx.globalAlpha = 0.15; ctx.lineWidth = 1;
+  ctx.save(); ctx.strokeStyle = ink; ctx.globalAlpha = highContrast ? 0.65 : 0.15; ctx.lineWidth = highContrast ? 1.6 : 1;
   for (let l = 1; l <= 4; l++) { polygon(Array(7).fill(l / 4)); ctx.stroke(); }
   for (let i = 0; i < 7; i++) { const [x, y] = point(i, 1); ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(x, y); ctx.stroke(); }
-  polygon(values.map(v => v / max)); ctx.globalAlpha = 0.18; ctx.fillStyle = ink; ctx.fill();
-  ctx.globalAlpha = 1; ctx.lineWidth = 2; ctx.stroke(); ctx.restore();
+  polygon(values.map(v => v / max)); ctx.globalAlpha = highContrast ? 0.32 : 0.22; ctx.fillStyle = accent; ctx.fill();
+  ctx.globalAlpha = 1; ctx.lineWidth = highContrast ? 3 : 2; ctx.strokeStyle = accent; ctx.stroke();
+  if (highContrast) for (let i = 0; i < 7; i++) {
+    const [x, y] = point(i, values[i] / max);
+    ctx.beginPath(); ctx.arc(x, y, 3.5, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.restore();
   ctx.fillStyle = ink; ctx.textAlign = "center"; ctx.textBaseline = "top";
   SHOW_TYPES.forEach((type, i) => {
     const [x, y] = point(i, 1, radius + 30);
@@ -102,7 +114,7 @@ export async function renderInsightCard(id: string, data: InsightCardData,
       text(ctx, "My show mix", 28, 28, 32, 700);
       const period = data.year == null ? "All time" : `${data.year}${data.year === new Date().getFullYear() ? " so far" : ""}`;
       text(ctx, `${period} · ${data.stats.total} visits`, 28, 72, 18, 400);
-      radar(ctx, data, color);
+      radar(ctx, data, color, background === "transparent", background === "transparent" && ink === "dark" ? "#DC2F4F" : "#FF5A5A");
     }
     drawShareFooter(ctx, data.handle, color, mark);
   });

@@ -19,7 +19,7 @@ test("parseTheatreFilters: reads each filter", () => {
 
 test("theatresHref: round trips", () => {
   const f = parseTheatreFilters({ q: "vic", website: "lacks", page: "2" });
-  assert.equal(theatresHref(f), "/app/admin/theatres?q=vic&website=lacks&page=2");
-  assert.equal(theatresHref(f, 1), "/app/admin/theatres?q=vic&website=lacks");
-  assert.equal(theatresHref(parseTheatreFilters({}), 1), "/app/admin/theatres");
+  assert.equal(theatresHref(f), "/app/backstage/theatres?q=vic&website=lacks&page=2");
+  assert.equal(theatresHref(f, 1), "/app/backstage/theatres?q=vic&website=lacks");
+  assert.equal(theatresHref(parseTheatreFilters({}), 1), "/app/backstage/theatres");
 });
