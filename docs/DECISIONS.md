@@ -1032,3 +1032,30 @@ After an import, View diary becomes the primary action. Result details omit zero
 ### 2026-11-06 — Web import completion replaces setup
 
 After saving a Mezzanine file, show a plain result block and only remaining actionable rows. Hide the chooser, export help, privacy note and existing-visit list; retain duplicate counts in the result. The sticky View diary action is the sole primary, a clean completion offers Import another file, and partial or stopped imports retain repair and continuation controls. Keep completion progress available to screen readers. Problem rows use an action-oriented warning pill and a named Fix action. Fold export help into the chooser using the trip disclosure pattern, and apply the existing container spacing/elevation spec. Shared Card, Notice and Disclosure primitives belong in a separate follow-up rather than widening this import PR.
+### 2026-11-05 — Current-show story overlay
+
+- Added a Show overlay design to entry sharing on iOS and web: centred show title, times seen, the visit’s ordinal show of its year, today’s local date, and the existing ticket mark plus wordmark in outline. It has no route graphic or user handle.
+- Starts transparent with light text, with the existing background and text-colour options. Its background choice is remembered separately so other sharing designs retain their chosen background.
+- Uses the existing entry-card stats; older entries name their recorded year rather than calling it “This Year”. Exports remain 1080×1080 PNGs, matching the sharing pipeline.
+
+- Added a Ticket stub variant with the same information: show title in the main ticket, counts in the perforated stub, and today’s date and outlined logo in the main ticket’s footer. The outline is generated from the logo’s exact single-ticket geometry and keeps its front ticket’s −7° angle; it shares the transparent overlay appearance options.
+
+- Refined the plain overlay to four equally spaced sections in this order: Show, Date, Seen, This year, with matching type sizes. It uses only the design system’s gradient Outline mark. The ticket layout places show and counts in the main area and date in the stub; branding moves outside below it, with the original Outline mark and a coral wordmark.
+
+- Removed the ticket perforation dots and reclaimed the width for the title and yearly count. The outside branding stays centred beneath the ticket.
+
+- Tightened the plain overlay’s section spacing and restored “This year so far”. Simplified the ticket to an unlabelled show title followed immediately by the date, reclaiming the stub area and widening the counts.
+
+- No-photo sharing designs now start transparent, including Insights. The action order is Stories, Copy image, Download, Copy text, Link, More (where applicable). Copy preserves the selected PNG’s alpha on iOS and web, records `copy_image`, and reports clipboard failures without substituting text. Transparent charts use stronger grid/boundary lines, radar vertex markers, higher-opacity visited-country fills, and clearer calendar cells and separators; regular in-app charts retain their appearance.
+
+- Ticket branding now shares the ticket’s rotation and coordinate system, centred 19pt below its lower edge so the outline icon and coral wordmark sit parallel and close beneath it.
+
+- Default entry cards now prioritise show-of-year and Seen / X time(s), removing the venue-visit metric from both photo and data layouts. A separate Venue visits card makes the venue and its visit count primary, with the current show secondary. It appears immediately before Year in theatre and is omitted when the venue or a positive visit count is missing.
+
+- Refreshed all four trip recap layouts to use the single-show cards’ 38pt title, 18pt metadata, 28pt margins, shared icon/30pt wordmark/20pt handle footer and 32pt card corners. Removed the separate domain footer. Lists use larger readable rows with overflow counts when space runs out; grids reserve the shared footer area; collages scale to their rotated bounds so images cannot collide with the header or footer.
+
+## 2026-11-06 — Default share-card stats at the corners
+
+The default photo and no-photo entry cards anchor show-of-year at the top-left margin and Seen / X time(s) at the top-right margin. The show title sits above the shared footer. Venue visits stay on their dedicated card, and the centred Show overlay and Ticket stub designs keep their existing compositions.
+
+Show number and Show overlay now follow the eligible photo cards, before Data and Encore. Filtering out unavailable photo/rating designs keeps this relative ordering on both platforms.

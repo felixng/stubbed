@@ -6,6 +6,7 @@ platform comes from one source.
 | Variant | File | Use |
 |---|---|---|
 | App icon (E1) | `svg/stubbed-icon.svg` | iOS app icon, Apple touch icon, PWA icons |
+| Share ticket | `svg/stubbed-share-ticket.svg` | Single-ticket outline for story overlays, using the logo geometry |
 | Mark (A2) | `svg/stubbed-mark.svg` | Beside the wordmark on light backgrounds; squared up as `svg/favicon.svg`, the browser tab icon |
 | Outline mark (E2) | `svg/stubbed-mark-outline.svg` | Large or decorative uses on white; base of the iOS dark and tinted icons |
 

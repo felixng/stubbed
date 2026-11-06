@@ -24,6 +24,10 @@ Browser verification covered partial completion, result focus, the Fix shortcut,
 
 The suggested Card, Notice and Disclosure primitives remain a separate design-system follow-up; this PR does not migrate unrelated screens.
 
+## Latest re-review
+
+Problem messages now describe state in plain red text; Fix is the only filled coral control in the row. The redundant result shortcut is removed, zero counts are hidden, short lists have no jump link, and bulk/country text actions align with headings. Native problem rows now use red warnings and a trailing chevron; hub icons have a fixed width. The screenshots below predate this final re-review polish.
+
 ## Checks
 
 - Web: 125 tests, lint, typecheck and production build pass.

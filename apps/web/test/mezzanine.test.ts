@@ -158,8 +158,8 @@ test("exports over 20 MB are rejected before reading, and attention copy names t
   const { checkMezzanineFileSize, MAX_MEZZANINE_FILE_BYTES, attentionCopy } = await import("@/lib/import/mezzanine-review");
   assert.doesNotThrow(() => checkMezzanineFileSize(MAX_MEZZANINE_FILE_BYTES));
   assert.throws(() => checkMezzanineFileSize(MAX_MEZZANINE_FILE_BYTES + 1), /smaller than 20 MB/);
-  assert.equal(attentionCopy(["country"]), "Choose a country");
-  assert.equal(attentionCopy(["date", "rating"]), "Add a date · Check the rating");
+  assert.equal(attentionCopy(["country"]), "Country missing");
+  assert.equal(attentionCopy(["date", "rating"]), "Date missing · Rating isn’t valid");
 });
 test("Stop during matching does not start later batches or query diary entries", async () => {
   const { resolveMezzanine, MezzanineStopped } = await import("@/lib/import/mezzanine-resolve");

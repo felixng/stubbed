@@ -210,8 +210,8 @@ export function MezzanineImport() {
               <div className="min-w-0 flex-1">
                 {metadata}
                 <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                  {missing.length > 0 && <span className="rounded-pill bg-tint-fill px-3 py-1 text-footnote text-destructive">{attentionCopy(missing)}</span>}
-                  <button type="button" className={textAction} disabled={busy} aria-label={`Fix ${title}, ${when}`} aria-expanded={expanded === d.key} onClick={toggleEditor}>Fix</button>
+                  {missing.length > 0 && <span className="text-footnote text-destructive">{attentionCopy(missing)}</span>}
+                  <Button variant="secondary" size="sm" disabled={busy} aria-label={`Fix ${title}, ${when}`} aria-expanded={expanded === d.key} onClick={toggleEditor}>Fix</Button>
                 </div>
                 {d.error && <p role="alert" className="text-subheadline text-destructive">{d.error}</p>}
               </div>
@@ -254,12 +254,11 @@ export function MezzanineImport() {
     {finished && <section ref={summary} tabIndex={-1} aria-labelledby="import-result" className="scroll-mt-20 focus-visible:outline-2 focus-visible:outline-focus">
       <h2 id="import-result" className="text-title font-display text-label">{added ? `${added} ${added === 1 ? "show" : "shows"} added` : "No shows added"}</h2>
       {details && <p className="mt-2 text-subheadline text-label-secondary">{details}</p>}
-      {needs.length > 0 && <button type="button" className={`${textAction} mt-2`} onClick={jumpToAttention}>Fix {needs.length} {needs.length === 1 ? "show" : "shows"}</button>}
       {selection.length > 0 && <Button variant="secondary" className="mt-3" disabled={busy} onClick={save}>{stopped ? "Continue importing" : "Import selected shows"}</Button>}
       {needs.length === 0 && ready.length === 0 && <button type="button" className={`${textAction} mt-2`} onClick={() => input.current?.click()}>Import another file</button>}
     </section>}
     {drafts.length > 0 && !finished && <div className="flex flex-col gap-2 text-subheadline text-label-secondary">
-      <p>{ready.length} ready · {needs.length > 0 ? <button type="button" className="min-h-11 text-tint-text underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-focus" onClick={jumpToAttention}>{needs.length} {needs.length === 1 ? "needs" : "need"} attention</button> : "0 need attention"} · {duplicates.length} already in your diary</p>
+      <p>{ready.length > 0 && <span>{ready.length} ready</span>}{needs.length > 0 && <>{ready.length > 0 && " · "}{drafts.length > 10 ? <button type="button" className="min-h-11 text-tint-text underline underline-offset-4" onClick={jumpToAttention}>{needs.length} need attention</button> : <span>{needs.length} {needs.length === 1 ? "needs" : "need"} attention</span>}</>}{duplicates.length > 0 && <>{(ready.length > 0 || needs.length > 0) && " · "}{duplicates.length} already in your diary</>}</p>
     </div>}
     {(cities.length > 0 || (!finished && countryNotice)) && <section aria-label="Countries" className="flex flex-col gap-3">
       {cities.length > 0 && <p className="text-subheadline text-label-secondary">Mezzanine doesn’t say which country a theatre is in. Choose one so your stats group correctly.</p>}
@@ -269,7 +268,7 @@ export function MezzanineImport() {
             <option value="">Choose country</option>{countries.map((c) => <option key={c.code} value={c.code}>{c.name}</option>)}
           </select>
         </label>
-        {lastCountry && <Button variant="ghost" size="sm" className="self-start" disabled={busy} onClick={() => country(city, lastCountry)}>Use {names.of(lastCountry)} for {city}</Button>}
+        {lastCountry && <button type="button" className={textAction} disabled={busy} onClick={() => country(city, lastCountry)}>Use {names.of(lastCountry)} for {city}</button>}
       </div>)}
       <p role="status" aria-live="polite" className="text-subheadline text-label-secondary">{countryNotice}</p>
     </section>}
@@ -277,8 +276,8 @@ export function MezzanineImport() {
     {!finished && drafts.length > 0 && drafts.every((d) => d.duplicate) && <p>Every show in this file is already in your diary.</p>}
     {groups.map((group) => group.rows.length > 0 && !(finished && group.id === "duplicates") && <section key={group.id} aria-labelledby={`group-${group.id}`} className="flex flex-col gap-2">
       <h2 ref={group.id === "needs-attention" ? attention : undefined} tabIndex={-1} id={`group-${group.id}`} className="scroll-mt-20 text-headline text-label focus-visible:outline-2 focus-visible:outline-focus">{finished && group.id === "needs-attention" ? `${group.rows.length} ${group.rows.length === 1 ? "show" : "shows"} to fix` : `${group.name} · ${group.rows.length}`}</h2>
-      {group.id === "ready" && <Button variant="ghost" size="sm" className="self-start" disabled={busy}
-        onClick={() => selectReady(!ready.every((d) => d.include))}>{ready.every((d) => d.include) ? "Untick all ready shows" : "Select all ready shows"}</Button>}
+      {group.id === "ready" && <button type="button" className={textAction} disabled={busy}
+        onClick={() => selectReady(!ready.every((d) => d.include))}>{ready.every((d) => d.include) ? "Untick all ready shows" : "Select all ready shows"}</button>}
       {group.id === "needs-attention" ? rowList(group.rows) : <details className="group overflow-hidden rounded-md border border-separator bg-surface shadow-sm" open={group.id === "ready" ? readyExpanded : duplicatesExpanded}
         onToggle={(e) => group.id === "ready" ? setReadyExpanded(e.currentTarget.open) : setDuplicatesExpanded(e.currentTarget.open)}>
         <summary className={disclosureSummary}>{group.id === "ready" ? "Review ready shows" : "Review existing visits"}{chevron}</summary>

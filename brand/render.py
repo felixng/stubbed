@@ -171,6 +171,29 @@ def ios_brand_mark():
               open(os.path.join(folder, "Contents.json"), "w"), indent=2)
 
 
+def ios_outline_mark():
+    """The existing E2 outline, tinted to match the sharing card's text."""
+    folder = os.path.join(IOS_ASSETS, "BrandMarkOutline.imageset")
+    os.makedirs(folder, exist_ok=True)
+    render("stubbed-mark-outline", os.path.join(folder, "BrandMarkOutline.png"), 240)
+    json.dump({"images": [{"filename": "BrandMarkOutline.png", "idiom": "universal"}],
+               "info": {"author": "xcode", "version": 1},
+               "properties": {"template-rendering-intent": "template"}},
+              open(os.path.join(folder, "Contents.json"), "w"), indent=2)
+
+
+def ios_share_ticket():
+    """Single ticket outline from the same geometry as the logo."""
+    folder = os.path.join(IOS_ASSETS, "ShareTicketOutline.imageset")
+    os.makedirs(folder, exist_ok=True)
+    render("stubbed-share-ticket", os.path.join(folder, "ShareTicketOutline.png"), 1300)
+    shutil.copy(os.path.join(SVG, "stubbed-share-ticket.svg"), os.path.join(WEB_PUBLIC, "stubbed-share-ticket.svg"))
+    json.dump({"images": [{"filename": "ShareTicketOutline.png", "idiom": "universal"}],
+               "info": {"author": "xcode", "version": 1},
+               "properties": {"template-rendering-intent": "template"}},
+              open(os.path.join(folder, "Contents.json"), "w"), indent=2)
+
+
 if __name__ == "__main__":
     os.makedirs(WEB_PUBLIC, exist_ok=True)
     for name in ("stubbed-icon", "stubbed-mark", "stubbed-mark-outline"):
@@ -184,4 +207,6 @@ if __name__ == "__main__":
     opaque("stubbed-icon", os.path.join(WEB_APP, "apple-icon.png"), 180)
     ios_icon_set()
     ios_brand_mark()
+    ios_outline_mark()
+    ios_share_ticket()
     print("done")

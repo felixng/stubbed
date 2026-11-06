@@ -35,7 +35,7 @@ struct MezzanineReviewView: View {
           Section {
             Text(model.resultTitle).font(.title2.bold()).accessibilityFocused($summaryFocused)
             if !model.resultDetails.isEmpty { Text(model.resultDetails).foregroundStyle(.secondary) }
-            if !model.needsAttention.isEmpty {
+            if model.rows.count > 10 && !model.needsAttention.isEmpty {
               Button("Fix \(model.needsAttention.count) \(model.needsAttention.count == 1 ? "show" : "shows")") {
                 withAnimation { proxy.scrollTo("attention", anchor: .top) }
               }
@@ -52,8 +52,8 @@ struct MezzanineReviewView: View {
           Section {
             Text("\(model.ready.count) ready · \(model.needsAttention.count) \(model.needsAttention.count == 1 ? "needs" : "need") attention · \(model.duplicates.count) already in your diary")
               .font(.subheadline).foregroundStyle(.secondary)
-            if !model.needsAttention.isEmpty {
-              Button("\(model.needsAttention.count) \(model.needsAttention.count == 1 ? "needs" : "need") attention", systemImage: "exclamationmark.circle") {
+            if model.rows.count > 10 && !model.needsAttention.isEmpty {
+              Button("\(model.needsAttention.count) \(model.needsAttention.count == 1 ? "needs" : "need") to fix", systemImage: "exclamationmark.circle") {
                 withAnimation { proxy.scrollTo("attention", anchor: .top) }
               }
             }
@@ -162,7 +162,7 @@ struct MezzanineReviewView: View {
     } label: {
       HStack(alignment: .top) {
         Image(systemName: needsFix ? "exclamationmark.circle" : row.selected ? "checkmark.circle.fill" : "circle")
-          .foregroundStyle(needsFix ? Color.secondary : Palette.tintText)
+          .foregroundStyle(needsFix ? Color.red : Palette.tintText)
         VStack(alignment: .leading, spacing: Space.xs) {
           Text(row.show.title.isEmpty ? "Untitled show" : row.show.title).font(.headline).foregroundStyle(.primary)
           Text([row.venue.name, row.venue.city ?? ""].filter { !$0.isEmpty }.joined(separator: ", "))
@@ -178,10 +178,11 @@ struct MezzanineReviewView: View {
             }
           }
           if row.duplicate { Text("Already in your diary").font(.footnote).foregroundStyle(.secondary) }
-          if !row.missing.isEmpty { Text(row.attentionMessage).font(.footnote).foregroundStyle(.secondary) }
+          if !row.missing.isEmpty { Text(row.attentionMessage).font(.footnote).foregroundStyle(.red) }
           if let error = row.error { Text(error).font(.footnote).foregroundStyle(.red) }
         }
         Spacer(minLength: 0)
+        if needsFix { Image(systemName: "chevron.right").font(.footnote).foregroundStyle(.secondary) }
       }
       .frame(minHeight: 44, alignment: .leading).contentShape(Rectangle())
     }

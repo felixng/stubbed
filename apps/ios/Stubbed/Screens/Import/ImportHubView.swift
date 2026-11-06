@@ -63,7 +63,7 @@ struct ImportHubView: View {
 
   nonisolated private func sourceRow(_ title: String, subtitle: String, symbol: String) -> some View {
     HStack {
-      Image(systemName: symbol).foregroundStyle(Palette.tintText)
+      Image(systemName: symbol).foregroundStyle(Palette.tintText).frame(width: 24)
       VStack(alignment: .leading) {
         Text(title).foregroundStyle(Color.primary)
         Text(subtitle).font(.subheadline).foregroundStyle(Color.secondary)

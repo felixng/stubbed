@@ -5,6 +5,7 @@ struct ShareActivityCard: View {
   let data: InsightCardData
   let ink: Color
   let accent: Color
+  var highContrast = false
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
       Text("My theatre calendar").font(.system(size: 32, weight: .bold))
@@ -14,7 +15,7 @@ struct ShareActivityCard: View {
           .font(.system(size: 54, weight: .heavy))
         Text("Show visits").font(.system(size: 20))
       }
-      ShareCalendar(year: data.calendarYear, counts: data.stats.activity, ink: ink, accent: accent).frame(height: 96)
+      ShareCalendar(year: data.calendarYear, counts: data.stats.activity, ink: ink, accent: accent, highContrast: highContrast).frame(height: 96)
       Text("One square per day · stronger colour means more visits").font(.system(size: 14))
       ShareMonthChart(months: data.stats.months, year: data.calendarYear, ink: ink, accent: accent).frame(height: 110)
     }
@@ -26,6 +27,7 @@ private struct ShareCalendar: View {
   let counts: [String: Int]
   let ink: Color
   let accent: Color
+  var highContrast = false
   var body: some View {
     Canvas { context, size in
       let weeks = ActivityGrid.weeks(year: year)
@@ -43,7 +45,7 @@ private struct ShareCalendar: View {
           let count = counts[day] ?? 0
           let rect = CGRect(x: Double(column) * step, y: 22 + Double(row) * step, width: side, height: side)
           context.fill(Path(roundedRect: rect, cornerRadius: 1),
-            with: .color(count == 0 ? ink.opacity(0.12) : accent.opacity(0.35 + 0.65 * Double(count) / Double(maximum))))
+            with: .color(count == 0 ? ink.opacity(highContrast ? 0.35 : 0.12) : accent.opacity((highContrast ? 0.65 : 0.35) + (highContrast ? 0.35 : 0.65) * Double(count) / Double(maximum))))
         }
       }
     }
@@ -54,6 +56,7 @@ struct ShareRepeatCard: View {
   let data: InsightCardData
   let ink: Color
   let accent: Color
+  var highContrast = false
   var body: some View {
     VStack(alignment: .leading, spacing: 16) {
       Text("My most-seen shows").font(.system(size: 32, weight: .bold))
@@ -75,7 +78,7 @@ struct ShareRepeatCard: View {
           }
           .padding(.vertical, 8)
           if show.id != data.stats.repeated_shows.prefix(5).last?.id {
-            Rectangle().fill(ink.opacity(0.18)).frame(height: 1)
+            Rectangle().fill(ink.opacity(highContrast ? 0.55 : 0.18)).frame(height: highContrast ? 1.5 : 1)
           }
         }
       }
@@ -88,6 +91,7 @@ struct ShareCountriesCard: View {
   let data: InsightCardData
   let ink: Color
   let accent: Color
+  var highContrast = false
   var body: some View {
     VStack(alignment: .leading, spacing: 12) {
       HStack(alignment: .top, spacing: 8) {
@@ -106,7 +110,7 @@ struct ShareCountriesCard: View {
       }
       // Let the map's natural aspect ratio use all 484pt of content width.
       // A fixed 170pt height previously constrained it to just 340pt wide.
-      CountryHeatmap(countries: data.stats.countries, ink: ink, accent: accent)
+      CountryHeatmap(countries: data.stats.countries, ink: ink, accent: accent, highContrast: highContrast)
         .frame(maxWidth: .infinity)
       VStack(spacing: 6) {
         ForEach(data.stats.countries.prefix(3)) { country in
