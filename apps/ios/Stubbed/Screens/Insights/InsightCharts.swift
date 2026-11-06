@@ -5,6 +5,7 @@ struct CountryHeatmap: View {
   let countries: [InsightStats.Country]
   var ink: Color? = nil
   var accent: Color? = nil
+  var highContrast = false
   private static let shapes = CountryBoundary.load()
 
   var body: some View {
@@ -13,8 +14,10 @@ struct CountryHeatmap: View {
     Canvas { context, size in
       let maximum = max(1, countries.map(\.count).max() ?? 1)
       let counts = Dictionary(countries.map { ($0.country, $0.count) }, uniquingKeysWith: +)
-      context.fill(Path(CGRect(origin: .zero, size: size)),
-        with: .color(ink?.opacity(0.04) ?? Color(.tertiarySystemFill).opacity(0.3)))
+      if !highContrast {
+        context.fill(Path(CGRect(origin: .zero, size: size)),
+          with: .color(ink?.opacity(0.04) ?? Color(.tertiarySystemFill).opacity(0.3)))
+      }
       // One drawing pass avoids hundreds of separate SwiftUI polygon views.
       for shape in Self.shapes where shape.code != "AQ" {
         let count = counts[shape.code] ?? 0
@@ -28,11 +31,11 @@ struct CountryHeatmap: View {
           path.closeSubpath()
         }
         let fill = count == 0
-          ? (ink?.opacity(0.12) ?? Color(.systemGray4))
-          : (accent ?? ink ?? Palette.tint).opacity(0.3 + 0.6 * Double(count) / Double(maximum))
+          ? (ink?.opacity(highContrast ? 0.2 : 0.12) ?? Color(.systemGray4))
+          : (accent ?? ink ?? Palette.tint).opacity((highContrast ? 0.7 : 0.3) + (highContrast ? 0.3 : 0.6) * Double(count) / Double(maximum))
         context.fill(path, with: .color(fill))
         context.stroke(path,
-          with: .color(ink?.opacity(0.2) ?? Color(.secondarySystemGroupedBackground)), lineWidth: 0.5)
+          with: .color(ink?.opacity(highContrast ? 0.8 : 0.2) ?? Color(.secondarySystemGroupedBackground)), lineWidth: highContrast ? 0.9 : 0.5)
       }
     }
     .aspectRatio(2, contentMode: .fit)

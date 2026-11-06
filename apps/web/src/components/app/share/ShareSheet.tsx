@@ -2,6 +2,7 @@
 
 import { useEffect, useEffectEvent, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/Button";
+import { copyCardImage } from "@/lib/share-clipboard";
 import { track } from "@/lib/analytics";
 import { cardBackground, renderCard, CARD_DOMAIN, type CardData, type CardDesign, type ShareBackground, type ShareInk } from "@/lib/share-card";
 import { availableInsightDesigns, availableShowDesigns, isInsightDesign, renderInsightCard, type InsightCardData, type InsightStats } from "@/lib/share-card-insights";
@@ -16,14 +17,16 @@ export type ShareSubject =
   | { kind: "insights"; data: InsightCardData };
 const backgrounds: ShareBackground[] = ["solid", "gradient", "transparent"];
 const keys = ["solid", "gradient", "transparent-light", "transparent-dark"];
-const checker = "bg-[repeating-conic-gradient(#bbb_0%_25%,#888_0%_50%)] bg-[length:20px_20px]";
+const checkerLight = "bg-[repeating-conic-gradient(#fff_0%_25%,#d6d6d6_0%_50%)] bg-[length:20px_20px]";
+const checkerDark = "bg-[repeating-conic-gradient(#474747_0%_25%,#5c5c5c_0%_50%)] bg-[length:20px_20px]";
 const pill = "min-h-11 rounded-pill px-4 py-2 text-subheadline font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:opacity-50";
 
 export function ShareSheet({ subject, slug, publicHref = null }: { subject: ShareSubject; slug: string; publicHref?: string | null }) {
   const [drawn, setDrawn] = useState<{ subject: ShareSubject; cards: DrawnCard[] } | null>(null);
   const [error, setError] = useState<ShareSubject | null>(null);
   const [active, setActive] = useState<string | null>(null);
-  const [background, setBackground] = useState<ShareBackground>("solid");
+  const [baseBackground, setBaseBackground] = useState<ShareBackground>("transparent");
+  const [overlayBackground, setOverlayBackground] = useState<ShareBackground>("transparent");
   const [ink, setInk] = useState<ShareInk>("light");
   const [notice, setNotice] = useState<string | null>(null);
   const [more, setMore] = useState(false);
@@ -33,6 +36,8 @@ export function ShareSheet({ subject, slug, publicHref = null }: { subject: Shar
   const resources = useRef(new Set<string>());
   const cards = drawn?.subject === subject ? drawn.cards : null;
   const current = cards?.find(c => c.design.id === active) ?? cards?.[0];
+  const background = (current?.design.id === "overlay" || current?.design.id === "ticket") ? overlayBackground : baseBackground;
+  const setBackground = (current?.design.id === "overlay" || current?.design.id === "ticket") ? setOverlayBackground : setBaseBackground;
   const key = current?.design.background ? background === "transparent" ? `transparent-${ink}` : background : "photo";
   const card = current?.variants[key];
   const storyCard = current?.story ?? card;
@@ -112,7 +117,7 @@ export function ShareSheet({ subject, slug, publicHref = null }: { subject: Shar
   const text = sharingInsights ? "" : subject.kind === "entry" ? `${subject.data.title}${subject.data.venue ? ` at ${subject.data.venue}` : ""}. Tracked on Stubbed ${CARD_DOMAIN}`
     : subject.kind === "trip" ? `${subject.data.name}: ${subject.data.shows.length} shows. Tracked on Stubbed ${CARD_DOMAIN}` : "";
   const title = subject.kind === "entry" ? subject.data.title : subject.kind === "trip" ? subject.data.name : "My theatre stats";
-  function record(action: "stories" | "more" | "download" | "copy_text" | "copy_link") {
+  function record(action: "stories" | "more" | "download" | "copy_image" | "copy_text" | "copy_link") {
     if (!current) return;
     void track(createClient(), "card_shared", { action, design: current.design.id,
       background: cardBackground(current.design, background), transparent: Boolean(current.design.background && background === "transparent"),
@@ -135,6 +140,14 @@ export function ShareSheet({ subject, slug, publicHref = null }: { subject: Shar
       if (err instanceof DOMException && err.name === "AbortError") return;
       setNotice("Couldn’t open sharing. Download the image instead.");
     }
+  }
+  async function copyImage() {
+    if (!card) return;
+    try {
+      await copyCardImage(card.file);
+      record("copy_image");
+      setNotice("Image copied. Paste it into your story.");
+    } catch { setNotice("Couldn’t copy the image. Use Download image in More instead."); }
   }
   async function copy(value: string, action: "copy_text" | "copy_link") {
     try { await navigator.clipboard.writeText(value); record(action); setNotice(action === "copy_link" ? "Link copied." : "Text copied."); }
@@ -161,7 +174,7 @@ export function ShareSheet({ subject, slug, publicHref = null }: { subject: Shar
             const clear = Boolean(item.design.background && background === "transparent");
             const variant = item.design.background ? clear ? `transparent-${ink}` : background : "photo";
             return <div key={item.design.id} data-design={item.design.id} role="group" aria-label={`${i + 1} of ${cards.length}: ${item.design.name}`}
-              className={`relative aspect-square w-full shrink-0 snap-center overflow-hidden rounded-[6%] ${clear ? checker : ""}`}>
+              className={`relative aspect-square w-full shrink-0 snap-center overflow-hidden rounded-[6%] ${clear ? ink === "dark" ? checkerLight : checkerDark : ""}`}>
               {/* eslint-disable-next-line @next/next/no-img-element -- locally drawn PNG */}
               <img src={item.variants[variant].url} alt={`Share card, ${item.design.name.toLowerCase()}${clear ? ", no background" : ""}: ${item.isInsights ? "My theatre stats" : title}`} className="size-full" />
             </div>;
@@ -183,6 +196,7 @@ export function ShareSheet({ subject, slug, publicHref = null }: { subject: Shar
         </fieldset>}
       </>}
       <Button disabled={!storyCard} onClick={() => share(false)} className="w-full">{storiesShare ? "Share to Stories" : "Download for Stories"}</Button>
+      <Button variant="secondary" disabled={!card} onClick={() => void copyImage()} className="w-full" aria-label="Copy image">Copy</Button>
       <div className="flex justify-center">
         <button ref={moreButton} type="button" aria-expanded={more} aria-controls={moreId} onClick={() => setMore(v => !v)} className={pick(false)}>More</button>
       </div>

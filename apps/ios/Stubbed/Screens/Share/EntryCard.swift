@@ -15,8 +15,9 @@ struct EntryCardData: Hashable, Sendable {
 }
 
 enum EntryCardDesign: String, CaseIterable, Identifiable, Sendable {
-  case stats, name, data, encore
+  case stats, name, data, encore, overlay, ticket
   case number = "show-number"
+  case venue = "venue-visits"
   var id: String { rawValue }
   var name: String {
     switch self {
@@ -25,12 +26,16 @@ enum EntryCardDesign: String, CaseIterable, Identifiable, Sendable {
     case .data: "Data"
     case .encore: "Encore"
     case .number: "Show number"
+    case .overlay: "Show overlay"
+    case .ticket: "Ticket stub"
+    case .venue: "Venue visits"
     }
   }
   var isPhoto: Bool { self == .stats || self == .name }
-  static func available(photo: Bool, rating: Double?, timesSeen: Int) -> [Self] {
+  static func available(photo: Bool, rating: Double?, timesSeen: Int, venue: String? = nil, venueVisit: Int = 0) -> [Self] {
     (photo ? [.stats] + (rating != nil ? [.name] : []) : [])
-      + [.data, .encore, .number]
+      + [.data, .encore, .number, .overlay, .ticket]
+      + (venue?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false && venueVisit > 0 ? [.venue] : [])
   }
 }
 
@@ -53,6 +58,10 @@ func ordinal(_ n: Int) -> String {
   }
 }
 
+func formatTimes(_ count: Int) -> String {
+  "\(count) \(count == 1 ? "time" : "times")"
+}
+
 struct EntryCardView: View {
   let design: EntryCardDesign
   let data: EntryCardData
@@ -61,10 +70,7 @@ struct EntryCardView: View {
   static let size: CGFloat = 540
   private var ink: Color { design.isPhoto ? .white : appearance.foreground }
   private var metrics: [(String, String)] {
-    var result = [("Show of \(data.year)", ordinal(data.showOfYear))]
-    if let venue = data.venue { result.append((venue, "\(ordinal(data.venueVisit)) visit")) }
-    result.append(("Times seen", String(data.timesSeen)))
-    return result
+    [("Show of \(data.year)", ordinal(data.showOfYear)), ("Seen", formatTimes(data.timesSeen))]
   }
   var body: some View {
     ZStack {
@@ -78,52 +84,162 @@ struct EntryCardView: View {
           LinearGradient(colors: [.clear, .black.opacity(0.8)], startPoint: .top, endPoint: .bottom).frame(height: 180)
         }
       } else { ShareCardSurface(appearance: appearance) }
-      VStack(alignment: .leading, spacing: 0) {
-        if design == .stats {
-          HStack(alignment: .top, spacing: 12) {
+      if design == .ticket {
+        TicketOverlayCard(data: data, ink: ink)
+      } else if design == .venue {
+        VenueVisitCard(data: data, appearance: appearance)
+      } else if design == .overlay {
+        ShowOverlayCard(data: data, ink: ink)
+      } else {
+        VStack(alignment: .leading, spacing: 0) {
+          if design == .stats {
+            HStack(alignment: .top, spacing: 12) {
+              ForEach(Array(metrics.enumerated()), id: \.offset) { _, item in
+                VStack(spacing: 6) {
+                  Text(item.0).font(.system(size: 17, weight: .medium)).lineLimit(2).frame(height: 42)
+                  Text(item.1).font(.system(size: 28, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7)
+                }.frame(maxWidth: .infinity)
+              }
+            }
+            Spacer()
+          } else if design == .data {
+            CardTitle(text: data.title, size: 38, lineHeight: 42, width: 484, ink: ink)
+            Spacer(minLength: 20)
             ForEach(Array(metrics.enumerated()), id: \.offset) { _, item in
-              VStack(spacing: 6) {
-                Text(item.0).font(.system(size: 17, weight: .medium)).lineLimit(2).frame(height: 42)
-                Text(item.1).font(.system(size: 28, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7)
-              }.frame(maxWidth: .infinity)
+              VStack(alignment: .leading, spacing: 3) {
+                Text(item.0).font(.system(size: 18, weight: .medium)).lineLimit(2)
+                Text(item.1).font(.system(size: 42, weight: .bold)).lineLimit(1).minimumScaleFactor(0.65)
+              }.padding(.bottom, 20)
+            }
+            Spacer(minLength: 12)
+          } else if !design.isPhoto {
+            Text(design == .encore ? (data.timesSeen == 1 ? "First visit" : "Encore") : "My theatre year")
+              .font(.system(size: 22, weight: .medium))
+            Spacer(minLength: 0)
+            CardBadge(value: design == .encore ? "\(data.timesSeen)x" : ordinal(data.showOfYear))
+              .frame(maxWidth: .infinity)
+            Text(verbatim: design == .encore ? "\(ordinal(data.timesSeen)) time seeing this show" : "Show of \(data.year)")
+              .font(.system(size: 20, weight: .medium)).lineLimit(1).minimumScaleFactor(0.7)
+            Spacer(minLength: 0)
+            CardTitle(text: data.title, size: 30, lineHeight: 34, width: 484, ink: ink)
+              .padding(.bottom, 12)
+            Spacer(minLength: 0)
+          } else { Spacer() }
+          if design.isPhoto {
+            CardTitle(text: data.title, size: design == .stats ? 28 : 36, lineHeight: 40, width: 484, ink: ink).padding(.bottom, 12)
+            if design == .name, let rating = data.rating {
+              CardStars(value: rating, size: 30, gap: 4, outline: .white.opacity(0.75)).padding(.bottom, 16)
             }
           }
-          Spacer()
-        } else if design == .data {
-          CardTitle(text: data.title, size: 38, lineHeight: 42, width: 484, ink: ink)
-          Spacer(minLength: 20)
-          ForEach(Array(metrics.enumerated()), id: \.offset) { _, item in
-            VStack(alignment: .leading, spacing: 3) {
-              Text(item.0).font(.system(size: 18, weight: .medium)).lineLimit(2)
-              Text(item.1).font(.system(size: 42, weight: .bold)).lineLimit(1).minimumScaleFactor(0.65)
-            }.padding(.bottom, 20)
-          }
-          Spacer(minLength: 12)
-        } else if !design.isPhoto {
-          Text(design == .encore ? (data.timesSeen == 1 ? "First visit" : "Encore") : "My theatre year")
-            .font(.system(size: 22, weight: .medium))
-          Spacer(minLength: 0)
-          CardBadge(value: design == .encore ? "\(data.timesSeen)x" : ordinal(data.showOfYear))
-            .frame(maxWidth: .infinity)
-          Text(verbatim: design == .encore ? "\(ordinal(data.timesSeen)) time seeing this show" : "Show of \(data.year)")
-            .font(.system(size: 20, weight: .medium)).lineLimit(1).minimumScaleFactor(0.7)
-          Spacer(minLength: 0)
-          CardTitle(text: data.title, size: 30, lineHeight: 34, width: 484, ink: ink)
-            .padding(.bottom, 12)
-          Spacer(minLength: 0)
-        } else { Spacer() }
-        if design.isPhoto {
-          CardTitle(text: data.title, size: design == .stats ? 28 : 36, lineHeight: 40, width: 484, ink: ink).padding(.bottom, 12)
-          if design == .name, let rating = data.rating {
-            CardStars(value: rating, size: 30, gap: 4, outline: .white.opacity(0.75)).padding(.bottom, 16)
-          }
-        }
-        CardFooter(handle: data.handle, ink: ink)
-      }.foregroundStyle(ink).padding(28).cardTextShadow(design.isPhoto)
+          CardFooter(handle: data.handle, ink: ink)
+        }.foregroundStyle(ink).padding(28).cardTextShadow(design.isPhoto)
+      }
     }
     .frame(width: Self.size, height: Self.size)
     .clipShape(.rect(cornerRadius: 32))
     .environment(\.colorScheme, .dark)
+  }
+}
+
+/// Fixed regions keep long venue/show names clear of the count and footer.
+private struct VenueVisitCard: View {
+  let data: EntryCardData
+  let appearance: ShareAppearance
+  private var ink: Color { appearance.foreground }
+
+  var body: some View {
+    ZStack(alignment: .topLeading) {
+      Text("Venue").font(.system(size: 18, weight: .medium)).offset(x: 28, y: 28)
+      CardTitle(text: data.venue ?? "", size: 38, lineHeight: 42, width: 484, ink: ink)
+        .offset(x: 28, y: 58)
+      Text("Visited").font(.system(size: 18, weight: .medium)).offset(x: 28, y: 192)
+      Text(formatTimes(data.venueVisit)).font(.system(size: 64, weight: .heavy)).tracking(-1)
+        .foregroundStyle(appearance.statsAccent).lineLimit(1).minimumScaleFactor(0.6)
+        .frame(width: 484, alignment: .leading).offset(x: 28, y: 220)
+      Text("Seeing").font(.system(size: 18, weight: .medium)).offset(x: 28, y: 354)
+      CardTitle(text: data.title, size: 28, lineHeight: 32, width: 484, ink: ink)
+        .offset(x: 28, y: 384)
+      CardFooter(handle: data.handle, ink: ink).frame(width: 484).offset(x: 28, y: 472)
+    }.foregroundStyle(ink).frame(width: 540, height: 540, alignment: .topLeading)
+  }
+}
+
+/// Four equally sized sections, followed by the design system's outline icon.
+private struct ShowOverlayCard: View {
+  let data: EntryCardData
+  let ink: Color
+  private let today = Date()
+
+  var body: some View {
+    ZStack(alignment: .top) {
+      VStack(spacing: 8) {
+        section("Show", value: data.title, title: true)
+        section("Date", value: today.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).year().locale(Locale(identifier: "en_GB"))))
+        section("Seen", value: formatTimes(data.timesSeen))
+        section(data.year == Calendar.current.component(.year, from: today) ? "This year so far" : "\(data.year) so far",
+          value: "\(ordinal(data.showOfYear)) show")
+      }.padding(.top, 48)
+      Image("BrandMarkOutline").renderingMode(.original).resizable().scaledToFit()
+        .frame(width: 58, height: 58 * 673 / 816).padding(.top, 454)
+    }
+    .foregroundStyle(ink)
+    .frame(width: 540, height: 540, alignment: .top)
+  }
+
+  private func section(_ label: String, value: String, title: Bool = false) -> some View {
+    VStack(spacing: 2) {
+      Text(label).font(.system(size: 17, weight: .semibold))
+      Text(value).font(.system(size: 36, weight: .bold)).tracking(-0.5)
+        .lineLimit(title ? 2 : 1).minimumScaleFactor(0.72)
+        .multilineTextAlignment(.center).frame(height: 64, alignment: .top)
+    }.frame(width: 400, height: 88, alignment: .top)
+  }
+}
+
+private struct TicketOverlayCard: View {
+  let data: EntryCardData
+  let ink: Color
+  private let today = Date()
+
+  var body: some View {
+    ZStack(alignment: .top) {
+      ZStack(alignment: .topLeading) {
+        Image("ShareTicketOutline").renderingMode(.template).resizable()
+          .frame(width: 480, height: 480 * 388 / 648)
+        VStack(alignment: .leading, spacing: 14) {
+          Text(data.title).font(.system(size: 30, weight: .bold)).tracking(-0.4)
+            .lineLimit(2).minimumScaleFactor(0.73)
+            .fixedSize(horizontal: false, vertical: true)
+          Text(today, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated).year())
+            .font(.system(size: 18, weight: .medium))
+        }.frame(width: 368, alignment: .leading).offset(x: 56, y: 44)
+        stat("Seen", value: formatTimes(data.timesSeen), width: 148)
+          .offset(x: 56, y: 194)
+        stat(data.year == Calendar.current.component(.year, from: today) ? "This year so far" : "\(data.year) so far",
+          value: "\(ordinal(data.showOfYear)) show", width: 168).offset(x: 246, y: 194)
+
+        HStack(spacing: 8) {
+          Image("BrandMarkOutline").renderingMode(.original).resizable().scaledToFit()
+            .frame(width: 48, height: 48 * 673 / 816)
+          Text("stubbed").font(.system(size: 30, weight: .heavy)).tracking(-1.35)
+            .foregroundStyle(CardInk.coral)
+        }.frame(width: 480).offset(y: 306)
+      }
+      .foregroundStyle(ink)
+      .frame(width: 480, height: 480 * 388 / 648)
+      .rotationEffect(.degrees(-7))
+      .padding(.top, 96)
+    }
+    .frame(width: 540, height: 540, alignment: .top)
+    .environment(\.locale, Locale(identifier: "en_GB"))
+  }
+
+  private func stat(_ label: String, value: String, width: CGFloat) -> some View {
+    VStack(alignment: .leading, spacing: 6) {
+      Text(label).font(.system(size: 14, weight: .semibold))
+      Text(value).font(.system(size: 24, weight: .bold)).tracking(-0.3)
+        .lineLimit(1).minimumScaleFactor(0.65)
+    }.frame(width: width, alignment: .leading)
   }
 }
 
