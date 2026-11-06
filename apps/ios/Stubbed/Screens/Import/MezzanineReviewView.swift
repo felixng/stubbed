@@ -60,12 +60,13 @@ struct MezzanineReviewView: View {
           }
           }
           countries
+          if model.rows.contains(where: { $0.source.planned }) || model.rows.allSatisfy(\.duplicate) {
           Section {
-            Text("Private notes aren’t imported.").font(.footnote).foregroundStyle(.secondary)
             if model.rows.contains(where: { $0.source.planned }) {
               Text("Future dates become planned shows, without ratings.").font(.footnote).foregroundStyle(.secondary)
             }
             if model.rows.allSatisfy(\.duplicate) { Text("Every show in this file is already in your diary.") }
+          }
           }
           if !model.needsAttention.isEmpty {
             Section("Needs attention · \(model.needsAttention.count)") {
@@ -93,13 +94,13 @@ struct MezzanineReviewView: View {
         }
       }
       .listStyle(.insetGrouped)
-      .tabBarClearance()
       .onChange(of: model.finished) { _, finished in
         if finished { proxy.scrollTo("summary", anchor: .top); summaryFocused = true }
       }
     }
     .navigationTitle("Review import")
     .navigationBarTitleDisplayMode(.inline)
+    .toolbar(.hidden, for: .tabBar)
     .toolbar {
       ToolbarItem(placement: .bottomBar) {
         if model.busy {

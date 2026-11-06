@@ -46,7 +46,7 @@ final class MezzanineReviewSnapshotTests: XCTestCase {
   }
 
   func testReviewOnSmallPhone() async throws {
-    try await capture(NavigationStack { MezzanineReviewView(model: model(), chooseAnother: {}) },
+    try await capture(TabView { NavigationStack { MezzanineReviewView(model: model(), chooseAnother: {}) }.tabItem { Label("Profile", systemImage: "person") } },
       name: "mezzanine-review-small", size: CGSize(width: 375, height: 667))
   }
   func testReviewInDarkModeAtLargestType() async throws {
