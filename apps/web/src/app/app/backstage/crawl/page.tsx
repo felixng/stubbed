@@ -15,7 +15,7 @@ type Run = RunSettings & { status: string; kind: string; created_at: string; sum
 const WHEN = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" });
 
 // The latest crawl runs (read with the admin's session; RLS: admins only).
-// Starting a run from this page arrives with #358.
+// The form dispatches saved runs through the admin-only API.
 async function Runs() {
   const { supabase } = await ownerContext();
   const { data, error } = await supabase
@@ -26,6 +26,7 @@ async function Runs() {
   if (error) return <p className="text-subheadline text-label-secondary">Couldn’t load runs: {error.message}</p>;
   const { data: theatres } = await supabase.from("venues").select("id, name").not("whats_on_url", "is", null).order("name").limit(10000);
   const runs = (data ?? []) as unknown as Run[];
+  const names = new Map((theatres ?? []).map(t => [t.id, t.name]));
   return (
     <>
     <StartCrawl theatres={theatres ?? []} lastPrompt={runs.find(r => r.prompt)?.prompt ?? ""} />
@@ -41,7 +42,7 @@ async function Runs() {
               <time dateTime={r.created_at}>{WHEN.format(new Date(r.created_at))} UTC</time> · {r.status}
             </span>
             <span className="text-footnote text-label-secondary">
-              {r.venue_ids.length} {r.venue_ids.length === 1 ? "theatre" : "theatres"} · {r.summary?.findings ?? 0} findings
+              {r.venue_ids.map(id => names.get(id) ?? "Theatre removed").join(", ")} · {r.summary?.findings ?? 0} findings
             </span>
             <span className="text-footnote text-label-secondary">{settingsLine(r)}</span>
           </Link>
