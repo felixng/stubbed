@@ -244,7 +244,7 @@ export function MezzanineImport() {
         {progress && <p className="text-subheadline text-label-secondary">{progress}</p>}
       </div>
       {!parsed && <details className="group border-t border-separator">
-        <summary className={disclosureSummary}>How to export from Mezzanine{chevron}</summary>
+        <summary className={disclosureSummary}>How to import from Mezzanine{chevron}</summary>
         <p className="border-t border-separator p-4 text-subheadline text-label-secondary">{MEZZANINE_EXPORT_HELP}</p>
       </details>}
     </div>}

@@ -15,14 +15,14 @@ struct ImportHubView: View {
       Section {
         PhotosPicker(selection: $photos, maxSelectionCount: PhotoImport.maxPhotos,
                      selectionBehavior: .ordered, matching: .images) {
-          sourceRow("Photos", subtitle: "Pick photos from your shows. Stubbed sorts them by show.", symbol: "photo.stack")
+          sourceRow("Import from Photos", subtitle: "Pick photos from your shows. Stubbed sorts them by show.", symbol: "photo.stack")
         }
         .buttonStyle(.plain)
         Button { pickingFile = true } label: {
-          sourceRow("Mezzanine export", subtitle: "Bring over your Mezzanine diary from a CSV or JSON file.", symbol: "doc.badge.arrow.up")
+          sourceRow("Import from Mezzanine", subtitle: "Bring over your Mezzanine diary from a CSV or JSON file.", symbol: "doc.badge.arrow.up")
         }
         .buttonStyle(.plain)
-        Button("How to export from Mezzanine", systemImage: "questionmark.circle") { help = true }
+        Button("How to import from Mezzanine", systemImage: "questionmark.circle") { help = true }
       }
 
     }
@@ -54,7 +54,7 @@ struct ImportHubView: View {
           Text("Open Mezzanine, find its export option, and export your diary as a CSV or JSON file. Save the file, then choose it here.")
           Text("Your shows, theatres, dates, ratings and reviews can be imported.").foregroundStyle(.secondary)
         }
-        .navigationTitle("Export from Mezzanine")
+        .navigationTitle("How to import from Mezzanine")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { help = false } } }
       }
