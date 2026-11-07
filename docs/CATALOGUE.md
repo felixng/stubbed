@@ -77,6 +77,33 @@ Implemented with the switch off. The owner deferred live acceptance runs until c
 - **#394 repair.** Health signals rerun #392 and #393. New rules must still find known shows. Attempts are limited per site, and good data stays in place.
 - **#288 the loop.** Daily batches until sites are filled, weekly what's-on checks, limits per run, and a progress page. Does nothing until repository variable `CRAWL_LOOP_ENABLED` is `true`, which is the owner's kick-off.
 
+### #419 Venue-first catalogue
+
+**#420 frontier.** `crawl_sources` holds adapter version, allowlisted hosts,
+minimum request interval and independent collection and publication switches.
+London Theatre and Playbill start with both switches off. The legacy
+official-site runner continues to use its existing controls and checkpoints.
+
+- `crawl_generations` identifies one scan per source and scope. Its completion
+  timestamp records that all reached directory pages were acknowledged. Venue
+  and event tasks have their own progress.
+- `crawl_tasks` deduplicates source, stage and canonical URL per generation.
+  `crawl_task_edges` retains each referring page independently. An edge does
+  not establish the venue of a show. `crawl_source_entities` retains external
+  venue and event identities across generations.
+- `start_crawl_generation` resumes the current generation or atomically creates
+  a fresh one with a seed task when called with `refresh => true`.
+  `enqueue_crawl_task` deduplicates a canonical URL in an enabled scope.
+- `acknowledge_crawl_task` checks the current generation, source state and
+  unexpired lease token. One transaction saves children, edges and observations,
+  queues non-empty extractions for independent publication and completes the
+  parent. Repeating an acknowledged lease is a no-op. An extraction stores
+  parsed facts and short evidence with a parser version and content hash.
+- These tables are admin-read and service-role-write. The RPCs are service-role
+  only. To stop new aggregate work, leave collection and publication off. The
+  migration can remain in place and existing catalogue and diary data remain
+  available. Worker scheduling and fetch-time URL checks arrive in #421.
+
 ### #272 Journey 1, step 4: suggest the show from runs
 - **#360 entry suggestions.** `suggest_shows(venue_ids uuid[], on_date date)` returns `(show_id, title, venue_id, source, score)`, `source` in `community`, `yours`. `security definer` only if needed to count other people's public entries; it must return no user ids and must apply `profile_is_visible`, entry visibility and `blocks` (reuse the predicates used by `feed_entries`). `entry_logged` gains `show_source`.
 - **#278 run suggestions.** Adds the `run` source. A single run at confidence 0.8 or above, seen recently, at a single venue fills an empty show; the rest are chips. Tapping a run with no show goes through the "Did you mean…?" path, so crawl noise never enters show search.
