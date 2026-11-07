@@ -337,3 +337,16 @@ Keep both aggregate collection and publication switches off until their
 respective acceptance checks pass. A paused reason records access blocks.
 Inspect it before retrying. The worker never follows an alternate host to
 bypass a block.
+
+
+The London Theatre adapter can be probed with collection and publication off:
+
+```sh
+node supabase/scripts/crawl/loop.mjs --source london_theatre --scope venue-directory \
+  --stage directory --max-pages 1 --max-minutes 2 --dry-run
+```
+
+The dry-run result records requested URLs, HTTP status and proposed short
+evidence. Run it separately from live collection for those hosts. The first
+directory task may enqueue venue and pagination links. A venue stage run
+processes the venue tasks already discovered. Event tasks remain independent.

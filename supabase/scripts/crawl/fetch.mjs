@@ -72,12 +72,12 @@ export function siteKey(url) {
   } catch { return null; }
 }
 
-async function readCapped(response, strict = false) {
+async function readCapped(response, strict = false, maxBytes = MAX_BYTES) {
   const reader = response.body?.getReader?.();
   if (!reader) {
     const body = await response.text();
-    if (strict && Buffer.byteLength(body) > MAX_BYTES) throw new Error('Response exceeded the byte limit');
-    return body.slice(0, MAX_BYTES);
+    if (strict && Buffer.byteLength(body) > maxBytes) throw new Error('Response exceeded the byte limit');
+    return body.slice(0, maxBytes);
   }
   const decoder = new TextDecoder();
   let text = '';
@@ -87,11 +87,11 @@ async function readCapped(response, strict = false) {
     if (done) break;
     bytes += value.length;
     text += decoder.decode(value, { stream: true });
-    if (strict && bytes > MAX_BYTES) {
+    if (strict && bytes > maxBytes) {
       await reader.cancel();
       throw new Error('Response exceeded the byte limit');
     }
-    if (!strict && bytes >= MAX_BYTES) { await reader.cancel(); break; }
+    if (!strict && bytes >= maxBytes) { await reader.cancel(); break; }
   }
   return text;
 }
@@ -173,8 +173,9 @@ export function createFetcher({ fetchFn = fetch, minDelayMs = 2000, cache = {}, 
 
 // Bounded frontier requests check policy before every hop. The supplied gate
 // covers reading the response as well as opening the connection.
-export function createGuardedFetcher({ allowUrl, request, gate, minDelayMs, maxRedirects = 5, onResponse = () => {} }) {
+export function createGuardedFetcher({ allowUrl, request, gate, minDelayMs, maxRedirects = 5, maxBytes = MAX_BYTES, onResponse = () => {} }) {
   const robots = new Map();
+  const pendingRobots = new Map();
   const emptyRules = { allow: [], disallow: [], crawlDelay: null };
 
   async function readResponse(url, headers, signal, gapMs, context, wantsBody) {
@@ -195,11 +196,11 @@ export function createGuardedFetcher({ allowUrl, request, gate, minDelayMs, maxR
         await response.body?.cancel();
         return { status: response.status, headers: response.headers, retryAfter };
       }
-      if (Number(response.headers.get('content-length')) > MAX_BYTES) {
+      if (Number(response.headers.get('content-length')) > maxBytes) {
         await response.body?.cancel();
         throw new Error('Response exceeded the byte limit');
       }
-      return { status: response.status, headers: response.headers, retryAfter, html: await readCapped(response, true) };
+      return { status: response.status, headers: response.headers, retryAfter, html: await readCapped(response, true, maxBytes) };
     });
   }
 
@@ -224,9 +225,16 @@ export function createGuardedFetcher({ allowUrl, request, gate, minDelayMs, maxR
 
   async function rulesFor(url, signal, context) {
     if (robots.has(url.origin)) return robots.get(url.origin);
-    const result = await readRobots(url, signal, context);
-    if (result.rules) robots.set(url.origin, result);
-    return result;
+    if (pendingRobots.has(url.origin)) return pendingRobots.get(url.origin);
+    const pending = readRobots(url, signal, context);
+    pendingRobots.set(url.origin, pending);
+    try {
+      const result = await pending;
+      if (result.rules) robots.set(url.origin, result);
+      return result;
+    } finally {
+      pendingRobots.delete(url.origin);
+    }
   }
 
   return async function fetchGuardedPage(value, { etag, lastModified, signal, context } = {}) {
