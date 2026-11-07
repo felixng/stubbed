@@ -4,21 +4,35 @@ import { fingerprint, healthSignals, archiveQueue } from './state.mjs';
 
 // One bounded site visit. Save a page's facts before its cursor, so an
 // interruption can retry the page without losing history. Publishing upserts.
-export async function crawlPersistentSite({ site, venues, run, spend, readers, fetchPage, store, load, publish, maxPages = 100, deadline = Infinity, now = Date.now }) {
+export async function crawlPersistentSite({ site, venues, run, spend, readers, fetchPage, store, load, publish, maxPages = 100, bounded = false, deadline = Infinity, now = Date.now }) {
   const pages = new Map((site.pages ?? []).map(p => [p.url,p]));
   const queue = [{url:site.whats_on_url,type:'whats_on'}, ...archiveQueue(site,[...pages.values()]).map(url => ({url,type:'archive'}))];
   const knownTitles = new Set([...pages.values()].flatMap(p=>p.titles??[]));
   const visited = new Set(); const signals = []; let findingsCount=0, fetched=0, unchanged=0;
-  let archiveFailed=false, archivePending=Boolean(site.archive_url);
+  let archiveFailed=false, blocked=false, deferred=null;
+  const failedVersions = new Set();
   while (queue.length && fetched < maxPages && now() < deadline) {
     const {url,type} = queue.shift();
     if (visited.has(url)) continue;
     visited.add(url); fetched++;
     const previous = pages.get(url);
     const page = await fetchPage(url);
+    if (page.status === 'deferred' || page.status === 'rate_limited') {
+      queue.unshift({url,type});
+      deferred = page.error ?? 'request_deferred';
+      break;
+    }
+    if (page.status === 'blocked') {
+      blocked = true;
+      signals.push('link_failed');
+      if (type === 'archive') archiveFailed = true;
+      await store.page(site,{...previous,url,type,status:'blocked',failures:(previous?.failures??0)+1});
+      continue;
+    }
     if (page.status !== 'ok' && page.status !== 'not_modified') {
       signals.push('link_failed'); if(type==='archive') archiveFailed=true;
-      await store.page(site,{...previous,url,type,status:page.status === 'blocked' ? 'blocked':'failed',failures:(previous?.failures??0)+1});
+      failedVersions.add(`${url}:${page.error ?? 'link_failed'}`);
+      await store.page(site,{...previous,url,type,status:'failed',failures:(previous?.failures??0)+1});
       continue;
     }
     const sameRules = (previous?.rule_id ?? null) === (site.rule_id ?? null);
@@ -36,6 +50,7 @@ export async function crawlPersistentSite({ site, venues, run, spend, readers, f
     if (site.rules && !findings.length) health.signals.push('no_findings');
     if (notes.some(n=>n.includes('failed the page check'))) health.signals.push('page_check_failed');
     if (health.signals.length) {
+      failedVersions.add(`${url}:${hash}`);
       signals.push(...health.signals); if(type==='archive') archiveFailed=true;
       await store.page(site,{...previous,url,type,status:'failed',failures:(previous?.failures??0)+1});
       continue;
@@ -52,8 +67,11 @@ export async function crawlPersistentSite({ site, venues, run, spend, readers, f
     if(type==='archive' && next && (site.archive_status !== 'done' || newTitles)) queue.push({url:next,type});
     for(const title of health.titles) knownTitles.add(title);
   }
-  archivePending=queue.some(p=>p.type==='archive');
+  const archivePending=queue.some(p=>p.type==='archive');
   const archive_status = site.archive_url ? (archiveFailed || archivePending ? 'in_progress':'done') : 'done';
   await store.site(site,{archive_status,health:[...new Set(signals)]});
-  return {url:site.whats_on_url,venues,status:signals.length?'failed':'ok',findings:findingsCount,methods:site.rules?['rules']:[],note:`${fetched} pages, ${unchanged} unchanged${signals.length?`; ${[...new Set(signals)].join(', ')}`:''}`};
+  const limited = deferred || (bounded && queue.length);
+  const status = limited && !blocked ? 'deferred' : signals.length ? 'failed' : 'ok';
+  return {url:site.whats_on_url,venues,status,repairVersion:fingerprint(JSON.stringify([...failedVersions].sort())),
+    reason:blocked?'access_blocked':deferred??(limited?'visit_limit':null),findings:findingsCount,methods:site.rules?['rules']:[],note:`${fetched} pages, ${unchanged} unchanged${signals.length?`; ${[...new Set(signals)].join(', ')}`:''}`};
 }

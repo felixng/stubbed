@@ -32,8 +32,8 @@ export function createFrontierStore(db = sql => runPsql(sql, { timeout: 15_000 }
       return scalar(`public.reparse_crawl_scope(${sqlText(source)}, ${sqlText(scope)})`);
     },
 
-    async claim(source, stage, scope, owner) {
-      return scalar(`public.claim_crawl_task(${sqlText(source)}, ${sqlText(stage)}, ${sqlText(scope)}, ${sqlText(owner)})`);
+    async claim(source, stage, scope, owner, expectedParser) {
+      return scalar(`public.claim_due_crawl_task(${sqlText(source)}, ${sqlText(stage)}, ${sqlText(scope)}, ${sqlText(owner)}, ${sqlText(expectedParser)})`);
     },
 
     async renew(task) {
@@ -54,6 +54,10 @@ export function createFrontierStore(db = sql => runPsql(sql, { timeout: 15_000 }
     async reserve(task, host, gapMs) {
       return scalar(`public.reserve_crawl_request(${uuidLiteral(task.id)}, ${uuidLiteral(task.lease_token)},
         ${sqlText(host)}, ${Math.min(2_147_483_647, Math.ceil(gapMs))})`);
+    },
+
+    async reserveOfficial(run, host, gapMs) {
+      return scalar(`public.reserve_official_crawl_request(${uuidLiteral(run)}, ${sqlText(host)}, ${Math.min(2_147_483_647, Math.ceil(gapMs))})`);
     },
 
     async release(host, token, cooldown) {

@@ -50,3 +50,15 @@ export async function selectedWork(ids,db=runPsql){
 }
 export async function claim(siteId,runId,owner,db=runPsql){const [ok]=await db(`select to_jsonb(public.claim_crawl_site(${uuidLiteral(siteId)},${uuidLiteral(runId)},${uuidLiteral(owner)}))`);return ok;}
 export async function release(siteId,owner,db=runPsql){await db(`select to_jsonb(public.release_crawl_site(${uuidLiteral(siteId)},${uuidLiteral(owner)}))`);}
+
+export async function reserveSpend(run,site,amount,limit,db=runPsql){
+ const [id]=await db(`select coalesce(to_jsonb(public.reserve_crawl_ai_spend(${uuidLiteral(run)}, ${jsonLiteral(site)}#>>'{}', ${Number(amount)}, ${Number(limit)})), 'null'::jsonb)`);
+ return id;
+}
+export async function settleSpend(id,amount,db=runPsql){
+ await db(`select public.settle_crawl_ai_spend(${uuidLiteral(id)}, ${Number(amount)})`);
+}
+export async function reserveRepair(site,version,db=runPsql){
+ const [allowed]=await db(`select to_jsonb(public.reserve_crawl_repair(${uuidLiteral(site)}, ${jsonLiteral(version)}#>>'{}'))`);
+ return allowed;
+}

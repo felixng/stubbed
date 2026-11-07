@@ -406,3 +406,72 @@ node supabase/scripts/crawl/loop.mjs --source playbill --scope broadway-director
 The robots file in the verified preflight declared no sitemap. Do not guess
 archive URLs or retry a blocked source through a different host. Production
 keys and labelled dates enter the shared identity and run evidence queues.
+
+### Incremental scheduling (#427)
+
+The Catalogue crawl workflow keeps its saved-run dispatch via `run_id`.
+Scheduled and source/stage dispatches require the repository variable
+`CRAWL_LOOP_ENABLED=true`. They also require the selected source's
+`collection_enabled` switch. The aggregate sources start with collection and
+publication off. The official site's existing saved-run path remains available.
+
+Use the existing Actions secret `SUPABASE_DB_URL` for the worker database
+connection. For local operator commands, provide the URL through the environment
+and use a role with the crawl grants. Install the crawl dependencies with
+`npm ci --prefix supabase/scripts/crawl --ignore-scripts`. An
+`ANTHROPIC_API_KEY` is optional. Existing healthy official rules and the two
+aggregate adapters work without it. Official model calls require a durable
+reservation under the $1 run and $0.20 site caps. Unknown billable outcomes
+retain the reservation. A content and parser version can start at most three
+AI repair cycles. Robots exclusions and access blocks skip repair.
+
+Examples for an already enabled source:
+
+```sh
+# Discovery only. Repeat the same command to resume due directory work.
+CRAWL_LOOP_ENABLED=true node supabase/scripts/crawl/loop.mjs \
+  --scheduled --source london_theatre --stage directory
+
+# Resume all due stages and drain enabled publication.
+CRAWL_LOOP_ENABLED=true node supabase/scripts/crawl/loop.mjs \
+  --scheduled --source london_theatre --stage all
+
+# Explicit reparse in place. Keep the saved evidence and discard validators.
+node supabase/scripts/crawl/loop.mjs --source london_theatre --scope venue-directory \
+  --reparse --max-pages 25 --max-minutes 10
+```
+
+The default scheduled invocation shares 100 task page attempts and 20 minutes
+across enabled sources. Postgres limits staged and scheduled HTTP concurrency to
+four requests globally and one per host. HTTP request counts also include
+robots and redirects. The worker gives each eligible source a share of time
+and pages. Within a source, every fifth claim gives priority to the oldest
+eligible lower-priority task. New links resume in the current scan. A newly
+observed pagination task reopens enumeration. A 304 with the same parser
+reuses its saved observations. An adapter upgrade fetches a fresh body.
+
+Directory metadata is due monthly. Venue lists are due weekly or daily when
+the source labels them current or upcoming. Current and imminent events are
+due daily, future announcements weekly, and explicitly closed events after
+180 days. A past start without evidence the run is continuing does not
+make it current. Actions summaries and Backstage show attempts, HTTP requests,
+current task counts, and publication outcomes independently.
+
+Disable all scheduled execution with `gh variable delete CRAWL_LOOP_ENABLED`
+or set the variable to `false`. Pause a single source immediately in
+Backstage → Crawl → Sources. Operators can also use these separate,
+privileged SQL commands through the existing linked project:
+
+```sql
+-- Stop collection for one source and retain its checkpoints.
+update public.crawl_sources set collection_enabled = false
+where source_key = 'london_theatre';
+
+-- Stop publishing new facts from one source and retain its last-good facts.
+update public.crawl_sources set publication_enabled = false
+where source_key = 'london_theatre';
+```
+
+Run identity and run publication independently with the commands above to
+recover a pending batch. For rollback, turn off the relevant switch and leave
+the migration and saved checkpoints in place.

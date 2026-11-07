@@ -1,9 +1,13 @@
 #!/usr/bin/env node
-import { runFrontierCli } from './frontier.mjs';
+import { formatFrontierProgress, HostDeferred, hostGate, runFrontierCli, runScheduledSource, scheduledSources } from './frontier.mjs';
+import { createFrontierStore } from './frontier-store.mjs';
+import { canonicalTaskUrl } from './frontier-url.mjs';
+import { requestPublicPage } from './frontier-network.mjs';
+import { parseArgs } from 'node:util';
 import {randomUUID} from 'node:crypto';
 import {appendFile} from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
-import {createFetcher,createHostGate} from './fetch.mjs';
+import {createFetcher,createGuardedFetcher,createHostGate} from './fetch.mjs';
 import {createRun,finishRun,loadSite,readRun,startRun} from './load.mjs';
 import {crawlPersistentSite} from './persistent.mjs';
 import {savePage,saveSite,publish} from './site-store.mjs';
@@ -25,9 +29,9 @@ export function executionLimits(env,run=null){
 }
 // Dependency-injected orchestration: deterministic ordering, bounded work,
 // isolated failures. No model step is needed to read an existing healthy site.
-export async function runLoop({limits,deps,now=Date.now}) {
+export async function runLoop({limits,deps,now=Date.now,deadline=now()+limits.maxMs}) {
  if(!limits.enabled) return {disabled:true,sites:[],spend:0};
- const deadline=now()+limits.maxMs,sites=[];
+ const sites=[];
  const work=await deps.work(limits.maxSites);
  const counters={searches:0,maxSearches:limits.maxSearches};
  const queue=work.slice(0,limits.maxSites).filter((venue,index,all)=>!venue.crawl_site_id || all.findIndex(v=>v.crawl_site_id===venue.crawl_site_id)===index);
@@ -48,12 +52,12 @@ export async function runLoop({limits,deps,now=Date.now}) {
   const budgetKey=site?.id??venue.website??venue.id;
   const model=request=>deps.model({...request,siteId:budgetKey});
   const knownTitles=site?.pages?.filter(p=>p.type==='whats_on').flatMap(p=>p.titles??[])??[];
-  async function setup(repair=false) {
+  async function setup(repair=false, repairModel=model) {
    if(repair && site) {
-    const links=await deps.discover({venue,model,limits:counters,repair:true});
+    const links=await deps.discover({venue,model:repairModel,limits:counters,repair:true});
     if(links.deferred||links.failed)return links;
     const candidate={...site,whats_on_url:links.whats_on_url,archive_url:links.archive_url??site.archive_url};
-    const prepared=await deps.writeRules({site:candidate,venues:site.venues,model,knownTitles,deferActivation:true});
+    const prepared=await deps.writeRules({site:candidate,venues:site.venues,model:repairModel,knownTitles,deferActivation:true});
     if(prepared.deferred||prepared.failed)return prepared;
     // Keep existing links and rules live until the replacement has passed the
     // page, date and known-show checks. Failed proposals never replace them.
@@ -78,7 +82,7 @@ export async function runLoop({limits,deps,now=Date.now}) {
   }
   try {
    if(site && !await claimSite(site)){record.status='deferred';record.reason='site_busy';return;}
-   if(site?.status==='needs_attention' && !deps.manual) {record.status='needs_attention';return;}
+   if(site?.status==='needs_attention' && !deps.manual && !deps.reserveRepair) {record.status='needs_attention';return;}
    let ready=await setup();
    if(!ready.ok) {
     record.status=ready.deferred?'deferred':'needs_attention';record.reason=ready.reason;
@@ -87,20 +91,35 @@ export async function runLoop({limits,deps,now=Date.now}) {
     await deps.recordVenue(venue,ready.deferred?null:ready.reason);return;
    }
    let result=await deps.crawl(site,{deadline,maxPages:limits.maxPages});
-   if(result.status==='failed') {
-    if((site.repair_attempts??0)>=3 && !deps.manual){record.status='needs_attention';record.reason='repair_limit';await deps.recordSite(site,{status:'needs_attention',reason:'repair_limit'});await deps.recordVenue(venue,'repair_limit');return;}
+   if(result.status==='failed'&&result.reason!=='access_blocked') {
+    if(!deps.reserveRepair && (site.repair_attempts??0)>=3 && !deps.manual){record.status='needs_attention';record.reason='repair_limit';await deps.recordSite(site,{status:'needs_attention',reason:'repair_limit'});await deps.recordVenue(venue,'repair_limit');return;}
     if(now()>=deadline-90000){record.status='deferred';record.reason='time_limit';return;}
-    const repaired=await setup(true);
+    let reservation,attempt;
+    const repairModel=deps.reserveRepair?request=>model({...request,beforeRequest:()=>{
+     reservation??=deps.reserveRepair(site.id,`${site.rule_id??'structured-v1'}:${result.repairVersion??result.note}`).then(value=>{attempt=value;return value>0;});
+     return reservation;
+    }}):model;
+    const repaired=await setup(true,repairModel);
     if(repaired.reason==='site_busy'){record.status='deferred';record.reason='site_busy';return;}
     if(!repaired.deferred) await deps.recordSite(site,{status:'pending',reason:repaired.reason??null,attempt:true});
     if(repaired.ok)result=await deps.crawl(site,{deadline,maxPages:limits.maxPages});
     else {
      record.status=repaired.deferred?'deferred':'needs_attention';record.reason=repaired.reason;
      // Outages/budget exhaustion wait; only exhausted repair attempts need the owner.
-     const exhausted=(site.repair_attempts??0)+1>=3;
-     await deps.recordSite(site,{status:!repaired.deferred&&exhausted?'needs_attention':'pending',reason:repaired.reason});
+     const exhausted=repaired.reason==='repair_limit'||(!repaired.deferred&&attempt===3)||(!deps.reserveRepair&&(site.repair_attempts??0)+1>=3);
+     if(exhausted)record.status='needs_attention';
+     await deps.recordSite(site,{status:exhausted?'needs_attention':'pending',reason:repaired.reason});
      await deps.recordVenue(venue,repaired.deferred?null:repaired.reason);return;
     }
+   }
+   if(result.reason==='access_blocked'||result.status==='blocked'||result.status==='deferred'){
+    const status=result.reason==='access_blocked'?'blocked':result.status;
+    Object.assign(record,{status,reason:result.reason,findings:result.findings,note:result.note});
+    if(status==='blocked'){
+     await deps.recordSite(site,{status:'pending',reason:result.reason});
+     await deps.recordVenue(venue,result.reason);
+    }
+    return;
    }
    record.status=result.status==='failed'?'needs_attention':'done';record.findings=result.findings;record.note=result.note;
    await deps.recordSite(site,{status:result.status==='failed'?'needs_attention':'ready',reason:result.status==='failed'?result.note:null,crawled:result.status!=='failed'});
@@ -111,45 +130,143 @@ export async function runLoop({limits,deps,now=Date.now}) {
    try{for(const id of claimed)await deps.release?.(id,owner);}finally{await checkpoint();}
   }
  }
- async function worker(){while(cursor<queue.length && now()<deadline-90000){const venue=queue[cursor++];await processVenue(venue);}}
+ async function worker(){while(cursor<queue.length && now()<deadline-90000 && !deps.exhausted?.()){const venue=queue[cursor++];await processVenue(venue);}}
  const workers=await Promise.allSettled(Array.from({length:Math.min(4,queue.length)},()=>worker()));
  const failed=workers.find(w=>w.status==='rejected');if(failed)throw failed.reason;
  return {sites,searches:counters.searches};
 }
-export async function main(env=process.env,{runId}={}) {
+export async function main(env=process.env,{runId,scheduled,deadline,maxPages}={}) {
  let run=runId?await readRun(runId):null;
  if(runId && (!run || run.status!=='queued'))throw new Error('Run is missing or already started');
  const limits=executionLimits(env,run);
  if(!limits.enabled){console.log('Crawl loop disabled. Set CRAWL_LOOP_ENABLED=true to start.');return;}
+ if(scheduled){
+  limits.budgetUsd=Math.min(1,limits.budgetUsd);
+  limits.siteBudgetUsd=Math.min(0.20,limits.siteBudgetUsd);
+ }
  const spend={usd:0};
  const gate=createHostGate();
- const fetchPage=createFetcher({conditional:false,gate});
- const model=createModel({spend,budgetUsd:limits.budgetUsd,siteBudgetUsd:limits.siteBudgetUsd});
+ const stopSignal=scheduled?AbortSignal.timeout(Math.max(1,deadline-Date.now()-10_000)):undefined;
+ let pages=0;
+ const frontier=createFrontierStore();
+ const officialGate=scheduled?hostGate({store:{
+  reserve:(id,host,gap)=>frontier.reserveOfficial(id,host,gap),
+  release:frontier.release,
+ },now:Date.now,onRequest:()=>{}}):null;
+ const guarded=new Map();
+ const makeFetcher=(cache={},conditional=true)=>{
+  if(!scheduled)return createFetcher({cache,conditional,gate});
+  return async value=>{
+   if(stopSignal.aborted||pages>=maxPages)return {status:'deferred',error:stopSignal.aborted?'time_limit':'page_budget'};
+   let host;
+   try{host=new URL(value).hostname;}catch{return {status:'failed',error:'Invalid source URL'};}
+   const url=canonicalTaskUrl(value,{allowedHosts:[host]});
+   if(!url)return {status:'failed',error:'Invalid source URL'};
+   pages++;
+   if(!guarded.has(host))guarded.set(host,createGuardedFetcher({
+    allowUrl:target=>canonicalTaskUrl(target,{allowedHosts:[host]}),
+    minDelayMs:2000,request:requestPublicPage,gate:officialGate,
+   }));
+   try{
+    const page=await guarded.get(host)(url,{...(conditional?cache[url]:{}),signal:stopSignal,context:run.id});
+    return page;
+   }catch(error){
+    if(stopSignal.aborted||error instanceof HostDeferred||error.message==='Task lease or source policy changed')return {status:'deferred',error:stopSignal.aborted?'time_limit':'host_cooldown'};
+    return {status:'failed',error:'Could not fetch the page'};
+   }
+  };
+ };
+ const fetchPage=makeFetcher({},false);
+ const model=createModel({
+  apiKey:env.ANTHROPIC_API_KEY,spend,budgetUsd:limits.budgetUsd,siteBudgetUsd:limits.siteBudgetUsd,stopSignal,
+  ...(scheduled?{reserveSpend:(site,amount,limit)=>store.reserveSpend(run.id,site,amount,limit),settleSpend:store.settleSpend}:{}),
+ });
  const lookupWebsite=async id=>{
   if(!/^Q[1-9][0-9]*$/.test(id))return null;
   const page=await fetchPage(`https://www.wikidata.org/wiki/Special:EntityData/${id}.json`);
+  if(page.status==='deferred'||page.status==='rate_limited')return page;
   try{return JSON.parse(page.html).entities[id].claims.P856?.find(c=>typeof c.mainsnak?.datavalue?.value==='string')?.mainsnak.datavalue.value??null;}catch{return null;}
  };
- const search=async query=>{const page=await fetchPage(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`);return page.status==='ok'?searchCandidates(page.html):[];};
+ const search=async query=>{const page=await fetchPage(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`);return page.status==='ok'?searchCandidates(page.html):page.status==='deferred'||page.status==='rate_limited'?page:[];};
  if(run)await startRun(run.id);
  else run=await createRun({pipeline:'discover',venueIds:[],method:'rules',branch:env.GITHUB_REF_NAME,commitSha:env.GITHUB_SHA,budgetUsd:limits.budgetUsd});
  if(env.GITHUB_ENV)await appendFile(env.GITHUB_ENV,`CRAWL_RUN_ID=${run.id}\n`);
  const checkpoint=async summary=>finishRun(run.id,{status:'running',summary,costUsd:spend.usd});
  try {
-  const result=await runLoop({limits,deps:{work:async count=>{const rows=runId?await store.selectedWork(run.venue_ids):await store.work(count);if(!runId)await store.setRunVenues(run.id,rows.map(v=>v.id));return rows;},loadSite:store.loadWorkSite,model,manual:Boolean(runId),claim:(id,owner)=>store.claim(id,run.id,owner),release:store.release,
+  const result=await runLoop({limits,deadline,deps:{exhausted:scheduled?()=>pages>=maxPages:undefined,reserveRepair:scheduled?store.reserveRepair:undefined,work:async count=>{const rows=runId?await store.selectedWork(run.venue_ids):await store.work(count);if(!runId)await store.setRunVenues(run.id,rows.map(v=>v.id));return rows;},loadSite:store.loadWorkSite,model,manual:Boolean(runId),claim:(id,owner)=>store.claim(id,run.id,owner),release:store.release,
    hasStructured:async site=>{const page=await fetchPage(site.whats_on_url);return page.status==='ok'&&checkFindings(page.html,structuredReader({url:site.whats_on_url,html:page.html},{venues:site.venues})??[]).some(f=>f.start_date);},
    discover:args=>discoverLinks({...args,fetchPage,lookupWebsite,search}),saveLinks:store.saveLinks,recordSite:store.recordSite,recordVenue:store.recordVenue,
    activatePrepared:(site,result)=>store.adoptVersion(site,result.ruleId,result.validation),
    writeRules:async args=>writeRules({...args,fetchPage,proposed:await store.proposed(args.site),saveVersion:(rules,author,check)=>store.saveVersion(args.site,rules,author,check),activate:(id,check)=>store.activate(args.site,id,check)}),
-   crawl:(site,options)=>{const cache=Object.fromEntries((site.pages??[]).filter(p=>p.status==='ok'&&p.rule_id===site.rule_id).map(p=>[p.url,{etag:p.etag,lastModified:p.last_modified}]));return crawlPersistentSite({site,venues:site.venues,run,spend,readers:[rulesReader,structuredReader],fetchPage:createFetcher({cache,gate}),store:{page:savePage,site:saveSite},load:(url,findings)=>loadSite(run.id,url,findings),publish:()=>publish(run.id),...options});},checkpoint}});
+   crawl:(site,options)=>{const cache=Object.fromEntries((site.pages??[]).filter(p=>p.status==='ok'&&p.rule_id===site.rule_id).map(p=>[p.url,{etag:p.etag,lastModified:p.last_modified}]));return crawlPersistentSite({site,venues:site.venues,run,spend,readers:[rulesReader,structuredReader],fetchPage:makeFetcher(cache),bounded:scheduled,store:{page:savePage,site:saveSite},load:(url,findings)=>loadSite(run.id,url,findings),publish:()=>publish(run.id),...options});},checkpoint}});
+  if(scheduled) result.pages=pages;
   const progress=await store.progress();
   await finishRun(run.id,{status:'done',summary:{...result,progress,findings:result.sites.reduce((n,s)=>n+(s.findings??0),0)},costUsd:spend.usd});
   const report=`# Crawl loop\n\n${result.sites.length} sites, ${result.searches} searches, $${spend.usd.toFixed(4)}.\n\n${Object.entries(progress).map(([key,value])=>`- ${key}: ${value}`).join('\n')}\n\n${result.sites.map(s=>`- ${s.venue_id}: ${s.status}${s.reason?` (${s.reason})`:''}`).join('\n')}\n`;
   console.log(report);if(env.GITHUB_STEP_SUMMARY)await appendFile(env.GITHUB_STEP_SUMMARY,report);
+  return result;
  } catch(error){await finishRun(run.id,{status:'failed',summary:{...(await readRun(run.id))?.summary,error:'Loop interrupted'},costUsd:spend.usd});throw error;}
 }
+export async function runScheduled({
+ env=process.env,source,stage='all',now=Date.now,frontier=createFrontierStore(),
+ runSource=runScheduledSource,runOfficial=main,
+}={}){
+ const limits=loopLimits(env);
+ if(!limits.enabled){console.log('Crawl loop disabled. Set CRAWL_LOOP_ENABLED=true to start.');return [];}
+ if(!['all','directory','venue','event'].includes(stage))throw new Error('Unknown crawl stage');
+ if(source && ![...scheduledSources,'official'].includes(source))throw new Error('Unknown crawl source');
+ if(source==='official'&&stage!=='all')throw new Error('The official-site loop uses the complete site workflow');
+ const deadline=now()+limits.maxMs;
+ let remaining=Math.min(100,limits.maxPages);
+ const keys=source?[source]:stage==='all'?[...scheduledSources,'official']:scheduledSources;
+ const sources=await Promise.all(keys.map(key=>frontier.source(key)));
+ if(sources.some(row=>!row))throw new Error('Scheduled crawl source missing in the database');
+ const active=sources.filter(row=>row.collection_enabled&&!row.paused_reason&&!row.operator_paused_at);
+ const reports=[];
+ for(const [index,row] of active.entries()){
+  if(!remaining||now()>=deadline-90_000)break;
+  const count=active.length-index;
+  const maxPages=Math.ceil(remaining/count);
+  const sourceDeadline=now()+Math.floor((deadline-now())/count);
+  const key=row.source_key;
+  try{
+   const result=key==='official'
+    ?await runOfficial(env,{scheduled:true,deadline:sourceDeadline,maxPages})
+    :await runSource(row,{stage,maxPages,stopSignal:AbortSignal.timeout(Math.max(1,sourceDeadline-now()-90_000))},frontier);
+   remaining-=result.pages??0;
+   reports.push({...result,source:key});
+   if(env.GITHUB_STEP_SUMMARY&&key!=='official'){
+    try{await appendFile(env.GITHUB_STEP_SUMMARY,await formatFrontierProgress(frontier,key));}
+    catch{console.log(`Progress snapshot unavailable for ${key}; use the source progress view.`);}
+   }
+  }catch{
+   // A failed process may have issued any number of its allotted requests.
+   remaining-=maxPages;
+   reports.push({source:key,error:'Source operation failed; saved leases and checkpoints will resume'});
+  }
+ }
+ const summary=`## Scheduled crawl
+
+Page allowance remaining: ${remaining}.
+
+`+
+  sources.filter(row=>!active.includes(row)).map(row=>`- ${row.source_key}: collection disabled or paused
+`).join('')+
+  reports.map(report=>`- ${report.source}: ${report.error??JSON.stringify({pages:report.pages,requests:report.requests,statuses:report.statuses,identities:report.identities,runs:report.runs})}
+`).join('');
+ console.log(summary);
+ if(env.GITHUB_STEP_SUMMARY)await appendFile(env.GITHUB_STEP_SUMMARY,summary);
+ if(reports.some(report=>report.error))throw new Error('One or more crawl sources failed; see run summary');
+ return reports;
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  if (process.argv.length > 2) {
+  if (process.argv[2] === '--scheduled') {
+    Promise.resolve().then(()=>{
+      const {values}=parseArgs({args:process.argv.slice(3),options:{source:{type:'string'},stage:{type:'string'}}});
+      return runScheduled(values);
+    }).catch(error=>{console.error(error.message);process.exitCode=1;});
+  } else if (process.argv.length > 2) {
     runFrontierCli().catch(error => { console.error(error.message); process.exitCode = 1; });
   } else {
     main().catch(() => { console.error('Crawl loop failed; see saved run for progress.'); process.exitCode = 1; });

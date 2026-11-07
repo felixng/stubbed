@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {shortlistLinks,homepageNamesVenue,discoverLinks,searchCandidates} from './discover.mjs';
 import {writeRules,checkRules,trimmedHtml} from './write-rules.mjs';
 import {createModel} from './model.mjs';
-import {runLoop,loopLimits} from './loop.mjs';
+import {runLoop,loopLimits,runScheduled} from './loop.mjs';
 const html=readFileSync(new URL('./fixtures/almeida-archive.html',import.meta.url),'utf8');
 const rules=JSON.parse(readFileSync(new URL('./almeida-rules.json',import.meta.url)));
 const venues=[{id:'v',name:'Almeida Theatre'}];
@@ -77,4 +77,46 @@ test('bad repairs keep existing links/rules, and limits clamp unsafe configurati
  deps.loadSite=async()=>({id:'s',rules,venues,pages:[],repair_attempts:0});deps.crawl=async()=>({status:'failed',note:'junk_titles'});deps.discover=async()=>({whats_on_url:'https://new.test'});deps.writeRules=async args=>{assert.equal(args.deferActivation,true);return {failed:true,reason:'known_shows_missing'};};deps.saveLinks=async()=>{changed=true;};
  const result=await runLoop({limits:config,deps});assert.equal(changed,false);assert.equal(result.sites[0].reason,'known_shows_missing');
  const capped=loopLimits({CRAWL_LOOP_ENABLED:'false',CRAWL_MAX_SITES:'999',CRAWL_MAX_SPEND_USD:'999',CRAWL_MAX_MINUTES:'999'});assert.equal(capped.enabled,false);assert.equal(capped.maxSites,100);assert.equal(capped.budgetUsd,10);assert.equal(capped.maxMs,1200000);
+});
+
+test('scheduled dispatch shares the page and time caps and skips paused sources',async()=>{
+ const now=()=>0;
+ const seen=[];
+ const env={CRAWL_LOOP_ENABLED:'true',CRAWL_MAX_PAGES:'200'};
+ const frontier={source:async key=>({source_key:key,collection_enabled:true,operator_paused_at:key==='playbill'?'paused':null})};
+ const result=await runScheduled({
+  env,now,frontier,
+  runSource:async(row,options)=>{seen.push([row.source_key,options.maxPages]);return {pages:12};},
+  runOfficial:async(_,options)=>{seen.push(['official',options.maxPages,options.deadline]);return {pages:options.maxPages};},
+ });
+ assert.deepEqual(seen,[['london_theatre',50],['official',88,1_200_000]]);
+ assert.equal(result.reduce((sum,row)=>sum+row.pages,0),100);
+ assert.deepEqual(await runScheduled({env:{},frontier:{source:()=>assert.fail('Master switch must short circuit')}}),[]);
+});
+
+test('access blocks and exhausted visits never start official AI repair',async()=>{
+ for(const status of ['blocked','deferred']){
+  const deps=loopDeps([{id:'a'}]);
+  deps.loadSite=async()=>({id:'s',rules,venues,pages:[]});
+  deps.discover=async()=>assert.fail('Access blocks and limits are not parser failures');
+  deps.crawl=async()=>({status,reason:status==='blocked'?'access_blocked':'page_budget',findings:0});
+  const result=await runLoop({limits:config,deps});
+  assert.equal(result.sites[0].status,status);
+ }
+});
+
+test('model requires a durable reservation and an allowed repair before sending a request',async()=>{
+ const attempts=[];
+ const args={siteId:'s',system:'Return JSON',payload:{html:'fixture'},schema:{type:'object'}};
+ const fetchFn=async()=>assert.fail('Model request must be deferred');
+ const denied=createModel({apiKey:'test',budgetUsd:1,fetchFn,reserveSpend:async()=>null});
+ assert.equal((await denied({...args,beforeRequest:()=>assert.fail('An exhausted budget must not consume a repair')})).reason,'budget_limit');
+ const settled=[];
+ const stopped=createModel({apiKey:'test',budgetUsd:1,fetchFn,
+  reserveSpend:async()=>{attempts.push('reserved');return 'id';},
+  settleSpend:async(...value)=>settled.push(value),
+ });
+ assert.equal((await stopped({...args,beforeRequest:()=>false})).reason,'repair_limit');
+ assert.deepEqual(attempts,['reserved']);
+ assert.deepEqual(settled,[['id',0]]);
 });
