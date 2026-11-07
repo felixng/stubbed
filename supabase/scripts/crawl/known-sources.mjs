@@ -32,7 +32,8 @@ const sources = [
   },
   {
     name: 'Circle in the Square Theatre', city: 'New York',
-    website: 'https://playbill.com/venue/circle-in-the-square-theatre-vault-0000000092',
+    website: 'https://circleinthesquare.com/',
+    // The theatre's ticket page names the current show but lacks run dates.
     whats_on_url: 'https://playbill.com/venue/circle-in-the-square-theatre-vault-0000000092',
     rules: {
       item: '.bsp-list-promo-section-text:has(.bsp-list-promo-title a[href*="/production/"])',
