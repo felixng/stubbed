@@ -313,3 +313,27 @@ jobs also process at most four sites concurrently.
 Apply `supabase db push` for the new pipeline column, manual selection validation
 and internal lease table before using this change. No live runs or hosted changes
 were performed during implementation.
+
+
+### Staged catalogue worker (#421)
+
+The existing `node supabase/scripts/crawl/loop.mjs` invocation continues to run
+the legacy official-site worker. The staged command selects source, scope and
+stage independently:
+
+```sh
+node supabase/scripts/crawl/loop.mjs --source official --scope <crawl-site-uuid> \
+  --stage venue --max-pages 1 --max-minutes 2 --dry-run
+```
+
+The scoped official adapter previews structured findings. Add `--refresh` or
+`--reparse` only for explicit operator runs. These operations are mutually
+exclusive with dry run. A normal run resumes the current scan. A result marked
+`checkpoint` has reached its page or time cap. Invoke the same command to
+resume from Postgres. A restarted worker needs no cache file. The staged
+runner records pending publication but performs no catalogue writes.
+
+Keep both aggregate collection and publication switches off until their
+respective acceptance checks pass. A paused reason records access blocks.
+Inspect it before retrying. The worker never follows an alternate host to
+bypass a block.

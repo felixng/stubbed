@@ -310,6 +310,7 @@ internal enum PublicSchema {
     internal let enumerationStatus: String
     internal let id: UUID
     internal let isCurrent: Bool
+    internal let pausedReason: String?
     internal let scopeKey: String
     internal let siteId: UUID?
     internal let sourceId: UUID
@@ -319,6 +320,7 @@ internal enum PublicSchema {
       case enumerationStatus = "enumeration_status"
       case id = "id"
       case isCurrent = "is_current"
+      case pausedReason = "paused_reason"
       case scopeKey = "scope_key"
       case siteId = "site_id"
       case sourceId = "source_id"
@@ -330,6 +332,7 @@ internal enum PublicSchema {
     internal let enumerationStatus: String?
     internal let id: UUID?
     internal let isCurrent: Bool?
+    internal let pausedReason: String?
     internal let scopeKey: String
     internal let siteId: UUID?
     internal let sourceId: UUID
@@ -339,6 +342,7 @@ internal enum PublicSchema {
       case enumerationStatus = "enumeration_status"
       case id = "id"
       case isCurrent = "is_current"
+      case pausedReason = "paused_reason"
       case scopeKey = "scope_key"
       case siteId = "site_id"
       case sourceId = "source_id"
@@ -350,6 +354,7 @@ internal enum PublicSchema {
     internal let enumerationStatus: String?
     internal let id: UUID?
     internal let isCurrent: Bool?
+    internal let pausedReason: String?
     internal let scopeKey: String?
     internal let siteId: UUID?
     internal let sourceId: UUID?
@@ -359,10 +364,59 @@ internal enum PublicSchema {
       case enumerationStatus = "enumeration_status"
       case id = "id"
       case isCurrent = "is_current"
+      case pausedReason = "paused_reason"
       case scopeKey = "scope_key"
       case siteId = "site_id"
       case sourceId = "source_id"
       case startedAt = "started_at"
+    }
+  }
+  internal struct CrawlHostsSelect: Codable, Hashable, Sendable {
+    internal let availableAt: String
+    internal let host: String
+    internal let lastStartedAt: String
+    internal let requestExpiresAt: String?
+    internal let requestToken: UUID?
+    internal let requests: Int64
+    internal enum CodingKeys: String, CodingKey {
+      case availableAt = "available_at"
+      case host = "host"
+      case lastStartedAt = "last_started_at"
+      case requestExpiresAt = "request_expires_at"
+      case requestToken = "request_token"
+      case requests = "requests"
+    }
+  }
+  internal struct CrawlHostsInsert: Codable, Hashable, Sendable {
+    internal let availableAt: String?
+    internal let host: String
+    internal let lastStartedAt: String?
+    internal let requestExpiresAt: String?
+    internal let requestToken: UUID?
+    internal let requests: Int64?
+    internal enum CodingKeys: String, CodingKey {
+      case availableAt = "available_at"
+      case host = "host"
+      case lastStartedAt = "last_started_at"
+      case requestExpiresAt = "request_expires_at"
+      case requestToken = "request_token"
+      case requests = "requests"
+    }
+  }
+  internal struct CrawlHostsUpdate: Codable, Hashable, Sendable {
+    internal let availableAt: String?
+    internal let host: String?
+    internal let lastStartedAt: String?
+    internal let requestExpiresAt: String?
+    internal let requestToken: UUID?
+    internal let requests: Int64?
+    internal enum CodingKeys: String, CodingKey {
+      case availableAt = "available_at"
+      case host = "host"
+      case lastStartedAt = "last_started_at"
+      case requestExpiresAt = "request_expires_at"
+      case requestToken = "request_token"
+      case requests = "requests"
     }
   }
   internal struct CrawlMissedSelect: Codable, Hashable, Sendable {
@@ -987,11 +1041,14 @@ internal enum PublicSchema {
     internal let attempts: Int32
     internal let availableAt: String
     internal let canonicalUrl: String
+    internal let consecutiveFailures: Int32
     internal let contentHash: String?
     internal let discoveredAt: String
+    internal let etag: String?
     internal let generationId: UUID
     internal let id: UUID
     internal let lastError: String?
+    internal let lastModified: String?
     internal let lastSuccessAt: String?
     internal let leaseExpiresAt: String?
     internal let leaseOwner: String?
@@ -1005,11 +1062,14 @@ internal enum PublicSchema {
       case attempts = "attempts"
       case availableAt = "available_at"
       case canonicalUrl = "canonical_url"
+      case consecutiveFailures = "consecutive_failures"
       case contentHash = "content_hash"
       case discoveredAt = "discovered_at"
+      case etag = "etag"
       case generationId = "generation_id"
       case id = "id"
       case lastError = "last_error"
+      case lastModified = "last_modified"
       case lastSuccessAt = "last_success_at"
       case leaseExpiresAt = "lease_expires_at"
       case leaseOwner = "lease_owner"
@@ -1025,11 +1085,14 @@ internal enum PublicSchema {
     internal let attempts: Int32?
     internal let availableAt: String?
     internal let canonicalUrl: String
+    internal let consecutiveFailures: Int32?
     internal let contentHash: String?
     internal let discoveredAt: String?
+    internal let etag: String?
     internal let generationId: UUID
     internal let id: UUID?
     internal let lastError: String?
+    internal let lastModified: String?
     internal let lastSuccessAt: String?
     internal let leaseExpiresAt: String?
     internal let leaseOwner: String?
@@ -1043,11 +1106,14 @@ internal enum PublicSchema {
       case attempts = "attempts"
       case availableAt = "available_at"
       case canonicalUrl = "canonical_url"
+      case consecutiveFailures = "consecutive_failures"
       case contentHash = "content_hash"
       case discoveredAt = "discovered_at"
+      case etag = "etag"
       case generationId = "generation_id"
       case id = "id"
       case lastError = "last_error"
+      case lastModified = "last_modified"
       case lastSuccessAt = "last_success_at"
       case leaseExpiresAt = "lease_expires_at"
       case leaseOwner = "lease_owner"
@@ -1063,11 +1129,14 @@ internal enum PublicSchema {
     internal let attempts: Int32?
     internal let availableAt: String?
     internal let canonicalUrl: String?
+    internal let consecutiveFailures: Int32?
     internal let contentHash: String?
     internal let discoveredAt: String?
+    internal let etag: String?
     internal let generationId: UUID?
     internal let id: UUID?
     internal let lastError: String?
+    internal let lastModified: String?
     internal let lastSuccessAt: String?
     internal let leaseExpiresAt: String?
     internal let leaseOwner: String?
@@ -1081,11 +1150,14 @@ internal enum PublicSchema {
       case attempts = "attempts"
       case availableAt = "available_at"
       case canonicalUrl = "canonical_url"
+      case consecutiveFailures = "consecutive_failures"
       case contentHash = "content_hash"
       case discoveredAt = "discovered_at"
+      case etag = "etag"
       case generationId = "generation_id"
       case id = "id"
       case lastError = "last_error"
+      case lastModified = "last_modified"
       case lastSuccessAt = "last_success_at"
       case leaseExpiresAt = "lease_expires_at"
       case leaseOwner = "lease_owner"

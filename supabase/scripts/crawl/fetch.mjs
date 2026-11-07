@@ -72,9 +72,13 @@ export function siteKey(url) {
   } catch { return null; }
 }
 
-async function readCapped(response) {
+async function readCapped(response, strict = false) {
   const reader = response.body?.getReader?.();
-  if (!reader) return (await response.text()).slice(0, MAX_BYTES);
+  if (!reader) {
+    const body = await response.text();
+    if (strict && Buffer.byteLength(body) > MAX_BYTES) throw new Error('Response exceeded the byte limit');
+    return body.slice(0, MAX_BYTES);
+  }
   const decoder = new TextDecoder();
   let text = '';
   let bytes = 0;
@@ -83,7 +87,11 @@ async function readCapped(response) {
     if (done) break;
     bytes += value.length;
     text += decoder.decode(value, { stream: true });
-    if (bytes >= MAX_BYTES) { await reader.cancel(); break; }
+    if (strict && bytes > MAX_BYTES) {
+      await reader.cancel();
+      throw new Error('Response exceeded the byte limit');
+    }
+    if (!strict && bytes >= MAX_BYTES) { await reader.cancel(); break; }
   }
   return text;
 }
@@ -161,4 +169,106 @@ export function createFetcher({ fetchFn = fetch, minDelayMs = 2000, cache = {}, 
       return { status: 'failed', error: error?.name === 'TimeoutError' ? 'Timed out' : 'Could not fetch the page' };
     }
   };
+}
+
+// Bounded frontier requests check policy before every hop. The supplied gate
+// covers reading the response as well as opening the connection.
+export function createGuardedFetcher({ allowUrl, request, gate, minDelayMs, maxRedirects = 5, onResponse = () => {} }) {
+  const robots = new Map();
+  const emptyRules = { allow: [], disallow: [], crawlDelay: null };
+
+  async function readResponse(url, headers, signal, gapMs, context, wantsBody) {
+    return gate(url.hostname, gapMs, signal, context, async () => {
+      let response;
+      try {
+        response = await request(url, {
+          headers: { 'User-Agent': USER_AGENT, 'Accept-Encoding': 'identity', ...headers },
+          signal: AbortSignal.any([signal, AbortSignal.timeout(TIMEOUT_MS)]),
+        });
+      } catch (error) {
+        onResponse({ url: url.href, status: 'request_error' });
+        throw error;
+      }
+      onResponse({ url: url.href, status: response.status });
+      const retryAfter = response.headers.get('retry-after');
+      if (!wantsBody(response)) {
+        await response.body?.cancel();
+        return { status: response.status, headers: response.headers, retryAfter };
+      }
+      if (Number(response.headers.get('content-length')) > MAX_BYTES) {
+        await response.body?.cancel();
+        throw new Error('Response exceeded the byte limit');
+      }
+      return { status: response.status, headers: response.headers, retryAfter, html: await readCapped(response, true) };
+    });
+  }
+
+  async function readRobots(url, signal, context) {
+    let target = new URL('/robots.txt', url);
+    for (let hop = 0; hop <= maxRedirects; hop++) {
+      const response = await readResponse(target, {}, signal, minDelayMs, context, r => r.ok);
+      const redirect = redirectTarget(target, response);
+      if (redirect) {
+        if (redirect.origin !== url.origin || !allowUrl(redirect.href)) {
+          return { status: 'blocked', error: 'Robots redirected outside its origin' };
+        }
+        target = redirect;
+        continue;
+      }
+      if (response.status === 404 || response.status === 410) return { rules: emptyRules };
+      if (response.status >= 200 && response.status < 300) return { rules: parseRobots(response.html) };
+      return unavailable(response, 'robots.txt');
+    }
+    return { status: 'blocked', error: 'Robots redirect limit exceeded' };
+  }
+
+  async function rulesFor(url, signal, context) {
+    if (robots.has(url.origin)) return robots.get(url.origin);
+    const result = await readRobots(url, signal, context);
+    if (result.rules) robots.set(url.origin, result);
+    return result;
+  }
+
+  return async function fetchGuardedPage(value, { etag, lastModified, signal, context } = {}) {
+    const requestSignal = signal ? AbortSignal.any([signal, AbortSignal.timeout(40_000)]) : AbortSignal.timeout(40_000);
+    let target = new URL(value);
+    const headers = {
+      Accept: 'text/html,application/xhtml+xml,application/ld+json;q=0.9',
+      ...(etag ? { 'If-None-Match': etag } : {}),
+      ...(lastModified ? { 'If-Modified-Since': lastModified } : {}),
+    };
+    for (let hop = 0; hop <= maxRedirects; hop++) {
+      if (!allowUrl(target.href)) return { status: 'blocked', error: 'URL outside the allowed hosts or schemes' };
+      const { rules, ...unavailableRobots } = await rulesFor(target, requestSignal, context);
+      if (!rules) return unavailableRobots;
+      if (!isAllowed(rules, target.pathname + target.search)) return { status: 'blocked', error: 'Disallowed by robots.txt' };
+      const gap = Math.max(minDelayMs, (rules.crawlDelay ?? 0) * 1000);
+      const response = await readResponse(target, headers, requestSignal, gap, context,
+        r => r.ok && /html|xml|json|text\//i.test(r.headers.get('content-type') ?? ''));
+      const redirected = redirectTarget(target, response);
+      if (redirected) { target = redirected; continue; }
+      const validators = {
+        etag: response.headers.get('etag'),
+        lastModified: response.headers.get('last-modified'),
+      };
+      if (response.status === 304) return { status: 'not_modified', ...validators };
+      if (response.status < 200 || response.status >= 300) return unavailable(response, 'Page');
+      if (response.html === undefined) return { status: 'failed', error: 'Response is not a supported web page' };
+      return { status: 'ok', url: target.href, html: response.html, ...validators };
+    }
+    return { status: 'failed', error: 'Page redirect limit exceeded' };
+  };
+}
+
+function redirectTarget(url, response) {
+  if (![301, 302, 303, 307, 308].includes(response.status)) return null;
+  const location = response.headers.get('location');
+  return location ? new URL(location, url) : null;
+}
+
+function unavailable(response, label) {
+  const error = `${label} answered ${response.status}`;
+  if (response.status === 429) return { status: 'rate_limited', error, retryAfter: response.retryAfter };
+  if ([401, 403].includes(response.status)) return { status: 'blocked', error };
+  return { status: 'failed', error };
 }
