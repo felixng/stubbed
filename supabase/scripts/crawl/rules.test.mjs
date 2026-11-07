@@ -16,6 +16,8 @@ test('all specified Almeida date forms, calendar validation and unknown forms',(
  ['Thu 11 - Sun 14 Jan 2024','2024-01-11','2024-01-14'],
  ['Sun 10 & Sun 17 Mar 2024','2024-03-10','2024-03-17'],
  ['Tue 14 May 2024','2024-05-14','2024-05-14'],
+ ['Oct 24, 2024 - Feb 16, 2025','2024-10-24','2025-02-16'],
+ ['Opened Apr 26, 2025','2025-04-26',null],
  ['From Oct 2024',null,null],['31 Feb 2024',null,null],['30 Dec - 2 Jan',null,null],['20 Jul - 11 Jun 2024',null,null]]) {
  assert.deepEqual(parseDates(text),{start_date:start,end_date:end,date_text:text});
  }

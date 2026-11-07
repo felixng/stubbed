@@ -31,6 +31,15 @@ const sources = [
     whats_on_url: CRAZY_COQS_FEED,
   },
   {
+    name: 'Circle in the Square Theatre', city: 'New York',
+    website: 'https://playbill.com/venue/circle-in-the-square-theatre-vault-0000000092',
+    whats_on_url: 'https://playbill.com/venue/circle-in-the-square-theatre-vault-0000000092',
+    rules: {
+      item: '.bsp-list-promo-section-text:has(.bsp-list-promo-title a[href*="/production/"])',
+      title: '.bsp-list-promo-title a', dates: '.bsp-list-promo-link a', link: '.bsp-list-promo-title a',
+    },
+  },
+  {
     name: "Wyndham's", city: 'London',
     website: 'https://www.wyndhamstheatre.co.uk/',
     whats_on_url: 'https://www.wyndhamstheatre.co.uk/',
