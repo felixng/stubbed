@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import { createFetcher, isAllowed, parseRobots, siteKey, USER_AGENT } from './fetch.mjs';
+import { createFetcher, siteKey, USER_AGENT } from './fetch.mjs';
 import { groupBySite, crawlSites } from './index.mjs';
 import { cleanFinding, insertFindingsSql, jsonLiteral, uuidLiteral } from './load.mjs';
 import { extractTitle, readPage, stubReader } from './readers.mjs';
@@ -17,48 +17,33 @@ const html = (body, { status = 200, type = 'text/html; charset=utf-8', headers =
   return res;
 };
 
-test('parseRobots: our agent beats *, longest rule wins, allow wins ties', () => {
-  const rules = parseRobots(`User-agent: *\nDisallow: /\n\nUser-agent: Stubbed\nDisallow: /private\nAllow: /private/open\nCrawl-delay: 5\n`);
-  assert.equal(rules.crawlDelay, 5);
-  assert.equal(isAllowed(rules, '/whats-on'), true);
-  assert.equal(isAllowed(rules, '/private/x'), false);
-  assert.equal(isAllowed(rules, '/private/open/x'), true);
-  const star = parseRobots('User-agent: *\nDisallow: /a*b$\nAllow: /a');
-  assert.equal(isAllowed(star, '/axb'), false);
-  assert.equal(isAllowed(star, '/axbc'), true);
-  assert.equal(isAllowed(parseRobots(''), '/anything'), true);
-  assert.equal(isAllowed(parseRobots('User-agent: *\nDisallow:'), '/anything'), true);
-});
-
 test('siteKey: http(s) only, no fragment', () => {
   assert.equal(siteKey('https://a.test/whats-on#top'), 'https://a.test/whats-on');
   assert.equal(siteKey('ftp://a.test/x'), null);
   assert.equal(siteKey('nonsense'), null);
 });
 
-test('fetcher: sends the User-Agent, reads robots.txt first, and spaces requests per host', async () => {
+test('fetcher: requests pages directly without robots.txt and spaces requests per host', async () => {
   const calls = [];
   const sleeps = [];
   let t = 0;
   const fetchFn = async (url, init) => {
     calls.push({ url, ua: init.headers['User-Agent'] });
-    return url.endsWith('/robots.txt') ? html('User-agent: *\nDisallow: /secret', { type: 'text/plain' }) : html('<title>Hi</title>');
+    return html('<title>Hi</title>');
   };
   const fetchPage = createFetcher({ fetchFn, minDelayMs: 1000, sleep: async ms => { sleeps.push(ms); t += ms; }, now: () => t });
   const a = await fetchPage('https://a.test/whats-on');
   const b = await fetchPage('https://a.test/other');
   assert.equal(a.status, 'ok');
   assert.equal(b.status, 'ok');
-  assert.deepEqual(calls.map(c => c.url), ['https://a.test/robots.txt', 'https://a.test/whats-on', 'https://a.test/other']);
+  assert.deepEqual(calls.map(c => c.url), ['https://a.test/whats-on', 'https://a.test/other']);
   assert.ok(calls.every(c => c.ua === USER_AGENT));
-  assert.equal(sleeps.length, 2, 'waited between the three requests');
-  assert.ok(sleeps.every(ms => ms > 0 && ms <= 1000));
-  assert.equal((await fetchPage('https://a.test/secret')).status, 'blocked');
+  assert.deepEqual(sleeps, [1000]);
 });
 
 test('fetcher: blocked, failed, unchanged and off-site answers are statuses, not throws', async () => {
-  const answer = (path, res) => async url => (url.endsWith('/robots.txt') ? html('', { status: 404 }) : res(path));
-  const run = async res => createFetcher({ fetchFn: answer('', res), minDelayMs: 0 })('https://a.test/x');
+  const run = async fetchFn => createFetcher({ fetchFn, minDelayMs: 0 })('https://a.test/x');
+  assert.deepEqual(await run(() => html('', { status: 401 })), { status: 'blocked', error: 'The site answered 401' });
   assert.equal((await run(() => html('', { status: 403 }))).status, 'blocked');
   assert.equal((await run(() => html('', { status: 429 }))).status, 'blocked');
   assert.equal((await run(() => html('', { status: 500 }))).status, 'failed');
@@ -66,15 +51,13 @@ test('fetcher: blocked, failed, unchanged and off-site answers are statuses, not
   assert.equal((await run(() => html('x', { type: 'image/png' }))).status, 'failed');
   assert.equal((await run(() => html('x', { url: 'https://other.test/x' }))).status, 'failed');
   assert.equal((await run(() => { throw new Error('socket hang up'); })).status, 'failed');
-  assert.equal((await createFetcher({ fetchFn: async () => html('', { status: 403 }), minDelayMs: 0 })('https://a.test/x')).status, 'blocked', 'a forbidden robots.txt blocks the site');
   assert.equal((await createFetcher()('not a url')).status, 'failed');
 });
 
 test('fetcher: remembers ETag and sends it back', async () => {
   const cache = {};
   const seen = [];
-  const fetchFn = async (url, init) => {
-    if (url.endsWith('/robots.txt')) return html('', { status: 404 });
+  const fetchFn = async (_url, init) => {
     seen.push(init.headers['If-None-Match']);
     return init.headers['If-None-Match'] ? html('', { status: 304 }) : html('<title>x</title>', { headers: { etag: '"v1"' } });
   };
@@ -116,7 +99,7 @@ test('crawlSites: a blocked or failing site does not stop the run', async () => 
     { url: 'https://store-fails.test/', venues: [{ id: '3', name: 'Store fails' }] },
     { url: 'https://ok2.test/', venues: [{ id: '4', name: 'Ok too' }] },
   ];
-  const fetchPage = async url => (url.includes('blocked') ? { status: 'blocked', error: 'Disallowed by robots.txt' } : { status: 'ok', html: '<title>T</title>' });
+  const fetchPage = async url => (url.includes('blocked') ? { status: 'blocked', error: 'The site answered 403' } : { status: 'ok', html: '<title>T</title>' });
   const stored = [];
   const results = await crawlSites({
     sites, fetchPage,
@@ -124,7 +107,7 @@ test('crawlSites: a blocked or failing site does not stop the run', async () => 
   });
   assert.deepEqual(results.map(r => r.status), ['ok', 'blocked', 'failed', 'ok']);
   assert.deepEqual(stored, [['https://ok.test/', 1], ['https://ok2.test/', 1]]);
-  assert.equal(results[1].error, 'Disallowed by robots.txt');
+  assert.equal(results[1].error, 'The site answered 403');
   const dry = await crawlSites({ sites: sites.slice(0, 1), fetchPage, load: null });
   assert.equal(dry[0].findings, 1, 'a dry run reads but stores nothing');
 });
@@ -146,11 +129,11 @@ test('load: findings are clipped and checked; SQL literals are safe', () => {
 test('report: lists each site and how it was read', () => {
   const sites = [
     { url: 'https://a.test/', venues: [{ id: '1', name: 'A Theatre' }], status: 'ok', findings: 1, methods: ['stub'] },
-    { url: 'https://b.test/', venues: [{ id: '2', name: 'B Theatre' }, { id: '3', name: 'B Studio' }], status: 'blocked', error: 'Disallowed by robots.txt', findings: 0, methods: [] },
+    { url: 'https://b.test/', venues: [{ id: '2', name: 'B Theatre' }, { id: '3', name: 'B Studio' }], status: 'blocked', error: 'The site answered 403', findings: 0, methods: [] },
   ];
   const text = renderReport({ run: { id: 'r1', method: 'rules', skipped_venues: [{ id: '9', name: 'No Link' }] }, sites });
   assert.match(text, /2 sites: 1 read, 1 not read\. 1 finding\./);
-  assert.match(text, /B Theatre, B Studio \| blocked \(Disallowed by robots\.txt\)/);
+  assert.match(text, /B Theatre, B Studio \| blocked \(The site answered 403\)/);
   assert.match(text, /Skipped \(no what's-on link\): No Link/);
   assert.match(renderReport({ run: null, sites: [], dryRun: true }), /dry run/);
   assert.deepEqual(summarise(sites, [{ id: '9' }]).skipped_venues, ['9']);
