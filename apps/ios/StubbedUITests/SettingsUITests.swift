@@ -68,11 +68,11 @@ final class SettingsUITests: XCTestCase {
     let app = try openSettings()
     scrollAndTap(app.buttons["Import shows"], in: app)
     XCTAssertTrue(app.navigationBars["Import shows"].waitForExistence(timeout: 10))
-    XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Photos")).firstMatch.exists)
-    XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Mezzanine export")).firstMatch.exists)
+    XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Import from Photos")).firstMatch.exists)
+    XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Import from Mezzanine")).firstMatch.exists)
     snapshot("import-shows-hub")
-    app.buttons["How to export from Mezzanine"].tap()
-    XCTAssertTrue(app.navigationBars["Export from Mezzanine"].waitForExistence(timeout: 5))
+    app.buttons["How to import from Mezzanine"].tap()
+    XCTAssertTrue(app.navigationBars["How to import from Mezzanine"].waitForExistence(timeout: 5))
     snapshot("mezzanine-export-help")
   }
 
