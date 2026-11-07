@@ -44,22 +44,37 @@ export async function runLoop({limits,deps,now=Date.now}) {
   }
   let site;
   const record={venue_id:venue.id,venue_name:venue.name,status:'pending'};sites.push(record);
+  const audit = (actor, action, urls = [], detail) => {
+   // Keep decision metadata only. Omit query strings, fragments and credentials.
+   const publicUrls = urls.flatMap(value => {
+    if (typeof value !== 'string') return [];
+    try {
+     const url = new URL(value);
+     return ['http:', 'https:'].includes(url.protocol) ? [(url.origin + url.pathname).slice(0, 512)] : [];
+    } catch { return []; }
+   });
+   (record.decisions ??= []).push({actor, action, urls: [...new Set(publicUrls)], detail});
+  };
   try{site=await deps.loadSite(venue);}catch{record.status='failed';record.reason='site_load_failed';await deps.recordVenue(venue,record.reason).catch(()=>{});await checkpoint();return;}
   const budgetKey=site?.id??venue.website??venue.id;
   const model=request=>deps.model({...request,siteId:budgetKey});
   const knownTitles=site?.pages?.filter(p=>p.type==='whats_on').flatMap(p=>p.titles??[])??[];
   async function setup(repair=false) {
    if(repair && site) {
-    const links=await deps.discover({venue,model,limits:counters,repair:true});
+    const links=await deps.discover({venue,model,limits:counters,repair:true,audit});
     if(links.deferred||links.failed)return links;
     const candidate={...site,whats_on_url:links.whats_on_url,archive_url:links.archive_url??site.archive_url};
-    const prepared=await deps.writeRules({site:candidate,venues:site.venues,model,knownTitles,deferActivation:true});
-    if(prepared.deferred||prepared.failed)return prepared;
+    const prepared=await deps.writeRules({site:candidate,venues:site.venues,model,knownTitles,deferActivation:true,audit});
+    if(prepared.deferred||prepared.failed) {
+     audit('Crawler', 'Kept previous source after repair checks', [site.whats_on_url, links.whats_on_url], prepared.detail ?? prepared.reason);
+     return prepared;
+    }
     // Keep existing links and rules live until the replacement has passed the
     // page, date and known-show checks. Failed proposals never replace them.
     await deps.saveLinks(venue,links);site=await deps.loadSite(venue);
     if(!await claimSite(site))return {deferred:true,reason:'site_busy'};
     await deps.activatePrepared?.(site,prepared);site=await deps.loadSite(venue);
+    audit('Crawler', 'Activated verified replacement', [links.whats_on_url, links.archive_url]);
     return {ok:true};
    }
    const preferred = deps.knownSource?.(venue);
@@ -67,37 +82,48 @@ export async function runLoop({limits,deps,now=Date.now}) {
      && site.whats_on_url !== preferred.whats_on_url
      && venue.whats_on_source !== 'manual';
    if(!site || shouldReplace) {
-    const links=await deps.discover({venue,model,limits:counters,repair:false});
+    const links=await deps.discover({venue,model,limits:counters,repair:false,audit});
     if(links.deferred||links.failed) return links;
     await deps.saveLinks(venue,links);site=await deps.loadSite(venue);
+    audit('Crawler', 'Saved source links', [links.whats_on_url, links.archive_url]);
+   } else {
+    audit('Crawler', 'Reused saved source links', [site.whats_on_url, site.archive_url]);
    }
    if(!site) return {failed:true,reason:'site_not_saved'};
    if(!await claimSite(site))return {deferred:true,reason:'site_busy'};
-   if((!site.rules||repair) && !(!site.rules && await deps.hasStructured?.(site))) {
-    const result=await deps.writeRules({site,venues:site.venues,model,knownTitles});
+   if (site.rules) {
+    audit('Crawler', 'Read using saved rules', [site.whats_on_url]);
+   } else if (await deps.hasStructured?.(site)) {
+    audit('Crawler', 'Read using structured data', [site.whats_on_url]);
+   } else {
+    const result=await deps.writeRules({site,venues:site.venues,model,knownTitles,audit});
     if(result.deferred||result.failed)return result;
     site=await deps.loadSite(venue);
    }
    return {ok:true};
   }
   try {
-   if(site && !await claimSite(site)){record.status='deferred';record.reason='site_busy';return;}
-   if(site?.status==='needs_attention' && !deps.manual) {record.status='needs_attention';return;}
+   if(site && !await claimSite(site)){audit('Crawler', 'Skipped busy source', [site.whats_on_url]);record.status='deferred';record.reason='site_busy';return;}
+   if(site?.status==='needs_attention' && !deps.manual) {audit('Crawler', 'Skipped source awaiting review', [site.whats_on_url]);record.status='needs_attention';return;}
    let ready=await setup();
    if(!ready.ok) {
+    audit('Crawler', 'Source setup stopped', [site?.whats_on_url], ready.detail ?? ready.reason);
     record.status=ready.deferred?'deferred':'needs_attention';record.reason=ready.reason;record.detail=ready.detail;
     if(ready.reason==='site_busy')return;
     if(site)await deps.recordSite(site,{status:ready.deferred?'pending':'needs_attention',reason:ready.reason});
     await deps.recordVenue(venue,ready.deferred?null:ready.reason);return;
    }
-   let result=await deps.crawl(site,{deadline,maxPages:limits.maxPages});
+   let result=await deps.crawl(site,{deadline,maxPages:limits.maxPages,audit});
    if(result.status==='failed') {
+    audit('Crawler', 'Crawl failed', [site.whats_on_url], result.note);
     if((site.repair_attempts??0)>=3 && !deps.manual){record.status='needs_attention';record.reason='repair_limit';await deps.recordSite(site,{status:'needs_attention',reason:'repair_limit'});await deps.recordVenue(venue,'repair_limit');return;}
     if(now()>=deadline-90000){record.status='deferred';record.reason='time_limit';return;}
+    audit('Crawler', 'Started source rediscovery', [site.whats_on_url]);
     const repaired=await setup(true);
+    if (!repaired.ok) audit('Crawler', 'Repair did not activate a replacement', [site.whats_on_url], repaired.detail ?? repaired.reason);
     if(repaired.reason==='site_busy'){record.status='deferred';record.reason='site_busy';return;}
     if(!repaired.deferred) await deps.recordSite(site,{status:'pending',reason:repaired.reason??null,attempt:true});
-    if(repaired.ok)result=await deps.crawl(site,{deadline,maxPages:limits.maxPages});
+    if(repaired.ok)result=await deps.crawl(site,{deadline,maxPages:limits.maxPages,audit});
     else {
      record.status=repaired.deferred?'deferred':'needs_attention';record.reason=repaired.reason;record.detail=repaired.detail;
      // Outages/budget exhaustion wait; only exhausted repair attempts need the owner.
@@ -106,10 +132,11 @@ export async function runLoop({limits,deps,now=Date.now}) {
      await deps.recordVenue(venue,repaired.deferred?null:repaired.reason);return;
     }
    }
+   audit('Crawler', result.status==='failed' ? 'Crawl still failed' : 'Finished reading source', [site.whats_on_url], result.note);
    record.status=result.status==='failed'?'needs_attention':'done';record.findings=result.findings;record.note=result.note;
    await deps.recordSite(site,{status:result.status==='failed'?'needs_attention':'ready',reason:result.status==='failed'?result.note:null,crawled:result.status!=='failed'});
    await deps.recordVenue(venue,result.status==='failed'?result.note:null);
-  } catch {record.status='failed';record.reason='site_operation_failed';await deps.recordVenue(venue,'site_operation_failed').catch(()=>{});}
+  } catch {audit('Crawler', 'Site operation failed', [site?.whats_on_url]);record.status='failed';record.reason='site_operation_failed';await deps.recordVenue(venue,'site_operation_failed').catch(()=>{});}
   finally {
    if(record.status==='done')for(const id of claimed)completed.add(id);
    try{for(const id of claimed)await deps.release?.(id,owner);}finally{await checkpoint();}

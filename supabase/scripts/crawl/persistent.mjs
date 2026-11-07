@@ -4,7 +4,7 @@ import { fingerprint, healthSignals, archiveQueue } from './state.mjs';
 
 // One bounded site visit. Save a page's facts before its cursor, so an
 // interruption can retry the page without losing history. Publishing upserts.
-export async function crawlPersistentSite({ site, venues, run, spend, readers, fetchPage, store, load, publish, maxPages = 100, deadline = Infinity, now = Date.now }) {
+export async function crawlPersistentSite({ site, venues, run, spend, readers, fetchPage, store, load, publish, maxPages = 100, deadline = Infinity, now = Date.now, audit = () => {} }) {
   const pages = new Map((site.pages ?? []).map(p => [p.url,p]));
   const queue = [{url:site.whats_on_url,type:'whats_on'}, ...archiveQueue(site,[...pages.values()]).map(url => ({url,type:'archive'}))];
   const knownTitles = new Set([...pages.values()].flatMap(p=>p.titles??[]));
@@ -17,6 +17,7 @@ export async function crawlPersistentSite({ site, venues, run, spend, readers, f
     const previous = pages.get(url);
     const page = await fetchPage(url);
     if (page.status !== 'ok' && page.status !== 'not_modified') {
+      audit('Crawler', 'Page request failed', [url], page.error ?? page.status);
       signals.push('link_failed'); if(type==='archive') archiveFailed=true;
       await store.page(site,{...previous,url,type,status:page.status === 'blocked' ? 'blocked':'failed',failures:(previous?.failures??0)+1});
       continue;
@@ -36,6 +37,7 @@ export async function crawlPersistentSite({ site, venues, run, spend, readers, f
     if (site.rules && !findings.length) health.signals.push('no_findings');
     if (notes.some(n=>n.includes('failed the page check'))) health.signals.push('page_check_failed');
     if (health.signals.length) {
+      audit('Crawler', 'Page failed extraction checks', [url], health.signals.join(', '));
       signals.push(...health.signals); if(type==='archive') archiveFailed=true;
       await store.page(site,{...previous,url,type,status:'failed',failures:(previous?.failures??0)+1});
       continue;

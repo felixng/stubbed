@@ -27,7 +27,12 @@ test('Wikidata is used before search; human links survive repair; external or bl
  const args={venue:{...venue,website:null,wikidata_id:'Q123'},fetchPage,model,lookupWebsite:async()=>venue.website,search:async()=>{searches++;return[];},limits:limits()};
  const found=await discoverLinks(args);assert.equal(found.website_source,'wikidata');assert.equal(searches,0);
  const manual=await discoverLinks({...args,venue:{...venue,whats_on_url:'https://almeida.test/manual',whats_on_source:'manual'},repair:true});assert.equal(manual.whats_on_url,'https://almeida.test/manual');
- const bad=await discoverLinks({...args,model:async()=>({value:{whats_on_url:'https://evil.test/',archive_url:null}})});assert.equal(bad.reason,'invalid_links');
+ const decisions=[];
+ const bad=await discoverLinks({...args,audit:(...event)=>decisions.push(event),model:async()=>({value:{whats_on_url:'https://evil.test/',archive_url:null}})});assert.equal(bad.reason,'invalid_links');
+ assert.deepEqual(decisions.slice(-2).map(([actor,action,urls])=>[actor,action,urls.filter(Boolean)]),[
+  ['claude-haiku-5-5','Proposed listings and archive URLs',['https://evil.test/']],
+  ['Crawler','Rejected proposed links',['https://evil.test/']],
+ ]);
  const blocked=await discoverLinks({...args,fetchPage:async url=>url.endsWith('/archive/')?{status:'blocked'}:fetchPage()});assert.equal(blocked.reason,'link_not_readable');
  const capped=await discoverLinks({...args,venue:{...venue,website:null},limits:{searches:1,maxSearches:1}});assert.equal(capped.reason,'search_limit');
 });
@@ -70,6 +75,10 @@ test('moved links/layouts repair before reread; outages wait without exhausting 
  let reads=0,attempts=0;
  const deps=loopDeps([{id:'a'}]);deps.loadSite=async()=>({id:'s',rules,venues,pages:[],repair_attempts:0});deps.recordSite=async(_,s)=>{if(s.attempt)attempts++;};deps.crawl=async()=>++reads===1?{status:'failed',note:'link_failed'}:{status:'ok',findings:2};deps.writeRules=async()=>({ok:true});
  let result=await runLoop({limits:config,deps});assert.equal(result.sites[0].status,'done');assert.equal(reads,2);assert.equal(attempts,1);
+ assert.deepEqual(result.sites[0].decisions.map(event=>event.action),[
+  'Reused saved source links','Read using saved rules','Crawl failed','Started source rediscovery',
+  'Activated verified replacement','Finished reading source',
+ ]);
  reads=0;attempts=0;deps.discover=async()=>({deferred:true,reason:'model_unavailable'});result=await runLoop({limits:config,deps});assert.equal(result.sites[0].status,'deferred');assert.equal(attempts,0);
  deps.loadSite=async()=>({id:'s',rules,venues,pages:[],repair_attempts:3});reads=0;result=await runLoop({limits:config,deps});assert.equal(result.sites[0].reason,'repair_limit');
 });
