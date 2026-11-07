@@ -19,7 +19,16 @@ export function parseDates(value) {
   if (chunks.length < 1 || chunks.length > 2) return empty;
   const a = part(chunks[0]), b = chunks.length === 2 ? part(chunks[1]) : null;
   if (!a || (chunks.length === 2 && !b)) return empty;
-  if (b) { a.year ??= b.year; b.year ??= a.year; a.month ??= b.month; b.month ??= a.month; }
+  if (b) {
+    a.month ??= b.month;
+    b.month ??= a.month;
+    // A November–January range with one stated year crosses New Year.
+    if (a.month && b.month) {
+      const crossesNewYear = a.month >= 11 && b.month <= 2;
+      a.year ??= b.year && b.year - Number(crossesNewYear);
+      b.year ??= a.year && a.year + Number(crossesNewYear);
+    }
+  }
   const start = iso(a), end = b ? iso(b) : start;
   if (!start || !end || end < start) return empty;
   return { start_date: start, end_date: end, date_text };

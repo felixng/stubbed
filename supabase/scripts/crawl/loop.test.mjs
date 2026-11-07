@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
+import {knownSource} from './known-sources.mjs';
 import {shortlistLinks,homepageNamesVenue,discoverLinks,searchCandidates} from './discover.mjs';
 import {writeRules,checkRules,trimmedHtml} from './write-rules.mjs';
 import {createModel} from './model.mjs';
@@ -113,4 +114,17 @@ test('a single checked show with a labelled date range can validate', () => {
  });
  assert.equal(result.ok, true);
  assert.equal(result.count, 1);
+});
+
+test('verified sources match the venue and city and preserve a manual listings URL', async () => {
+ const venue = {id:'v',name:'Boulevard Theatre',city:'London'};
+ assert.equal(knownSource({...venue,city:'New York'}),undefined);
+ const result = await discoverLinks({venue,limits:limits(),fetchPage:async()=>({status:'ok'})});
+ assert.equal(result.whats_on_url,'https://underbellyboulevard.com/');
+ const manual = await discoverLinks({
+   venue:{...venue,website:'https://venue.test/',whats_on_source:'manual',whats_on_url:'https://venue.test/calendar'},
+   fetchPage:async()=>({status:'ok',html:'<h1>Boulevard Theatre</h1>'}),
+   limits:limits(),model:async()=>({value:{whats_on_url:null,archive_url:null}}),
+ });
+ assert.equal(manual.whats_on_url,'https://venue.test/calendar');
 });

@@ -8,6 +8,7 @@ import {crawlPersistentSite} from './persistent.mjs';
 import {savePage,saveSite,publish} from './site-store.mjs';
 import * as store from './loop-store.mjs';
 import {createModel} from './model.mjs';
+import {knownSource} from './known-sources.mjs';
 import {discoverLinks,searchCandidates} from './discover.mjs';
 import {writeRules} from './write-rules.mjs';
 import {checkFindings,rulesReader} from './rules.mjs';
@@ -61,7 +62,11 @@ export async function runLoop({limits,deps,now=Date.now}) {
     await deps.activatePrepared?.(site,prepared);site=await deps.loadSite(venue);
     return {ok:true};
    }
-   if(!site) {
+   const preferred = deps.knownSource?.(venue);
+   const shouldReplace = preferred && site && !site.rules
+     && site.whats_on_url !== preferred.whats_on_url
+     && venue.whats_on_source !== 'manual';
+   if(!site || shouldReplace) {
     const links=await deps.discover({venue,model,limits:counters,repair:false});
     if(links.deferred||links.failed) return links;
     await deps.saveLinks(venue,links);site=await deps.loadSite(venue);
@@ -135,7 +140,7 @@ export async function main(env=process.env,{runId}={}) {
  if(env.GITHUB_ENV)await appendFile(env.GITHUB_ENV,`CRAWL_RUN_ID=${run.id}\n`);
  const checkpoint=async summary=>finishRun(run.id,{status:'running',summary,costUsd:spend.usd});
  try {
-  const result=await runLoop({limits,deps:{work:async count=>{const rows=runId?await store.selectedWork(run.venue_ids):await store.work(count);if(!runId)await store.setRunVenues(run.id,rows.map(v=>v.id));return rows;},loadSite:store.loadWorkSite,model,manual:Boolean(runId),claim:(id,owner)=>store.claim(id,run.id,owner),release:store.release,
+  const result=await runLoop({limits,deps:{work:async count=>{const rows=runId?await store.selectedWork(run.venue_ids):await store.work(count);if(!runId)await store.setRunVenues(run.id,rows.map(v=>v.id));return rows;},loadSite:store.loadWorkSite,knownSource,model,manual:Boolean(runId),claim:(id,owner)=>store.claim(id,run.id,owner),release:store.release,
    hasStructured:async site=>{const page=await fetchPage(site.whats_on_url);return page.status==='ok'&&checkFindings(page.html,structuredReader({url:site.whats_on_url,html:page.html},{venues:site.venues})??[]).some(f=>f.start_date);},
    discover:args=>discoverLinks({...args,fetchPage,lookupWebsite,search}),saveLinks:store.saveLinks,recordSite:store.recordSite,recordVenue:store.recordVenue,
    activatePrepared:(site,result)=>store.adoptVersion(site,result.ruleId,result.validation),

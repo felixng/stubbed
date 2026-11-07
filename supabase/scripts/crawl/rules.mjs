@@ -18,13 +18,16 @@ export const normalText = s => String(s ?? '').normalize('NFKC').replace(/\s+/g,
 export function pageText(html) { const $ = load(html); return normalText(decodeEntities($.root().text())); }
 export function checkFindings(html, findings) {
   const text = pageText(html);
+  const $ = load(html);
+  const metadata = new Set($('meta[itemprop][content]').map((_, el) => normalText($(el).attr('content'))).get());
   return findings.filter(f => {
     const title = normalText(f.raw_title);
-    if (!title || !text.includes(title)) return false;
+    const backed = value => text.includes(value) || (f.method === 'structured' && metadata.has(value));
+    if (!title || !backed(title)) return false;
     if (!f.date_text) return true;
     // Structured data combines the two literal ISO fields for presentation.
     const parts = f.method === 'structured' ? f.date_text.split(' to ') : [f.date_text];
-    return parts.every(p => text.includes(normalText(p)));
+    return parts.every(p => backed(normalText(p)));
   }).map(f => ({ ...f, page_checked: true }));
 }
 export function readRules({ html, url }, { rules, venues, ruleId = null }) {

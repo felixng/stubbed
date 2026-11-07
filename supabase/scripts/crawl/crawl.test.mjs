@@ -309,3 +309,16 @@ test('the full chain: structured first, model next, the stub last; the report sa
   const noModel = await crawlSites({ sites: sites.slice(1, 2), fetchPage, run: { method: 'rules' }, readerList: READERS, readerContext: { today: TODAY } });
   assert.deepEqual(noModel[0].methods, ['stub'], 'rules only: a page with no structured data is the stub');
 });
+
+test('structured reader takes the event title and dates from scoped HTML metadata', async () => {
+ const html = `<article itemscope itemtype="https://schema.org/Event">
+  <div itemprop="location" itemscope><meta itemprop="name" content="Test Theatre"></div>
+  <meta itemprop="name" content="Winter Play">
+  <meta itemprop="startDate" content="2026-12-18 19:30">
+  <meta itemprop="endDate" content="2027-01-23 19:30">
+ </article>`;
+ const findings = await readPage({url:'https://theatre.test/',html},{venues:[{id:'v',name:'Test Theatre'}]},[structuredReader]);
+ assert.deepEqual(findings.map(f=>[f.raw_title,f.start_date,f.end_date,f.page_checked]),[
+  ['Winter Play','2026-12-18','2027-01-23',true],
+ ]);
+});

@@ -1,6 +1,7 @@
 // Reads what's on from a theatre's own website (#291): schema.org Event data
 // first (by code, no cost), then a model when the run allows it. Findings keep
 // the raw title and the dates as written; nothing here links to a show.
+import { load } from 'cheerio';
 import { readFileSync } from 'node:fs';
 import { decodeEntities } from '../readers.mjs';
 
@@ -113,6 +114,19 @@ export function matchStage(stage, venues) {
 
 export function structuredReader({ url, html }, { venues }) {
   const events = eventsFromJsonLd(jsonLdBlocks(html));
+  const $ = load(html);
+  $('[itemscope][itemtype$="Event"]').each((_, element) => {
+    const item = $(element);
+    const metadata = property => item.find(`meta[itemprop="${property}"]`)
+      .filter((_, field) => $(field).closest('[itemscope]')[0] === element).first().attr('content');
+    const name = metadata('name');
+    const startDate = metadata('startDate');
+    if (name && startDate) events.push({
+      '@type': item.attr('itemtype').split('/').at(-1),
+      name, startDate, endDate: metadata('endDate'),
+      location: item.find('[itemprop="location"] meta[itemprop="name"]').first().attr('content'),
+    });
+  });
   if (events.length === 0) return null;
   const seen = new Set();
   const findings = [];

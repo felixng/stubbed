@@ -64,3 +64,9 @@ test('failed links and broken rules retain good page data and never publish',asy
  result=await crawlPersistentSite({...args,fetchPage:async()=>({status:'ok',html:'<h1>New layout</h1>'})});
  assert.match(result.note,/no_findings/);assert.equal(loaded,false);
 });
+
+test('an explicit winter end year can date a November start', () => {
+ assert.deepEqual(parseDates('13 Nov - 10 Jan 2027'), {
+  date_text:'13 Nov - 10 Jan 2027', start_date:'2026-11-13', end_date:'2027-01-10',
+ });
+});
