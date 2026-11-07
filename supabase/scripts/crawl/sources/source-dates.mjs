@@ -60,3 +60,29 @@ export function sourcePartialPrecision(value) {
   if (month && MONTHS.some(name => month === name || month === name.slice(0, 3))) return 'month';
   return 'unknown';
 }
+
+const dateEvidence = (field, value) => ({
+  field, text: String(value ?? '').replace(/\s+/g, ' ').trim().slice(0, 400) || null,
+});
+
+export function sourceDateClaims(value, kind, field) {
+  if (kind === 'performance') {
+    const discrete = value.split(/;|\s+and\s+|(?<=\d{4}),\s+/i).map(part => part.trim()).filter(Boolean);
+    if (discrete.length > 1 && discrete.every(part => sourceDateRange(part).precision === 'day')) {
+      return discrete.map(part => ({ kind, date: sourceDateRange(part).start, evidence: dateEvidence(field, part) }));
+    }
+  }
+  const range = sourceDateRange(value);
+  if (!range.start) return [{
+    kind: 'unknown', date: null, intended_kind: kind, precision: sourcePartialPrecision(value),
+    evidence: dateEvidence(field, value),
+  }];
+  if (range.precision === 'range' && kind === 'performance') {
+    return [
+      { kind: 'start', date: range.start, evidence: dateEvidence(field, value) },
+      { kind: 'end', date: range.end, evidence: dateEvidence(field, value) },
+    ];
+  }
+  const endKind = ['end', 'closing', 'booking_until'].includes(kind);
+  return [{ kind, date: endKind ? range.end : range.start, evidence: dateEvidence(field, value) }];
+}
