@@ -1186,3 +1186,12 @@ are unclear, so generic end dates never become confirmed closings. The worker
 waits through ordinary request spacing while leaving long host cooldowns
 queued. London Theatre remains a private staged source until identity and
 publication checks are available.
+
+### #423 Source identity publication
+
+Use independent checkpoints for identity matching and later run reconciliation.
+Only the active extraction can advance identity publication. Require location
+corroboration and compatible auditorium granularity for venue matching, and
+compatible work evidence and a known type for show matching. Reuse candidate
+approval for new unverified shows and preserve established mappings across
+source renames. Ambiguity remains staged with a reason for review.

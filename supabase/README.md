@@ -350,3 +350,17 @@ The dry-run result records requested URLs, HTTP status and proposed short
 evidence. Run it separately from live collection for those hosts. The first
 directory task may enqueue venue and pagination links. A venue stage run
 processes the venue tasks already discovered. Event tasks remain independent.
+
+
+Process a bounded identity publication batch after a source's publication
+switch has passed its rollout gate:
+
+```sh
+node supabase/scripts/crawl/loop.mjs --source london_theatre --publish-identities --max-publications 25
+```
+
+A disabled source returns `inactive`. Pending venue dependencies and failed
+transactions keep their queue records with retry timestamps. Ambiguous
+identities stay in the source mappings and show candidate review queue. This
+command handles identity only. It neither reconciles runs nor activates
+suggestions.

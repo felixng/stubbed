@@ -565,11 +565,17 @@ internal enum PublicSchema {
   }
   internal struct CrawlPublicationQueueSelect: Codable, Hashable, Sendable {
     internal let extractionId: UUID
+    internal let identityAvailableAt: String
+    internal let identityError: String?
+    internal let identityProcessedAt: String?
     internal let lastError: String?
     internal let processedAt: String?
     internal let queuedAt: String
     internal enum CodingKeys: String, CodingKey {
       case extractionId = "extraction_id"
+      case identityAvailableAt = "identity_available_at"
+      case identityError = "identity_error"
+      case identityProcessedAt = "identity_processed_at"
       case lastError = "last_error"
       case processedAt = "processed_at"
       case queuedAt = "queued_at"
@@ -577,11 +583,17 @@ internal enum PublicSchema {
   }
   internal struct CrawlPublicationQueueInsert: Codable, Hashable, Sendable {
     internal let extractionId: UUID
+    internal let identityAvailableAt: String?
+    internal let identityError: String?
+    internal let identityProcessedAt: String?
     internal let lastError: String?
     internal let processedAt: String?
     internal let queuedAt: String?
     internal enum CodingKeys: String, CodingKey {
       case extractionId = "extraction_id"
+      case identityAvailableAt = "identity_available_at"
+      case identityError = "identity_error"
+      case identityProcessedAt = "identity_processed_at"
       case lastError = "last_error"
       case processedAt = "processed_at"
       case queuedAt = "queued_at"
@@ -589,11 +601,17 @@ internal enum PublicSchema {
   }
   internal struct CrawlPublicationQueueUpdate: Codable, Hashable, Sendable {
     internal let extractionId: UUID?
+    internal let identityAvailableAt: String?
+    internal let identityError: String?
+    internal let identityProcessedAt: String?
     internal let lastError: String?
     internal let processedAt: String?
     internal let queuedAt: String?
     internal enum CodingKeys: String, CodingKey {
       case extractionId = "extraction_id"
+      case identityAvailableAt = "identity_available_at"
+      case identityError = "identity_error"
+      case identityProcessedAt = "identity_processed_at"
       case lastError = "last_error"
       case processedAt = "processed_at"
       case queuedAt = "queued_at"
@@ -900,48 +918,84 @@ internal enum PublicSchema {
     }
   }
   internal struct CrawlSourceEntitiesSelect: Codable, Hashable, Sendable {
+    internal let candidateId: UUID?
     internal let entityKind: String
+    internal let evidence: AnyJSON
     internal let externalKey: String
     internal let firstSeenAt: String
+    internal let lastExtractionId: UUID?
+    internal let overrideLocked: Bool
+    internal let resolutionReason: String?
+    internal let resolutionStatus: String
     internal let showId: UUID?
     internal let sourceId: UUID
     internal let venueId: UUID?
     internal enum CodingKeys: String, CodingKey {
+      case candidateId = "candidate_id"
       case entityKind = "entity_kind"
+      case evidence = "evidence"
       case externalKey = "external_key"
       case firstSeenAt = "first_seen_at"
+      case lastExtractionId = "last_extraction_id"
+      case overrideLocked = "override_locked"
+      case resolutionReason = "resolution_reason"
+      case resolutionStatus = "resolution_status"
       case showId = "show_id"
       case sourceId = "source_id"
       case venueId = "venue_id"
     }
   }
   internal struct CrawlSourceEntitiesInsert: Codable, Hashable, Sendable {
+    internal let candidateId: UUID?
     internal let entityKind: String
+    internal let evidence: AnyJSON?
     internal let externalKey: String
     internal let firstSeenAt: String?
+    internal let lastExtractionId: UUID?
+    internal let overrideLocked: Bool?
+    internal let resolutionReason: String?
+    internal let resolutionStatus: String?
     internal let showId: UUID?
     internal let sourceId: UUID
     internal let venueId: UUID?
     internal enum CodingKeys: String, CodingKey {
+      case candidateId = "candidate_id"
       case entityKind = "entity_kind"
+      case evidence = "evidence"
       case externalKey = "external_key"
       case firstSeenAt = "first_seen_at"
+      case lastExtractionId = "last_extraction_id"
+      case overrideLocked = "override_locked"
+      case resolutionReason = "resolution_reason"
+      case resolutionStatus = "resolution_status"
       case showId = "show_id"
       case sourceId = "source_id"
       case venueId = "venue_id"
     }
   }
   internal struct CrawlSourceEntitiesUpdate: Codable, Hashable, Sendable {
+    internal let candidateId: UUID?
     internal let entityKind: String?
+    internal let evidence: AnyJSON?
     internal let externalKey: String?
     internal let firstSeenAt: String?
+    internal let lastExtractionId: UUID?
+    internal let overrideLocked: Bool?
+    internal let resolutionReason: String?
+    internal let resolutionStatus: String?
     internal let showId: UUID?
     internal let sourceId: UUID?
     internal let venueId: UUID?
     internal enum CodingKeys: String, CodingKey {
+      case candidateId = "candidate_id"
       case entityKind = "entity_kind"
+      case evidence = "evidence"
       case externalKey = "external_key"
       case firstSeenAt = "first_seen_at"
+      case lastExtractionId = "last_extraction_id"
+      case overrideLocked = "override_locked"
+      case resolutionReason = "resolution_reason"
+      case resolutionStatus = "resolution_status"
       case showId = "show_id"
       case sourceId = "source_id"
       case venueId = "venue_id"
@@ -2122,6 +2176,7 @@ internal enum PublicSchema {
     internal let createdAt: String
     internal let firstPerformed: Int16?
     internal let id: UUID
+    internal let reviewMethod: String?
     internal let reviewedAt: String?
     internal let sampleId: UUID?
     internal let seenCount: Int32
@@ -2139,6 +2194,7 @@ internal enum PublicSchema {
       case createdAt = "created_at"
       case firstPerformed = "first_performed"
       case id = "id"
+      case reviewMethod = "review_method"
       case reviewedAt = "reviewed_at"
       case sampleId = "sample_id"
       case seenCount = "seen_count"
@@ -2158,6 +2214,7 @@ internal enum PublicSchema {
     internal let createdAt: String?
     internal let firstPerformed: Int16?
     internal let id: UUID?
+    internal let reviewMethod: String?
     internal let reviewedAt: String?
     internal let sampleId: UUID?
     internal let seenCount: Int32?
@@ -2175,6 +2232,7 @@ internal enum PublicSchema {
       case createdAt = "created_at"
       case firstPerformed = "first_performed"
       case id = "id"
+      case reviewMethod = "review_method"
       case reviewedAt = "reviewed_at"
       case sampleId = "sample_id"
       case seenCount = "seen_count"
@@ -2194,6 +2252,7 @@ internal enum PublicSchema {
     internal let createdAt: String?
     internal let firstPerformed: Int16?
     internal let id: UUID?
+    internal let reviewMethod: String?
     internal let reviewedAt: String?
     internal let sampleId: UUID?
     internal let seenCount: Int32?
@@ -2211,6 +2270,7 @@ internal enum PublicSchema {
       case createdAt = "created_at"
       case firstPerformed = "first_performed"
       case id = "id"
+      case reviewMethod = "review_method"
       case reviewedAt = "reviewed_at"
       case sampleId = "sample_id"
       case seenCount = "seen_count"
@@ -2304,6 +2364,10 @@ internal enum PublicSchema {
     }
   }
   internal struct VenuesSelect: Codable, Hashable, Sendable {
+    internal let catalogueAuditorium: String?
+    internal let catalogueGranularity: String?
+    internal let cataloguePostcode: String?
+    internal let catalogueStreet: String?
     internal let circuit: VenueCircuit?
     internal let city: String?
     internal let country: String?
@@ -2327,6 +2391,10 @@ internal enum PublicSchema {
     internal let whatsOnUrl: String?
     internal let wikidataId: String?
     internal enum CodingKeys: String, CodingKey {
+      case catalogueAuditorium = "catalogue_auditorium"
+      case catalogueGranularity = "catalogue_granularity"
+      case cataloguePostcode = "catalogue_postcode"
+      case catalogueStreet = "catalogue_street"
       case circuit = "circuit"
       case city = "city"
       case country = "country"
@@ -2352,6 +2420,10 @@ internal enum PublicSchema {
     }
   }
   internal struct VenuesInsert: Codable, Hashable, Sendable {
+    internal let catalogueAuditorium: String?
+    internal let catalogueGranularity: String?
+    internal let cataloguePostcode: String?
+    internal let catalogueStreet: String?
     internal let circuit: VenueCircuit?
     internal let city: String?
     internal let country: String?
@@ -2375,6 +2447,10 @@ internal enum PublicSchema {
     internal let whatsOnUrl: String?
     internal let wikidataId: String?
     internal enum CodingKeys: String, CodingKey {
+      case catalogueAuditorium = "catalogue_auditorium"
+      case catalogueGranularity = "catalogue_granularity"
+      case cataloguePostcode = "catalogue_postcode"
+      case catalogueStreet = "catalogue_street"
       case circuit = "circuit"
       case city = "city"
       case country = "country"
@@ -2400,6 +2476,10 @@ internal enum PublicSchema {
     }
   }
   internal struct VenuesUpdate: Codable, Hashable, Sendable {
+    internal let catalogueAuditorium: String?
+    internal let catalogueGranularity: String?
+    internal let cataloguePostcode: String?
+    internal let catalogueStreet: String?
     internal let circuit: VenueCircuit?
     internal let city: String?
     internal let country: String?
@@ -2423,6 +2503,10 @@ internal enum PublicSchema {
     internal let whatsOnUrl: String?
     internal let wikidataId: String?
     internal enum CodingKeys: String, CodingKey {
+      case catalogueAuditorium = "catalogue_auditorium"
+      case catalogueGranularity = "catalogue_granularity"
+      case cataloguePostcode = "catalogue_postcode"
+      case catalogueStreet = "catalogue_street"
       case circuit = "circuit"
       case city = "city"
       case country = "country"
