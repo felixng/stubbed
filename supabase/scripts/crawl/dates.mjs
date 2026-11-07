@@ -13,7 +13,7 @@ function iso(p) {
 }
 export function parseDates(value) {
   const date_text = String(value ?? '').replace(/\s+/g,' ').trim();
-  const text = date_text.replace(/\b(?:mon|tue|wed|thu|fri|sat|sun)(?:day|sday|nesday|rsday|urday)?\b,?\s*/gi,'').replace(/(\d)(?:st|nd|rd|th)\b/gi,'$1').replace(/[–—]/g,'-');
+  const text = date_text.replace(/^dates?\s*:\s*/i, '').replace(/\b(?:mon|tue|wed|thu|fri|sat|sun)(?:day|sday|nesday|rsday|urday)?\b,?\s*/gi,'').replace(/(\d)(?:st|nd|rd|th)\b/gi,'$1').replace(/[–—]/g,'-');
   const chunks = text.split(/\s*(?:-|&)\s*/);
   const empty = { start_date: null, end_date: null, date_text };
   if (chunks.length < 1 || chunks.length > 2) return empty;

@@ -150,13 +150,13 @@ export function createFetcher({ fetchFn = fetch, minDelayMs = 2000, cache = {}, 
       if (res.status === 304) return { status: 'not_modified' };
       if (res.status === 401 || res.status === 403 || res.status === 429) return { status: 'blocked', error: `The site answered ${res.status}` };
       if (!res.ok) return { status: 'failed', error: `The site answered ${res.status}` };
-      if (res.url && new URL(res.url).host !== u.host) return { status: 'failed', error: 'Redirected to another site' };
+      if (res.url && new URL(res.url).host.replace(/^www\./, '') !== u.host.replace(/^www\./, '')) return { status: 'failed', error: 'Redirected to another site' };
       const type = res.headers.get('content-type') ?? '';
       if (!/html|xml|json|text\//i.test(type)) return { status: 'failed', error: `Not a web page (${type || 'no content type'})` };
       const etag = res.headers.get('etag') ?? undefined;
       const lastModified = res.headers.get('last-modified') ?? undefined;
       if (etag || lastModified) cache[key] = { etag, lastModified };
-      return { status: 'ok', html: await readCapped(res), etag, lastModified };
+      return { status: 'ok', url: res.url || key, html: await readCapped(res), etag, lastModified };
     } catch (error) {
       return { status: 'failed', error: error?.name === 'TimeoutError' ? 'Timed out' : 'Could not fetch the page' };
     }

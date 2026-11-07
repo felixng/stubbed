@@ -42,7 +42,7 @@ export async function runLoop({limits,deps,now=Date.now}) {
    claimed.add(candidate.id);return true;
   }
   let site;
-  const record={venue_id:venue.id,status:'pending'};sites.push(record);
+  const record={venue_id:venue.id,venue_name:venue.name,status:'pending'};sites.push(record);
   try{site=await deps.loadSite(venue);}catch{record.status='failed';record.reason='site_load_failed';await deps.recordVenue(venue,record.reason).catch(()=>{});await checkpoint();return;}
   const budgetKey=site?.id??venue.website??venue.id;
   const model=request=>deps.model({...request,siteId:budgetKey});
@@ -80,7 +80,7 @@ export async function runLoop({limits,deps,now=Date.now}) {
    if(site?.status==='needs_attention' && !deps.manual) {record.status='needs_attention';return;}
    let ready=await setup();
    if(!ready.ok) {
-    record.status=ready.deferred?'deferred':'needs_attention';record.reason=ready.reason;
+    record.status=ready.deferred?'deferred':'needs_attention';record.reason=ready.reason;record.detail=ready.detail;
     if(ready.reason==='site_busy')return;
     if(site)await deps.recordSite(site,{status:ready.deferred?'pending':'needs_attention',reason:ready.reason});
     await deps.recordVenue(venue,ready.deferred?null:ready.reason);return;
@@ -94,7 +94,7 @@ export async function runLoop({limits,deps,now=Date.now}) {
     if(!repaired.deferred) await deps.recordSite(site,{status:'pending',reason:repaired.reason??null,attempt:true});
     if(repaired.ok)result=await deps.crawl(site,{deadline,maxPages:limits.maxPages});
     else {
-     record.status=repaired.deferred?'deferred':'needs_attention';record.reason=repaired.reason;
+     record.status=repaired.deferred?'deferred':'needs_attention';record.reason=repaired.reason;record.detail=repaired.detail;
      // Outages/budget exhaustion wait; only exhausted repair attempts need the owner.
      const exhausted=(site.repair_attempts??0)+1>=3;
      await deps.recordSite(site,{status:!repaired.deferred&&exhausted?'needs_attention':'pending',reason:repaired.reason});
@@ -142,9 +142,12 @@ export async function main(env=process.env,{runId}={}) {
    writeRules:async args=>writeRules({...args,fetchPage,proposed:await store.proposed(args.site),saveVersion:(rules,author,check)=>store.saveVersion(args.site,rules,author,check),activate:(id,check)=>store.activate(args.site,id,check)}),
    crawl:(site,options)=>{const cache=Object.fromEntries((site.pages??[]).filter(p=>p.status==='ok'&&p.rule_id===site.rule_id).map(p=>[p.url,{etag:p.etag,lastModified:p.last_modified}]));return crawlPersistentSite({site,venues:site.venues,run,spend,readers:[rulesReader,structuredReader],fetchPage:createFetcher({cache,gate}),store:{page:savePage,site:saveSite},load:(url,findings)=>loadSite(run.id,url,findings),publish:()=>publish(run.id),...options});},checkpoint}});
   const progress=await store.progress();
-  await finishRun(run.id,{status:'done',summary:{...result,progress,findings:result.sites.reduce((n,s)=>n+(s.findings??0),0)},costUsd:spend.usd});
-  const report=`# Crawl loop\n\n${result.sites.length} sites, ${result.searches} searches, $${spend.usd.toFixed(4)}.\n\n${Object.entries(progress).map(([key,value])=>`- ${key}: ${value}`).join('\n')}\n\n${result.sites.map(s=>`- ${s.venue_id}: ${s.status}${s.reason?` (${s.reason})`:''}`).join('\n')}\n`;
+  const findings = result.sites.reduce((n, site) => n + (site.findings ?? 0), 0);
+  const allFailed = result.sites.length > 0 && result.sites.every(site => ['needs_attention', 'failed'].includes(site.status));
+  await finishRun(run.id,{status:allFailed?'failed':'done',summary:{...result,progress,findings},costUsd:spend.usd});
+  const report=`# Crawl loop\n\n${result.sites.length} sites, ${findings} findings, ${result.searches} searches, $${spend.usd.toFixed(4)}.\n\n${Object.entries(progress).map(([key,value])=>`- ${key}: ${value}`).join('\n')}\n\n${result.sites.map(s=>`- ${s.venue_name ?? s.venue_id}: ${s.status}${s.reason?` (${s.reason}${s.detail ? `: ${s.detail}` : ''})`:''}`).join('\n')}\n`;
   console.log(report);if(env.GITHUB_STEP_SUMMARY)await appendFile(env.GITHUB_STEP_SUMMARY,report);
+  return {allFailed};
  } catch(error){await finishRun(run.id,{status:'failed',summary:{...(await readRun(run.id))?.summary,error:'Loop interrupted'},costUsd:spend.usd});throw error;}
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)main().catch(()=>{console.error('Crawl loop failed; see saved run for progress.');process.exitCode=1;});
+if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)main().then(result=>{if(result?.allFailed)process.exitCode=1;}).catch(()=>{console.error('Crawl loop failed; see saved run for progress.');process.exitCode=1;});

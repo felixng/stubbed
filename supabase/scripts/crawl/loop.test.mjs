@@ -78,3 +78,39 @@ test('bad repairs keep existing links/rules, and limits clamp unsafe configurati
  const result=await runLoop({limits:config,deps});assert.equal(changed,false);assert.equal(result.sites[0].reason,'known_shows_missing');
  const capped=loopLimits({CRAWL_LOOP_ENABLED:'false',CRAWL_MAX_SITES:'999',CRAWL_MAX_SPEND_USD:'999',CRAWL_MAX_MINUTES:'999'});assert.equal(capped.enabled,false);assert.equal(capped.maxSites,100);assert.equal(capped.budgetUsd,10);assert.equal(capped.maxMs,1200000);
 });
+
+test('search skips adverts and duplicate domains before limiting results', () => {
+ const html = `<div class="result--ad"><a class="result__a" href="https://advert.test/">Ad</a></div>
+  <a class="result__a" href="https://duckduckgo.com/y.js">Tracking link</a>
+  <a class="result__a" href="https://www.official.test/theatre/">Official theatre</a>
+  <a class="result__a" href="https://official.test/tickets/">Same site</a>
+  <a class="result__a" href="https://another.test/">Another site</a>`;
+ assert.deepEqual(searchCandidates(html), ['https://www.official.test/theatre/', 'https://another.test/']);
+ assert.equal(homepageNamesVenue('<img alt="Southwark Playhouse Borough logo">', 'Southwark Playhouse Borough'), true);
+});
+
+test('discovery resolves relative links against the redirected venue page', async () => {
+ const redirected = 'https://www.almeida.test/en-GB/';
+ const listing = new URL('whats-on', redirected).href;
+ const fetchPage = async url => url === venue.website
+   ? {status:'ok', url:redirected, html:'<a href="whats-on">What’s on</a>'}
+   : {status:url === listing ? 'ok' : 'failed'};
+ const result = await discoverLinks({
+   venue, fetchPage, limits:limits(),
+   model:async ({payload}) => {
+     assert.ok(payload.links.some(link => link.url === listing));
+     assert.ok(payload.links.some(link => link.url === redirected));
+     return {value:{whats_on_url:listing,archive_url:null}};
+   },
+ });
+ assert.equal(result.whats_on_url, listing);
+});
+
+test('a single checked show with a labelled date range can validate', () => {
+ const html = '<article><h2>Example Play</h2><p>Dates: 28 Aug – 14 Nov 2026</p></article>';
+ const result = checkRules({
+   rules:{item:'article',title:'h2',dates:'p'},html,url:venue.website,venues,
+ });
+ assert.equal(result.ok, true);
+ assert.equal(result.count, 1);
+});
