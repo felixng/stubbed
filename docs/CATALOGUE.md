@@ -102,7 +102,35 @@ official-site runner continues to use its existing controls and checkpoints.
 - These tables are admin-read and service-role-write. The RPCs are service-role
   only. To stop new aggregate work, leave collection and publication off. The
   migration can remain in place and existing catalogue and diary data remain
-  available. Worker scheduling and fetch-time URL checks arrive in #421.
+  available.
+
+**#421 worker.** The optional staged command lives alongside the original
+official-site loop. Each task claims a five-minute token with `SKIP LOCKED`.
+It renews the lease every minute. All outcomes, including retries, validate
+the token and expiry. Expired tasks can be claimed again. The worker stops
+claiming and cancels requests 90 seconds before its declared deadline.
+
+- The request gate permits four active requests across staged workers and
+  one per host. It records a request count separately from task attempts.
+  It checks every redirect against source hosts and robots rules. It connects
+  only to the validated public DNS address. A 429 persists the host cooldown
+  and respects `Retry-After` or defaults to one hour. A 403 or robots exclusion
+  pauses the aggregate source or the selected official-site scope.
+- Timeouts, parser failures and server errors use jittered retries at roughly
+  1 minute, 5 minutes, 30 minutes, 2 hours and 12 hours. Exhausted retries
+  leave failed work visible. They preserve prior extracted observations.
+- A 304 reuses the saved extraction and links for the same parser version.
+  New parser versions and missing extractions require an unconditional fetch.
+  `--reparse` keeps the current scan and saved observations, clears validators
+  and queues its tasks again. `--refresh` creates a new scan and seed.
+- `--dry-run` reads due tasks and proposes extractions without any mutations
+  or model calls. It uses local pacing and respects observed database
+  cooldowns. Run live dry runs separately from live collection for that host.
+- This slice installs the staged runner and an explicit scoped preview that
+  reuses the official structured reader. The existing official loop and
+  archive checkpoints continue to serve current manual and scheduled runs.
+  London Theatre and Playbill are disabled and have no adapter until their
+  respective slices. The publication queue has no consumer yet.
 
 ### #272 Journey 1, step 4: suggest the show from runs
 - **#360 entry suggestions.** `suggest_shows(venue_ids uuid[], on_date date)` returns `(show_id, title, venue_id, source, score)`, `source` in `community`, `yours`. `security definer` only if needed to count other people's public entries; it must return no user ids and must apply `profile_is_visible`, entry visibility and `blocks` (reuse the predicates used by `feed_entries`). `entry_logged` gains `show_source`.

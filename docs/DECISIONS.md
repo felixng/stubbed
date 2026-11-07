@@ -1167,3 +1167,12 @@ current generation and retains its links, extractions and source identities.
 Publication receives a durable extraction ID in the same transaction that
 saves child links and acknowledges their parent. That transaction grants no
 public catalogue visibility.
+
+### #421 Staged fetch and task leases
+
+Fence writes with the task's token and fence each outbound request separately
+with a shared host slot. A timed-out job cannot acknowledge a replacement
+worker's task or release its request slot. Store conditional request
+validators next to the versioned extraction and reuse them only when that
+parser has saved evidence. Keep the existing official-site loop available
+while the staged runner exercises the structured reader in a selected scope.

@@ -18,10 +18,10 @@ export function connectionEnv(url = process.env.SUPABASE_DB_URL ?? LOCAL) {
   return env;
 }
 
-export function runPsql(sql) {
+export function runPsql(sql, { timeout = 120_000 } = {}) {
   return new Promise((resolve, reject) => {
     const child = spawn('psql', ['-X', '-q', '-A', '-t', '-v', 'ON_ERROR_STOP=1'], {
-      env: { ...process.env, ...connectionEnv() }, stdio: ['pipe', 'pipe', 'pipe'], timeout: 120_000,
+      env: { ...process.env, ...connectionEnv() }, stdio: ['pipe', 'pipe', 'pipe'], timeout,
     });
     let output = '';
     child.stdout.on('data', chunk => { output += chunk; });

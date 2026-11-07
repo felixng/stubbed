@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { runFrontierCli } from './frontier.mjs';
 import {randomUUID} from 'node:crypto';
 import {appendFile} from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
@@ -147,4 +148,10 @@ export async function main(env=process.env,{runId}={}) {
   console.log(report);if(env.GITHUB_STEP_SUMMARY)await appendFile(env.GITHUB_STEP_SUMMARY,report);
  } catch(error){await finishRun(run.id,{status:'failed',summary:{...(await readRun(run.id))?.summary,error:'Loop interrupted'},costUsd:spend.usd});throw error;}
 }
-if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)main().catch(()=>{console.error('Crawl loop failed; see saved run for progress.');process.exitCode=1;});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  if (process.argv.length > 2) {
+    runFrontierCli().catch(error => { console.error(error.message); process.exitCode = 1; });
+  } else {
+    main().catch(() => { console.error('Crawl loop failed; see saved run for progress.'); process.exitCode = 1; });
+  }
+}
