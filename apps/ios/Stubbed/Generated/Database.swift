@@ -571,6 +571,7 @@ internal enum PublicSchema {
     internal let lastError: String?
     internal let processedAt: String?
     internal let queuedAt: String
+    internal let runAvailableAt: String
     internal enum CodingKeys: String, CodingKey {
       case extractionId = "extraction_id"
       case identityAvailableAt = "identity_available_at"
@@ -579,6 +580,7 @@ internal enum PublicSchema {
       case lastError = "last_error"
       case processedAt = "processed_at"
       case queuedAt = "queued_at"
+      case runAvailableAt = "run_available_at"
     }
   }
   internal struct CrawlPublicationQueueInsert: Codable, Hashable, Sendable {
@@ -589,6 +591,7 @@ internal enum PublicSchema {
     internal let lastError: String?
     internal let processedAt: String?
     internal let queuedAt: String?
+    internal let runAvailableAt: String?
     internal enum CodingKeys: String, CodingKey {
       case extractionId = "extraction_id"
       case identityAvailableAt = "identity_available_at"
@@ -597,6 +600,7 @@ internal enum PublicSchema {
       case lastError = "last_error"
       case processedAt = "processed_at"
       case queuedAt = "queued_at"
+      case runAvailableAt = "run_available_at"
     }
   }
   internal struct CrawlPublicationQueueUpdate: Codable, Hashable, Sendable {
@@ -607,6 +611,7 @@ internal enum PublicSchema {
     internal let lastError: String?
     internal let processedAt: String?
     internal let queuedAt: String?
+    internal let runAvailableAt: String?
     internal enum CodingKeys: String, CodingKey {
       case extractionId = "extraction_id"
       case identityAvailableAt = "identity_available_at"
@@ -615,6 +620,7 @@ internal enum PublicSchema {
       case lastError = "last_error"
       case processedAt = "processed_at"
       case queuedAt = "queued_at"
+      case runAvailableAt = "run_available_at"
     }
   }
   internal struct CrawlRulesSelect: Codable, Hashable, Sendable {
@@ -669,6 +675,180 @@ internal enum PublicSchema {
       case siteId = "site_id"
       case status = "status"
       case validation = "validation"
+    }
+  }
+  internal struct CrawlRunEvidenceSelect: Codable, Hashable, Sendable {
+    internal let engagementId: UUID
+    internal let evidenceField: String
+    internal let evidenceText: String?
+    internal let extractionId: UUID?
+    internal let extractionMethod: String
+    internal let factKey: String
+    internal let id: UUID
+    internal let kind: String
+    internal let lastSeenAt: String
+    internal let legacyRunId: UUID?
+    internal let matchStatus: String
+    internal let observedAt: String
+    internal let onDate: String?
+    internal let pageChecked: Bool
+    internal let parserVersion: String
+    internal let precision: String
+    internal let rawTitle: String
+    internal let segmentKey: String
+    internal let sharedRef: String?
+    internal let showId: UUID?
+    internal let sourceEventKey: String
+    internal let sourceId: UUID
+    internal let sourceUrl: String
+    internal let supersededAt: String?
+    internal let valueHash: String
+    internal let venueId: UUID?
+    internal let withdrawnAt: String?
+    internal enum CodingKeys: String, CodingKey {
+      case engagementId = "engagement_id"
+      case evidenceField = "evidence_field"
+      case evidenceText = "evidence_text"
+      case extractionId = "extraction_id"
+      case extractionMethod = "extraction_method"
+      case factKey = "fact_key"
+      case id = "id"
+      case kind = "kind"
+      case lastSeenAt = "last_seen_at"
+      case legacyRunId = "legacy_run_id"
+      case matchStatus = "match_status"
+      case observedAt = "observed_at"
+      case onDate = "on_date"
+      case pageChecked = "page_checked"
+      case parserVersion = "parser_version"
+      case precision = "precision"
+      case rawTitle = "raw_title"
+      case segmentKey = "segment_key"
+      case sharedRef = "shared_ref"
+      case showId = "show_id"
+      case sourceEventKey = "source_event_key"
+      case sourceId = "source_id"
+      case sourceUrl = "source_url"
+      case supersededAt = "superseded_at"
+      case valueHash = "value_hash"
+      case venueId = "venue_id"
+      case withdrawnAt = "withdrawn_at"
+    }
+  }
+  internal struct CrawlRunEvidenceInsert: Codable, Hashable, Sendable {
+    internal let engagementId: UUID
+    internal let evidenceField: String
+    internal let evidenceText: String?
+    internal let extractionId: UUID?
+    internal let extractionMethod: String
+    internal let factKey: String
+    internal let id: UUID?
+    internal let kind: String
+    internal let lastSeenAt: String
+    internal let legacyRunId: UUID?
+    internal let matchStatus: String
+    internal let observedAt: String
+    internal let onDate: String?
+    internal let pageChecked: Bool
+    internal let parserVersion: String
+    internal let precision: String
+    internal let rawTitle: String
+    internal let segmentKey: String
+    internal let sharedRef: String?
+    internal let showId: UUID?
+    internal let sourceEventKey: String
+    internal let sourceId: UUID
+    internal let sourceUrl: String
+    internal let supersededAt: String?
+    internal let valueHash: String
+    internal let venueId: UUID?
+    internal let withdrawnAt: String?
+    internal enum CodingKeys: String, CodingKey {
+      case engagementId = "engagement_id"
+      case evidenceField = "evidence_field"
+      case evidenceText = "evidence_text"
+      case extractionId = "extraction_id"
+      case extractionMethod = "extraction_method"
+      case factKey = "fact_key"
+      case id = "id"
+      case kind = "kind"
+      case lastSeenAt = "last_seen_at"
+      case legacyRunId = "legacy_run_id"
+      case matchStatus = "match_status"
+      case observedAt = "observed_at"
+      case onDate = "on_date"
+      case pageChecked = "page_checked"
+      case parserVersion = "parser_version"
+      case precision = "precision"
+      case rawTitle = "raw_title"
+      case segmentKey = "segment_key"
+      case sharedRef = "shared_ref"
+      case showId = "show_id"
+      case sourceEventKey = "source_event_key"
+      case sourceId = "source_id"
+      case sourceUrl = "source_url"
+      case supersededAt = "superseded_at"
+      case valueHash = "value_hash"
+      case venueId = "venue_id"
+      case withdrawnAt = "withdrawn_at"
+    }
+  }
+  internal struct CrawlRunEvidenceUpdate: Codable, Hashable, Sendable {
+    internal let engagementId: UUID?
+    internal let evidenceField: String?
+    internal let evidenceText: String?
+    internal let extractionId: UUID?
+    internal let extractionMethod: String?
+    internal let factKey: String?
+    internal let id: UUID?
+    internal let kind: String?
+    internal let lastSeenAt: String?
+    internal let legacyRunId: UUID?
+    internal let matchStatus: String?
+    internal let observedAt: String?
+    internal let onDate: String?
+    internal let pageChecked: Bool?
+    internal let parserVersion: String?
+    internal let precision: String?
+    internal let rawTitle: String?
+    internal let segmentKey: String?
+    internal let sharedRef: String?
+    internal let showId: UUID?
+    internal let sourceEventKey: String?
+    internal let sourceId: UUID?
+    internal let sourceUrl: String?
+    internal let supersededAt: String?
+    internal let valueHash: String?
+    internal let venueId: UUID?
+    internal let withdrawnAt: String?
+    internal enum CodingKeys: String, CodingKey {
+      case engagementId = "engagement_id"
+      case evidenceField = "evidence_field"
+      case evidenceText = "evidence_text"
+      case extractionId = "extraction_id"
+      case extractionMethod = "extraction_method"
+      case factKey = "fact_key"
+      case id = "id"
+      case kind = "kind"
+      case lastSeenAt = "last_seen_at"
+      case legacyRunId = "legacy_run_id"
+      case matchStatus = "match_status"
+      case observedAt = "observed_at"
+      case onDate = "on_date"
+      case pageChecked = "page_checked"
+      case parserVersion = "parser_version"
+      case precision = "precision"
+      case rawTitle = "raw_title"
+      case segmentKey = "segment_key"
+      case sharedRef = "shared_ref"
+      case showId = "show_id"
+      case sourceEventKey = "source_event_key"
+      case sourceId = "source_id"
+      case sourceUrl = "source_url"
+      case supersededAt = "superseded_at"
+      case valueHash = "value_hash"
+      case venueId = "venue_id"
+      case withdrawnAt = "withdrawn_at"
     }
   }
   internal struct CrawlRunsSelect: Codable, Hashable, Sendable {
@@ -1010,6 +1190,7 @@ internal enum PublicSchema {
     internal let pausedReason: String?
     internal let publicationEnabled: Bool
     internal let sourceKey: String
+    internal let withdrawnAt: String?
     internal enum CodingKeys: String, CodingKey {
       case adapterVersion = "adapter_version"
       case allowedHosts = "allowed_hosts"
@@ -1019,6 +1200,7 @@ internal enum PublicSchema {
       case pausedReason = "paused_reason"
       case publicationEnabled = "publication_enabled"
       case sourceKey = "source_key"
+      case withdrawnAt = "withdrawn_at"
     }
   }
   internal struct CrawlSourcesInsert: Codable, Hashable, Sendable {
@@ -1030,6 +1212,7 @@ internal enum PublicSchema {
     internal let pausedReason: String?
     internal let publicationEnabled: Bool?
     internal let sourceKey: String
+    internal let withdrawnAt: String?
     internal enum CodingKeys: String, CodingKey {
       case adapterVersion = "adapter_version"
       case allowedHosts = "allowed_hosts"
@@ -1039,6 +1222,7 @@ internal enum PublicSchema {
       case pausedReason = "paused_reason"
       case publicationEnabled = "publication_enabled"
       case sourceKey = "source_key"
+      case withdrawnAt = "withdrawn_at"
     }
   }
   internal struct CrawlSourcesUpdate: Codable, Hashable, Sendable {
@@ -1050,6 +1234,7 @@ internal enum PublicSchema {
     internal let pausedReason: String?
     internal let publicationEnabled: Bool?
     internal let sourceKey: String?
+    internal let withdrawnAt: String?
     internal enum CodingKeys: String, CodingKey {
       case adapterVersion = "adapter_version"
       case allowedHosts = "allowed_hosts"
@@ -1059,6 +1244,7 @@ internal enum PublicSchema {
       case pausedReason = "paused_reason"
       case publicationEnabled = "publication_enabled"
       case sourceKey = "source_key"
+      case withdrawnAt = "withdrawn_at"
     }
   }
   internal struct CrawlTaskEdgesSelect: Codable, Hashable, Sendable {
@@ -2565,6 +2751,48 @@ internal enum PublicSchema {
       case email = "email"
       case id = "id"
       case source = "source"
+    }
+  }
+  internal struct CatalogueEffectiveRunsSelect: Codable, Hashable, Sendable {
+    internal let autofillEligible: Bool?
+    internal let autofillReason: String?
+    internal let bookingUntil: String?
+    internal let cancelled: Bool?
+    internal let confirmedEndDate: String?
+    internal let conflicting: Bool?
+    internal let exceptionDates: [String]?
+    internal let id: UUID?
+    internal let lastObservedAt: String?
+    internal let legacy: Bool?
+    internal let openingDate: String?
+    internal let performanceDates: [String]?
+    internal let previewDate: String?
+    internal let scheduledEndDate: String?
+    internal let showId: UUID?
+    internal let startDate: String?
+    internal let supportEndDate: String?
+    internal let title: String?
+    internal let venueId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case autofillEligible = "autofill_eligible"
+      case autofillReason = "autofill_reason"
+      case bookingUntil = "booking_until"
+      case cancelled = "cancelled"
+      case confirmedEndDate = "confirmed_end_date"
+      case conflicting = "conflicting"
+      case exceptionDates = "exception_dates"
+      case id = "id"
+      case lastObservedAt = "last_observed_at"
+      case legacy = "legacy"
+      case openingDate = "opening_date"
+      case performanceDates = "performance_dates"
+      case previewDate = "preview_date"
+      case scheduledEndDate = "scheduled_end_date"
+      case showId = "show_id"
+      case startDate = "start_date"
+      case supportEndDate = "support_end_date"
+      case title = "title"
+      case venueId = "venue_id"
     }
   }
 }

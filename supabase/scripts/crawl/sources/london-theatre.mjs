@@ -1,7 +1,7 @@
 import { load } from 'cheerio';
 import { canonicalTaskUrl } from '../frontier-url.mjs';
 import { eventsFromJsonLd, jsonLdBlocks } from './theatre-site.mjs';
-import { sourceDateRange } from './source-dates.mjs';
+import { sourceDateRange, sourcePartialPrecision } from './source-dates.mjs';
 
 const ORIGIN = 'https://www.londontheatre.co.uk';
 const HOSTS = ['www.londontheatre.co.uk', 'londontheatre.co.uk'];
@@ -181,7 +181,10 @@ function dateClaims(value, kind, field) {
     }
   }
   const range = sourceDateRange(value);
-  if (!range.start) return [{ kind: 'unknown', date: null, intended_kind: kind, evidence: evidence(field, value) }];
+  if (!range.start) return [{
+    kind: 'unknown', date: null, intended_kind: kind, precision: sourcePartialPrecision(value),
+    evidence: evidence(field, value),
+  }];
   if (range.precision === 'range' && kind === 'performance') {
     return [
       { kind: 'start', date: range.start, evidence: evidence(field, value) },
@@ -276,7 +279,7 @@ export function parseEvent({ url, html }) {
 }
 
 export const londonTheatre = {
-  version: 'london-theatre-v1',
+  version: 'london-theatre-v2',
   maxBytes: 6_000_000,
   seeds: [{ scope: 'venue-directory', stage: 'directory', url: ORIGIN + '/venues' }],
   parsers: { directory: parseDirectory, venue: parseVenue, event: parseEvent },
