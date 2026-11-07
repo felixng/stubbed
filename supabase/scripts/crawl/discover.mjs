@@ -1,5 +1,4 @@
 import {load} from 'cheerio';
-import {knownSource} from './known-sources.mjs';
 import {normalText} from './rules.mjs';
 const LINK_SCHEMA={type:'object',additionalProperties:false,required:['whats_on_url','archive_url'],properties:{whats_on_url:{type:['string','null']},archive_url:{type:['string','null']}}};
 export function sameSite(url,homepage) {try{const a=new URL(url),b=new URL(homepage);return /^https?:$/.test(a.protocol)&&a.hostname.replace(/^www\./,'')===b.hostname.replace(/^www\./,'');}catch{return false;}}
@@ -36,15 +35,6 @@ export function searchCandidates(html) {
  return urls.slice(0, 5);
 }
 export async function discoverLinks({venue,fetchPage,model,lookupWebsite,search,limits,repair=false,audit=()=>{}}) {
- const known = knownSource(venue);
- if (known && !repair && venue.whats_on_source !== 'manual') {
-  const page = await fetchPage(known.whats_on_url);
-  audit('Crawler', page.status === 'ok' ? 'Selected bundled source' : 'Bundled source unavailable', [known.whats_on_url], page.error ?? page.status);
-  if (page.status === 'ok') return {
-   website: known.website, website_source: 'existing',
-   whats_on_url: known.whats_on_url, whats_on_source: 'discovered', archive_url: null, repair,
-  };
- }
  let website = repair && venue.website_source !== 'manual' ? null : venue.website;
  let websiteSource = venue.website_source;
  if (!website && venue.wikidata_id) {

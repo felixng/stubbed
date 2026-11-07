@@ -1,5 +1,4 @@
 import {load} from 'cheerio';
-import {knownRules} from './known-sources.mjs';
 import {RULES_SCHEMA,validateRules,readRules,checkFindings,normalText} from './rules.mjs';
 export function trimmedHtml(html) {const $=load(html);$('script,style,noscript,svg,iframe').remove();$('*').each((_,el)=>{for(const attr of Object.keys(el.attribs??{}))if(!['class','id','href','datetime','rel'].includes(attr))$(el).removeAttr(attr);});return $.html().slice(0,20000);}
 export function checkRules({rules,html,url,venues,knownTitles=[]}) {
@@ -27,16 +26,6 @@ export async function writeRules({site,venues,fetchPage,model,saveVersion,activa
  const validate=rules=>{const current=checkRules({rules,html:page.html,url:site.whats_on_url,venues,knownTitles});if(!current.ok)return current;if(archive){const old=checkRules({rules,html:archive,url:site.archive_url,venues});if(!old.ok)return {...old,reason:`archive_${old.reason}`};}return current;};
  const $=load(html);
  if($.root().text().trim().length<100 || (!$('#__next, #root, #app').text().trim() && /id=["'](?:__next|root|app)["']/.test(html) && $('h1,h2,h3').length===0)) return {failed:true,reason:'javascript_only_page'};
- const verified = knownRules(site.whats_on_url);
- if (verified) {
-  const checked = validate(verified);
-  audit('Crawler', checked.ok ? 'Validated bundled reading rules' : 'Rejected bundled reading rules', [site.whats_on_url], checked.reason);
-  if (checked.ok) {
-   const id = await saveVersion(verified, 'verified-source', checked);
-   if (!deferActivation) await activate(id, checked);
-   return {ok:true,rules:verified,ruleId:id,validation:checked};
-  }
- }
  if(proposed) {
   const checked=validate(proposed.rules);
   audit('Crawler', checked.ok ? 'Validated saved rule proposal' : 'Rejected saved rule proposal', [site.whats_on_url], checked.reason);

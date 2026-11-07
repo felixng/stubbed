@@ -1,8 +1,7 @@
 import { load } from 'cheerio';
 import { decodeEntities } from './readers.mjs';
-import { calendarEvents } from './known-sources.mjs';
 import { parseDates } from './dates.mjs';
-import { matchStage } from './sources/theatre-site.mjs';
+import { calendarEvents, matchStage } from './sources/theatre-site.mjs';
 
 export const RULES_SCHEMA = {
   type: 'object', additionalProperties: false, required: ['item', 'title', 'dates'],

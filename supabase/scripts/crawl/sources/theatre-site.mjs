@@ -3,7 +3,6 @@
 // the raw title and the dates as written; nothing here links to a show.
 import { load } from 'cheerio';
 import { readFileSync } from 'node:fs';
-import { calendarEvents } from '../known-sources.mjs';
 import { decodeEntities } from '../readers.mjs';
 
 export const DEFAULT_PROMPT = readFileSync(new URL('../prompt.md', import.meta.url), 'utf8').trim();
@@ -111,6 +110,20 @@ export function matchStage(stage, venues) {
     return n && (n === s || s.includes(n) || (s.length >= 4 && n.includes(s)));
   });
   return hits.length === 1 ? hits[0].id : null;
+}
+
+// Read the calendar format when the selected URL is this public feed. This
+// reader does not participate in URL discovery.
+export function calendarEvents(url, body) {
+  if (url !== 'https://www.brasseriezedel.com/api/get_calendar.php') return [];
+  let feed;
+  try { feed = JSON.parse(body); } catch { return []; }
+  if (!feed?.events || Array.isArray(feed.events)) return [];
+  return Object.entries(feed.events).flatMap(([date, rows]) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Array.isArray(rows)) return [];
+    return rows.filter(row => typeof row?.name === 'string' && row.stream !== true)
+      .map(row => ({'@type': 'Event', name: row.name, startDate: date, endDate: date}));
+  });
 }
 
 export function structuredReader({ url, html }, { venues }) {

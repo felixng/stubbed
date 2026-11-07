@@ -1,7 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {knownSource} from './known-sources.mjs';
 import {shortlistLinks,homepageNamesVenue,discoverLinks,searchCandidates} from './discover.mjs';
 import {writeRules,checkRules,trimmedHtml} from './write-rules.mjs';
 import {createModel} from './model.mjs';
@@ -125,15 +124,28 @@ test('a single checked show with a labelled date range can validate', () => {
  assert.equal(result.count, 1);
 });
 
-test('verified sources match the venue and city and preserve a manual listings URL', async () => {
- const venue = {id:'v',name:'Boulevard Theatre',city:'London'};
- assert.equal(knownSource({...venue,city:'New York'}),undefined);
- const result = await discoverLinks({venue,limits:limits(),fetchPage:async()=>({status:'ok'})});
- assert.equal(result.whats_on_url,'https://underbellyboulevard.com/');
+test('a formerly bundled venue uses Claude’s shortlisted URL; a manual URL survives', async () => {
+ const website = 'https://circleinthesquare.test/';
+ const listings = new URL('current-productions/', website).href;
+ const manualUrl = new URL('calendar/', website).href;
+ const venue = {id:'v',name:'Circle in the Square Theatre',city:'New York',website};
+ const fetched = [];
+ const args = {
+   venue, limits:limits(),
+   fetchPage:async url => {
+     fetched.push(url);
+     return {status:'ok', html:'<h1>Circle in the Square Theatre</h1><a href="/current-productions/">Current productions</a>'};
+   },
+   model:async ({payload}) => {
+     assert.ok(payload.links.some(link => link.url === listings));
+     return {value:{whats_on_url:listings,archive_url:null}};
+   },
+ };
+ const result = await discoverLinks(args);
+ assert.equal(result.whats_on_url,listings);
+ assert.deepEqual(fetched,[website,listings]);
  const manual = await discoverLinks({
-   venue:{...venue,website:'https://venue.test/',whats_on_source:'manual',whats_on_url:'https://venue.test/calendar'},
-   fetchPage:async()=>({status:'ok',html:'<h1>Boulevard Theatre</h1>'}),
-   limits:limits(),model:async()=>({value:{whats_on_url:null,archive_url:null}}),
+   ...args, venue:{...venue,whats_on_source:'manual',whats_on_url:manualUrl},
  });
- assert.equal(manual.whats_on_url,'https://venue.test/calendar');
+ assert.equal(manual.whats_on_url,manualUrl);
 });
