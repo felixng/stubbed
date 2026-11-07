@@ -377,3 +377,12 @@ Home’s bell sits beside Search on mobile and desktop web, with an accessible s
 Notification settings distinguishes account preferences from this installation’s permission. Each implemented category has its own inbox/push control. Preview-off sample copy is generic. Optional quiet hours show times and a named time zone. iPhone browser-tab guidance explains Add to Home Screen → open its icon → Enable; Android explains browser permission and optional installation. Desktop offers the shared inbox and account mobile preferences, without a permission prompt. Web runtime screenshots remain outstanding because local browser control is disabled; do not substitute mockups for running captures.
 
 Notification settings use push-category switches only. Permission is a contextual inset-grouped invitation with a bell symbol, short heading, supporting copy and one native action; it disappears after enabling. Denial offers system Settings, never a repeated OS prompt. The inbox has no category controls; previews and quiet time use device settings.
+
+### Backstage crawl progress
+
+Source progress uses labelled surface cards and a responsive, single-column
+page list on small screens. URL filters retain scan, stage, status and page.
+Processed venue pages and completed event work have separate counts. Source
+controls leave the collection and publication states visible.
+
+[Desktop fixture](screenshots/crawl-source-progress/desktop.png) · [Mobile fixture](screenshots/crawl-source-progress/mobile.png)

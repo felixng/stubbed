@@ -1,0 +1,197 @@
+import { Suspense } from "react";
+import Link from "next/link";
+import { AdminOnly } from "@/components/app/admin/AdminOnly";
+import { CrawlSourceControl } from "@/components/app/admin/CrawlSourceControl";
+import { BackLink } from "@/components/ui/BackLink";
+import { Button } from "@/components/ui/Button";
+import {
+  CRAWL_PAGE_SIZE, CRAWL_SOURCES_PATH, CRAWL_STAGES, CRAWL_STATUS_LABELS,
+  crawlSourceFilters, crawlSourceHref, crawlSourceName, crawlStageProgress,
+  type CrawlPage, type CrawlScan, type CrawlSourceProgress,
+} from "@/lib/admin-crawl";
+import { ownerContext } from "@/lib/supabase/data";
+
+const stageNames = { directory: "Directory", venue: "Venues", event: "Event details" };
+const panel = "min-w-0 rounded-md border border-separator bg-surface p-4";
+const selectStyle = "min-h-11 min-w-0 rounded-sm border border-separator bg-surface px-2 text-subheadline";
+const time = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" });
+const number = new Intl.NumberFormat("en-GB");
+
+function timestamp(value: string) {
+  return `${time.format(new Date(value))} UTC`;
+}
+
+function discovery(scan: CrawlScan | null) {
+  if (!scan) return "No scan recorded.";
+  if (scan.enumeration_status === "enumerated" && scan.completed_at) {
+    return `Discovery complete for configured scope, as of ${timestamp(scan.completed_at)}.`;
+  }
+  if (scan.enumeration_status === "not_applicable") return "This scope starts at a supplied page.";
+  return "Discovery in progress — total may grow.";
+}
+
+function TaskRow({ row, source, scan }: { row: CrawlPage; source: string; scan: CrawlScan }) {
+  return (
+    <li className={`flex flex-col gap-2 ${panel}`}>
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+        <p className="min-w-0 break-all text-subheadline font-semibold">{row.canonical_url}</p>
+        <span className="rounded-pill bg-fill px-2 py-1 text-footnote">{CRAWL_STATUS_LABELS[row.status]}</span>
+      </div>
+      <p className="text-footnote text-label-secondary">
+        {row.attempts} attempts · {row.http_requests} reserved HTTP requests · Parser {row.parser_version ?? "pending"}
+      </p>
+      {row.last_success_at && <p className="text-footnote text-label-secondary">Last processed {timestamp(row.last_success_at)}</p>}
+      {row.stage === "venue" && row.last_success_at && (
+        <p className="text-footnote">{row.enriched ? "Reachable event work complete" : "Reachable event work incomplete"}</p>
+      )}
+      {row.status === "retry_wait" && <p className="text-footnote">Retry due {timestamp(row.available_at)}</p>}
+      {row.last_error && <p className="break-words text-footnote">{row.last_error}</p>}
+      {scan.is_current && (
+        <div className="flex flex-wrap gap-2">
+          {row.status === "blocked" ? <CrawlSourceControl source={source} operation="retry_blocked" scan={scan.id} task={row.id} />
+            : (row.status === "failed" || row.status === "retry_wait") &&
+              <CrawlSourceControl source={source} operation="retry_failed" scan={scan.id} task={row.id} />}
+          {row.status !== "blocked" && row.parser_version &&
+            <CrawlSourceControl source={source} operation="reparse" scan={scan.id} task={row.id} />}
+        </div>
+      )}
+    </li>
+  );
+}
+
+async function Sources({ searchParams }: Pick<PageProps<"/app/backstage/crawl/sources">, "searchParams">) {
+  const filters = crawlSourceFilters(await searchParams);
+  const { supabase } = await ownerContext();
+  const { data: payload, error } = await supabase.rpc("crawl_source_progress", {
+    for_source: filters.source, for_generation: filters.scan, for_stage: filters.stage,
+    for_status: filters.status, page_size: CRAWL_PAGE_SIZE, page_offset: (filters.page - 1) * CRAWL_PAGE_SIZE,
+  });
+  if (error || !payload) return <p>Couldn’t load source progress.</p>;
+  const data = payload as unknown as CrawlSourceProgress;
+  const source = data.sources.find(item => item.source_key === filters.source);
+  const scan = data.scan;
+  const first = (filters.page - 1) * CRAWL_PAGE_SIZE + 1;
+  const last = Math.min(filters.page * CRAWL_PAGE_SIZE, data.filtered_total);
+
+  return (
+    <>
+      <nav aria-label="Crawl sources" className="flex flex-wrap gap-3">
+        {data.sources.map(item => (
+          <Link key={item.source_key} href={crawlSourceHref({ ...filters, source: item.source_key, scan: undefined, status: undefined, page: 1 })}
+            aria-current={source?.source_key === item.source_key ? "page" : undefined}
+            className="inline-flex min-h-11 items-center rounded-pill bg-fill px-3 text-subheadline font-semibold text-tint-text aria-[current=page]:bg-tint-fill">
+            {crawlSourceName(item.source_key)}
+          </Link>
+        ))}
+      </nav>
+      {source ? (
+        <>
+          <section className={`flex flex-col gap-3 ${panel}`} aria-labelledby="crawl-source-state">
+            <h2 id="crawl-source-state" className="text-headline">{crawlSourceName(source.source_key)}</h2>
+            <dl className="grid grid-cols-2 gap-3 text-subheadline sm:grid-cols-3">
+              <div><dt className="text-label-secondary">Collection</dt><dd>{source.collection_enabled ? "Enabled" : "Off"}</dd></div>
+              <div><dt className="text-label-secondary">Publication</dt><dd>{source.publication_enabled ? "Enabled" : "Off"}</dd></div>
+              <div><dt className="text-label-secondary">Parser</dt><dd className="break-words">{source.adapter_version}</dd></div>
+              <div><dt className="text-label-secondary">Claims</dt><dd>{source.paused_reason ? "Blocked" : source.operator_paused_at ? "Paused by operator" : source.collection_enabled ? "Accepting new claims" : "Disabled"}</dd></div>
+              <div><dt className="text-label-secondary">Last scan activity</dt><dd>{data.last_activity_at ? timestamp(data.last_activity_at) : "None recorded"}</dd></div>
+              {source.withdrawn_at && <div><dt className="text-label-secondary">Evidence</dt><dd>Withdrawn</dd></div>}
+            </dl>
+            {source.paused_reason && <p className="break-words text-subheadline">{source.paused_reason}</p>}
+            {source.source_key === "official" && <p className="text-footnote text-label-secondary">Legacy official-site activity is listed under Crawl sites and Crawl runs.</p>}
+            <div className="flex flex-wrap gap-2">
+              <CrawlSourceControl source={source.source_key} operation={source.operator_paused_at ? "resume" : "pause"} />
+              {scan?.is_current && (
+                <>
+                  <CrawlSourceControl source={source.source_key} operation="retry_failed" scan={scan.id} />
+                  <CrawlSourceControl source={source.source_key} operation="retry_blocked" scan={scan.id} />
+                  <CrawlSourceControl source={source.source_key} operation="rediscover" scan={scan.id}
+                    disabled={!source.collection_enabled || Boolean(source.operator_paused_at || source.paused_reason)} />
+                </>
+              )}
+            </div>
+          </section>
+
+          <section className="flex flex-col gap-3" aria-labelledby="crawl-scan-heading">
+            <h2 id="crawl-scan-heading" className="text-headline">Scan progress</h2>
+            <p className="text-subheadline">{discovery(scan)}</p>
+            {scan && <p className="break-words text-footnote text-label-secondary">{scan.scope_key} · {scan.is_current ? "Current" : "Archived"} · Started {timestamp(scan.started_at)}</p>}
+            {scan?.paused_reason && <p className="break-words text-subheadline">{scan.paused_reason}</p>}
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+              {CRAWL_STAGES.map(stage => {
+                const counts = data.stages[stage];
+                return (
+                  <div key={stage} className={panel}>
+                    <h3 className="text-headline">{stageNames[stage]}</h3>
+                    <p className="mt-1 text-subheadline">{crawlStageProgress(stage, counts)}</p>
+                    {stage === "venue" && <p className="mt-1 text-footnote text-label-secondary">{number.format(data.enriched_venue_pages)} with reachable event work complete</p>}
+                    <dl className="mt-3 grid gap-y-1 text-footnote">
+                      {Object.entries(CRAWL_STATUS_LABELS).map(([status, label]) => (
+                        <div key={status} className="flex justify-between gap-2"><dt>{label}</dt><dd className="tabular-nums">{number.format(counts[status as keyof typeof CRAWL_STATUS_LABELS])}</dd></div>
+                      ))}
+                    </dl>
+                  </div>
+                );
+              })}
+            </div>
+            <div className={`grid gap-3 text-subheadline md:grid-cols-3 ${panel}`}>
+              <div><h3 className="font-semibold">Work counters</h3><p>{number.format(data.attempts)} attempts · {number.format(data.http_requests)} reserved HTTP requests</p>
+                <p>{data.model_calls === null ? "Legacy model calls untracked" : `${data.model_calls} model calls`} · ${data.model_spend_usd.toFixed(4)} {source.source_key === "official" ? "legacy spend" : "model spend"}</p></div>
+              <div><h3 className="font-semibold">Unique identities</h3><p>Venues · {data.identities.matched_venues} matched · {data.identities.crawler_venues} crawler-created · {data.identities.unresolved_venues} unresolved</p>
+                <p>Shows · {data.identities.matched_shows} matched · {data.identities.crawler_shows} crawler-created · {data.identities.unresolved_events} unresolved events</p></div>
+              <div><h3 className="font-semibold">Effective run evidence</h3><p>{data.evidence.published_runs} published · {data.evidence.conflicting_runs} conflicting · {data.evidence.stale_runs} stale</p>
+                <p>{data.evidence.unsupported_closing} without confirmed closing</p></div>
+            </div>
+          </section>
+
+          <section className="flex flex-col gap-3" aria-labelledby="crawl-pages-heading">
+            <h2 id="crawl-pages-heading" className="text-headline">Discovered pages</h2>
+            <form action={CRAWL_SOURCES_PATH} method="get" className="flex flex-wrap items-end gap-3">
+              <input type="hidden" name="source" value={source.source_key} />
+              <div className="flex min-w-0 max-w-full flex-col gap-1 text-footnote">
+                <label htmlFor="crawl-scan">Scan</label>
+                <select id="crawl-scan" name="scan" defaultValue={filters.scan ?? ""} className={selectStyle}>
+                  <option value="">Latest current scan</option>
+                  {data.scans.map(scan => <option key={scan.id} value={scan.id}>{scan.scope_key} · {timestamp(scan.started_at)}</option>)}
+                </select>
+              </div>
+              <div className="flex min-w-0 max-w-full flex-col gap-1 text-footnote">
+                <label htmlFor="crawl-stage">Stage</label>
+                <select id="crawl-stage" name="stage" defaultValue={filters.stage} className={selectStyle}>
+                  {CRAWL_STAGES.map(stage => <option key={stage} value={stage}>{stageNames[stage]}</option>)}
+                </select>
+              </div>
+              <div className="flex min-w-0 max-w-full flex-col gap-1 text-footnote">
+                <label htmlFor="crawl-status">Status</label>
+                <select id="crawl-status" name="status" defaultValue={filters.status ?? ""} className={selectStyle}>
+                  <option value="">All statuses</option>
+                  {Object.entries(CRAWL_STATUS_LABELS).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                </select>
+              </div>
+              <Button type="submit" variant="secondary" size="sm">Apply filters</Button>
+            </form>
+            {scan && data.rows.length > 0 ? (
+              <ul className="flex flex-col gap-2">{data.rows.map(row => <TaskRow key={row.id} row={row} source={source.source_key} scan={scan} />)}</ul>
+            ) : <p className="text-subheadline text-label-secondary">No pages match these filters.</p>}
+            <nav aria-label="Page results" className="flex flex-wrap items-center gap-4 text-subheadline">
+              <span>{first <= last ? `${number.format(first)}–${number.format(last)} of ${number.format(data.filtered_total)}` : `${number.format(data.filtered_total)} matching pages`}</span>
+              {filters.page > 1 && <Link className="text-tint-text" href={crawlSourceHref(filters, filters.page - 1)}>Previous</Link>}
+              {last < data.filtered_total && <Link className="text-tint-text" href={crawlSourceHref(filters, filters.page + 1)}>Next</Link>}
+            </nav>
+          </section>
+        </>
+      ) : <p>Select an available crawl source.</p>}
+    </>
+  );
+}
+
+export default function CrawlSourcesPage(props: Pick<PageProps<"/app/backstage/crawl/sources">, "searchParams">) {
+  return (
+    <section className="flex min-w-0 flex-col gap-4">
+      <BackLink href="/app/backstage/crawl/sites">Crawl sites</BackLink>
+      <h1 className="font-display text-title">Crawl sources</h1>
+      <Suspense fallback={<p>Loading source progress…</p>}>
+        <AdminOnly><Sources {...props} /></AdminOnly>
+      </Suspense>
+    </section>
+  );
+}

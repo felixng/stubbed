@@ -379,3 +379,16 @@ resume from its queue after interruption. Use the privileged
 contribution from effective results. Pass `false` to restore its retained
 evidence. Leaving publication off stops new publication without withdrawing
 older facts. Neither operation changes diary entries.
+
+
+Inspect the same progress shown in Backstage:
+
+```sh
+node supabase/scripts/crawl/loop.mjs --source london_theatre --progress --stage venue --page 5
+```
+
+Use `--scan` for a prior scan and `--status` to filter its task list. Staged
+jobs write source and scope counts to their GitHub Actions summaries. The
+Backstage controls pause claims, retry failed or explicitly blocked tasks,
+reparse a selected page or start a new scan. Pause and retry never withdraw
+published evidence or delete diary entries.

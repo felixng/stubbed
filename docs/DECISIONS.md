@@ -1204,3 +1204,11 @@ while retaining the legacy run IDs and publisher signature. A date omitted
 from a later reading keeps its last supported value. Withdrawal filters
 only the withdrawn source. Confidence from the old publisher does not grant
 autofill eligibility.
+
+### #425 Source and scan progress
+
+Use one database snapshot for admin, CLI and Actions summaries. Count
+unique discovered pages separately from task attempts and reserved outbound
+requests. Keep successful page checkpoints visible during a reparse. Derive
+venue enrichment from the reachable task frontier. Operator pause is
+separate from source access blocks and lets bounded in-flight work finish.
