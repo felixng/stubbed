@@ -208,6 +208,22 @@ opens a new scan with the current scope's seed. Each action records its
 administrator, target and affected count. Collection and publication remain
 independent.
 
+**#426 Playbill.** Playbill uses a deterministic adapter over the same task
+frontier and publisher. The Broadway directory and the two supplied venue
+seeds keep distinct scopes. The adapter follows observed production cards
+and approved pagination. A production's source key identifies the source
+record without implying a work ID. Explicit transfers keep separate venue
+engagements. Current status without a closing date remains unknown.
+
+A bounded, robots-aware preflight returned HTTP 200 for the directory, both
+venue seeds and two linked production pages. The sampled directory yielded
+41 venue links. Theatre Royal Stratford East yielded 15 production links
+and Circle in the Square yielded 115. The sampled historical detail exposed
+separate preview, opening and closing dates. The current detail had a preview
+and opening date with no confirmed close. The robots file declared no sitemap.
+These are sampled reachable links, with no claim of full Playbill or
+historical coverage. Playbill collection and publication remain off.
+
 ### #419 Consumer suggestions
 
 #360 stages optional suggestions derived from existing entries, with privacy

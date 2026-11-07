@@ -1212,3 +1212,11 @@ unique discovered pages separately from task attempts and reserved outbound
 requests. Keep successful page checkpoints visible during a reparse. Derive
 venue enrichment from the reachable task frontier. Operator pause is
 separate from source access blocks and lets bounded in-flight work finish.
+
+### #426 Playbill staging
+
+Separate the directory from supplied venue scopes. Use labelled production
+cards and Pro Info date fields with the shared date semantics. Treat a
+production slug as its source event key and keep transfer segments distinct.
+Only observed links enter the frontier. The sampled robots file had no sitemap
+declaration, and Playbill collection and publication remain disabled.

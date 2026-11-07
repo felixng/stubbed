@@ -392,3 +392,17 @@ jobs write source and scope counts to their GitHub Actions summaries. The
 Backstage controls pause claims, retry failed or explicitly blocked tasks,
 reparse a selected page or start a new scan. Pause and retry never withdraw
 published evidence or delete diary entries.
+
+
+Playbill has separate `broadway-directory`, `supplied-stratford-east` and
+`supplied-circle-in-the-square` scopes. Probe one at a time with the relevant
+stage and collection and publication off:
+
+```sh
+node supabase/scripts/crawl/loop.mjs --source playbill --scope broadway-directory \
+  --stage directory --max-pages 1 --max-minutes 2 --dry-run
+```
+
+The robots file in the verified preflight declared no sitemap. Do not guess
+archive URLs or retry a blocked source through a different host. Production
+keys and labelled dates enter the shared identity and run evidence queues.

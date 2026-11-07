@@ -9,6 +9,7 @@ import { createFrontierStore } from './frontier-store.mjs';
 import { canonicalTaskUrl } from './frontier-url.mjs';
 import { structuredReader } from './sources/theatre-site.mjs';
 import { londonTheatre } from './sources/london-theatre.mjs';
+import { playbill } from './sources/playbill.mjs';
 
 const STAGES = ['directory', 'venue', 'event'];
 const RETRIES = [60, 300, 1800, 7200, 43200];
@@ -254,7 +255,7 @@ const official = {
   },
 };
 
-const adapters = { official, london_theatre: londonTheatre };
+const adapters = { official, london_theatre: londonTheatre, playbill };
 
 function integer(value, name, min, max) {
   const number = Number(value);

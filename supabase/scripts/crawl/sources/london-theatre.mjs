@@ -1,7 +1,7 @@
 import { load } from 'cheerio';
 import { canonicalTaskUrl } from '../frontier-url.mjs';
 import { eventsFromJsonLd, jsonLdBlocks } from './theatre-site.mjs';
-import { sourceDateRange, sourcePartialPrecision } from './source-dates.mjs';
+import { sourceDateClaims } from './source-dates.mjs';
 
 const ORIGIN = 'https://www.londontheatre.co.uk';
 const HOSTS = ['www.londontheatre.co.uk', 'londontheatre.co.uk'];
@@ -173,28 +173,6 @@ function detailFields($, main) {
   return fields;
 }
 
-function dateClaims(value, kind, field) {
-  if (kind === 'performance') {
-    const discrete = value.split(/;|\s+and\s+|(?<=\d{4}),\s+/i).map(part => part.trim()).filter(Boolean);
-    if (discrete.length > 1 && discrete.every(part => sourceDateRange(part).precision === 'day')) {
-      return discrete.map(part => ({ kind, date: sourceDateRange(part).start, evidence: evidence(field, part) }));
-    }
-  }
-  const range = sourceDateRange(value);
-  if (!range.start) return [{
-    kind: 'unknown', date: null, intended_kind: kind, precision: sourcePartialPrecision(value),
-    evidence: evidence(field, value),
-  }];
-  if (range.precision === 'range' && kind === 'performance') {
-    return [
-      { kind: 'start', date: range.start, evidence: evidence(field, value) },
-      { kind: 'end', date: range.end, evidence: evidence(field, value) },
-    ];
-  }
-  const endKind = ['end', 'closing', 'booking_until'].includes(kind);
-  return [{ kind, date: endKind ? range.end : range.start, evidence: evidence(field, value) }];
-}
-
 function eventType(fields, structured, title) {
   const categories = (fields.get('categories') ?? []).flatMap(({ labels, text }) =>
     labels.length ? labels : text.split(/[,/|]/));
@@ -235,11 +213,11 @@ export function parseEvent({ url, html }) {
   const structured = eventsFromJsonLd(jsonLdBlocks(html)).filter(item =>
     identity(sourceUrl(item.url, url), EVENT_PATH) === key);
   const dates = structured.flatMap(item => [
-    ...(item.startDate ? dateClaims(item.startDate, 'start', 'json_ld.Event.startDate') : []),
-    ...(item.endDate ? dateClaims(item.endDate, 'end', 'json_ld.Event.endDate') : []),
+    ...(item.startDate ? sourceDateClaims(item.startDate, 'start', 'json_ld.Event.startDate') : []),
+    ...(item.endDate ? sourceDateClaims(item.endDate, 'end', 'json_ld.Event.endDate') : []),
   ]);
   for (const [label, kind] of Object.entries(DATE_LABELS)) {
-    for (const value of fields.get(label) ?? []) dates.push(...dateClaims(value.text, kind, `detail.${label}`));
+    for (const value of fields.get(label) ?? []) dates.push(...sourceDateClaims(value.text, kind, `detail.${label}`));
   }
 
   const competing = kind => new Set(dates.filter(claim => claim.kind === kind && claim.date).map(claim => claim.date));
