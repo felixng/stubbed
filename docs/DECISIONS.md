@@ -1176,3 +1176,13 @@ worker's task or release its request slot. Store conditional request
 validators next to the versioned extraction and reuse them only when that
 parser has saved evidence. Keep the existing official-site loop available
 while the staged runner exercises the structured reader in a selected scope.
+
+### #422 London Theatre staging
+
+Use the public directory and labelled event sections with deterministic
+parsing. Preserve structured and visible assertions separately when they
+disagree. The source advertises a date range even when its closing semantics
+are unclear, so generic end dates never become confirmed closings. The worker
+waits through ordinary request spacing while leaving long host cooldowns
+queued. London Theatre remains a private staged source until identity and
+publication checks are available.

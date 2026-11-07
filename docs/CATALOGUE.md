@@ -129,8 +129,25 @@ claiming and cancels requests 90 seconds before its declared deadline.
 - This slice installs the staged runner and an explicit scoped preview that
   reuses the official structured reader. The existing official loop and
   archive checkpoints continue to serve current manual and scheduled runs.
-  London Theatre and Playbill are disabled and have no adapter until their
-  respective slices. The publication queue has no consumer yet.
+  The publication queue has no consumer yet.
+
+**#422 London Theatre.** The deterministic adapter starts at the source's
+venue directory and follows observed pagination. Each venue detail queues
+its current, upcoming and past event links independently. Event evidence
+keeps source keys, labelled or structured date assertions, venue identity
+and explicit categories. Prose and listing categories provide no dates.
+Preview, opening, explicit closing and booking horizons are separate
+assertions. Generic end dates stay generic. Conflicting dates and events
+without sufficient evidence remain staged. Unknown categories stay unknown.
+
+The read-only probe on 2026-11-07 received HTTP 200 for the source robots
+file, venue directory, Adelphi venue and one linked historical detail.
+The first directory page yielded 10 venue links and five pagination links.
+Adelphi yielded 23 event links. The historical detail corroborated one date
+in its visible fields and structured data. These are sampled page counts,
+with no inferred whole-site or historical total. The directory response
+was about 3 MB. The adapter caps bodies at 6 MB and retains only extracted
+records. London Theatre collection and publication remain disabled.
 
 ### #272 Journey 1, step 4: suggest the show from runs
 - **#360 entry suggestions.** `suggest_shows(venue_ids uuid[], on_date date)` returns `(show_id, title, venue_id, source, score)`, `source` in `community`, `yours`. `security definer` only if needed to count other people's public entries; it must return no user ids and must apply `profile_is_visible`, entry visibility and `blocks` (reuse the predicates used by `feed_entries`). `entry_logged` gains `show_source`.

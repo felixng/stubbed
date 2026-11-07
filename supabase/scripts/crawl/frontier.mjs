@@ -7,6 +7,7 @@ import { requestPublicPage } from './frontier-network.mjs';
 import { createFrontierStore } from './frontier-store.mjs';
 import { canonicalTaskUrl } from './frontier-url.mjs';
 import { structuredReader } from './sources/theatre-site.mjs';
+import { londonTheatre } from './sources/london-theatre.mjs';
 
 const STAGES = ['directory', 'venue', 'event'];
 const RETRIES = [60, 300, 1800, 7200, 43200];
@@ -150,7 +151,7 @@ export async function runFrontier({
   }
 
   const fetchPage = createGuardedFetcher({
-    allowUrl: policy, request, minDelayMs: source.min_interval_ms,
+    allowUrl: policy, request, minDelayMs: source.min_interval_ms, maxBytes: adapter.maxBytes,
     onResponse: dryRun ? response => result.responses.push(response) : undefined,
     gate: hostGate({ store, now, dryRun, onRequest: () => result.requests++ }),
   });
@@ -252,7 +253,7 @@ const official = {
   },
 };
 
-const adapters = { official };
+const adapters = { official, london_theatre: londonTheatre };
 
 function integer(value, name, min, max) {
   const number = Number(value);
