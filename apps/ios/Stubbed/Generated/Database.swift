@@ -125,6 +125,54 @@ internal enum PublicSchema {
       case userId = "user_id"
     }
   }
+  internal struct CrawlExtractionsSelect: Codable, Hashable, Sendable {
+    internal let contentHash: String
+    internal let extractedAt: String
+    internal let id: UUID
+    internal let observations: AnyJSON
+    internal let parserVersion: String
+    internal let taskId: UUID
+    internal enum CodingKeys: String, CodingKey {
+      case contentHash = "content_hash"
+      case extractedAt = "extracted_at"
+      case id = "id"
+      case observations = "observations"
+      case parserVersion = "parser_version"
+      case taskId = "task_id"
+    }
+  }
+  internal struct CrawlExtractionsInsert: Codable, Hashable, Sendable {
+    internal let contentHash: String
+    internal let extractedAt: String?
+    internal let id: UUID?
+    internal let observations: AnyJSON
+    internal let parserVersion: String
+    internal let taskId: UUID
+    internal enum CodingKeys: String, CodingKey {
+      case contentHash = "content_hash"
+      case extractedAt = "extracted_at"
+      case id = "id"
+      case observations = "observations"
+      case parserVersion = "parser_version"
+      case taskId = "task_id"
+    }
+  }
+  internal struct CrawlExtractionsUpdate: Codable, Hashable, Sendable {
+    internal let contentHash: String?
+    internal let extractedAt: String?
+    internal let id: UUID?
+    internal let observations: AnyJSON?
+    internal let parserVersion: String?
+    internal let taskId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case contentHash = "content_hash"
+      case extractedAt = "extracted_at"
+      case id = "id"
+      case observations = "observations"
+      case parserVersion = "parser_version"
+      case taskId = "task_id"
+    }
+  }
   internal struct CrawlFindingsSelect: Codable, Hashable, Sendable {
     internal let confidence: Decimal
     internal let createdAt: String
@@ -255,6 +303,66 @@ internal enum PublicSchema {
       case stageText = "stage_text"
       case startDate = "start_date"
       case venueId = "venue_id"
+    }
+  }
+  internal struct CrawlGenerationsSelect: Codable, Hashable, Sendable {
+    internal let completedAt: String?
+    internal let enumerationStatus: String
+    internal let id: UUID
+    internal let isCurrent: Bool
+    internal let scopeKey: String
+    internal let siteId: UUID?
+    internal let sourceId: UUID
+    internal let startedAt: String
+    internal enum CodingKeys: String, CodingKey {
+      case completedAt = "completed_at"
+      case enumerationStatus = "enumeration_status"
+      case id = "id"
+      case isCurrent = "is_current"
+      case scopeKey = "scope_key"
+      case siteId = "site_id"
+      case sourceId = "source_id"
+      case startedAt = "started_at"
+    }
+  }
+  internal struct CrawlGenerationsInsert: Codable, Hashable, Sendable {
+    internal let completedAt: String?
+    internal let enumerationStatus: String?
+    internal let id: UUID?
+    internal let isCurrent: Bool?
+    internal let scopeKey: String
+    internal let siteId: UUID?
+    internal let sourceId: UUID
+    internal let startedAt: String?
+    internal enum CodingKeys: String, CodingKey {
+      case completedAt = "completed_at"
+      case enumerationStatus = "enumeration_status"
+      case id = "id"
+      case isCurrent = "is_current"
+      case scopeKey = "scope_key"
+      case siteId = "site_id"
+      case sourceId = "source_id"
+      case startedAt = "started_at"
+    }
+  }
+  internal struct CrawlGenerationsUpdate: Codable, Hashable, Sendable {
+    internal let completedAt: String?
+    internal let enumerationStatus: String?
+    internal let id: UUID?
+    internal let isCurrent: Bool?
+    internal let scopeKey: String?
+    internal let siteId: UUID?
+    internal let sourceId: UUID?
+    internal let startedAt: String?
+    internal enum CodingKeys: String, CodingKey {
+      case completedAt = "completed_at"
+      case enumerationStatus = "enumeration_status"
+      case id = "id"
+      case isCurrent = "is_current"
+      case scopeKey = "scope_key"
+      case siteId = "site_id"
+      case sourceId = "source_id"
+      case startedAt = "started_at"
     }
   }
   internal struct CrawlMissedSelect: Codable, Hashable, Sendable {
@@ -399,6 +507,42 @@ internal enum PublicSchema {
       case titles = "titles"
       case type = "type"
       case url = "url"
+    }
+  }
+  internal struct CrawlPublicationQueueSelect: Codable, Hashable, Sendable {
+    internal let extractionId: UUID
+    internal let lastError: String?
+    internal let processedAt: String?
+    internal let queuedAt: String
+    internal enum CodingKeys: String, CodingKey {
+      case extractionId = "extraction_id"
+      case lastError = "last_error"
+      case processedAt = "processed_at"
+      case queuedAt = "queued_at"
+    }
+  }
+  internal struct CrawlPublicationQueueInsert: Codable, Hashable, Sendable {
+    internal let extractionId: UUID
+    internal let lastError: String?
+    internal let processedAt: String?
+    internal let queuedAt: String?
+    internal enum CodingKeys: String, CodingKey {
+      case extractionId = "extraction_id"
+      case lastError = "last_error"
+      case processedAt = "processed_at"
+      case queuedAt = "queued_at"
+    }
+  }
+  internal struct CrawlPublicationQueueUpdate: Codable, Hashable, Sendable {
+    internal let extractionId: UUID?
+    internal let lastError: String?
+    internal let processedAt: String?
+    internal let queuedAt: String?
+    internal enum CodingKeys: String, CodingKey {
+      case extractionId = "extraction_id"
+      case lastError = "last_error"
+      case processedAt = "processed_at"
+      case queuedAt = "queued_at"
     }
   }
   internal struct CrawlRulesSelect: Codable, Hashable, Sendable {
@@ -699,6 +843,258 @@ internal enum PublicSchema {
       case updatedAt = "updated_at"
       case websiteUrl = "website_url"
       case whatsOnUrl = "whats_on_url"
+    }
+  }
+  internal struct CrawlSourceEntitiesSelect: Codable, Hashable, Sendable {
+    internal let entityKind: String
+    internal let externalKey: String
+    internal let firstSeenAt: String
+    internal let showId: UUID?
+    internal let sourceId: UUID
+    internal let venueId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case entityKind = "entity_kind"
+      case externalKey = "external_key"
+      case firstSeenAt = "first_seen_at"
+      case showId = "show_id"
+      case sourceId = "source_id"
+      case venueId = "venue_id"
+    }
+  }
+  internal struct CrawlSourceEntitiesInsert: Codable, Hashable, Sendable {
+    internal let entityKind: String
+    internal let externalKey: String
+    internal let firstSeenAt: String?
+    internal let showId: UUID?
+    internal let sourceId: UUID
+    internal let venueId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case entityKind = "entity_kind"
+      case externalKey = "external_key"
+      case firstSeenAt = "first_seen_at"
+      case showId = "show_id"
+      case sourceId = "source_id"
+      case venueId = "venue_id"
+    }
+  }
+  internal struct CrawlSourceEntitiesUpdate: Codable, Hashable, Sendable {
+    internal let entityKind: String?
+    internal let externalKey: String?
+    internal let firstSeenAt: String?
+    internal let showId: UUID?
+    internal let sourceId: UUID?
+    internal let venueId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case entityKind = "entity_kind"
+      case externalKey = "external_key"
+      case firstSeenAt = "first_seen_at"
+      case showId = "show_id"
+      case sourceId = "source_id"
+      case venueId = "venue_id"
+    }
+  }
+  internal struct CrawlSourcesSelect: Codable, Hashable, Sendable {
+    internal let adapterVersion: String
+    internal let allowedHosts: [String]
+    internal let collectionEnabled: Bool
+    internal let id: UUID
+    internal let minIntervalMs: Int32
+    internal let pausedReason: String?
+    internal let publicationEnabled: Bool
+    internal let sourceKey: String
+    internal enum CodingKeys: String, CodingKey {
+      case adapterVersion = "adapter_version"
+      case allowedHosts = "allowed_hosts"
+      case collectionEnabled = "collection_enabled"
+      case id = "id"
+      case minIntervalMs = "min_interval_ms"
+      case pausedReason = "paused_reason"
+      case publicationEnabled = "publication_enabled"
+      case sourceKey = "source_key"
+    }
+  }
+  internal struct CrawlSourcesInsert: Codable, Hashable, Sendable {
+    internal let adapterVersion: String
+    internal let allowedHosts: [String]?
+    internal let collectionEnabled: Bool?
+    internal let id: UUID?
+    internal let minIntervalMs: Int32?
+    internal let pausedReason: String?
+    internal let publicationEnabled: Bool?
+    internal let sourceKey: String
+    internal enum CodingKeys: String, CodingKey {
+      case adapterVersion = "adapter_version"
+      case allowedHosts = "allowed_hosts"
+      case collectionEnabled = "collection_enabled"
+      case id = "id"
+      case minIntervalMs = "min_interval_ms"
+      case pausedReason = "paused_reason"
+      case publicationEnabled = "publication_enabled"
+      case sourceKey = "source_key"
+    }
+  }
+  internal struct CrawlSourcesUpdate: Codable, Hashable, Sendable {
+    internal let adapterVersion: String?
+    internal let allowedHosts: [String]?
+    internal let collectionEnabled: Bool?
+    internal let id: UUID?
+    internal let minIntervalMs: Int32?
+    internal let pausedReason: String?
+    internal let publicationEnabled: Bool?
+    internal let sourceKey: String?
+    internal enum CodingKeys: String, CodingKey {
+      case adapterVersion = "adapter_version"
+      case allowedHosts = "allowed_hosts"
+      case collectionEnabled = "collection_enabled"
+      case id = "id"
+      case minIntervalMs = "min_interval_ms"
+      case pausedReason = "paused_reason"
+      case publicationEnabled = "publication_enabled"
+      case sourceKey = "source_key"
+    }
+  }
+  internal struct CrawlTaskEdgesSelect: Codable, Hashable, Sendable {
+    internal let childId: UUID
+    internal let generationId: UUID
+    internal let parentId: UUID
+    internal enum CodingKeys: String, CodingKey {
+      case childId = "child_id"
+      case generationId = "generation_id"
+      case parentId = "parent_id"
+    }
+  }
+  internal struct CrawlTaskEdgesInsert: Codable, Hashable, Sendable {
+    internal let childId: UUID
+    internal let generationId: UUID
+    internal let parentId: UUID
+    internal enum CodingKeys: String, CodingKey {
+      case childId = "child_id"
+      case generationId = "generation_id"
+      case parentId = "parent_id"
+    }
+  }
+  internal struct CrawlTaskEdgesUpdate: Codable, Hashable, Sendable {
+    internal let childId: UUID?
+    internal let generationId: UUID?
+    internal let parentId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case childId = "child_id"
+      case generationId = "generation_id"
+      case parentId = "parent_id"
+    }
+  }
+  internal struct CrawlTasksSelect: Codable, Hashable, Sendable {
+    internal let attempts: Int32
+    internal let availableAt: String
+    internal let canonicalUrl: String
+    internal let contentHash: String?
+    internal let discoveredAt: String
+    internal let generationId: UUID
+    internal let id: UUID
+    internal let lastError: String?
+    internal let lastSuccessAt: String?
+    internal let leaseExpiresAt: String?
+    internal let leaseOwner: String?
+    internal let leaseToken: UUID?
+    internal let parserVersion: String?
+    internal let priority: Int32
+    internal let sourceId: UUID
+    internal let stage: String
+    internal let status: String
+    internal enum CodingKeys: String, CodingKey {
+      case attempts = "attempts"
+      case availableAt = "available_at"
+      case canonicalUrl = "canonical_url"
+      case contentHash = "content_hash"
+      case discoveredAt = "discovered_at"
+      case generationId = "generation_id"
+      case id = "id"
+      case lastError = "last_error"
+      case lastSuccessAt = "last_success_at"
+      case leaseExpiresAt = "lease_expires_at"
+      case leaseOwner = "lease_owner"
+      case leaseToken = "lease_token"
+      case parserVersion = "parser_version"
+      case priority = "priority"
+      case sourceId = "source_id"
+      case stage = "stage"
+      case status = "status"
+    }
+  }
+  internal struct CrawlTasksInsert: Codable, Hashable, Sendable {
+    internal let attempts: Int32?
+    internal let availableAt: String?
+    internal let canonicalUrl: String
+    internal let contentHash: String?
+    internal let discoveredAt: String?
+    internal let generationId: UUID
+    internal let id: UUID?
+    internal let lastError: String?
+    internal let lastSuccessAt: String?
+    internal let leaseExpiresAt: String?
+    internal let leaseOwner: String?
+    internal let leaseToken: UUID?
+    internal let parserVersion: String?
+    internal let priority: Int32?
+    internal let sourceId: UUID
+    internal let stage: String
+    internal let status: String?
+    internal enum CodingKeys: String, CodingKey {
+      case attempts = "attempts"
+      case availableAt = "available_at"
+      case canonicalUrl = "canonical_url"
+      case contentHash = "content_hash"
+      case discoveredAt = "discovered_at"
+      case generationId = "generation_id"
+      case id = "id"
+      case lastError = "last_error"
+      case lastSuccessAt = "last_success_at"
+      case leaseExpiresAt = "lease_expires_at"
+      case leaseOwner = "lease_owner"
+      case leaseToken = "lease_token"
+      case parserVersion = "parser_version"
+      case priority = "priority"
+      case sourceId = "source_id"
+      case stage = "stage"
+      case status = "status"
+    }
+  }
+  internal struct CrawlTasksUpdate: Codable, Hashable, Sendable {
+    internal let attempts: Int32?
+    internal let availableAt: String?
+    internal let canonicalUrl: String?
+    internal let contentHash: String?
+    internal let discoveredAt: String?
+    internal let generationId: UUID?
+    internal let id: UUID?
+    internal let lastError: String?
+    internal let lastSuccessAt: String?
+    internal let leaseExpiresAt: String?
+    internal let leaseOwner: String?
+    internal let leaseToken: UUID?
+    internal let parserVersion: String?
+    internal let priority: Int32?
+    internal let sourceId: UUID?
+    internal let stage: String?
+    internal let status: String?
+    internal enum CodingKeys: String, CodingKey {
+      case attempts = "attempts"
+      case availableAt = "available_at"
+      case canonicalUrl = "canonical_url"
+      case contentHash = "content_hash"
+      case discoveredAt = "discovered_at"
+      case generationId = "generation_id"
+      case id = "id"
+      case lastError = "last_error"
+      case lastSuccessAt = "last_success_at"
+      case leaseExpiresAt = "lease_expires_at"
+      case leaseOwner = "lease_owner"
+      case leaseToken = "lease_token"
+      case parserVersion = "parser_version"
+      case priority = "priority"
+      case sourceId = "source_id"
+      case stage = "stage"
+      case status = "status"
     }
   }
   internal struct EntriesSelect: Codable, Hashable, Sendable {

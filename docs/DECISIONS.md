@@ -1157,3 +1157,13 @@ Progress snapshots are serialised to prevent stale concurrent writes.
 ### 2026-11-06 — Import review owns the bottom toolbar
 
 Keep the native tab bar visible while reviewing Mezzanine imports. Place Import in the list for up to 10 shows, and in the native trailing navigation toolbar for larger files. Stop stays in the navigation toolbar during work; View diary is in the completed page. Avoid bottom inset materials that change the floating tab bar’s appearance. Back and all tabs remain navigation exits. Remove the private-notes notice from review and export help at the owner’s request; the parser continues excluding private notes. Render the small-phone regression inside a TabView so captures include the real container interaction.
+
+### #420 Durable source frontier
+
+Keep the official-site tables and worker intact while adding a source-scoped
+frontier for directory adapters. An execution ID identifies an attempt, while
+a generation identifies a scan of reachable scope. Refresh supersedes the
+current generation and retains its links, extractions and source identities.
+Publication receives a durable extraction ID in the same transaction that
+saves child links and acknowledges their parent. That transaction grants no
+public catalogue visibility.

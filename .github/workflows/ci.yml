@@ -46,7 +46,7 @@ jobs:
           node-version-file: .nvmrc
       - run: npm ci --prefix supabase/scripts/crawl --ignore-scripts
       - name: Verify crawl loop against database and fixture pages
-        run: node --test supabase/scripts/crawl/loop-integration.test.mjs
+        run: node --test supabase/scripts/crawl/loop-integration.test.mjs supabase/scripts/crawl/frontier-integration.test.mjs
         env:
           CRAWL_INTEGRATION_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
       - name: Verify concurrent notification read snapshot
