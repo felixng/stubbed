@@ -1,10 +1,15 @@
 // Polite fetching for the crawler: one request at a time per host
-// with a minimum gap, an identifying User-Agent, and conditional requests.
+// with a minimum gap, browser-style request headers, and conditional requests.
 // No packages. Every failure comes back as a status (never a throw), so one
 // bad site can't stop a run.
 import { setTimeout as delay } from 'node:timers/promises';
 
-export const USER_AGENT = 'Stubbed/1.0 (+https://getstubbed.app; what\'s-on research crawler)';
+const PAGE_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,application/ld+json;q=0.8,*/*;q=0.7',
+  'Accept-Language': 'en-GB,en;q=0.9',
+  'Upgrade-Insecure-Requests': '1',
+};
 const MAX_BYTES = 2_000_000;
 const TIMEOUT_MS = 20_000;
 
@@ -60,7 +65,7 @@ export function createFetcher({ fetchFn = fetch, minDelayMs = 2000, cache = {}, 
 
   async function get(url, headers = {}) {
     return fetchFn(url, {
-      headers: { 'User-Agent': USER_AGENT, Accept: 'text/html,application/xhtml+xml,application/ld+json;q=0.9,*/*;q=0.5', ...headers },
+      headers: { ...PAGE_HEADERS, ...headers },
       redirect: 'follow', signal: AbortSignal.timeout(TIMEOUT_MS),
     });
   }

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
-import { createFetcher, siteKey, USER_AGENT } from './fetch.mjs';
+import { createFetcher, siteKey } from './fetch.mjs';
 import { groupBySite, crawlSites } from './index.mjs';
 import { cleanFinding, insertFindingsSql, jsonLiteral, uuidLiteral } from './load.mjs';
 import { extractTitle, readPage, stubReader } from './readers.mjs';
@@ -28,7 +28,7 @@ test('fetcher: requests pages directly without robots.txt and spaces requests pe
   const sleeps = [];
   let t = 0;
   const fetchFn = async (url, init) => {
-    calls.push({ url, ua: init.headers['User-Agent'] });
+    calls.push({ url, headers: init.headers });
     return html('<title>Hi</title>');
   };
   const fetchPage = createFetcher({ fetchFn, minDelayMs: 1000, sleep: async ms => { sleeps.push(ms); t += ms; }, now: () => t });
@@ -37,7 +37,12 @@ test('fetcher: requests pages directly without robots.txt and spaces requests pe
   assert.equal(a.status, 'ok');
   assert.equal(b.status, 'ok');
   assert.deepEqual(calls.map(c => c.url), ['https://a.test/whats-on', 'https://a.test/other']);
-  assert.ok(calls.every(c => c.ua === USER_AGENT));
+  for (const { headers } of calls) {
+    assert.match(headers['User-Agent'], /^Mozilla\/5\.0 .*Chrome\//);
+    assert.match(headers.Accept, /^text\/html,/);
+    assert.equal(headers['Accept-Language'], 'en-GB,en;q=0.9');
+    assert.equal(headers['Upgrade-Insecure-Requests'], '1');
+  }
   assert.deepEqual(sleeps, [1000]);
 });
 
