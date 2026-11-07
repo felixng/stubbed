@@ -70,7 +70,11 @@ struct EntryCardView: View {
   static let size: CGFloat = 540
   private var ink: Color { design.isPhoto ? .white : appearance.foreground }
   private var metrics: [(String, String)] {
-    [("Show of \(data.year)", ordinal(data.showOfYear)), ("Seen", formatTimes(data.timesSeen))]
+    var metrics = [("Show of \(data.year)", ordinal(data.showOfYear))]
+    if design == .data || data.timesSeen > 1 {
+      metrics.append(("Seen", formatTimes(data.timesSeen)))
+    }
+    return metrics
   }
   var body: some View {
     ZStack {
