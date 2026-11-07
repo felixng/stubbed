@@ -1,5 +1,6 @@
 import { load } from 'cheerio';
 import { decodeEntities } from './readers.mjs';
+import { calendarEvents } from './known-sources.mjs';
 import { parseDates } from './dates.mjs';
 import { matchStage } from './sources/theatre-site.mjs';
 
@@ -20,7 +21,11 @@ export function checkFindings(html, findings) {
   const text = pageText(html);
   const $ = load(html);
   const metadata = new Set($('meta[itemprop][content]').map((_, el) => normalText($(el).attr('content'))).get());
+  const sourceUrl = findings[0]?.source_url;
+  const feedDates = new Set(calendarEvents(sourceUrl, html).map(event =>
+    JSON.stringify([normalText(event.name), event.startDate, event.endDate])));
   return findings.filter(f => {
+    if (f.method === 'structured' && feedDates.has(JSON.stringify([normalText(f.raw_title), f.start_date, f.end_date]))) return true;
     const title = normalText(f.raw_title);
     const backed = value => text.includes(value) || (f.method === 'structured' && metadata.has(value));
     if (!title || !backed(title)) return false;

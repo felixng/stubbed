@@ -322,3 +322,15 @@ test('structured reader takes the event title and dates from scoped HTML metadat
   ['Winter Play','2026-12-18','2027-01-23',true],
  ]);
 });
+
+test('Crazy Coqs feed keeps the calendar day attached to each performance', async () => {
+ const url = 'https://www.brasseriezedel.com/api/get_calendar.php';
+ const html = JSON.stringify({events:{'2026-11-07':[
+  {name:'Example Cabaret',stream:false},
+  {name:'Example Stream',stream:true},
+ ]}});
+ const findings = await readPage({url,html},{venues:[{id:'v',name:'Crazy Coqs'}]},[structuredReader]);
+ assert.deepEqual(findings.map(f=>[f.raw_title,f.start_date,f.end_date,f.page_checked]),[
+  ['Example Cabaret','2026-11-07','2026-11-07',true],
+ ]);
+});

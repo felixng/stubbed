@@ -1,3 +1,5 @@
+const CRAZY_COQS_FEED = 'https://www.brasseriezedel.com/api/get_calendar.php';
+
 // Official listing pages verified for venues whose search results are ambiguous
 // or whose catalogue website has moved. Keep venue and city together.
 const sources = [
@@ -24,6 +26,11 @@ const sources = [
     },
   },
   {
+    name: 'Crazy Coqs', city: 'London',
+    website: 'https://www.brasseriezedel.com/crazy-coqs/',
+    whats_on_url: CRAZY_COQS_FEED,
+  },
+  {
     name: "Wyndham's", city: 'London',
     website: 'https://www.wyndhamstheatre.co.uk/',
     whats_on_url: 'https://www.wyndhamstheatre.co.uk/',
@@ -36,4 +43,18 @@ export function knownSource(venue) {
 
 export function knownRules(url) {
   return sources.find(source => source.whats_on_url === url)?.rules;
+}
+
+
+// The public calendar groups each performance under its explicit ISO day.
+export function calendarEvents(url, body) {
+  if (url !== CRAZY_COQS_FEED) return [];
+  let feed;
+  try { feed = JSON.parse(body); } catch { return []; }
+  if (!feed?.events || Array.isArray(feed.events)) return [];
+  return Object.entries(feed.events).flatMap(([date, rows]) => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !Array.isArray(rows)) return [];
+    return rows.filter(row => typeof row?.name === 'string' && row.stream !== true)
+      .map(row => ({'@type': 'Event', name: row.name, startDate: date, endDate: date}));
+  });
 }

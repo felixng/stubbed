@@ -3,6 +3,7 @@
 // the raw title and the dates as written; nothing here links to a show.
 import { load } from 'cheerio';
 import { readFileSync } from 'node:fs';
+import { calendarEvents } from '../known-sources.mjs';
 import { decodeEntities } from '../readers.mjs';
 
 export const DEFAULT_PROMPT = readFileSync(new URL('../prompt.md', import.meta.url), 'utf8').trim();
@@ -113,7 +114,7 @@ export function matchStage(stage, venues) {
 }
 
 export function structuredReader({ url, html }, { venues }) {
-  const events = eventsFromJsonLd(jsonLdBlocks(html));
+  const events = [...eventsFromJsonLd(jsonLdBlocks(html)), ...calendarEvents(url, html)];
   const $ = load(html);
   $('[itemscope][itemtype$="Event"]').each((_, element) => {
     const item = $(element);
