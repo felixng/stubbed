@@ -38,7 +38,7 @@ export function StartCrawl({ theatres, lastPrompt }: { theatres: Theatre[]; last
     try {
       const response = await fetch("/api/admin/crawl", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
         venue_ids: selected, pipeline, method: pipeline === "discover" ? "rules" : method, model: form.get("model") || CRAWL_MODELS[0], prompt: form.get("prompt") || null,
-        budget_usd: Number(form.get("budget")), branch: form.get("branch"), kind: form.get("kind"),
+        budget_usd: Number(form.get("budget")), branch: form.get("branch"), kind: "whats_on",
       }) });
       const result = await response.json();
       if (!response.ok) { setError(result.error || "Couldn’t start the crawl."); return; }
@@ -60,7 +60,6 @@ export function StartCrawl({ theatres, lastPrompt }: { theatres: Theatre[]; last
       {searchError && <p role="alert">{searchError}</p>}
       <p className="text-footnote text-label-secondary">Showing up to 50 search matches. Selected theatres stay in the list.</p>
       <label>Run type<select className={FIELD} value={pipeline} onChange={e => setPipeline(e.target.value)}><option value="discover">Discover links and crawl</option><option value="legacy">Advanced: compare page readers (requires links)</option></select></label>
-      <label>Job<select name="kind" className={FIELD}><option value="whats_on">What’s on</option><option value="show_names">Show names for review</option></select></label>
       {pipeline === "legacy" && <>
       <label>Method<select className={FIELD} value={method} onChange={e => setMethod(e.target.value)}><option value="rules">Rules only</option><option value="rules_model">Rules, then model</option></select></label>
       <label>Model<select name="model" className={FIELD}>{CRAWL_MODELS.map(m => <option key={m}>{m}</option>)}</select></label>

@@ -41,11 +41,11 @@ export function SendToReview({ runId, waiting }: { runId: string; waiting: numbe
       <p className="text-footnote text-label-secondary">
         {waiting > 0
           ? `${waiting} ${waiting === 1 ? "finding" : "findings"} marked right and not yet sent. Titles that aren’t already shows go to show review as candidates, with this page as their source. Nothing reaches search until you add it there.`
-          : "Findings marked right that aren’t shows yet can be sent to show review from here."}
+          : "Completed crawls automatically send unmatched, page-checked show titles to Show candidates."}
       </p>
       <div className="flex flex-wrap items-center gap-2">
         <Button size="sm" variant="secondary" disabled={busy || refreshing || waiting === 0} onClick={send}>
-          Send to show review
+          Send marked findings
         </Button>
         <Link href="/app/backstage/shows/candidates" className="inline-flex min-h-11 items-center text-subheadline font-semibold text-tint-text">
           Open show candidates
