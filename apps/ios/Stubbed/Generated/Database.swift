@@ -125,6 +125,66 @@ internal enum PublicSchema {
       case userId = "user_id"
     }
   }
+  internal struct CrawlAdminActionsSelect: Codable, Hashable, Sendable {
+    internal let actorId: UUID?
+    internal let affected: Int32
+    internal let createdAt: String
+    internal let generationId: UUID?
+    internal let id: UUID
+    internal let operation: String
+    internal let sourceId: UUID
+    internal let taskId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case actorId = "actor_id"
+      case affected = "affected"
+      case createdAt = "created_at"
+      case generationId = "generation_id"
+      case id = "id"
+      case operation = "operation"
+      case sourceId = "source_id"
+      case taskId = "task_id"
+    }
+  }
+  internal struct CrawlAdminActionsInsert: Codable, Hashable, Sendable {
+    internal let actorId: UUID?
+    internal let affected: Int32
+    internal let createdAt: String?
+    internal let generationId: UUID?
+    internal let id: UUID?
+    internal let operation: String
+    internal let sourceId: UUID
+    internal let taskId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case actorId = "actor_id"
+      case affected = "affected"
+      case createdAt = "created_at"
+      case generationId = "generation_id"
+      case id = "id"
+      case operation = "operation"
+      case sourceId = "source_id"
+      case taskId = "task_id"
+    }
+  }
+  internal struct CrawlAdminActionsUpdate: Codable, Hashable, Sendable {
+    internal let actorId: UUID?
+    internal let affected: Int32?
+    internal let createdAt: String?
+    internal let generationId: UUID?
+    internal let id: UUID?
+    internal let operation: String?
+    internal let sourceId: UUID?
+    internal let taskId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case actorId = "actor_id"
+      case affected = "affected"
+      case createdAt = "created_at"
+      case generationId = "generation_id"
+      case id = "id"
+      case operation = "operation"
+      case sourceId = "source_id"
+      case taskId = "task_id"
+    }
+  }
   internal struct CrawlExtractionsSelect: Codable, Hashable, Sendable {
     internal let contentHash: String
     internal let extractedAt: String
@@ -1187,6 +1247,7 @@ internal enum PublicSchema {
     internal let collectionEnabled: Bool
     internal let id: UUID
     internal let minIntervalMs: Int32
+    internal let operatorPausedAt: String?
     internal let pausedReason: String?
     internal let publicationEnabled: Bool
     internal let sourceKey: String
@@ -1197,6 +1258,7 @@ internal enum PublicSchema {
       case collectionEnabled = "collection_enabled"
       case id = "id"
       case minIntervalMs = "min_interval_ms"
+      case operatorPausedAt = "operator_paused_at"
       case pausedReason = "paused_reason"
       case publicationEnabled = "publication_enabled"
       case sourceKey = "source_key"
@@ -1209,6 +1271,7 @@ internal enum PublicSchema {
     internal let collectionEnabled: Bool?
     internal let id: UUID?
     internal let minIntervalMs: Int32?
+    internal let operatorPausedAt: String?
     internal let pausedReason: String?
     internal let publicationEnabled: Bool?
     internal let sourceKey: String
@@ -1219,6 +1282,7 @@ internal enum PublicSchema {
       case collectionEnabled = "collection_enabled"
       case id = "id"
       case minIntervalMs = "min_interval_ms"
+      case operatorPausedAt = "operator_paused_at"
       case pausedReason = "paused_reason"
       case publicationEnabled = "publication_enabled"
       case sourceKey = "source_key"
@@ -1231,6 +1295,7 @@ internal enum PublicSchema {
     internal let collectionEnabled: Bool?
     internal let id: UUID?
     internal let minIntervalMs: Int32?
+    internal let operatorPausedAt: String?
     internal let pausedReason: String?
     internal let publicationEnabled: Bool?
     internal let sourceKey: String?
@@ -1241,6 +1306,7 @@ internal enum PublicSchema {
       case collectionEnabled = "collection_enabled"
       case id = "id"
       case minIntervalMs = "min_interval_ms"
+      case operatorPausedAt = "operator_paused_at"
       case pausedReason = "paused_reason"
       case publicationEnabled = "publication_enabled"
       case sourceKey = "source_key"
@@ -1286,7 +1352,9 @@ internal enum PublicSchema {
     internal let discoveredAt: String
     internal let etag: String?
     internal let generationId: UUID
+    internal let httpRequests: Int64
     internal let id: UUID
+    internal let lastAttemptAt: String?
     internal let lastError: String?
     internal let lastModified: String?
     internal let lastSuccessAt: String?
@@ -1307,7 +1375,9 @@ internal enum PublicSchema {
       case discoveredAt = "discovered_at"
       case etag = "etag"
       case generationId = "generation_id"
+      case httpRequests = "http_requests"
       case id = "id"
+      case lastAttemptAt = "last_attempt_at"
       case lastError = "last_error"
       case lastModified = "last_modified"
       case lastSuccessAt = "last_success_at"
@@ -1330,7 +1400,9 @@ internal enum PublicSchema {
     internal let discoveredAt: String?
     internal let etag: String?
     internal let generationId: UUID
+    internal let httpRequests: Int64?
     internal let id: UUID?
+    internal let lastAttemptAt: String?
     internal let lastError: String?
     internal let lastModified: String?
     internal let lastSuccessAt: String?
@@ -1351,7 +1423,9 @@ internal enum PublicSchema {
       case discoveredAt = "discovered_at"
       case etag = "etag"
       case generationId = "generation_id"
+      case httpRequests = "http_requests"
       case id = "id"
+      case lastAttemptAt = "last_attempt_at"
       case lastError = "last_error"
       case lastModified = "last_modified"
       case lastSuccessAt = "last_success_at"
@@ -1374,7 +1448,9 @@ internal enum PublicSchema {
     internal let discoveredAt: String?
     internal let etag: String?
     internal let generationId: UUID?
+    internal let httpRequests: Int64?
     internal let id: UUID?
+    internal let lastAttemptAt: String?
     internal let lastError: String?
     internal let lastModified: String?
     internal let lastSuccessAt: String?
@@ -1395,7 +1471,9 @@ internal enum PublicSchema {
       case discoveredAt = "discovered_at"
       case etag = "etag"
       case generationId = "generation_id"
+      case httpRequests = "http_requests"
       case id = "id"
+      case lastAttemptAt = "last_attempt_at"
       case lastError = "last_error"
       case lastModified = "last_modified"
       case lastSuccessAt = "last_success_at"

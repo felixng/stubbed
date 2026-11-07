@@ -80,6 +80,11 @@ export function createFrontierStore(db = sql => runPsql(sql, { timeout: 15_000 }
       return scalar(`public.publish_crawl_run_evidence(${sqlText(source)}, ${limit})`);
     },
 
+    async progress(source, scan, stage, status, offset = 0) {
+      return scalar(`public.crawl_source_progress(${sqlText(source)}, ${scan ? uuidLiteral(scan) : 'null'},
+        ${sqlText(stage)}, ${sqlText(status)}, 25, ${offset})`);
+    },
+
     async hostState(host) {
       const [row] = await db(`select to_jsonb(h) from public.crawl_hosts h where h.host = ${sqlText(host)}`);
       return row;

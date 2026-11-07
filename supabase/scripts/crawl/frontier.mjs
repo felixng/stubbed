@@ -1,3 +1,4 @@
+import { appendFile } from 'node:fs/promises';
 import { createHash, randomUUID } from 'node:crypto';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { parseArgs } from 'node:util';
@@ -119,8 +120,8 @@ export async function runFrontier({
   stopSignal = AbortSignal.timeout(maxMinutes * 60_000 - CLEANUP_MS),
 }) {
   const result = { source: source.source_key, pages: 0, requests: 0, statuses: {}, proposed: [], responses: [] };
-  if (source.paused_reason || (!dryRun && !source.collection_enabled)) {
-    return { ...result, inactive: source.paused_reason ? 'paused' : 'collection disabled' };
+  if (source.paused_reason || source.operator_paused_at || (!dryRun && !source.collection_enabled)) {
+    return { ...result, inactive: source.paused_reason || source.operator_paused_at ? 'paused' : 'collection disabled' };
   }
   const allowedHosts = source.allowed_hosts;
   const policy = value => canonicalTaskUrl(value, { allowedHosts });
@@ -268,15 +269,29 @@ export async function runFrontierCli(args = process.argv.slice(2), store = creat
     'dry-run': { type: 'boolean' }, refresh: { type: 'boolean' }, reparse: { type: 'boolean' },
     'publish-identities': { type: 'boolean' },
     'publish-runs': { type: 'boolean' },
+    progress: { type: 'boolean' }, scan: { type: 'string' }, status: { type: 'string' },
+    page: { type: 'string', default: '1' },
     'max-publications': { type: 'string', default: '25' },
     help: { type: 'boolean' },
   } });
   if (values.help) {
     console.log('Usage: node supabase/scripts/crawl/loop.mjs --source <key> [--scope <key>] [--stage directory|venue|event|all] [--max-pages 25] [--max-minutes 10] [--dry-run | --refresh | --reparse]');
     console.log('       node supabase/scripts/crawl/loop.mjs --source <key> (--publish-identities | --publish-runs) [--max-publications 25]');
+    console.log('       node supabase/scripts/crawl/loop.mjs --source <key> --progress [--scan <uuid>] [--stage venue] [--status blocked] [--page 1]');
     return;
   }
   const key = values.source;
+  if (values.progress) {
+    if (!/^[a-z][a-z0-9_]{0,63}$/.test(key ?? '')) throw new Error('Select a valid source key');
+    if (values.stage !== 'all' && !STAGES.includes(values.stage)) throw new Error('Unknown crawl stage');
+    if (values.status && !['pending','leased','succeeded','retry_wait','blocked','failed'].includes(values.status)) {
+      throw new Error('Unknown task status');
+    }
+    const page = integer(values.page, '--page', 1, 1_000_000);
+    const progress = await store.progress(key, values.scan, values.stage === 'all' ? null : values.stage, values.status, (page - 1) * 25);
+    console.log(JSON.stringify(progress, null, 2));
+    return;
+  }
   if (!Object.hasOwn(adapters, key)) throw new Error('No installed frontier adapter for that source');
   if (values['publish-identities'] || values['publish-runs']) {
     if (values['publish-identities'] && values['publish-runs']) throw new Error('Choose one publication stage');
@@ -311,4 +326,22 @@ export async function runFrontierCli(args = process.argv.slice(2), store = creat
     dryRun: values['dry-run'], refresh: values.refresh, reparse: values.reparse, maxPages, maxMinutes, store,
   });
   console.log(JSON.stringify(result, null, 2));
+  if (process.env.GITHUB_STEP_SUMMARY && !values['dry-run']) {
+    const first = await store.progress(key, null, null, null);
+    if (!first.stages) return;
+    const current = first.scans.filter(scan => scan.is_current && (!values.scope || scan.scope_key === values.scope));
+    const scans = current.length ? current : [first.scan];
+    for (const scan of scans) {
+      const progress = scan?.id === first.scan?.id ? first : await store.progress(key, scan.id, null, null);
+      const counts = Object.entries(progress.stages).map(([stage, row]) =>
+        `- ${stage}: ${row.processed} of ${row.discovered} discovered pages processed · ${row.pending} queued · ${row.leased} in flight · ${row.retry_wait} retrying · ${row.blocked} blocked · ${row.failed} failed`);
+      await appendFile(process.env.GITHUB_STEP_SUMMARY, [
+        `## Crawl progress · ${key}`,
+        `Scope: ${progress.scan?.scope_key ?? 'no scan'} · ${progress.scan?.enumeration_status ?? 'no enumeration recorded'}`,
+        ...counts,
+        `${progress.attempts} task attempts · ${progress.http_requests} reserved HTTP requests`,
+        '',
+      ].join('\n'));
+    }
+  }
 }

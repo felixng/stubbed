@@ -193,6 +193,21 @@ withdrawing accepted evidence. The detailed owner-only diary score returns
 exact, partial, conflicting, wrong dates or missing. The older score RPC
 retains its three labels for existing clients.
 
+**#425 source progress.** Backstage and the CLI use the same paginated
+Postgres snapshot. A scan's denominator is its discovered page count.
+Processed counts track pages with a durable successful checkpoint even
+while a reparse is pending. Queue status counts describe current work.
+A processed venue page only counts as enriched once its reachable venue
+pagination and event tasks have succeeded. Requests are durable outbound
+slot reservations. Legacy model-call counts are shown as untracked.
+
+An operator pause stops new claims and lets existing bounded work finish.
+A source access block has a separate reason and requires explicit blocked
+retry. Retry and reparse keep their scan and last-good evidence. Rediscovery
+opens a new scan with the current scope's seed. Each action records its
+administrator, target and affected count. Collection and publication remain
+independent.
+
 ### #419 Consumer suggestions
 
 #360 stages optional suggestions derived from existing entries, with privacy

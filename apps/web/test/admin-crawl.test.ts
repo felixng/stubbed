@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { rerunCommand, scoreLine, settingsLine, shareRight, sumScores, UUID } from "@/lib/admin-crawl";
+import { crawlSourceFilters, crawlSourceHref, crawlStageProgress, rerunCommand, scoreLine, settingsLine, shareRight, sumScores, UUID } from "@/lib/admin-crawl";
 
 const score = { right: 3, wrong: 1, unsure: 1, unreviewed: 2, findings: 7, missed: 2 };
 
@@ -30,4 +30,15 @@ test("settingsLine and rerunCommand", () => {
 test("UUID", () => {
   assert.ok(UUID.test("c0000000-0000-0000-0000-00000000000a"));
   assert.ok(!UUID.test("nope"));
+});
+
+test("source progress keeps the discovered denominator and paginated filters", () => {
+  const counts = { discovered: 1000, processed: 3, pending: 994, leased: 1, succeeded: 3, retry_wait: 0, blocked: 2, failed: 0 };
+  assert.equal(crawlStageProgress("venue", counts), "3 of 1,000 discovered venue pages processed");
+  const scan = "1a1a1a1a-0000-0000-0000-000000000001";
+  const filters = crawlSourceFilters({ source: "london_theatre", scan, stage: "event", status: "retry_wait", page: "5" });
+  assert.equal(crawlSourceHref(filters, 6), `/app/backstage/crawl/sources?source=london_theatre&stage=event&scan=${scan}&status=retry_wait&page=6`);
+  assert.deepEqual(crawlSourceFilters({ source: ["x"], scan: "bad", stage: "private", status: "weird", page: "-1" }), {
+    source: "london_theatre", scan: undefined, stage: "venue", status: undefined, page: 1,
+  });
 });
