@@ -266,14 +266,26 @@ export async function runFrontierCli(args = process.argv.slice(2), store = creat
     source: { type: 'string' }, scope: { type: 'string' }, stage: { type: 'string', default: 'all' },
     'max-pages': { type: 'string', default: '25' }, 'max-minutes': { type: 'string', default: '10' },
     'dry-run': { type: 'boolean' }, refresh: { type: 'boolean' }, reparse: { type: 'boolean' },
+    'publish-identities': { type: 'boolean' },
+    'max-publications': { type: 'string', default: '25' },
     help: { type: 'boolean' },
   } });
   if (values.help) {
     console.log('Usage: node supabase/scripts/crawl/loop.mjs --source <key> [--scope <key>] [--stage directory|venue|event|all] [--max-pages 25] [--max-minutes 10] [--dry-run | --refresh | --reparse]');
+    console.log('       node supabase/scripts/crawl/loop.mjs --source <key> --publish-identities [--max-publications 25]');
     return;
   }
   const key = values.source;
   if (!Object.hasOwn(adapters, key)) throw new Error('No installed frontier adapter for that source');
+  if (values['publish-identities']) {
+    if (values.scope || values.stage !== 'all' || values.refresh || values.reparse || values['dry-run']) {
+      throw new Error('--publish-identities is a source-level operation separate from fetch stages');
+    }
+    const limit = integer(values['max-publications'], '--max-publications', 1, 100);
+    console.log(JSON.stringify(await store.publishIdentities(key, limit)));
+    return;
+  }
+
   if (values.stage !== 'all' && !STAGES.includes(values.stage)) throw new Error('Unknown crawl stage');
   if ([values.refresh, values.reparse, values['dry-run']].filter(Boolean).length > 1) {
     throw new Error('Choose at most one of --dry-run, --refresh and --reparse');

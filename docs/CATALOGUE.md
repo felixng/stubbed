@@ -149,6 +149,24 @@ with no inferred whole-site or historical total. The directory response
 was about 3 MB. The adapter caps bodies at 6 MB and retains only extracted
 records. London Theatre collection and publication remain disabled.
 
+**#423 catalogue identities.** The source's publication switch gates a
+separate bounded identity queue. Source venue and event keys retain a mapping,
+evidence, last extraction, resolution reason and an optional override lock.
+Venue matching requires compatible granularity and a corroborating address or
+coordinates for name-based matches. A shared building identifier cannot stand
+for two auditoria. Existing names and coordinates are preserved. A newly
+created venue carries crawler provenance and is unverified.
+
+Show matching considers a stable compatible work ID, or a unique exact title
+or alias with a supported compatible type and no conflicting evidence. The
+crawler preserves source titles and aliases on new candidate approvals. The
+existing admin review path remains available for ambiguity and unknown types.
+Candidate approval has explicit crawler provenance. The queue marks identity
+processing separately from eventual run publication. Each bounded call
+serializes automatic matching and commits the identity and checkpoint together.
+Existing diary IDs and user-authored names and aliases remain in place when
+publication is paused. A source switch changes eligibility for future work.
+
 ### #272 Journey 1, step 4: suggest the show from runs
 - **#360 entry suggestions.** `suggest_shows(venue_ids uuid[], on_date date)` returns `(show_id, title, venue_id, source, score)`, `source` in `community`, `yours`. `security definer` only if needed to count other people's public entries; it must return no user ids and must apply `profile_is_visible`, entry visibility and `blocks` (reuse the predicates used by `feed_entries`). `entry_logged` gains `show_source`.
 - **#278 run suggestions.** Adds the `run` source. A single run at confidence 0.8 or above, seen recently, at a single venue fills an empty show; the rest are chips. Tapping a run with no show goes through the "Did you mean…?" path, so crawl noise never enters show search.
