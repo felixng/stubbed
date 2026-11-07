@@ -51,3 +51,12 @@ export function sourceDateRange(value) {
   if (!start || !end || end < start) return unknown;
   return { start, end, precision: start === end ? 'day' : 'range' };
 }
+
+
+export function sourcePartialPrecision(value) {
+  const text = String(value ?? '').trim().toLowerCase();
+  if (/^[1-9][0-9]{3}$/.test(text)) return 'year';
+  const month = /^([a-z]+)[ ,]+[1-9][0-9]{3}$/.exec(text)?.[1];
+  if (month && MONTHS.some(name => month === name || month === name.slice(0, 3))) return 'month';
+  return 'unknown';
+}

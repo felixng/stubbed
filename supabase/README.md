@@ -364,3 +364,18 @@ transactions keep their queue records with retry timestamps. Ambiguous
 identities stay in the source mappings and show candidate review queue. This
 command handles identity only. It neither reconciles runs nor activates
 suggestions.
+
+
+After identities have reached their checkpoint, process the independent run
+evidence stage with:
+
+```sh
+node supabase/scripts/crawl/loop.mjs --source london_theatre --publish-runs --max-publications 25
+```
+
+Run evidence publication obeys the same source publication switch and can
+resume from its queue after interruption. Use the privileged
+`set_crawl_source_withdrawal(source, true)` operation to remove a source's
+contribution from effective results. Pass `false` to restore its retained
+evidence. Leaving publication off stops new publication without withdrawing
+older facts. Neither operation changes diary entries.

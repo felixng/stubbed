@@ -1195,3 +1195,12 @@ corroboration and compatible auditorium granularity for venue matching, and
 compatible work evidence and a known type for show matching. Reuse candidate
 approval for new unverified shows and preserve established mappings across
 source renames. Ambiguity remains staged with a reason for review.
+
+### #424 Run evidence and compatibility
+
+Store date claims by source event and engagement segment with their precise
+meaning and provenance. Reconcile them in a private effective catalogue
+while retaining the legacy run IDs and publisher signature. A date omitted
+from a later reading keeps its last supported value. Withdrawal filters
+only the withdrawn source. Confidence from the old publisher does not grant
+autofill eligibility.

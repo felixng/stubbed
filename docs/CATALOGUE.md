@@ -167,12 +167,43 @@ serializes automatic matching and commits the identity and checkpoint together.
 Existing diary IDs and user-authored names and aliases remain in place when
 publication is paused. A source switch changes eligibility for future work.
 
-### #272 Journey 1, step 4: suggest the show from runs
-- **#360 entry suggestions.** `suggest_shows(venue_ids uuid[], on_date date)` returns `(show_id, title, venue_id, source, score)`, `source` in `community`, `yours`. `security definer` only if needed to count other people's public entries; it must return no user ids and must apply `profile_is_visible`, entry visibility and `blocks` (reuse the predicates used by `feed_entries`). `entry_logged` gains `show_source`.
-- **#278 run suggestions.** Adds the `run` source. A single run at confidence 0.8 or above, seen recently, at a single venue fills an empty show; the rest are chips. Tapping a run with no show goes through the "Did you mean…?" path, so crawl noise never enters show search.
+**#424 run evidence.** Identity publication and run publication have separate
+durable checkpoints. `crawl_run_evidence` records source event and segment
+keys, individual facts and their provenance. A correction from the same
+field supersedes its prior assertion. Missing or invalid fields preserve
+earlier supported dates. A stable engagement key survives start corrections.
+Cross-source assertions share it only when explicit shared evidence,
+resolved show and venue agree. Independent events keep separate IDs even
+when their titles and dates overlap.
 
-### #314 Journey 1, later: more crawl sources (parked)
-Parked until the diary score and the loop's "needs attention" list show the gaps: #361 Wikipedia, #287 IBDB and Playbill, #292 Wayback Machine, and any search for show data on other websites.
+`catalogue_effective_runs` exposes bounded schedule support internally.
+Preview, opening, closing, booking and generic schedule dates stay separate.
+Partial dates have precision tags and no inferred calendar day. Discrete
+performances and exceptions keep their own dates. Equal-authority conflicts
+suppress interval claims and autofill eligibility. Official evidence outranks
+aggregate evidence for the same fact. The stronger eligibility field requires
+a resolved show and confirmed closing, with current evidence for open runs.
+Consumer activation still requires #428.
+
+The legacy `runs` table and writer signature remain available. An unbounded
+legacy row supports its stated start only. Source withdrawal removes its
+contribution from effective results while retaining evidence, independent
+support and diary entries. Pausing publication stops new writes without
+withdrawing accepted evidence. The detailed owner-only diary score returns
+exact, partial, conflicting, wrong dates or missing. The older score RPC
+retains its three labels for existing clients.
+
+### #419 Consumer suggestions
+
+#360 stages optional suggestions derived from existing entries, with privacy
+and block checks. #278 adds validated catalogue suggestions as optional
+chips. Both preserve manual logging and imports. Autofill has a separate
+switch and stays off unless #428's stronger acceptance gate passes.
+
+### #314 Journey 1, later sources
+
+Wikipedia (#361), IBDB (#287) and Wayback (#292) remain deferred. Playbill
+belongs to #426 in the venue-first epic.
 
 ## 4. SQL conventions and known traps
 

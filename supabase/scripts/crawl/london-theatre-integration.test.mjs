@@ -53,7 +53,7 @@ test('London enumeration and detail stages resume independently from Postgres', 
   try {
     await runPsql(`insert into public.crawl_sources
       (id, source_key, adapter_version, collection_enabled, allowed_hosts, min_interval_ms)
-      values ('${id}', '${key}', 'london-theatre-v1', true, array['${host}'], 1000);`);
+      values ('${id}', '${key}', '${londonTheatre.version}', true, array['${host}'], 1000);`);
     assert.equal((await run('directory', 1)).checkpoint, true);
     assert.deepEqual(await count(), { enumeration: 'enumerating', directory: 1, venues: 0, events: 0, queuedEvents: 0 });
     assert.equal((await run('venue', 3)).statuses.succeeded, 3);
