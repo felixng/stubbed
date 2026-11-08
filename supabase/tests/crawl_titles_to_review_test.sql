@@ -98,5 +98,30 @@ select pg_temp.as_postgres();
 select is((select (title, type::text, wikidata_id is null, verified)::text from public.shows where title = 'Blorple Crawl Only'), '("Blorple Crawl Only",other,t,t)', 'it becomes a show with no Wikidata id');
 select is((select count(*) from public.search_shows('Blorple Crawl Only')), 1::bigint, 'findable once added');
 
+-- Automatic queueing only accepts checked show findings that have not been rejected.
+insert into public.crawl_runs (id, status) values ('c0000000-0000-0000-0000-00000000000d', 'running');
+insert into public.crawl_findings (run_id, source_url, raw_title, kind, method, review, page_checked)
+select 'c0000000-0000-0000-0000-00000000000d', 'https://one.test/whats-on', title, kind, method, review, checked
+from (values
+  ('Blorple Automatic Candidate', 'show', 'structured', null, true),
+  ('Blorple Unchecked', 'show', 'structured', null, false),
+  ('Blorple Rejected Finding', 'show', 'structured', 'wrong', true),
+  ('Blorple Concert', 'concert', 'structured', null, true),
+  ('Blorple Stub', 'show', 'stub', null, true),
+  ('The Blorple Held Show', 'show', 'structured', null, true)
+) as findings(title, kind, method, review, checked);
+
+set local role service_role;
+update public.crawl_runs set status = 'done' where id = 'c0000000-0000-0000-0000-00000000000d';
+reset role;
+select results_eq(
+  $$select title from public.show_candidates where title in (
+    'Blorple Automatic Candidate', 'Blorple Unchecked', 'Blorple Rejected Finding',
+    'Blorple Concert', 'Blorple Stub', 'The Blorple Held Show'
+  )$$,
+  $$select 'Blorple Automatic Candidate'::text$$,
+  'the worker queues only the checked unmatched show'
+);
+
 select * from finish();
 rollback;

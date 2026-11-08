@@ -38,6 +38,13 @@ test('local database loop discovers, publishes, repairs and rereads without AI o
    assert.equal(result.sites[0].status,'done',JSON.stringify(result));
    if(offline)assert.equal(result.sites[0].findings,0);
    await finishRun(run.id,{status:'done',summary:result});
+   const [candidateCount]=await runPsql(`select to_jsonb(count(*)) from public.show_candidates where venue_id='${id}' and source='crawler' and status='pending'`);
+   assert.equal(candidateCount,5,'finished crawls queue unmatched titles for review');
+   const [sightings]=await runPsql(`select to_jsonb(sum(seen_count)) from public.show_candidates where venue_id='${id}'`);
+   await finishRun(run.id,{status:'done',summary:result});
+   const [retriedSightings]=await runPsql(`select to_jsonb(sum(seen_count)) from public.show_candidates where venue_id='${id}'`);
+   assert.equal(retriedSightings,sightings,'retrying finalization does not count findings twice');
+
   }
   const [count]=await runPsql(`select to_jsonb(count(*)) from public.runs where venue_id='${id}'`);assert.equal(count,5);
   const [venue]=await runPsql(`select to_jsonb(v) from public.venues v where id='${id}'`);assert.equal(venue.whats_on_url,`${origin}/moved`);assert.equal(venue.website,`${origin}/`);
@@ -52,7 +59,7 @@ test('local database loop discovers, publishes, repairs and rereads without AI o
   await store.release(venue.crawl_site_id,winner);
 
  }finally{
-  await runPsql(`delete from public.venues where id='${id}';delete from public.crawl_runs where id=any(array[${runIds.map(r=>`'${r}'::uuid`).join(',')}]);delete from public.crawl_sites where whats_on_url like '${origin}/%';`);
+  await runPsql(`delete from public.show_candidates where venue_id='${id}' and source='crawler';delete from public.venues where id='${id}';delete from public.crawl_runs where id=any(array[${runIds.map(r=>`'${r}'::uuid`).join(',')}]);delete from public.crawl_sites where whats_on_url like '${origin}/%';`);
   if(previous===undefined)delete process.env.SUPABASE_DB_URL;else process.env.SUPABASE_DB_URL=previous;
  }
 });
