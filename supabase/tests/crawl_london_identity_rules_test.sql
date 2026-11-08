@@ -92,6 +92,16 @@ select pg_temp.stage('event','show/15-workshop',pg_temp.event('15','Devising Wor
 select pg_temp.stage('event','show/16-tour',pg_temp.event('16','Backstage Tour',null,'{"event_kind":"building_tour"}'));
 select pg_temp.stage('event','show/17-concert',pg_temp.event('17','Winter Concert',null,'{"event_kind":"concert"}'));
 select pg_temp.stage('event','show/18-nodate',pg_temp.event('18','No Date Piece',null,'{"event_kind":"unknown","date_status":"missing"}'));
+-- 20261108200100: cleaned titles, first-category types, title cues, concerts, held unknown types.
+select pg_temp.stage('event','show/19-company',pg_temp.event('19','Zebra Quartet Fantasia - Royal Ballet and Opera',null,
+  '{"evidence":{"categories":[{"text":"Opera, West End"}]}}'));
+select pg_temp.stage('event','show/20-first-cat',pg_temp.event('20','Quokka Mia!',null,
+  '{"evidence":{"categories":[{"text":"Musicals, Romance, Comedy, West End"}]}}'));
+select pg_temp.stage('event','show/21-venue-suffix',pg_temp.event('21','Quillfeather Confessions (Garrick Theatre)',null,'{"event_kind":"unknown"}'));
+select pg_temp.stage('event','show/22-promo',pg_temp.event('22','Spring Ticket Event - Tap Wombats',null,'{"event_kind":"unknown"}'));
+select pg_temp.stage('event','show/23-under-typed',pg_temp.event('23','Candle Recital Nights',null,
+  '{"event_kind":"concert","evidence":{"categories":[{"text":"Concerts, Classical"}]}}'));
+insert into public.shows (id, title, type) values ('b4440000-0000-0000-0000-000000000023', 'Candle Recital Nights', 'other');
 update public.crawl_sources set publication_enabled = true where source_key = 'london_theatre';
 select is(public.publish_crawl_identities('london_theatre')->>'failed', '0', 'publication processes');
 select public.publish_crawl_identities('london_theatre');
@@ -116,13 +126,43 @@ select is((pg_temp.mapping('event','11')).show_id, 'b4440000-0000-0000-0000-0000
 select is((select type::text from public.shows where id = 'b4440000-0000-0000-0000-000000000001'), 'musical', 'existing show type is not overwritten');
 select is((pg_temp.mapping('event','12')).resolution_reason, 'uncorroborated_exact_show', 'an exact title with no venue or run evidence stays held');
 select is((select type::text from public.shows where id = 'b4440000-0000-0000-0000-000000000004'), 'dance', 'held case leaves the existing type');
-select ok((select type = 'other' and not verified from public.shows where id = (pg_temp.mapping('event','13')).show_id),
-  'a new unknown-type title publishes as an unverified other show');
+select is((pg_temp.mapping('event','13')).resolution_reason, 'unknown_show_type', 'a new unknown-type title is held, not published');
+select is((pg_temp.mapping('event','13')).show_id, null, 'no show is created for a held unknown type');
+select ok((select status = 'pending' and type = 'other' from public.show_candidates where id = (pg_temp.mapping('event','13')).candidate_id),
+  'the held title waits as a pending candidate');
 select is((pg_temp.mapping('event','14')).resolution_status, 'excluded', 'class stays excluded');
 select is((pg_temp.mapping('event','15')).resolution_status, 'excluded', 'workshop stays excluded');
 select is((pg_temp.mapping('event','16')).resolution_status, 'excluded', 'tour stays excluded');
-select is((pg_temp.mapping('event','17')).resolution_status, 'excluded', 'concert stays excluded');
+select is((select type::text from public.shows where id = (pg_temp.mapping('event','17')).show_id), 'concert',
+  'a concert publishes as a concert show');
 select is((pg_temp.mapping('event','18')).resolution_reason, 'missing_supported_date', 'unknown type still needs a supported date');
+
+select ok((select title = 'Zebra Quartet Fantasia' and type = 'opera' from public.shows where id = (pg_temp.mapping('event','19')).show_id),
+  'company suffix is stripped and the opera category types it');
+select ok((select 'Zebra Quartet Fantasia - Royal Ballet and Opera' = any(aliases) from public.show_candidates
+  where id = (pg_temp.mapping('event','19')).candidate_id), 'the raw source title is kept as a candidate alias');
+select is((select type::text from public.shows where id = (pg_temp.mapping('event','20')).show_id), 'musical',
+  'the first category naming a type wins over a later Comedy');
+select ok((select title = 'Quillfeather Confessions' and status = 'pending' from public.show_candidates
+  where id = (pg_temp.mapping('event','21')).candidate_id), 'a trailing (venue) is stripped; unknown type stays held');
+select ok((select title = 'Tap Wombats' and type = 'dance' from public.shows where id = (pg_temp.mapping('event','22')).show_id),
+  'a ticket-event prefix is stripped and a title cue types it');
+select is((pg_temp.mapping('event','23')).show_id, 'b4440000-0000-0000-0000-000000000023'::uuid,
+  'a typed event links to an existing Other show of the same title');
+select is((select type::text from public.shows where id = 'b4440000-0000-0000-0000-000000000023'), 'other',
+  'linking does not retype the existing show');
+
+select is(public.crawl_clean_title('london_theatre', 'Il trovatore - English National Opera'), 'Il trovatore', 'ENO suffix stripped');
+select is(public.crawl_clean_title('london_theatre', 'Samantha Barks: The Cathedral Tour - London'), 'Samantha Barks: The Cathedral Tour', 'trailing - London stripped');
+select is(public.crawl_clean_title('london_theatre', 'Tina - The Tina Turner Musical'), 'Tina - The Tina Turner Musical', 'a real subtitle is kept');
+select is(public.crawl_clean_title('playbill', 'Hamlet (Garrick Theatre)'), 'Hamlet (Garrick Theatre)', 'cleaning is London-only');
+select is(public.crawl_event_show_type('london_theatre', '{"raw_title":"Love Songs by Candlelight"}')::text, 'concert', 'candlelight is a concert');
+select is(public.crawl_event_show_type('london_theatre', '{"raw_title":"Mandy Patinkin - Live in Concert"}')::text, 'concert', 'in concert is a concert');
+select is(public.crawl_event_show_type('london_theatre', '{"raw_title":"Il trovatore - English National Opera"}')::text, 'opera', 'ENO cue is opera');
+select is(public.crawl_event_show_type('london_theatre', '{"raw_title":"Paddington The Musical"}')::text, 'musical', 'The Musical cue');
+select is(public.crawl_event_show_type('london_theatre', '{"raw_title":"La Fille mal gardée - Royal Ballet and Opera"}'), null,
+  'the Royal Ballet and Opera suffix alone does not decide opera or dance');
+select is(public.crawl_event_show_type('london_theatre', '{"raw_title":"Brokeback Mountain"}'), null, 'no cue stays unknown');
 
 select is(public.put_crawl_geocode('postcodes.io', 'AB1 2CD', 51.0, -1.0), true, 'geocode cache stores a hit');
 select is((select lat from public.get_crawl_geocode('postcodes.io', 'AB1 2CD')), 51.0::double precision, 'geocode cache reads it back');

@@ -14,7 +14,8 @@ export type InsightStats = {
 export type InsightCardData = { stats: InsightStats; year: number | null; handle: string | null };
 export const SHOW_TYPES = [
   { id: "musical", name: "Musical" }, { id: "play", name: "Play" }, { id: "opera", name: "Opera" },
-  { id: "dance", name: "Dance" }, { id: "comedy", name: "Comedy" }, { id: "standup", name: "Stand-up" }, { id: "other", name: "Other" },
+  { id: "dance", name: "Dance" }, { id: "comedy", name: "Comedy" }, { id: "standup", name: "Stand-up" },
+  { id: "concert", name: "Concert" }, { id: "other", name: "Other" },
 ];
 export const INSIGHT_CARD_DESIGNS: CardDesign[] = [
   { id: "weekly-streak", name: "Weekly streak", background: true },

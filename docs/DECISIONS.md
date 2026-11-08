@@ -1293,3 +1293,30 @@ workshops, building tours and concerts stay excluded.
 
 **Booking horizon.** A JSON-LD `endDate` is parsed as `end` (a scheduled end), never `closing`: it is not a
 confirmed end, cannot make a run autofill-eligible, and chips describe it as `scheduled_end`.
+
+### #444 London type and title rules, concert type (2026-11-08)
+
+A rolled-back dry run of London publication on the hosted data would have created 333 shows, 316 of them
+unverified `other`, plus concerts and titles carrying source decoration. Owner decisions the same day:
+
+- **Concert is a show type** (`20261108200000`, after stand-up). Web, iOS, posters, share cards and admin
+  filters list it; iOS still reads any unknown type as Other.
+- **First matching category wins.** London lists the main category first, so "Musicals, Romance, Comedy" is a
+  musical (previously two specific types meant unknown, which dropped Mamma Mia!, The Book of Mormon and
+  others). "Comedy Shows" means comedy; "Concerts" means concert.
+- **Titles are cleaned** before matching or creating (`crawl_clean_title`, London only): ticket-event
+  prefixes, " - Royal Ballet and Opera" / " - English National Opera" / " - English National Ballet" /
+  " - London" suffixes and a trailing "(<venue>)". The raw title stays on the candidate as an alias.
+- **Title cues type the rest** (`crawl_event_show_type`): "in Concert", "by Candlelight", "Gala", "Symphonic",
+  "Sing-Along" mean concert; "The Musical" musical; "English National Opera" or "Opera" opera; "Ballet",
+  "Dance", "Tap", "Flamenco" dance. "- Royal Ballet and Opera" alone decides nothing.
+- **Unknown types are held, not published as Other** (`unknown_show_type`). London's past-show pages carry no
+  categories at all (864 of 980 pages), so most untyped titles are past runs. They wait as pending `other`
+  candidates; typing them with a model is a separate follow-up, since #419 keeps London pages away from AI.
+- A typed event may link to an existing show of type `other` with the same title (an under-typed show, not a
+  conflict); the existing type is not changed.
+
+The rules run in Postgres over stored evidence, so they apply on the next identity pass with no refetch. The
+London parser (v4) applies the same first-category rule to new pages. Dry run with these rules, rolled back:
+77 new shows (14 musical, 12 play, 18 opera, 12 dance, 21 concert, 0 other), 71 existing shows linked (53
+before), 313 held as unknown type, 64 runs, 0 autofill-eligible.

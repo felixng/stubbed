@@ -1,7 +1,7 @@
 // Filters for /app/backstage/shows and the name check, shared with the page.
 export const PAGE_SIZE = 50;
 
-export const SHOW_TYPES = ["musical", "play", "opera", "dance", "comedy", "other"] as const;
+export const SHOW_TYPES = ["musical", "play", "opera", "dance", "comedy", "standup", "concert", "other"] as const;
 
 export type ShowFilters = {
   q: string;

@@ -10,6 +10,8 @@ struct EntryLogicTests {
     }
     #expect(try show("standup").type == .standup)
     #expect(ShowType.standup.label == "Stand-up")
+    #expect(try show("concert").type == .concert)
+    #expect(ShowType.concert.label == "Concert")
     // A type added after this build reads as Other instead of failing the list.
     #expect(try show("circus").type == .other)
   }
