@@ -209,7 +209,10 @@ export async function runFrontier({
       if (lease.signal.aborted) return 'stale';
       if (stopSignal.aborted) return finishAttempt(task, 'pending', null, null);
       if (error instanceof HostDeferred) return finishAttempt(task, 'pending', error.retryAt, error.message);
-      return fail(task, 'Fetch or parse failed');
+      // Keep the cause (no URLs or credentials): an operator can tell a timeout from a parser error.
+      const cause = String(error?.cause?.code ?? error?.code ?? error?.name ?? 'Error');
+      const detail = String(error?.message ?? '').replace(/https?:\/\/\S+/g, '<url>').slice(0, 120);
+      return fail(task, `Fetch or parse failed (${cause}: ${detail})`.slice(0, 300));
     } finally {
       stopHeartbeat();
     }
