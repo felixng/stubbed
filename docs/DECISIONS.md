@@ -1360,3 +1360,19 @@ the venue name and the first and last run dates.
   titles, 280 would publish (272 in v1). The hand-checked sample is 94% right (92% in v1). The errors left are
   famous titles shared with another kind of work. In the rolled-back dry run with v2 answers, held London
   events fall from 313 to 28, with 254 new shows.
+
+### #444 Street-address geocoding for US venues (2026-11-08)
+
+The first Playbill probe held 20 of 42 Broadway venues. Playbill gives a street address but no postcode, and
+15 of 41 Nominatim lookups had been cached as misses. Checked live, three causes:
+- One address often returns several objects in the same building (245 W 44th St: the Majestic Theatre and a
+  gift shop 20 m apart). The old rule treated any second answer as ambiguity. Now answers within **150 m** of
+  each other are one place, and the theatre's own point is used when present.
+- Answers far apart stay ambiguous unless **exactly one** is a performance venue (`amenity` = theatre,
+  arts_centre, concert_hall, opera_house, events_venue): "1634 Broadway" is the Winter Garden in Manhattan and a
+  shop in Brooklyn.
+- A bracketed note ("1634 Broadway (At W. 50th St.)") made Nominatim find nothing, so it is dropped from the
+  query.
+Migration `20261108230000` forgets the cached Nominatim misses and re-queues the Playbill and London venue
+pages (about 100), so the next run geocodes them again at the existing 1.1 s gap. Matching rules are unchanged:
+a geocoded point still needs exactly one same-name venue within 250 m.

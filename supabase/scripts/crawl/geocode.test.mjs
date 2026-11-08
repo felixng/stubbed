@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { createGeocoder, geocodeVenueObservations, normalisePostcode } from './geocode.mjs';
+import { createGeocoder, geocodeVenueObservations, normalisePostcode, pickNominatim, streetForQuery } from './geocode.mjs';
 import { safeError } from './frontier.mjs';
 
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status });
@@ -100,4 +100,43 @@ test('safeError keeps the class, strips URLs and secrets and caps length', () =>
   assert.ok(text.startsWith('ECONNRESET: '));
   assert.ok(text.length <= 300);
   assert.ok(!/secret|https?:|eyJ/.test(text));
+});
+
+test('Nominatim: objects in one building are one place, and the venue point wins', () => {
+  // 245 W 44th St answers with the Majestic Theatre and a gift shop about 20 m apart.
+  const majestic = [
+    { lat: '40.7583731', lon: '-73.9882377', category: 'shop', type: 'gift' },
+    { lat: '40.7584179', lon: '-73.9880164', category: 'amenity', type: 'theatre' },
+  ];
+  assert.deepEqual(pickNominatim(majestic), { lat: 40.7584179, lng: -73.9880164 });
+  // Two non-venue objects in the same building still give the address point.
+  assert.deepEqual(pickNominatim([{ lat: '40.75', lon: '-73.98', category: 'shop', type: 'gift' },
+    { lat: '40.7501', lon: '-73.9801', category: 'shop', type: 'books' }]), { lat: 40.75, lng: -73.98 });
+});
+
+test('Nominatim: far-apart answers are ambiguous unless exactly one is a performance venue', () => {
+  // "1634 Broadway" is the Winter Garden in Manhattan and a shop in Brooklyn.
+  const winterGarden = [
+    { lat: '40.7616856', lon: '-73.9835045', category: 'amenity', type: 'theatre' },
+    { lat: '40.6847818', lon: '-73.9141336', category: 'shop', type: 'variety_store' },
+    { lat: '40.7615479', lon: '-73.9837434', category: 'amenity', type: 'restaurant' },
+  ];
+  assert.deepEqual(pickNominatim(winterGarden), { lat: 40.7616856, lng: -73.9835045 });
+  const twoTheatres = [
+    { lat: '40.76', lon: '-73.98', category: 'amenity', type: 'theatre' },
+    { lat: '40.68', lon: '-73.91', category: 'amenity', type: 'theatre' },
+  ];
+  assert.equal(pickNominatim(twoTheatres), null);
+  assert.equal(pickNominatim([{ lat: '40.76', lon: '-73.98' }, { lat: '40.68', lon: '-73.91' }]), null);
+  assert.equal(pickNominatim([]), null);
+});
+
+test('a bracketed note is left out of the street query', async () => {
+  assert.equal(streetForQuery('1634 Broadway (At W. 50th St.)'), '1634 Broadway');
+  assert.equal(streetForQuery('219 W. 49th St.'), '219 W. 49th St.');
+  const { fetcher, calls } = mock([['nominatim', json([{ lat: '40.7616856', lon: '-73.9835045', category: 'amenity', type: 'theatre' }])]]);
+  const hit = await createGeocoder({ fetcher, sleep: async () => {} })(
+    { street: '1634 Broadway (At W. 50th St.)', city: 'New York', country: 'US' });
+  assert.equal(hit.query, '1634 Broadway, New York, US');
+  assert.equal(new URL(calls[0].url).searchParams.get('countrycodes'), null, 'a US address is not limited to GB');
 });
