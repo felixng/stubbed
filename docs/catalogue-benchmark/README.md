@@ -8,28 +8,33 @@ model-assisted type step would do with them.
 | File | What it is |
 |---|---|
 | `london-held-titles.json` | The 310 held titles at a venue (from 313 events), exported from a rolled-back identity pass on hosted data. Each row has only what the model is sent: title, venue name, first and last dates, plus the keys to store answers. |
-| `london-show-type-answers.json` | Every answer from [run 42513782100](https://github.com/felixng/stubbed/actions/runs/42513782100): `claude-haiku-5-5`, prompt version 1, title only for all 310 titles, then web search for the 113 that came back unsure or below 0.80. |
-| `london-show-types-sample.csv` | **100 sampled answers to check by hand** (a deterministic sample by title hash). Fill in `correct_type` (blank means the answer is right) and `notes`. `would_publish_as` is `(held)` when the final answer isn't confident. |
+| `london-show-type-answers.json` | **Prompt v2** answers ([run 42515940783](https://github.com/felixng/stubbed/actions/runs/42515940783)): `claude-haiku-5-5`, with circus added, and told to judge the production rather than the title. Title only for all 310 titles, then web search for the 109 that came back unsure or below 0.80. |
+| `london-show-type-answers-v1.json` | Prompt v1 answers ([run 42513782100](https://github.com/felixng/stubbed/actions/runs/42513782100)), kept for comparison. |
+| `london-show-types-sample.csv` | **100 sampled v2 answers, hand-checked** (the same rows as v1: a deterministic sample by title hash). `correct_type` is filled where an answer is wrong; `notes` holds borderline calls and v1-to-v2 changes. `would_publish_as` is `(held)` when the final answer isn't confident. |
 
 To re-run: workflow "Catalogue crawl", input `show_types: benchmark` (spends, capped by `CRAWL_TYPE_SPEND_USD`,
 default $2) or `show_types: dry-run` (no model calls).
 
 ### Cost
 
-| Pass | Calls | Input tokens | Output tokens | Searches | Cost |
-|---|---|---|---|---|---|
-| Title only | 310 | 196,185 | 5,203 | 0 | $0.02 |
-| Web search (unsure only) | 113 | 1,661,103 | 40,066 | 113 | $1.32 |
-| **Total** | | | | | **$1.34** |
+| Pass | v1 calls | v1 cost | v2 calls | v2 input / output tokens | v2 searches | v2 cost |
+|---|---|---|---|---|---|---|
+| Title only | 310 | $0.02 | 310 | 263,455 / 5,202 | 0 | $0.03 |
+| Web search (unsure only) | 113 | $1.32 | 109 | 1,644,226 / 39,889 | 109 | $1.27 |
+| **Total** | | **$1.34** | | | | **$1.30** |
 
 ### Answers
 
-- Title only: 197 of 310 confident (at least 0.80), 113 unsure or below 0.80.
-- Web search: 75 of those 113 became confident; 38 stay unsure.
-- Final: 272 titles would publish (44 musical, 81 play, 24 opera, 29 dance, 22 comedy, 16 stand-up, 37 concert,
-  19 other); 38 stay held.
+| | v1 | v2 |
+|---|---|---|
+| Confident from the title alone | 197 | 201 |
+| Made confident by web search | 75 of 113 | 79 of 109 |
+| Would publish | 272 | **280** |
+| Still held | 38 | **30** |
 
-### Rolled-back dry run on hosted data
+v2 by type: 37 musical, 77 play, 25 opera, 25 dance, 22 comedy, 12 stand-up, 51 concert, 6 circus, 25 other.
+
+### Rolled-back dry run on hosted data (v1 answers; v2 waits for the circus type on hosted)
 
 [Run 42514195298](https://github.com/felixng/stubbed/actions/runs/42514195298) did all of this in one
 transaction, then rolled it back: apply the migration, switch London publication on, publish every London
@@ -51,21 +56,31 @@ extraction, load the answers, publish again.
 
 ### Hand check of the sample (2026-11-08)
 
-Checked by Claude from its own knowledge, with a web search for four titles it wasn't sure of. Not yet checked
-by the owner. Corrections are in `correct_type`; borderline calls are in `notes`.
+Checked by Claude from its own knowledge, with a web search for five titles it wasn't sure of. Not yet checked by
+the owner.
 
-- **89 of the 100 would publish; 82 of those have the right type: 92% accurate.** The 11 held rows don't publish.
-- **The 7 wrong ones:**
-  - *Don Quixote*, the RSC play, answered dance.
-  - *Like Water for Chocolate*, the Wheeldon ballet, answered musical.
+| | v1 | v2 |
+|---|---|---|
+| Sampled answers that would publish | 89 | 94 |
+| Right | 82 (**92%**) | 88 (**94%**) |
+| Debatable, counted right | 8 | 12 |
+| Right if every debatable call is wrong | 83% | 81% |
+
+- **v2 fixed 3:** the celebrity talk (now other), the magic show *Unbelievable* (now other) and *West End Musical
+  Christmas* (now concert). Circus now types *360 ALLSTARS* and *Return of the GODZ*.
+- **4 errors remain:**
+  - *Don Quixote*, the RSC play, now answered musical.
+  - *Like Water for Chocolate*, the Royal Opera House ballet, still answered musical despite the venue hint.
   - *The Secret Diary of Adrian Mole*, the musical, answered play.
   - *Go Your Own Way*, a tribute concert, answered musical.
-  - *West End Musical Christmas*, a concert, answered musical.
-  - *Unbelievable*, a magic show, answered play.
-  - *Chrishell Stause: Up Close and Personal*, a talk, answered stand-up.
-- **The pattern:** a title shared by another kind of work (the novel, the ballet or the musical), and song
-  compilations or tribute nights called musicals.
-- **8 debatable calls are counted as right:** comic plays as comedy or play, and one-person shows. Counting
-  them all wrong would give 83%.
+- **2 new errors:**
+  - *So Are We: León & Lightfoot*, the ROH dance programme, answered concert (v1 was right).
+  - *The Mongol Khan*, a play that v1 held, published as opera.
+- **New debatable calls:**
+  - Trevor Ashley's drag cabaret, answered concert (the prompt says drag is other).
+  - A fundraising gala, answered concert.
+  - *La Clique*, answered circus.
+- **What's left is mostly well-known titles** that are also another kind of work. A short list of known productions
+  (or a deterministic venue rule: Royal Opera House means opera or dance) would fix more than prompting.
 
 Any wrong answers can be reverted by provenance (`crawl_revert_show_type_suggestions`).

@@ -2,37 +2,38 @@
 "summary": {
 "rows": 310,
 "answered": 310,
-"cost_usd": 1.3384,
+"cost_usd": 1.3033,
 "plain": {
 "asked": 310,
-"confident": 197,
-"unsure": 113,
+"confident": 201,
+"unsure": 109,
 "invalid": 0,
 "stopped": null
 },
 "web_search": {
-"asked": 113,
-"confident": 75,
-"unsure": 38,
+"asked": 109,
+"confident": 79,
+"unsure": 30,
 "invalid": 0,
 "stopped": null
 },
-"would_publish": 272,
-"still_held": 38,
+"would_publish": 280,
+"still_held": 30,
 "by_type": {
-"musical": 44,
-"play": 81,
-"opera": 24,
-"dance": 29,
+"musical": 37,
+"play": 77,
+"opera": 25,
+"dance": 25,
 "comedy": 22,
-"standup": 16,
-"concert": 37,
-"other": 19
+"standup": 12,
+"concert": 51,
+"circus": 6,
+"other": 25
 }
 },
 "model": "claude-haiku-5-5",
-"prompt_version": 1,
-"run": "https://github.com/felixng/stubbed/actions/runs/42513782100",
+"prompt_version": 2,
+"run": "https://github.com/felixng/stubbed/actions/runs/42515940783",
 "answers": [
 {
 "title_key": "360 allstars",
@@ -42,13 +43,13 @@
 "first_date": "2026-06-02",
 "last_date": "2026-06-06",
 "verdict": "type",
-"suggested_type": "other",
-"confidence": 0.5,
+"suggested_type": "circus",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
-"output_tokens": 16
+"input_tokens": 848,
+"output_tokens": 17
 }
 },
 {
@@ -62,9 +63,9 @@
 "suggested_type": "play",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 624,
+"input_tokens": 841,
 "output_tokens": 16
 }
 },
@@ -76,13 +77,13 @@
 "first_date": "2025-11-23",
 "last_date": "2025-11-23",
 "verdict": "type",
-"suggested_type": "other",
+"suggested_type": "concert",
 "confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
-"output_tokens": 16
+"input_tokens": 850,
+"output_tokens": 17
 }
 },
 {
@@ -92,14 +93,14 @@
 "venue_name": "Lyric Theatre",
 "first_date": "2022-09-12",
 "last_date": "2022-09-12",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.3,
+"verdict": "type",
+"suggested_type": "musical",
+"confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
-"output_tokens": 18
+"input_tokens": 847,
+"output_tokens": 17
 }
 },
 {
@@ -109,14 +110,14 @@
 "venue_name": "Trafalgar Theatre",
 "first_date": "2024-01-22",
 "last_date": "2024-04-20",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.3,
+"verdict": "type",
+"suggested_type": "play",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
-"output_tokens": 18
+"input_tokens": 846,
+"output_tokens": 16
 }
 },
 {
@@ -128,11 +129,11 @@
 "last_date": "2018-08-25",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.95,
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 627,
+"input_tokens": 844,
 "output_tokens": 16
 }
 },
@@ -145,11 +146,11 @@
 "last_date": "2022-12-04",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.7,
+"confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 17
 }
 },
@@ -164,9 +165,9 @@
 "suggested_type": "play",
 "confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 623,
+"input_tokens": 840,
 "output_tokens": 16
 }
 },
@@ -181,9 +182,9 @@
 "suggested_type": "play",
 "confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 16
 }
 },
@@ -195,13 +196,13 @@
 "first_date": "2026-04-20",
 "last_date": "2026-04-20",
 "verdict": "type",
-"suggested_type": "other",
-"confidence": 0.4,
+"suggested_type": "concert",
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 652,
-"output_tokens": 16
+"input_tokens": 869,
+"output_tokens": 17
 }
 },
 {
@@ -213,11 +214,11 @@
 "last_date": "2025-04-20",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.7,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 627,
+"input_tokens": 844,
 "output_tokens": 17
 }
 },
@@ -230,11 +231,11 @@
 "last_date": "2026-09-19",
 "verdict": "type",
 "suggested_type": "comedy",
-"confidence": 0.85,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 18
 }
 },
@@ -246,13 +247,13 @@
 "first_date": "2025-11-09",
 "last_date": "2025-11-09",
 "verdict": "type",
-"suggested_type": "musical",
-"confidence": 0.95,
+"suggested_type": "comedy",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
-"output_tokens": 17
+"input_tokens": 850,
+"output_tokens": 18
 }
 },
 {
@@ -266,9 +267,9 @@
 "suggested_type": "standup",
 "confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 638,
+"input_tokens": 855,
 "output_tokens": 17
 }
 },
@@ -281,11 +282,11 @@
 "last_date": "2021-06-26",
 "verdict": "type",
 "suggested_type": "standup",
-"confidence": 0.8,
+"confidence": 0.75,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 637,
+"input_tokens": 854,
 "output_tokens": 17
 }
 },
@@ -298,11 +299,11 @@
 "last_date": "2019-10-07",
 "verdict": "type",
 "suggested_type": "standup",
-"confidence": 0.8,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 638,
+"input_tokens": 855,
 "output_tokens": 17
 }
 },
@@ -315,11 +316,11 @@
 "last_date": "2019-11-25",
 "verdict": "type",
 "suggested_type": "standup",
-"confidence": 0.6,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 641,
+"input_tokens": 858,
 "output_tokens": 17
 }
 },
@@ -332,11 +333,11 @@
 "last_date": "2023-10-28",
 "verdict": "type",
 "suggested_type": "standup",
-"confidence": 0.8,
+"confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 645,
+"input_tokens": 862,
 "output_tokens": 17
 }
 },
@@ -349,11 +350,11 @@
 "last_date": "2024-01-16",
 "verdict": "type",
 "suggested_type": "standup",
-"confidence": 0.6,
+"confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 644,
+"input_tokens": 861,
 "output_tokens": 17
 }
 },
@@ -368,9 +369,9 @@
 "suggested_type": "opera",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 625,
+"input_tokens": 842,
 "output_tokens": 17
 }
 },
@@ -383,11 +384,11 @@
 "last_date": "2024-09-30",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.8,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 17
 }
 },
@@ -402,9 +403,9 @@
 "suggested_type": "play",
 "confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 16
 }
 },
@@ -417,11 +418,11 @@
 "last_date": "2018-03-11",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.4,
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 635,
+"input_tokens": 852,
 "output_tokens": 16
 }
 },
@@ -434,11 +435,11 @@
 "last_date": "2021-06-13",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.6,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 642,
+"input_tokens": 859,
 "output_tokens": 17
 }
 },
@@ -450,13 +451,13 @@
 "first_date": "2024-11-24",
 "last_date": "2024-11-24",
 "verdict": "type",
-"suggested_type": "standup",
-"confidence": 0.4,
+"suggested_type": "other",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 641,
-"output_tokens": 17
+"input_tokens": 858,
+"output_tokens": 16
 }
 },
 {
@@ -470,9 +471,9 @@
 "suggested_type": "dance",
 "confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
+"input_tokens": 849,
 "output_tokens": 17
 }
 },
@@ -487,9 +488,9 @@
 "suggested_type": "play",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 16
 }
 },
@@ -504,9 +505,9 @@
 "suggested_type": "concert",
 "confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 626,
+"input_tokens": 843,
 "output_tokens": 17
 }
 },
@@ -521,9 +522,9 @@
 "suggested_type": "opera",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 626,
+"input_tokens": 843,
 "output_tokens": 17
 }
 },
@@ -538,9 +539,9 @@
 "suggested_type": "comedy",
 "confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 636,
+"input_tokens": 853,
 "output_tokens": 18
 }
 },
@@ -553,11 +554,11 @@
 "last_date": "2024-01-27",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.8,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 634,
+"input_tokens": 851,
 "output_tokens": 16
 }
 },
@@ -570,11 +571,11 @@
 "last_date": "2022-09-25",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.95,
+"confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 627,
+"input_tokens": 844,
 "output_tokens": 16
 }
 },
@@ -587,11 +588,11 @@
 "last_date": "2025-01-11",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.6,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 16
 }
 },
@@ -603,13 +604,13 @@
 "first_date": "2024-09-01",
 "last_date": "2024-09-01",
 "verdict": "type",
-"suggested_type": "standup",
-"confidence": 0.6,
+"suggested_type": "other",
+"confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 638,
-"output_tokens": 17
+"input_tokens": 855,
+"output_tokens": 16
 }
 },
 {
@@ -620,12 +621,12 @@
 "first_date": "2023-10-17",
 "last_date": "2023-10-17",
 "verdict": "type",
-"suggested_type": "musical",
+"suggested_type": "concert",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 636,
+"input_tokens": 853,
 "output_tokens": 17
 }
 },
@@ -638,11 +639,11 @@
 "last_date": "2025-06-07",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.97,
+"confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 17
 }
 },
@@ -657,9 +658,9 @@
 "suggested_type": "other",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 642,
+"input_tokens": 859,
 "output_tokens": 16
 }
 },
@@ -674,9 +675,9 @@
 "suggested_type": "standup",
 "confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 17
 }
 },
@@ -689,11 +690,11 @@
 "last_date": "2019-06-10",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.8,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 17
 }
 },
@@ -708,10 +709,10 @@
 "suggested_type": "concert",
 "confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 641,
-"output_tokens": 17
+"input_tokens": 858,
+"output_tokens": 19
 }
 },
 {
@@ -725,9 +726,9 @@
 "suggested_type": "dance",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 17
 }
 },
@@ -742,9 +743,9 @@
 "suggested_type": "standup",
 "confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 641,
+"input_tokens": 858,
 "output_tokens": 17
 }
 },
@@ -757,11 +758,11 @@
 "last_date": "2023-11-20",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.6,
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
+"input_tokens": 849,
 "output_tokens": 17
 }
 },
@@ -773,13 +774,13 @@
 "first_date": "2021-07-17",
 "last_date": "2021-08-22",
 "verdict": "type",
-"suggested_type": "play",
+"suggested_type": "musical",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
-"output_tokens": 16
+"input_tokens": 847,
+"output_tokens": 17
 }
 },
 {
@@ -791,11 +792,11 @@
 "last_date": "2019-09-21",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.6,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 16
 }
 },
@@ -810,9 +811,9 @@
 "suggested_type": "concert",
 "confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 624,
+"input_tokens": 841,
 "output_tokens": 17
 }
 },
@@ -825,11 +826,11 @@
 "last_date": "2023-08-13",
 "verdict": "type",
 "suggested_type": "comedy",
-"confidence": 0.85,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 18
 }
 },
@@ -844,9 +845,9 @@
 "suggested_type": "other",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 640,
+"input_tokens": 857,
 "output_tokens": 16
 }
 },
@@ -857,14 +858,14 @@
 "venue_name": "Lyric Theatre",
 "first_date": "2023-09-27",
 "last_date": "2023-09-30",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.3,
+"verdict": "type",
+"suggested_type": "play",
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
-"output_tokens": 18
+"input_tokens": 846,
+"output_tokens": 16
 }
 },
 {
@@ -878,9 +879,9 @@
 "suggested_type": "opera",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 17
 }
 },
@@ -895,9 +896,9 @@
 "suggested_type": "play",
 "confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 16
 }
 },
@@ -909,13 +910,13 @@
 "first_date": "2026-04-29",
 "last_date": "2026-07-18",
 "verdict": "type",
-"suggested_type": "play",
-"confidence": 0.8,
+"suggested_type": "musical",
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 634,
-"output_tokens": 16
+"input_tokens": 851,
+"output_tokens": 17
 }
 },
 {
@@ -929,9 +930,9 @@
 "suggested_type": "play",
 "confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 16
 }
 },
@@ -944,11 +945,11 @@
 "last_date": "2019-01-03",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.6,
+"confidence": 0.55,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 638,
+"input_tokens": 855,
 "output_tokens": 16
 }
 },
@@ -961,11 +962,11 @@
 "last_date": "2025-06-14",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.5,
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 627,
+"input_tokens": 844,
 "output_tokens": 16
 }
 },
@@ -978,11 +979,11 @@
 "last_date": "2023-08-12",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.9,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 16
 }
 },
@@ -993,14 +994,14 @@
 "venue_name": "Lyric Theatre",
 "first_date": "2026-10-12",
 "last_date": "2026-10-19",
-"verdict": "type",
-"suggested_type": "play",
-"confidence": 0.5,
+"verdict": "unsure",
+"suggested_type": null,
+"confidence": 0.3,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
-"output_tokens": 16
+"input_tokens": 847,
+"output_tokens": 18
 }
 },
 {
@@ -1012,11 +1013,11 @@
 "last_date": "2025-09-28",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.4,
+"confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
+"input_tokens": 849,
 "output_tokens": 16
 }
 },
@@ -1028,13 +1029,13 @@
 "first_date": "2024-02-07",
 "last_date": "2024-02-07",
 "verdict": "type",
-"suggested_type": "standup",
-"confidence": 0.5,
+"suggested_type": "other",
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 646,
-"output_tokens": 17
+"input_tokens": 863,
+"output_tokens": 16
 }
 },
 {
@@ -1046,11 +1047,11 @@
 "last_date": "2019-08-31",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.9,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 638,
+"input_tokens": 855,
 "output_tokens": 16
 }
 },
@@ -1062,12 +1063,12 @@
 "first_date": "2023-09-25",
 "last_date": "2023-09-25",
 "verdict": "type",
-"suggested_type": "standup",
+"suggested_type": "concert",
 "confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 17
 }
 },
@@ -1080,11 +1081,11 @@
 "last_date": "2021-10-04",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.6,
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 17
 }
 },
@@ -1096,13 +1097,13 @@
 "first_date": "2024-12-05",
 "last_date": "2025-01-05",
 "verdict": "type",
-"suggested_type": "play",
-"confidence": 0.8,
+"suggested_type": "comedy",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 638,
-"output_tokens": 16
+"input_tokens": 855,
+"output_tokens": 18
 }
 },
 {
@@ -1113,13 +1114,13 @@
 "first_date": "2024-04-30",
 "last_date": "2024-04-30",
 "verdict": "type",
-"suggested_type": "standup",
-"confidence": 0.8,
+"suggested_type": "other",
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 636,
-"output_tokens": 17
+"input_tokens": 853,
+"output_tokens": 16
 }
 },
 {
@@ -1130,13 +1131,13 @@
 "first_date": "2026-10-21",
 "last_date": "2026-10-31",
 "verdict": "type",
-"suggested_type": "other",
-"confidence": 0.85,
+"suggested_type": "circus",
+"confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
-"output_tokens": 16
+"input_tokens": 848,
+"output_tokens": 17
 }
 },
 {
@@ -1146,14 +1147,14 @@
 "venue_name": "Trafalgar Theatre",
 "first_date": "2025-09-17",
 "last_date": "2025-11-22",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.2,
+"verdict": "type",
+"suggested_type": "play",
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
-"output_tokens": 18
+"input_tokens": 846,
+"output_tokens": 16
 }
 },
 {
@@ -1164,13 +1165,13 @@
 "first_date": "2018-11-09",
 "last_date": "2018-12-29",
 "verdict": "type",
-"suggested_type": "other",
-"confidence": 0.5,
+"suggested_type": "comedy",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
-"output_tokens": 16
+"input_tokens": 850,
+"output_tokens": 18
 }
 },
 {
@@ -1181,13 +1182,13 @@
 "first_date": "2021-07-07",
 "last_date": "2021-07-25",
 "verdict": "type",
-"suggested_type": "play",
-"confidence": 0.6,
+"suggested_type": "comedy",
+"confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
-"output_tokens": 16
+"input_tokens": 846,
+"output_tokens": 18
 }
 },
 {
@@ -1199,11 +1200,11 @@
 "last_date": "2025-09-05",
 "verdict": "type",
 "suggested_type": "comedy",
-"confidence": 0.8,
+"confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 18
 }
 },
@@ -1218,9 +1219,9 @@
 "suggested_type": "comedy",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
+"input_tokens": 849,
 "output_tokens": 18
 }
 },
@@ -1231,14 +1232,14 @@
 "venue_name": "Trafalgar Theatre",
 "first_date": "2020-01-08",
 "last_date": "2020-02-01",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.2,
+"verdict": "type",
+"suggested_type": "play",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
-"output_tokens": 18
+"input_tokens": 847,
+"output_tokens": 16
 }
 },
 {
@@ -1250,11 +1251,11 @@
 "last_date": "2018-08-11",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.97,
+"confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 16
 }
 },
@@ -1267,11 +1268,11 @@
 "last_date": "2024-08-10",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.9,
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 625,
+"input_tokens": 842,
 "output_tokens": 16
 }
 },
@@ -1282,14 +1283,14 @@
 "venue_name": "Garrick Theatre",
 "first_date": "2023-07-07",
 "last_date": "2023-09-16",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.3,
+"verdict": "type",
+"suggested_type": "play",
+"confidence": 0.55,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
-"output_tokens": 18
+"input_tokens": 847,
+"output_tokens": 16
 }
 },
 {
@@ -1301,11 +1302,11 @@
 "last_date": "2022-09-04",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.8,
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 626,
+"input_tokens": 843,
 "output_tokens": 16
 }
 },
@@ -1318,11 +1319,11 @@
 "last_date": "2025-10-11",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.85,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 639,
+"input_tokens": 856,
 "output_tokens": 16
 }
 },
@@ -1334,13 +1335,13 @@
 "first_date": "2022-10-24",
 "last_date": "2022-11-19",
 "verdict": "type",
-"suggested_type": "comedy",
-"confidence": 0.6,
+"suggested_type": "play",
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
-"output_tokens": 18
+"input_tokens": 849,
+"output_tokens": 16
 }
 },
 {
@@ -1352,11 +1353,11 @@
 "last_date": "2023-10-15",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.6,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 625,
+"input_tokens": 842,
 "output_tokens": 17
 }
 },
@@ -1371,9 +1372,9 @@
 "suggested_type": "standup",
 "confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 634,
+"input_tokens": 851,
 "output_tokens": 17
 }
 },
@@ -1386,11 +1387,11 @@
 "last_date": "2017-02-04",
 "verdict": "type",
 "suggested_type": "comedy",
-"confidence": 0.8,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 18
 }
 },
@@ -1403,11 +1404,11 @@
 "last_date": "2024-09-28",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.8,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
+"input_tokens": 846,
 "output_tokens": 16
 }
 },
@@ -1422,9 +1423,9 @@
 "suggested_type": "play",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 16
 }
 },
@@ -1437,11 +1438,11 @@
 "last_date": "2024-09-28",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.85,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 627,
+"input_tokens": 844,
 "output_tokens": 16
 }
 },
@@ -1453,13 +1454,13 @@
 "first_date": "2026-10-10",
 "last_date": "2027-01-30",
 "verdict": "type",
-"suggested_type": "standup",
-"confidence": 0.6,
+"suggested_type": "other",
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
-"output_tokens": 17
+"input_tokens": 850,
+"output_tokens": 16
 }
 },
 {
@@ -1473,9 +1474,9 @@
 "suggested_type": "concert",
 "confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 644,
+"input_tokens": 861,
 "output_tokens": 17
 }
 },
@@ -1488,11 +1489,11 @@
 "last_date": "2022-01-09",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.8,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 16
 }
 },
@@ -1503,14 +1504,14 @@
 "venue_name": "Peacock Theatre",
 "first_date": "2025-01-29",
 "last_date": "2025-02-01",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.2,
+"verdict": "type",
+"suggested_type": "dance",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 627,
-"output_tokens": 18
+"input_tokens": 844,
+"output_tokens": 17
 }
 },
 {
@@ -1524,9 +1525,9 @@
 "suggested_type": "musical",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 636,
+"input_tokens": 853,
 "output_tokens": 17
 }
 },
@@ -1538,12 +1539,12 @@
 "first_date": "2018-10-27",
 "last_date": "2019-02-02",
 "verdict": "type",
-"suggested_type": "dance",
-"confidence": 0.85,
+"suggested_type": "musical",
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 17
 }
 },
@@ -1556,11 +1557,11 @@
 "last_date": "2022-10-31",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.4,
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 16
 }
 },
@@ -1575,9 +1576,9 @@
 "suggested_type": "play",
 "confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 634,
+"input_tokens": 851,
 "output_tokens": 16
 }
 },
@@ -1590,11 +1591,11 @@
 "last_date": "2025-01-25",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.9,
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
+"input_tokens": 849,
 "output_tokens": 16
 }
 },
@@ -1607,11 +1608,11 @@
 "last_date": "2022-10-15",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.97,
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 17
 }
 },
@@ -1626,9 +1627,9 @@
 "suggested_type": "opera",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 17
 }
 },
@@ -1641,11 +1642,11 @@
 "last_date": "2023-07-01",
 "verdict": "type",
 "suggested_type": "standup",
-"confidence": 0.8,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 637,
+"input_tokens": 854,
 "output_tokens": 17
 }
 },
@@ -1658,11 +1659,11 @@
 "last_date": "2025-08-31",
 "verdict": "type",
 "suggested_type": "dance",
-"confidence": 0.8,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 636,
+"input_tokens": 853,
 "output_tokens": 17
 }
 },
@@ -1677,9 +1678,9 @@
 "suggested_type": "opera",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 17
 }
 },
@@ -1692,11 +1693,11 @@
 "last_date": "2019-06-01",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.9,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
+"input_tokens": 846,
 "output_tokens": 16
 }
 },
@@ -1709,11 +1710,11 @@
 "last_date": "2024-11-16",
 "verdict": "type",
 "suggested_type": "dance",
-"confidence": 0.97,
+"confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 637,
+"input_tokens": 854,
 "output_tokens": 17
 }
 },
@@ -1728,9 +1729,9 @@
 "suggested_type": "play",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
+"input_tokens": 846,
 "output_tokens": 16
 }
 },
@@ -1745,9 +1746,9 @@
 "suggested_type": "musical",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 636,
+"input_tokens": 853,
 "output_tokens": 17
 }
 },
@@ -1760,11 +1761,11 @@
 "last_date": "2018-03-10",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.85,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
+"input_tokens": 846,
 "output_tokens": 16
 }
 },
@@ -1777,11 +1778,11 @@
 "last_date": "2024-08-31",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.95,
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
+"input_tokens": 849,
 "output_tokens": 16
 }
 },
@@ -1796,9 +1797,9 @@
 "suggested_type": "comedy",
 "confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 634,
+"input_tokens": 851,
 "output_tokens": 18
 }
 },
@@ -1809,14 +1810,14 @@
 "venue_name": "Soho Place",
 "first_date": "2025-05-10",
 "last_date": "2025-07-26",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.3,
+"verdict": "type",
+"suggested_type": "play",
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 626,
-"output_tokens": 18
+"input_tokens": 843,
+"output_tokens": 16
 }
 },
 {
@@ -1830,9 +1831,9 @@
 "suggested_type": "comedy",
 "confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
+"input_tokens": 846,
 "output_tokens": 18
 }
 },
@@ -1845,11 +1846,11 @@
 "last_date": "2023-09-05",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.6,
+"confidence": 0.55,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 17
 }
 },
@@ -1862,11 +1863,11 @@
 "last_date": "2024-08-24",
 "verdict": "type",
 "suggested_type": "standup",
-"confidence": 0.95,
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 641,
+"input_tokens": 858,
 "output_tokens": 17
 }
 },
@@ -1878,12 +1879,12 @@
 "first_date": "2023-09-16",
 "last_date": "2023-09-16",
 "verdict": "type",
-"suggested_type": "musical",
+"suggested_type": "concert",
 "confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
+"input_tokens": 846,
 "output_tokens": 17
 }
 },
@@ -1896,11 +1897,11 @@
 "last_date": "2022-09-25",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.85,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 639,
+"input_tokens": 856,
 "output_tokens": 17
 }
 },
@@ -1913,11 +1914,11 @@
 "last_date": "2022-11-28",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.9,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 644,
+"input_tokens": 861,
 "output_tokens": 17
 }
 },
@@ -1928,13 +1929,13 @@
 "venue_name": "Aldwych Theatre",
 "first_date": "2026-01-13",
 "last_date": "2026-01-24",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.3,
+"verdict": "type",
+"suggested_type": "comedy",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
+"input_tokens": 849,
 "output_tokens": 18
 }
 },
@@ -1949,9 +1950,9 @@
 "suggested_type": "other",
 "confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 643,
+"input_tokens": 860,
 "output_tokens": 16
 }
 },
@@ -1964,11 +1965,11 @@
 "last_date": "2019-08-17",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.8,
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 634,
+"input_tokens": 851,
 "output_tokens": 16
 }
 },
@@ -1979,14 +1980,14 @@
 "venue_name": "London Palladium",
 "first_date": "2023-10-15",
 "last_date": "2023-10-16",
-"verdict": "type",
-"suggested_type": "other",
-"confidence": 0.4,
+"verdict": "unsure",
+"suggested_type": null,
+"confidence": 0.3,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 626,
-"output_tokens": 16
+"input_tokens": 843,
+"output_tokens": 18
 }
 },
 {
@@ -1998,11 +1999,11 @@
 "last_date": "2024-04-02",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.9,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 17
 }
 },
@@ -2015,11 +2016,11 @@
 "last_date": "2025-06-14",
 "verdict": "unsure",
 "suggested_type": null,
-"confidence": 0.2,
+"confidence": 0.3,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 625,
+"input_tokens": 842,
 "output_tokens": 18
 }
 },
@@ -2031,12 +2032,12 @@
 "first_date": "2024-03-30",
 "last_date": "2024-03-30",
 "verdict": "type",
-"suggested_type": "standup",
-"confidence": 0.6,
+"suggested_type": "concert",
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 635,
+"input_tokens": 852,
 "output_tokens": 17
 }
 },
@@ -2051,9 +2052,9 @@
 "suggested_type": "comedy",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 18
 }
 },
@@ -2065,13 +2066,13 @@
 "first_date": "2024-07-17",
 "last_date": "2024-09-08",
 "verdict": "type",
-"suggested_type": "play",
-"confidence": 0.7,
+"suggested_type": "musical",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
-"output_tokens": 16
+"input_tokens": 846,
+"output_tokens": 17
 }
 },
 {
@@ -2083,11 +2084,11 @@
 "last_date": "2019-09-08",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.85,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 635,
+"input_tokens": 852,
 "output_tokens": 16
 }
 },
@@ -2100,11 +2101,11 @@
 "last_date": "2026-01-11",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.8,
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
+"input_tokens": 849,
 "output_tokens": 17
 }
 },
@@ -2117,11 +2118,11 @@
 "last_date": "2022-12-06",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.9,
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 636,
+"input_tokens": 853,
 "output_tokens": 17
 }
 },
@@ -2133,13 +2134,13 @@
 "first_date": "2024-02-01",
 "last_date": "2024-02-15",
 "verdict": "type",
-"suggested_type": "play",
-"confidence": 0.6,
+"suggested_type": "opera",
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
-"output_tokens": 16
+"input_tokens": 847,
+"output_tokens": 17
 }
 },
 {
@@ -2151,11 +2152,11 @@
 "last_date": "2025-01-07",
 "verdict": "type",
 "suggested_type": "opera",
-"confidence": 0.8,
+"confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 17
 }
 },
@@ -2166,13 +2167,13 @@
 "venue_name": "Seven Dials Playhouse",
 "first_date": "2022-09-05",
 "last_date": "2022-10-15",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.3,
+"verdict": "type",
+"suggested_type": "comedy",
+"confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 636,
+"input_tokens": 853,
 "output_tokens": 18
 }
 },
@@ -2183,14 +2184,14 @@
 "venue_name": "The Actors' Church",
 "first_date": "2023-07-20",
 "last_date": "2023-07-22",
-"verdict": "type",
-"suggested_type": "play",
-"confidence": 0.7,
+"verdict": "unsure",
+"suggested_type": null,
+"confidence": 0.3,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 634,
-"output_tokens": 16
+"input_tokens": 851,
+"output_tokens": 18
 }
 },
 {
@@ -2201,13 +2202,13 @@
 "first_date": "2018-08-02",
 "last_date": "2018-09-01",
 "verdict": "type",
-"suggested_type": "musical",
-"confidence": 0.5,
+"suggested_type": "comedy",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 637,
-"output_tokens": 17
+"input_tokens": 854,
+"output_tokens": 18
 }
 },
 {
@@ -2221,9 +2222,9 @@
 "suggested_type": "comedy",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 641,
+"input_tokens": 858,
 "output_tokens": 18
 }
 },
@@ -2238,9 +2239,9 @@
 "suggested_type": "comedy",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 643,
+"input_tokens": 860,
 "output_tokens": 18
 }
 },
@@ -2255,9 +2256,9 @@
 "suggested_type": "comedy",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 644,
+"input_tokens": 861,
 "output_tokens": 18
 }
 },
@@ -2270,11 +2271,11 @@
 "last_date": "2024-09-11",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.9,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 16
 }
 },
@@ -2289,9 +2290,9 @@
 "suggested_type": "play",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 16
 }
 },
@@ -2306,9 +2307,9 @@
 "suggested_type": "musical",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 635,
+"input_tokens": 852,
 "output_tokens": 17
 }
 },
@@ -2321,12 +2322,12 @@
 "last_date": "2026-05-09",
 "verdict": "type",
 "suggested_type": "comedy",
-"confidence": 0.85,
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 636,
-"output_tokens": 18
+"input_tokens": 853,
+"output_tokens": 20
 }
 },
 {
@@ -2340,9 +2341,9 @@
 "suggested_type": "opera",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 625,
+"input_tokens": 842,
 "output_tokens": 17
 }
 },
@@ -2355,11 +2356,11 @@
 "last_date": "2020-01-05",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.5,
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 638,
+"input_tokens": 855,
 "output_tokens": 16
 }
 },
@@ -2372,11 +2373,11 @@
 "last_date": "2024-04-28",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.6,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 637,
+"input_tokens": 854,
 "output_tokens": 16
 }
 },
@@ -2387,14 +2388,14 @@
 "venue_name": "Seven Dials Playhouse",
 "first_date": "2023-01-09",
 "last_date": "2023-01-28",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.2,
+"verdict": "type",
+"suggested_type": "play",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
-"output_tokens": 18
+"input_tokens": 848,
+"output_tokens": 16
 }
 },
 {
@@ -2406,11 +2407,11 @@
 "last_date": "2023-12-10",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.93,
+"confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 634,
+"input_tokens": 851,
 "output_tokens": 16
 }
 },
@@ -2425,9 +2426,9 @@
 "suggested_type": "play",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
+"input_tokens": 849,
 "output_tokens": 16
 }
 },
@@ -2442,9 +2443,9 @@
 "suggested_type": "other",
 "confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 16
 }
 },
@@ -2457,11 +2458,11 @@
 "last_date": "2026-03-22",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.7,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 636,
+"input_tokens": 853,
 "output_tokens": 17
 }
 },
@@ -2474,11 +2475,11 @@
 "last_date": "2024-03-24",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.6,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 17
 }
 },
@@ -2493,9 +2494,9 @@
 "suggested_type": "opera",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 625,
+"input_tokens": 842,
 "output_tokens": 17
 }
 },
@@ -2510,9 +2511,9 @@
 "suggested_type": "opera",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 626,
+"input_tokens": 843,
 "output_tokens": 17
 }
 },
@@ -2525,11 +2526,11 @@
 "last_date": "2025-07-20",
 "verdict": "type",
 "suggested_type": "opera",
-"confidence": 0.82,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 636,
+"input_tokens": 853,
 "output_tokens": 17
 }
 },
@@ -2542,11 +2543,11 @@
 "last_date": "2022-10-28",
 "verdict": "type",
 "suggested_type": "standup",
-"confidence": 0.9,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 635,
+"input_tokens": 852,
 "output_tokens": 17
 }
 },
@@ -2559,11 +2560,11 @@
 "last_date": "2018-11-03",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.9,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 638,
+"input_tokens": 855,
 "output_tokens": 16
 }
 },
@@ -2576,11 +2577,11 @@
 "last_date": "2022-02-20",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.6,
+"confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 16
 }
 },
@@ -2593,11 +2594,11 @@
 "last_date": "2024-09-11",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.6,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 641,
+"input_tokens": 858,
 "output_tokens": 17
 }
 },
@@ -2610,11 +2611,11 @@
 "last_date": "2017-03-11",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.95,
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 641,
+"input_tokens": 858,
 "output_tokens": 16
 }
 },
@@ -2629,9 +2630,9 @@
 "suggested_type": null,
 "confidence": 0.3,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
+"input_tokens": 846,
 "output_tokens": 18
 }
 },
@@ -2644,11 +2645,11 @@
 "last_date": "2025-05-03",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.8,
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 624,
+"input_tokens": 841,
 "output_tokens": 16
 }
 },
@@ -2663,9 +2664,9 @@
 "suggested_type": "opera",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 17
 }
 },
@@ -2678,11 +2679,11 @@
 "last_date": "2023-09-02",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.9,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 17
 }
 },
@@ -2694,13 +2695,13 @@
 "first_date": "2024-11-06",
 "last_date": "2025-01-05",
 "verdict": "type",
-"suggested_type": "other",
+"suggested_type": "circus",
 "confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
-"output_tokens": 16
+"input_tokens": 848,
+"output_tokens": 17
 }
 },
 {
@@ -2714,9 +2715,9 @@
 "suggested_type": "dance",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 17
 }
 },
@@ -2731,9 +2732,9 @@
 "suggested_type": "opera",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 627,
+"input_tokens": 844,
 "output_tokens": 17
 }
 },
@@ -2745,13 +2746,13 @@
 "first_date": "2017-11-24",
 "last_date": "2018-02-03",
 "verdict": "type",
-"suggested_type": "other",
+"suggested_type": "circus",
 "confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
-"output_tokens": 16
+"input_tokens": 845,
+"output_tokens": 17
 }
 },
 {
@@ -2765,9 +2766,9 @@
 "suggested_type": "opera",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 625,
+"input_tokens": 842,
 "output_tokens": 17
 }
 },
@@ -2782,9 +2783,9 @@
 "suggested_type": "concert",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 637,
+"input_tokens": 854,
 "output_tokens": 17
 }
 },
@@ -2797,11 +2798,11 @@
 "last_date": "2021-10-17",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.97,
+"confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
+"input_tokens": 846,
 "output_tokens": 17
 }
 },
@@ -2812,13 +2813,13 @@
 "venue_name": "Noël Coward Theatre",
 "first_date": "2025-02-25",
 "last_date": "2025-03-22",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.3,
+"verdict": "type",
+"suggested_type": "comedy",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 18
 }
 },
@@ -2831,11 +2832,11 @@
 "last_date": "2020-01-14",
 "verdict": "type",
 "suggested_type": "dance",
-"confidence": 0.97,
+"confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 627,
+"input_tokens": 844,
 "output_tokens": 17
 }
 },
@@ -2848,11 +2849,11 @@
 "last_date": "2018-01-20",
 "verdict": "type",
 "suggested_type": "dance",
-"confidence": 0.95,
+"confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 642,
+"input_tokens": 859,
 "output_tokens": 17
 }
 },
@@ -2864,13 +2865,13 @@
 "first_date": "2023-01-18",
 "last_date": "2023-03-18",
 "verdict": "type",
-"suggested_type": "play",
+"suggested_type": "comedy",
 "confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 645,
-"output_tokens": 16
+"input_tokens": 862,
+"output_tokens": 18
 }
 },
 {
@@ -2884,9 +2885,9 @@
 "suggested_type": "dance",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 645,
+"input_tokens": 862,
 "output_tokens": 17
 }
 },
@@ -2901,9 +2902,9 @@
 "suggested_type": "dance",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 645,
+"input_tokens": 862,
 "output_tokens": 17
 }
 },
@@ -2916,11 +2917,11 @@
 "last_date": "2026-10-31",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.7,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 17
 }
 },
@@ -2935,9 +2936,9 @@
 "suggested_type": "dance",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 627,
+"input_tokens": 844,
 "output_tokens": 17
 }
 },
@@ -2950,11 +2951,11 @@
 "last_date": "2025-10-24",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.85,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 17
 }
 },
@@ -2967,11 +2968,11 @@
 "last_date": "2023-05-15",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.8,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 649,
+"input_tokens": 866,
 "output_tokens": 17
 }
 },
@@ -2986,9 +2987,9 @@
 "suggested_type": "opera",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
+"input_tokens": 849,
 "output_tokens": 17
 }
 },
@@ -3000,12 +3001,12 @@
 "first_date": "2026-02-16",
 "last_date": "2026-02-16",
 "verdict": "type",
-"suggested_type": "standup",
-"confidence": 0.85,
+"suggested_type": "concert",
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 635,
+"input_tokens": 852,
 "output_tokens": 17
 }
 },
@@ -3018,11 +3019,11 @@
 "last_date": "2019-11-09",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.97,
+"confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 624,
+"input_tokens": 841,
 "output_tokens": 16
 }
 },
@@ -3037,9 +3038,9 @@
 "suggested_type": "play",
 "confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 16
 }
 },
@@ -3052,11 +3053,11 @@
 "last_date": "2024-11-30",
 "verdict": "type",
 "suggested_type": "opera",
-"confidence": 0.9,
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 17
 }
 },
@@ -3071,9 +3072,9 @@
 "suggested_type": "other",
 "confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 640,
+"input_tokens": 857,
 "output_tokens": 16
 }
 },
@@ -3088,9 +3089,9 @@
 "suggested_type": "opera",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 627,
+"input_tokens": 844,
 "output_tokens": 17
 }
 },
@@ -3103,11 +3104,11 @@
 "last_date": "2022-02-27",
 "verdict": "type",
 "suggested_type": "comedy",
-"confidence": 0.85,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
+"input_tokens": 849,
 "output_tokens": 18
 }
 },
@@ -3122,9 +3123,9 @@
 "suggested_type": "opera",
 "confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
+"input_tokens": 846,
 "output_tokens": 17
 }
 },
@@ -3139,9 +3140,9 @@
 "suggested_type": "dance",
 "confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 626,
+"input_tokens": 843,
 "output_tokens": 17
 }
 },
@@ -3154,11 +3155,11 @@
 "last_date": "2019-12-07",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.9,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 16
 }
 },
@@ -3173,9 +3174,9 @@
 "suggested_type": "dance",
 "confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 638,
+"input_tokens": 855,
 "output_tokens": 17
 }
 },
@@ -3188,11 +3189,11 @@
 "last_date": "2025-03-11",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.7,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 17
 }
 },
@@ -3203,14 +3204,14 @@
 "venue_name": "Soho Place",
 "first_date": "2022-10-15",
 "last_date": "2022-11-26",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.3,
+"verdict": "type",
+"suggested_type": "musical",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 624,
-"output_tokens": 18
+"input_tokens": 841,
+"output_tokens": 17
 }
 },
 {
@@ -3222,11 +3223,11 @@
 "last_date": "2026-05-18",
 "verdict": "type",
 "suggested_type": "dance",
-"confidence": 0.93,
+"confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 626,
+"input_tokens": 843,
 "output_tokens": 17
 }
 },
@@ -3239,11 +3240,11 @@
 "last_date": "2024-11-26",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.8,
+"confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 643,
+"input_tokens": 860,
 "output_tokens": 17
 }
 },
@@ -3258,9 +3259,9 @@
 "suggested_type": "concert",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 635,
+"input_tokens": 852,
 "output_tokens": 17
 }
 },
@@ -3271,14 +3272,14 @@
 "venue_name": "Peacock Theatre",
 "first_date": "2023-10-04",
 "last_date": "2023-10-14",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.3,
+"verdict": "type",
+"suggested_type": "play",
+"confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
-"output_tokens": 18
+"input_tokens": 847,
+"output_tokens": 16
 }
 },
 {
@@ -3290,11 +3291,11 @@
 "last_date": "2023-10-07",
 "verdict": "type",
 "suggested_type": "standup",
-"confidence": 0.95,
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 644,
+"input_tokens": 861,
 "output_tokens": 17
 }
 },
@@ -3307,11 +3308,11 @@
 "last_date": "2024-04-28",
 "verdict": "type",
 "suggested_type": "standup",
-"confidence": 0.6,
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 641,
+"input_tokens": 858,
 "output_tokens": 17
 }
 },
@@ -3324,11 +3325,11 @@
 "last_date": "2018-06-02",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.8,
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
+"input_tokens": 846,
 "output_tokens": 16
 }
 },
@@ -3341,11 +3342,11 @@
 "last_date": "2021-11-28",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.85,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 16
 }
 },
@@ -3356,14 +3357,14 @@
 "venue_name": "Apollo Theatre",
 "first_date": "2021-05-24",
 "last_date": "2021-07-05",
-"verdict": "type",
-"suggested_type": "other",
-"confidence": 0.5,
+"verdict": "unsure",
+"suggested_type": null,
+"confidence": 0.3,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
-"output_tokens": 16
+"input_tokens": 850,
+"output_tokens": 18
 }
 },
 {
@@ -3375,11 +3376,11 @@
 "last_date": "2023-12-02",
 "verdict": "type",
 "suggested_type": "opera",
-"confidence": 0.5,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 17
 }
 },
@@ -3394,9 +3395,9 @@
 "suggested_type": "play",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 16
 }
 },
@@ -3408,13 +3409,13 @@
 "first_date": "2024-11-16",
 "last_date": "2024-11-17",
 "verdict": "type",
-"suggested_type": "play",
-"confidence": 0.6,
+"suggested_type": "musical",
+"confidence": 0.4,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 637,
-"output_tokens": 16
+"input_tokens": 854,
+"output_tokens": 17
 }
 },
 {
@@ -3426,11 +3427,11 @@
 "last_date": "2016-12-03",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.93,
+"confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 17
 }
 },
@@ -3443,11 +3444,11 @@
 "last_date": "2025-09-20",
 "verdict": "type",
 "suggested_type": "dance",
-"confidence": 0.8,
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 17
 }
 },
@@ -3458,14 +3459,14 @@
 "venue_name": "Leicester Square Theatre",
 "first_date": "2020-02-05",
 "last_date": "2020-03-01",
-"verdict": "type",
-"suggested_type": "musical",
-"confidence": 0.6,
+"verdict": "unsure",
+"suggested_type": null,
+"confidence": 0.3,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
-"output_tokens": 17
+"input_tokens": 846,
+"output_tokens": 18
 }
 },
 {
@@ -3477,11 +3478,11 @@
 "last_date": "2026-04-19",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.45,
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 16
 }
 },
@@ -3494,11 +3495,11 @@
 "last_date": "2024-06-23",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.5,
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 639,
+"input_tokens": 856,
 "output_tokens": 16
 }
 },
@@ -3511,11 +3512,11 @@
 "last_date": "2024-02-21",
 "verdict": "type",
 "suggested_type": "dance",
-"confidence": 0.8,
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 624,
+"input_tokens": 841,
 "output_tokens": 17
 }
 },
@@ -3527,13 +3528,13 @@
 "first_date": "2016-11-15",
 "last_date": "2017-02-11",
 "verdict": "type",
-"suggested_type": "play",
-"confidence": 0.9,
+"suggested_type": "comedy",
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
-"output_tokens": 16
+"input_tokens": 848,
+"output_tokens": 18
 }
 },
 {
@@ -3547,9 +3548,9 @@
 "suggested_type": "comedy",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 655,
+"input_tokens": 872,
 "output_tokens": 18
 }
 },
@@ -3562,11 +3563,11 @@
 "last_date": "2026-09-06",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.85,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 16
 }
 },
@@ -3579,11 +3580,11 @@
 "last_date": "2023-11-25",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.9,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 637,
+"input_tokens": 854,
 "output_tokens": 16
 }
 },
@@ -3596,11 +3597,11 @@
 "last_date": "2023-08-06",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.6,
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 636,
+"input_tokens": 853,
 "output_tokens": 16
 }
 },
@@ -3612,12 +3613,12 @@
 "first_date": "2025-05-29",
 "last_date": "2025-06-12",
 "verdict": "type",
-"suggested_type": "dance",
-"confidence": 0.9,
+"suggested_type": "opera",
+"confidence": 0.92,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 625,
+"input_tokens": 842,
 "output_tokens": 17
 }
 },
@@ -3628,14 +3629,14 @@
 "venue_name": "Gielgud Theatre",
 "first_date": "2024-03-06",
 "last_date": "2024-05-18",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.3,
+"verdict": "type",
+"suggested_type": "play",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
-"output_tokens": 18
+"input_tokens": 845,
+"output_tokens": 16
 }
 },
 {
@@ -3645,13 +3646,13 @@
 "venue_name": "Lyric Theatre",
 "first_date": "2021-12-04",
 "last_date": "2022-01-16",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.3,
+"verdict": "type",
+"suggested_type": "comedy",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
+"input_tokens": 846,
 "output_tokens": 18
 }
 },
@@ -3666,9 +3667,9 @@
 "suggested_type": "other",
 "confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 16
 }
 },
@@ -3683,9 +3684,9 @@
 "suggested_type": "play",
 "confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 16
 }
 },
@@ -3700,9 +3701,9 @@
 "suggested_type": "other",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 642,
+"input_tokens": 859,
 "output_tokens": 16
 }
 },
@@ -3715,11 +3716,11 @@
 "last_date": "2025-12-02",
 "verdict": "type",
 "suggested_type": "dance",
-"confidence": 0.9,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 640,
+"input_tokens": 857,
 "output_tokens": 17
 }
 },
@@ -3734,9 +3735,9 @@
 "suggested_type": "opera",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 17
 }
 },
@@ -3751,9 +3752,9 @@
 "suggested_type": "play",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 650,
+"input_tokens": 867,
 "output_tokens": 16
 }
 },
@@ -3768,9 +3769,9 @@
 "suggested_type": "play",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 646,
+"input_tokens": 863,
 "output_tokens": 16
 }
 },
@@ -3785,10 +3786,10 @@
 "suggested_type": "play",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 641,
-"output_tokens": 16
+"input_tokens": 858,
+"output_tokens": 18
 }
 },
 {
@@ -3802,9 +3803,9 @@
 "suggested_type": "play",
 "confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
+"input_tokens": 846,
 "output_tokens": 16
 }
 },
@@ -3817,11 +3818,11 @@
 "last_date": "2025-11-16",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.55,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 626,
+"input_tokens": 843,
 "output_tokens": 16
 }
 },
@@ -3832,13 +3833,13 @@
 "venue_name": "The Vaudeville Theatre",
 "first_date": "2021-05-27",
 "last_date": "2021-05-30",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.2,
+"verdict": "type",
+"suggested_type": "comedy",
+"confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 18
 }
 },
@@ -3850,13 +3851,13 @@
 "first_date": "2024-04-07",
 "last_date": "2024-04-07",
 "verdict": "type",
-"suggested_type": "musical",
-"confidence": 0.6,
+"suggested_type": "other",
+"confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 638,
-"output_tokens": 17
+"input_tokens": 855,
+"output_tokens": 16
 }
 },
 {
@@ -3868,11 +3869,11 @@
 "last_date": "2018-06-16",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.9,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 16
 }
 },
@@ -3884,13 +3885,13 @@
 "first_date": "2025-10-05",
 "last_date": "2025-10-05",
 "verdict": "type",
-"suggested_type": "concert",
+"suggested_type": "other",
 "confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 627,
-"output_tokens": 17
+"input_tokens": 844,
+"output_tokens": 16
 }
 },
 {
@@ -3901,13 +3902,13 @@
 "first_date": "2018-10-05",
 "last_date": "2018-10-06",
 "verdict": "type",
-"suggested_type": "concert",
-"confidence": 0.8,
+"suggested_type": "other",
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 643,
-"output_tokens": 17
+"input_tokens": 860,
+"output_tokens": 16
 }
 },
 {
@@ -3919,11 +3920,11 @@
 "last_date": "2018-02-03",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.9,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 17
 }
 },
@@ -3936,11 +3937,11 @@
 "last_date": "2022-01-23",
 "verdict": "type",
 "suggested_type": "dance",
-"confidence": 0.97,
+"confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 625,
+"input_tokens": 842,
 "output_tokens": 17
 }
 },
@@ -3951,14 +3952,14 @@
 "venue_name": "Soho Place",
 "first_date": "2024-03-15",
 "last_date": "2024-05-04",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.2,
+"verdict": "type",
+"suggested_type": "play",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 625,
-"output_tokens": 18
+"input_tokens": 842,
+"output_tokens": 16
 }
 },
 {
@@ -3969,13 +3970,13 @@
 "first_date": "2022-05-02",
 "last_date": "2022-05-07",
 "verdict": "type",
-"suggested_type": "other",
-"confidence": 0.5,
+"suggested_type": "concert",
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 642,
-"output_tokens": 16
+"input_tokens": 859,
+"output_tokens": 17
 }
 },
 {
@@ -3987,11 +3988,11 @@
 "last_date": "2024-06-01",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.6,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 16
 }
 },
@@ -4004,11 +4005,11 @@
 "last_date": "2025-06-14",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.85,
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 627,
+"input_tokens": 844,
 "output_tokens": 16
 }
 },
@@ -4021,11 +4022,11 @@
 "last_date": "2026-06-20",
 "verdict": "type",
 "suggested_type": "comedy",
-"confidence": 0.55,
+"confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 18
 }
 },
@@ -4040,9 +4041,9 @@
 "suggested_type": "musical",
 "confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 17
 }
 },
@@ -4054,13 +4055,13 @@
 "first_date": "2019-04-28",
 "last_date": "2019-04-28",
 "verdict": "type",
-"suggested_type": "standup",
-"confidence": 0.6,
+"suggested_type": "other",
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 642,
-"output_tokens": 17
+"input_tokens": 859,
+"output_tokens": 16
 }
 },
 {
@@ -4070,14 +4071,14 @@
 "venue_name": "Lyric Theatre",
 "first_date": "2026-06-01",
 "last_date": "2026-06-01",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.3,
+"verdict": "type",
+"suggested_type": "concert",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
-"output_tokens": 18
+"input_tokens": 849,
+"output_tokens": 17
 }
 },
 {
@@ -4091,9 +4092,9 @@
 "suggested_type": "opera",
 "confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 624,
+"input_tokens": 841,
 "output_tokens": 17
 }
 },
@@ -4106,11 +4107,11 @@
 "last_date": "2025-04-05",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.7,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 626,
+"input_tokens": 843,
 "output_tokens": 17
 }
 },
@@ -4123,11 +4124,11 @@
 "last_date": "2025-03-23",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.4,
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
+"input_tokens": 849,
 "output_tokens": 16
 }
 },
@@ -4139,13 +4140,13 @@
 "first_date": "2024-11-13",
 "last_date": "2024-11-14",
 "verdict": "type",
-"suggested_type": "standup",
-"confidence": 0.8,
+"suggested_type": "other",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 637,
-"output_tokens": 17
+"input_tokens": 854,
+"output_tokens": 16
 }
 },
 {
@@ -4157,11 +4158,11 @@
 "last_date": "2025-04-26",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.55,
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
+"input_tokens": 846,
 "output_tokens": 16
 }
 },
@@ -4176,9 +4177,9 @@
 "suggested_type": "play",
 "confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 626,
+"input_tokens": 843,
 "output_tokens": 16
 }
 },
@@ -4189,14 +4190,14 @@
 "venue_name": "Theatre Royal, Drury Lane",
 "first_date": "2026-03-01",
 "last_date": "2026-03-01",
-"verdict": "type",
-"suggested_type": "musical",
-"confidence": 0.6,
+"verdict": "unsure",
+"suggested_type": null,
+"confidence": 0.3,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 634,
-"output_tokens": 17
+"input_tokens": 851,
+"output_tokens": 18
 }
 },
 {
@@ -4208,11 +4209,11 @@
 "last_date": "2019-09-28",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.85,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 639,
+"input_tokens": 856,
 "output_tokens": 16
 }
 },
@@ -4225,11 +4226,11 @@
 "last_date": "2025-07-18",
 "verdict": "type",
 "suggested_type": "opera",
-"confidence": 0.95,
+"confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 624,
+"input_tokens": 841,
 "output_tokens": 17
 }
 },
@@ -4242,11 +4243,11 @@
 "last_date": "2025-07-23",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.7,
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 16
 }
 },
@@ -4259,11 +4260,11 @@
 "last_date": "2025-01-11",
 "verdict": "type",
 "suggested_type": "comedy",
-"confidence": 0.8,
+"confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 648,
+"input_tokens": 865,
 "output_tokens": 18
 }
 },
@@ -4278,9 +4279,9 @@
 "suggested_type": "comedy",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 639,
+"input_tokens": 856,
 "output_tokens": 18
 }
 },
@@ -4291,14 +4292,14 @@
 "venue_name": "Cambridge Theatre",
 "first_date": "2026-10-19",
 "last_date": "2026-10-19",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.2,
+"verdict": "type",
+"suggested_type": "concert",
+"confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
-"output_tokens": 18
+"input_tokens": 847,
+"output_tokens": 17
 }
 },
 {
@@ -4310,11 +4311,11 @@
 "last_date": "2022-02-13",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.95,
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
+"input_tokens": 849,
 "output_tokens": 16
 }
 },
@@ -4329,9 +4330,9 @@
 "suggested_type": null,
 "confidence": 0.3,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 18
 }
 },
@@ -4342,14 +4343,14 @@
 "venue_name": "Palace Theatre",
 "first_date": "2021-06-02",
 "last_date": "2021-06-06",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.2,
+"verdict": "type",
+"suggested_type": "musical",
+"confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
-"output_tokens": 18
+"input_tokens": 846,
+"output_tokens": 17
 }
 },
 {
@@ -4361,11 +4362,11 @@
 "last_date": "2024-04-07",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.6,
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 17
 }
 },
@@ -4380,9 +4381,9 @@
 "suggested_type": "opera",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 17
 }
 },
@@ -4395,11 +4396,11 @@
 "last_date": "2026-05-31",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.8,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 636,
+"input_tokens": 853,
 "output_tokens": 17
 }
 },
@@ -4411,12 +4412,12 @@
 "first_date": "2026-01-18",
 "last_date": "2026-01-18",
 "verdict": "type",
-"suggested_type": "musical",
+"suggested_type": "concert",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 641,
+"input_tokens": 858,
 "output_tokens": 17
 }
 },
@@ -4428,13 +4429,13 @@
 "first_date": "2024-04-09",
 "last_date": "2024-06-29",
 "verdict": "type",
-"suggested_type": "musical",
-"confidence": 0.85,
+"suggested_type": "comedy",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
-"output_tokens": 17
+"input_tokens": 850,
+"output_tokens": 18
 }
 },
 {
@@ -4448,9 +4449,9 @@
 "suggested_type": "dance",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 634,
+"input_tokens": 851,
 "output_tokens": 17
 }
 },
@@ -4465,9 +4466,9 @@
 "suggested_type": "dance",
 "confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 17
 }
 },
@@ -4482,9 +4483,9 @@
 "suggested_type": "musical",
 "confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 17
 }
 },
@@ -4497,11 +4498,11 @@
 "last_date": "2026-06-20",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.6,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 634,
+"input_tokens": 851,
 "output_tokens": 17
 }
 },
@@ -4514,11 +4515,11 @@
 "last_date": "2019-12-08",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.6,
+"confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 16
 }
 },
@@ -4531,11 +4532,11 @@
 "last_date": "2024-07-20",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.97,
+"confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 626,
+"input_tokens": 843,
 "output_tokens": 17
 }
 },
@@ -4548,11 +4549,11 @@
 "last_date": "2026-02-21",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.85,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 16
 }
 },
@@ -4567,9 +4568,9 @@
 "suggested_type": "musical",
 "confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
+"input_tokens": 846,
 "output_tokens": 17
 }
 },
@@ -4584,9 +4585,9 @@
 "suggested_type": "play",
 "confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 638,
+"input_tokens": 855,
 "output_tokens": 16
 }
 },
@@ -4597,14 +4598,14 @@
 "venue_name": "Soho Place",
 "first_date": "2026-07-24",
 "last_date": "2026-09-12",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.3,
+"verdict": "type",
+"suggested_type": "musical",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 626,
-"output_tokens": 18
+"input_tokens": 843,
+"output_tokens": 17
 }
 },
 {
@@ -4615,13 +4616,13 @@
 "first_date": "2017-06-06",
 "last_date": "2017-07-22",
 "verdict": "type",
-"suggested_type": "other",
-"confidence": 0.85,
+"suggested_type": "comedy",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 627,
-"output_tokens": 16
+"input_tokens": 844,
+"output_tokens": 18
 }
 },
 {
@@ -4631,14 +4632,14 @@
 "venue_name": "Theatre Royal, Drury Lane",
 "first_date": "2026-08-23",
 "last_date": "2026-08-23",
-"verdict": "unsure",
-"suggested_type": null,
-"confidence": 0.2,
+"verdict": "type",
+"suggested_type": "other",
+"confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 642,
-"output_tokens": 18
+"input_tokens": 859,
+"output_tokens": 16
 }
 },
 {
@@ -4650,11 +4651,11 @@
 "last_date": "2025-09-27",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.9,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 636,
+"input_tokens": 853,
 "output_tokens": 17
 }
 },
@@ -4666,13 +4667,13 @@
 "first_date": "2023-10-07",
 "last_date": "2024-02-24",
 "verdict": "type",
-"suggested_type": "musical",
-"confidence": 0.93,
+"suggested_type": "play",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
-"output_tokens": 17
+"input_tokens": 850,
+"output_tokens": 16
 }
 },
 {
@@ -4684,11 +4685,11 @@
 "last_date": "2020-02-29",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.85,
+"confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
+"input_tokens": 849,
 "output_tokens": 16
 }
 },
@@ -4701,11 +4702,11 @@
 "last_date": "2017-12-03",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.93,
+"confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 17
 }
 },
@@ -4720,9 +4721,9 @@
 "suggested_type": "other",
 "confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 635,
+"input_tokens": 852,
 "output_tokens": 16
 }
 },
@@ -4734,13 +4735,13 @@
 "first_date": "2025-02-18",
 "last_date": "2025-03-01",
 "verdict": "type",
-"suggested_type": "musical",
-"confidence": 0.62,
+"suggested_type": "other",
+"confidence": 0.4,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 627,
-"output_tokens": 17
+"input_tokens": 844,
+"output_tokens": 16
 }
 },
 {
@@ -4754,9 +4755,9 @@
 "suggested_type": "play",
 "confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 16
 }
 },
@@ -4768,12 +4769,12 @@
 "first_date": "2026-09-06",
 "last_date": "2026-09-06",
 "verdict": "type",
-"suggested_type": "standup",
-"confidence": 0.6,
+"suggested_type": "concert",
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 642,
+"input_tokens": 859,
 "output_tokens": 17
 }
 },
@@ -4786,11 +4787,11 @@
 "last_date": "2023-10-09",
 "verdict": "type",
 "suggested_type": "standup",
-"confidence": 0.6,
+"confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 639,
+"input_tokens": 856,
 "output_tokens": 17
 }
 },
@@ -4805,9 +4806,9 @@
 "suggested_type": "opera",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 627,
+"input_tokens": 844,
 "output_tokens": 17
 }
 },
@@ -4822,9 +4823,9 @@
 "suggested_type": "opera",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 625,
+"input_tokens": 842,
 "output_tokens": 17
 }
 },
@@ -4839,9 +4840,9 @@
 "suggested_type": "opera",
 "confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 629,
+"input_tokens": 846,
 "output_tokens": 17
 }
 },
@@ -4854,11 +4855,11 @@
 "last_date": "2024-01-07",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.9,
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 16
 }
 },
@@ -4871,11 +4872,11 @@
 "last_date": "2024-03-09",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.8,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 16
 }
 },
@@ -4888,11 +4889,11 @@
 "last_date": "2026-04-18",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.93,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 646,
+"input_tokens": 863,
 "output_tokens": 16
 }
 },
@@ -4907,9 +4908,9 @@
 "suggested_type": "comedy",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 18
 }
 },
@@ -4924,9 +4925,9 @@
 "suggested_type": "play",
 "confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 16
 }
 },
@@ -4939,11 +4940,11 @@
 "last_date": "2021-06-12",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.9,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 16
 }
 },
@@ -4956,11 +4957,11 @@
 "last_date": "2020-09-26",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.85,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 630,
+"input_tokens": 847,
 "output_tokens": 16
 }
 },
@@ -4973,11 +4974,11 @@
 "last_date": "2026-05-06",
 "verdict": "type",
 "suggested_type": "dance",
-"confidence": 0.9,
+"confidence": 0.92,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 635,
+"input_tokens": 852,
 "output_tokens": 17
 }
 },
@@ -4990,11 +4991,11 @@
 "last_date": "2018-10-28",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.7,
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 16
 }
 },
@@ -5006,12 +5007,12 @@
 "first_date": "2023-12-12",
 "last_date": "2023-12-12",
 "verdict": "type",
-"suggested_type": "musical",
-"confidence": 0.8,
+"suggested_type": "concert",
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
+"input_tokens": 849,
 "output_tokens": 17
 }
 },
@@ -5023,12 +5024,12 @@
 "first_date": "2025-12-15",
 "last_date": "2025-12-15",
 "verdict": "type",
-"suggested_type": "musical",
+"suggested_type": "concert",
 "confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 17
 }
 },
@@ -5040,12 +5041,12 @@
 "first_date": "2025-10-27",
 "last_date": "2025-10-27",
 "verdict": "type",
-"suggested_type": "musical",
+"suggested_type": "concert",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 17
 }
 },
@@ -5058,11 +5059,11 @@
 "last_date": "2024-03-09",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.7,
+"confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
+"input_tokens": 849,
 "output_tokens": 17
 }
 },
@@ -5074,13 +5075,13 @@
 "first_date": "2025-03-23",
 "last_date": "2025-03-23",
 "verdict": "type",
-"suggested_type": "comedy",
+"suggested_type": "other",
 "confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 650,
-"output_tokens": 18
+"input_tokens": 867,
+"output_tokens": 16
 }
 },
 {
@@ -5092,11 +5093,11 @@
 "last_date": "2025-06-23",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.6,
+"confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 641,
+"input_tokens": 858,
 "output_tokens": 17
 }
 },
@@ -5108,12 +5109,12 @@
 "first_date": "2026-05-07",
 "last_date": "2026-05-07",
 "verdict": "type",
-"suggested_type": "musical",
+"suggested_type": "concert",
 "confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
+"input_tokens": 849,
 "output_tokens": 17
 }
 },
@@ -5126,11 +5127,11 @@
 "last_date": "2024-02-14",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.8,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 17
 }
 },
@@ -5145,9 +5146,9 @@
 "suggested_type": "comedy",
 "confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 631,
+"input_tokens": 848,
 "output_tokens": 18
 }
 },
@@ -5160,11 +5161,11 @@
 "last_date": "2024-09-16",
 "verdict": "type",
 "suggested_type": "standup",
-"confidence": 0.8,
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 17
 }
 },
@@ -5179,9 +5180,9 @@
 "suggested_type": null,
 "confidence": 0.3,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 633,
+"input_tokens": 850,
 "output_tokens": 18
 }
 },
@@ -5194,11 +5195,11 @@
 "last_date": "2018-12-01",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.9,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 17
 }
 },
@@ -5211,11 +5212,11 @@
 "last_date": "2023-03-04",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.97,
+"confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 628,
+"input_tokens": 845,
 "output_tokens": 16
 }
 },
@@ -5228,11 +5229,11 @@
 "last_date": "2026-02-13",
 "verdict": "type",
 "suggested_type": "dance",
-"confidence": 0.93,
+"confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 627,
+"input_tokens": 844,
 "output_tokens": 17
 }
 },
@@ -5245,11 +5246,11 @@
 "last_date": "2019-09-08",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.85,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
+"input_tokens": 849,
 "output_tokens": 17
 }
 },
@@ -5262,11 +5263,11 @@
 "last_date": "2017-06-24",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.95,
+"confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 626,
+"input_tokens": 843,
 "output_tokens": 16
 }
 },
@@ -5278,13 +5279,13 @@
 "first_date": "2026-05-12",
 "last_date": "2026-05-30",
 "verdict": "type",
-"suggested_type": "other",
-"confidence": 0.85,
+"suggested_type": "dance",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 655,
-"output_tokens": 16
+"input_tokens": 872,
+"output_tokens": 17
 }
 },
 {
@@ -5296,11 +5297,11 @@
 "last_date": "2024-08-11",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.8,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 632,
+"input_tokens": 849,
 "output_tokens": 17
 }
 },
@@ -5312,13 +5313,13 @@
 "first_date": "2026-06-02",
 "last_date": "2026-06-06",
 "verdict": "type",
-"suggested_type": "other",
-"confidence": 0.8,
+"suggested_type": "circus",
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 16121,
-"output_tokens": 468,
+"input_tokens": 16549,
+"output_tokens": 364,
 "web_search_requests": 1
 }
 },
@@ -5331,12 +5332,12 @@
 "last_date": "2025-11-23",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.9,
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14452,
-"output_tokens": 324,
+"input_tokens": 15123,
+"output_tokens": 313,
 "web_search_requests": 1
 }
 },
@@ -5349,12 +5350,12 @@
 "last_date": "2022-09-12",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.8,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15403,
-"output_tokens": 350,
+"input_tokens": 14660,
+"output_tokens": 374,
 "web_search_requests": 1
 }
 },
@@ -5367,84 +5368,48 @@
 "last_date": "2024-04-20",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.85,
+"confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15918,
-"output_tokens": 318,
+"input_tokens": 16348,
+"output_tokens": 304,
 "web_search_requests": 1
 }
 },
 {
-"title_key": "a musical theatre christmas",
-"venue_id": "4b27c255-3b5e-45c3-98a5-41e609cd1020",
-"title": "A Musical Theatre Christmas",
-"venue_name": "The Actors' Church",
-"first_date": "2022-12-04",
-"last_date": "2022-12-04",
+"title_key": "acorn antiques",
+"venue_id": "7624feff-c501-44d7-a7df-747353264d43",
+"title": "Acorn Antiques",
+"venue_name": "Shaftesbury Theatre",
+"first_date": "2025-11-09",
+"last_date": "2025-11-09",
 "verdict": "type",
 "suggested_type": "concert",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13908,
-"output_tokens": 333,
-"web_search_requests": 1
-}
-},
-{
-"title_key": "a west end fundraiser in support of the phoenix arts club c i c",
-"venue_id": "d5607559-ef4c-48d7-a8cf-7c4d87de81c6",
-"title": "A West End Fundraiser in support of The Phoenix Arts Club C.I.C.",
-"venue_name": "Phoenix Theatre",
-"first_date": "2026-04-20",
-"last_date": "2026-04-20",
-"verdict": "type",
-"suggested_type": "other",
-"confidence": 0.55,
-"provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
-"usage": {
-"input_tokens": 16461,
+"input_tokens": 14758,
 "output_tokens": 372,
 "web_search_requests": 1
 }
 },
 {
-"title_key": "aaron tveit",
-"venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
-"title": "Aaron Tveit",
-"venue_name": "London Palladium",
-"first_date": "2025-04-19",
-"last_date": "2025-04-20",
-"verdict": "type",
-"suggested_type": "concert",
-"confidence": 0.85,
-"provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
-"usage": {
-"input_tokens": 14358,
-"output_tokens": 246,
-"web_search_requests": 1
-}
-},
-{
 "title_key": "adam kay this is going to hurt",
-"venue_id": "f7444518-365a-42d1-a492-a591dfbdeb39",
+"venue_id": "80ee04a2-eba7-4028-acdd-9efb7b283c91",
 "title": "Adam Kay: This is Going to Hurt",
-"venue_name": "The Vaudeville Theatre",
-"first_date": "2019-07-01",
-"last_date": "2019-11-25",
+"venue_name": "Palace Theatre",
+"first_date": "2021-06-21",
+"last_date": "2021-06-26",
 "verdict": "type",
 "suggested_type": "standup",
-"confidence": 0.85,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14135,
-"output_tokens": 382,
+"input_tokens": 14587,
+"output_tokens": 504,
 "web_search_requests": 1
 }
 },
@@ -5456,13 +5421,13 @@
 "first_date": "2024-01-15",
 "last_date": "2024-01-16",
 "verdict": "type",
-"suggested_type": "other",
-"confidence": 0.4,
+"suggested_type": "concert",
+"confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15468,
-"output_tokens": 388,
+"input_tokens": 15659,
+"output_tokens": 327,
 "web_search_requests": 1
 }
 },
@@ -5474,13 +5439,13 @@
 "first_date": "2025-07-04",
 "last_date": "2025-07-04",
 "verdict": "type",
-"suggested_type": "play",
+"suggested_type": "other",
 "confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14388,
-"output_tokens": 348,
+"input_tokens": 14714,
+"output_tokens": 434,
 "web_search_requests": 1
 }
 },
@@ -5495,28 +5460,10 @@
 "suggested_type": "musical",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 23448,
-"output_tokens": 293,
-"web_search_requests": 2
-}
-},
-{
-"title_key": "alyssa memoirs of a queen",
-"venue_id": "f7444518-365a-42d1-a492-a591dfbdeb39",
-"title": "Alyssa, Memoirs of a Queen!",
-"venue_name": "The Vaudeville Theatre",
-"first_date": "2021-06-07",
-"last_date": "2021-06-13",
-"verdict": "type",
-"suggested_type": "other",
-"confidence": 0.55,
-"provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
-"usage": {
-"input_tokens": 16466,
-"output_tokens": 340,
+"input_tokens": 15914,
+"output_tokens": 317,
 "web_search_requests": 1
 }
 },
@@ -5528,13 +5475,13 @@
 "first_date": "2024-11-24",
 "last_date": "2024-11-24",
 "verdict": "type",
-"suggested_type": "other",
-"confidence": 0.5,
+"suggested_type": "concert",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14106,
-"output_tokens": 342,
+"input_tokens": 14534,
+"output_tokens": 423,
 "web_search_requests": 1
 }
 },
@@ -5547,30 +5494,12 @@
 "last_date": "2023-04-01",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.9,
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14150,
-"output_tokens": 358,
-"web_search_requests": 1
-}
-},
-{
-"title_key": "barcelona",
-"venue_id": "8aa341a3-5a0e-4287-8df2-b0c1ddad748d",
-"title": "Barcelona",
-"venue_name": "Tom Stoppard Theatre",
-"first_date": "2024-10-21",
-"last_date": "2025-01-11",
-"verdict": "type",
-"suggested_type": "play",
-"confidence": 0.95,
-"provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
-"usage": {
-"input_tokens": 14348,
-"output_tokens": 281,
+"input_tokens": 14438,
+"output_tokens": 290,
 "web_search_requests": 1
 }
 },
@@ -5583,12 +5512,12 @@
 "last_date": "2024-09-01",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.8,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13938,
-"output_tokens": 322,
+"input_tokens": 14368,
+"output_tokens": 299,
 "web_search_requests": 1
 }
 },
@@ -5601,30 +5530,12 @@
 "last_date": "2023-11-20",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.9,
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15176,
-"output_tokens": 289,
-"web_search_requests": 1
-}
-},
-{
-"title_key": "bitter wheat",
-"venue_id": "537c65ec-1bab-4108-acec-c00202d71d56",
-"title": "Bitter Wheat",
-"venue_name": "Garrick Theatre",
-"first_date": "2019-06-07",
-"last_date": "2019-09-21",
-"verdict": "type",
-"suggested_type": "play",
-"confidence": 0.97,
-"provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
-"usage": {
-"input_tokens": 15393,
-"output_tokens": 328,
+"input_tokens": 15609,
+"output_tokens": 288,
 "web_search_requests": 1
 }
 },
@@ -5637,12 +5548,12 @@
 "last_date": "2023-09-30",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.93,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15263,
-"output_tokens": 312,
+"input_tokens": 15665,
+"output_tokens": 515,
 "web_search_requests": 1
 }
 },
@@ -5654,13 +5565,13 @@
 "first_date": "2018-11-09",
 "last_date": "2019-01-03",
 "verdict": "type",
-"suggested_type": "other",
+"suggested_type": "circus",
 "confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15033,
-"output_tokens": 314,
+"input_tokens": 15663,
+"output_tokens": 334,
 "web_search_requests": 1
 }
 },
@@ -5675,10 +5586,10 @@
 "suggested_type": "play",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 16037,
-"output_tokens": 306,
+"input_tokens": 16521,
+"output_tokens": 346,
 "web_search_requests": 1
 }
 },
@@ -5693,10 +5604,10 @@
 "suggested_type": "comedy",
 "confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14205,
-"output_tokens": 359,
+"input_tokens": 14630,
+"output_tokens": 318,
 "web_search_requests": 1
 }
 },
@@ -5711,28 +5622,10 @@
 "suggested_type": "other",
 "confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14570,
-"output_tokens": 323,
-"web_search_requests": 1
-}
-},
-{
-"title_key": "candace bushnell true tales of sex success and sex and the city",
-"venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
-"title": "Candace Bushnell – True Tales of Sex, Success and Sex and the City",
-"venue_name": "London Palladium",
-"first_date": "2024-02-07",
-"last_date": "2024-02-07",
-"verdict": "type",
-"suggested_type": "other",
-"confidence": 0.6,
-"provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
-"usage": {
-"input_tokens": 14168,
-"output_tokens": 388,
+"input_tokens": 14923,
+"output_tokens": 288,
 "web_search_requests": 1
 }
 },
@@ -5745,12 +5638,12 @@
 "last_date": "2023-09-25",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.6,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13734,
-"output_tokens": 491,
+"input_tokens": 14077,
+"output_tokens": 464,
 "web_search_requests": 1
 }
 },
@@ -5763,30 +5656,30 @@
 "last_date": "2021-10-04",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.85,
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14522,
-"output_tokens": 390,
+"input_tokens": 14976,
+"output_tokens": 266,
 "web_search_requests": 1
 }
 },
 {
-"title_key": "clarkston",
+"title_key": "charlie cook s favourite book",
 "venue_id": "c060243f-f74f-4a9e-8769-f6ba7cabf8b9",
-"title": "Clarkston",
+"title": "Charlie Cook's Favourite Book",
 "venue_name": "Trafalgar Theatre",
-"first_date": "2025-09-17",
-"last_date": "2025-11-22",
+"first_date": "2024-12-05",
+"last_date": "2025-01-05",
 "verdict": "type",
-"suggested_type": "play",
-"confidence": 0.97,
+"suggested_type": "musical",
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14813,
-"output_tokens": 239,
+"input_tokens": 15981,
+"output_tokens": 403,
 "web_search_requests": 1
 }
 },
@@ -5799,12 +5692,12 @@
 "last_date": "2018-12-29",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.85,
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14886,
-"output_tokens": 317,
+"input_tokens": 15178,
+"output_tokens": 400,
 "web_search_requests": 1
 }
 },
@@ -5817,12 +5710,12 @@
 "last_date": "2021-07-25",
 "verdict": "type",
 "suggested_type": "comedy",
-"confidence": 0.95,
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15727,
-"output_tokens": 280,
+"input_tokens": 16174,
+"output_tokens": 305,
 "web_search_requests": 1
 }
 },
@@ -5835,12 +5728,12 @@
 "last_date": "2020-02-01",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.9,
+"confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 16388,
-"output_tokens": 377,
+"input_tokens": 16842,
+"output_tokens": 295,
 "web_search_requests": 1
 }
 },
@@ -5855,10 +5748,28 @@
 "suggested_type": "comedy",
 "confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15763,
-"output_tokens": 228,
+"input_tokens": 16199,
+"output_tokens": 280,
+"web_search_requests": 1
+}
+},
+{
+"title_key": "cruise",
+"venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
+"title": "Cruise",
+"venue_name": "Apollo Theatre",
+"first_date": "2022-08-13",
+"last_date": "2022-09-04",
+"verdict": "type",
+"suggested_type": "play",
+"confidence": 0.93,
+"provenance": "ai:claude-haiku-5-5+web_search",
+"prompt_version": 2,
+"usage": {
+"input_tokens": 15994,
+"output_tokens": 285,
 "web_search_requests": 1
 }
 },
@@ -5870,49 +5781,13 @@
 "first_date": "2022-10-24",
 "last_date": "2022-11-19",
 "verdict": "type",
-"suggested_type": "play",
+"suggested_type": "comedy",
 "confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14759,
-"output_tokens": 462,
-"web_search_requests": 1
-}
-},
-{
-"title_key": "darren criss",
-"venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
-"title": "Darren Criss",
-"venue_name": "London Palladium",
-"first_date": "2023-10-15",
-"last_date": "2023-10-15",
-"verdict": "type",
-"suggested_type": "concert",
-"confidence": 0.95,
-"provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
-"usage": {
-"input_tokens": 15402,
-"output_tokens": 345,
-"web_search_requests": 1
-}
-},
-{
-"title_key": "derren brown only human",
-"venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
-"title": "Derren Brown: Only Human",
-"venue_name": "Apollo Theatre",
-"first_date": "2026-10-10",
-"last_date": "2027-01-30",
-"verdict": "type",
-"suggested_type": "other",
-"confidence": 0.8,
-"provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
-"usage": {
-"input_tokens": 15016,
-"output_tokens": 333,
+"input_tokens": 15189,
+"output_tokens": 416,
 "web_search_requests": 1
 }
 },
@@ -5925,12 +5800,12 @@
 "last_date": "2025-06-22",
 "verdict": "type",
 "suggested_type": "dance",
-"confidence": 0.93,
+"confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15544,
-"output_tokens": 359,
+"input_tokens": 15972,
+"output_tokens": 366,
 "web_search_requests": 1
 }
 },
@@ -5945,10 +5820,10 @@
 "suggested_type": "other",
 "confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 12760,
-"output_tokens": 452,
+"input_tokens": 13188,
+"output_tokens": 462,
 "web_search_requests": 1
 }
 },
@@ -5961,12 +5836,12 @@
 "last_date": "2022-10-31",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.6,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13978,
-"output_tokens": 378,
+"input_tokens": 13974,
+"output_tokens": 389,
 "web_search_requests": 1
 }
 },
@@ -5981,10 +5856,10 @@
 "suggested_type": "play",
 "confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15027,
-"output_tokens": 344,
+"input_tokens": 15527,
+"output_tokens": 363,
 "web_search_requests": 1
 }
 },
@@ -5996,13 +5871,13 @@
 "first_date": "2023-09-05",
 "last_date": "2023-09-05",
 "verdict": "type",
-"suggested_type": "musical",
-"confidence": 0.72,
+"suggested_type": "concert",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14854,
-"output_tokens": 391,
+"input_tokens": 15140,
+"output_tokens": 380,
 "web_search_requests": 1
 }
 },
@@ -6015,12 +5890,12 @@
 "last_date": "2023-09-16",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.5,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 12995,
-"output_tokens": 352,
+"input_tokens": 13489,
+"output_tokens": 349,
 "web_search_requests": 1
 }
 },
@@ -6033,12 +5908,12 @@
 "last_date": "2026-01-24",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.6,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14264,
-"output_tokens": 406,
+"input_tokens": 14694,
+"output_tokens": 470,
 "web_search_requests": 1
 }
 },
@@ -6051,13 +5926,31 @@
 "last_date": "2018-12-11",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.7,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 12407,
-"output_tokens": 401,
+"input_tokens": 13014,
+"output_tokens": 378,
 "web_search_requests": 1
+}
+},
+{
+"title_key": "girl on the train",
+"venue_id": "8aa341a3-5a0e-4287-8df2-b0c1ddad748d",
+"title": "The Girl on the Train",
+"venue_name": "Tom Stoppard Theatre",
+"first_date": "2019-07-23",
+"last_date": "2019-08-17",
+"verdict": "type",
+"suggested_type": "play",
+"confidence": 0.95,
+"provenance": "ai:claude-haiku-5-5+web_search",
+"prompt_version": 2,
+"usage": {
+"input_tokens": 22236,
+"output_tokens": 482,
+"web_search_requests": 2
 }
 },
 {
@@ -6069,12 +5962,12 @@
 "last_date": "2023-10-16",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.7,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13951,
-"output_tokens": 482,
+"input_tokens": 14367,
+"output_tokens": 386,
 "web_search_requests": 1
 }
 },
@@ -6086,13 +5979,13 @@
 "first_date": "2025-06-11",
 "last_date": "2025-06-14",
 "verdict": "type",
-"suggested_type": "other",
-"confidence": 0.8,
+"suggested_type": "circus",
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13089,
-"output_tokens": 389,
+"input_tokens": 13492,
+"output_tokens": 313,
 "web_search_requests": 1
 }
 },
@@ -6105,12 +5998,12 @@
 "last_date": "2024-03-30",
 "verdict": "type",
 "suggested_type": "dance",
-"confidence": 0.85,
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14136,
-"output_tokens": 415,
+"input_tokens": 14432,
+"output_tokens": 378,
 "web_search_requests": 1
 }
 },
@@ -6122,31 +6015,31 @@
 "first_date": "2024-07-17",
 "last_date": "2024-09-08",
 "verdict": "type",
-"suggested_type": "musical",
-"confidence": 0.8,
+"suggested_type": "other",
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15381,
-"output_tokens": 385,
-"web_search_requests": 1
+"input_tokens": 3487,
+"output_tokens": 151
 }
 },
 {
-"title_key": "handmaid s tale",
-"venue_id": "65683668-2fb7-4527-8424-eb9de721905c",
-"title": "The Handmaid's Tale",
-"venue_name": "London Coliseum",
-"first_date": "2024-02-01",
-"last_date": "2024-02-15",
+"title_key": "gruffalo s child",
+"venue_id": "76dd0465-81b7-4ea8-9610-cb4a42785be2",
+"title": "The Gruffalo's Child",
+"venue_name": "Lyric Theatre",
+"first_date": "2025-11-28",
+"last_date": "2026-01-11",
 "verdict": "type",
-"suggested_type": "opera",
-"confidence": 0.9,
+"suggested_type": "other",
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 3274,
-"output_tokens": 161
+"input_tokens": 15574,
+"output_tokens": 380,
+"web_search_requests": 1
 }
 },
 {
@@ -6158,12 +6051,12 @@
 "last_date": "2022-10-15",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.97,
+"confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15655,
-"output_tokens": 309,
+"input_tokens": 17053,
+"output_tokens": 368,
 "web_search_requests": 1
 }
 },
@@ -6176,12 +6069,12 @@
 "last_date": "2023-07-22",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.95,
+"confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13440,
-"output_tokens": 272,
+"input_tokens": 13942,
+"output_tokens": 315,
 "web_search_requests": 1
 }
 },
@@ -6193,13 +6086,31 @@
 "first_date": "2018-08-02",
 "last_date": "2018-09-01",
 "verdict": "type",
-"suggested_type": "comedy",
-"confidence": 0.6,
+"suggested_type": "other",
+"confidence": 0.75,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15273,
-"output_tokens": 370,
+"input_tokens": 15800,
+"output_tokens": 437,
+"web_search_requests": 1
+}
+},
+{
+"title_key": "i m sorry prime minister",
+"venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
+"title": "I’m Sorry, Prime Minister",
+"venue_name": "Apollo Theatre",
+"first_date": "2026-01-29",
+"last_date": "2026-05-09",
+"verdict": "type",
+"suggested_type": "comedy",
+"confidence": 0.8,
+"provenance": "ai:claude-haiku-5-5+web_search",
+"prompt_version": 2,
+"usage": {
+"input_tokens": 16755,
+"output_tokens": 391,
 "web_search_requests": 1
 }
 },
@@ -6214,28 +6125,10 @@
 "suggested_type": "other",
 "confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14745,
-"output_tokens": 413,
-"web_search_requests": 1
-}
-},
-{
-"title_key": "instructions for a teenage armageddon",
-"venue_id": "537c65ec-1bab-4108-acec-c00202d71d56",
-"title": "Instructions for a Teenage Armageddon",
-"venue_name": "Garrick Theatre",
-"first_date": "2024-03-17",
-"last_date": "2024-04-28",
-"verdict": "type",
-"suggested_type": "play",
-"confidence": 0.85,
-"provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
-"usage": {
-"input_tokens": 15563,
-"output_tokens": 374,
+"input_tokens": 15226,
+"output_tokens": 435,
 "web_search_requests": 1
 }
 },
@@ -6248,48 +6141,12 @@
 "last_date": "2023-01-28",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.85,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13981,
-"output_tokens": 364,
-"web_search_requests": 1
-}
-},
-{
-"title_key": "jamie muscato",
-"venue_id": "76002057-f9e9-46cf-a6cb-b3fb87c4c83e",
-"title": "Jamie Muscato",
-"venue_name": "Theatre Royal, Drury Lane",
-"first_date": "2026-03-22",
-"last_date": "2026-03-22",
-"verdict": "type",
-"suggested_type": "concert",
-"confidence": 0.9,
-"provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
-"usage": {
-"input_tokens": 14654,
-"output_tokens": 403,
-"web_search_requests": 1
-}
-},
-{
-"title_key": "jason robert brown",
-"venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
-"title": "Jason Robert Brown",
-"venue_name": "London Palladium",
-"first_date": "2024-03-24",
-"last_date": "2024-03-24",
-"verdict": "type",
-"suggested_type": "concert",
-"confidence": 0.93,
-"provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
-"usage": {
-"input_tokens": 13468,
-"output_tokens": 313,
+"input_tokens": 14355,
+"output_tokens": 373,
 "web_search_requests": 1
 }
 },
@@ -6302,30 +6159,12 @@
 "last_date": "2022-02-20",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.97,
+"confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13252,
-"output_tokens": 371,
-"web_search_requests": 1
-}
-},
-{
-"title_key": "kirill richter richter trio sands of time",
-"venue_id": "65683668-2fb7-4527-8424-eb9de721905c",
-"title": "Kirill Richter & Richter Trio: Sands of Time",
-"venue_name": "London Coliseum",
-"first_date": "2024-09-11",
-"last_date": "2024-09-11",
-"verdict": "type",
-"suggested_type": "concert",
-"confidence": 0.95,
-"provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
-"usage": {
-"input_tokens": 14200,
-"output_tokens": 299,
+"input_tokens": 13529,
+"output_tokens": 381,
 "web_search_requests": 1
 }
 },
@@ -6338,12 +6177,30 @@
 "last_date": "2018-08-26",
 "verdict": "type",
 "suggested_type": "musical",
+"confidence": 0.95,
+"provenance": "ai:claude-haiku-5-5+web_search",
+"prompt_version": 2,
+"usage": {
+"input_tokens": 16351,
+"output_tokens": 243,
+"web_search_requests": 1
+}
+},
+{
+"title_key": "kyoto",
+"venue_id": "a9337cab-01bf-46e3-9331-ce24fd5085d2",
+"title": "Kyoto",
+"venue_name": "Soho Place",
+"first_date": "2025-01-09",
+"last_date": "2025-05-03",
+"verdict": "type",
+"suggested_type": "play",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15923,
-"output_tokens": 258,
+"input_tokens": 15771,
+"output_tokens": 323,
 "web_search_requests": 1
 }
 },
@@ -6355,13 +6212,13 @@
 "first_date": "2025-02-25",
 "last_date": "2025-03-22",
 "verdict": "type",
-"suggested_type": "comedy",
-"confidence": 0.8,
+"suggested_type": "play",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15480,
-"output_tokens": 343,
+"input_tokens": 15924,
+"output_tokens": 509,
 "web_search_requests": 1
 }
 },
@@ -6374,30 +6231,30 @@
 "last_date": "2023-03-18",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.8,
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15242,
-"output_tokens": 490,
+"input_tokens": 15670,
+"output_tokens": 376,
 "web_search_requests": 1
 }
 },
 {
-"title_key": "leslie odom jr",
-"venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
-"title": "Leslie Odom, Jr.",
-"venue_name": "London Palladium",
-"first_date": "2026-10-31",
-"last_date": "2026-10-31",
+"title_key": "maddaddam",
+"venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+"title": "MADDADDAM",
+"venue_name": "Royal Opera House",
+"first_date": "2024-11-14",
+"last_date": "2024-11-30",
 "verdict": "type",
-"suggested_type": "concert",
-"confidence": 0.85,
+"suggested_type": "dance",
+"confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15331,
-"output_tokens": 400,
+"input_tokens": 13921,
+"output_tokens": 367,
 "web_search_requests": 1
 }
 },
@@ -6410,30 +6267,12 @@
 "last_date": "2026-01-04",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.8,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14867,
-"output_tokens": 303,
-"web_search_requests": 1
-}
-},
-{
-"title_key": "marisha wallace",
-"venue_id": "6bd0f3c5-4127-4259-ad54-da4f3bfef5fc",
-"title": "Marisha Wallace",
-"venue_name": "Adelphi Theatre",
-"first_date": "2025-03-11",
-"last_date": "2025-03-11",
-"verdict": "type",
-"suggested_type": "concert",
-"confidence": 0.95,
-"provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
-"usage": {
-"input_tokens": 14498,
-"output_tokens": 340,
+"input_tokens": 15331,
+"output_tokens": 387,
 "web_search_requests": 1
 }
 },
@@ -6446,12 +6285,12 @@
 "last_date": "2022-11-26",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.9,
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15096,
-"output_tokens": 378,
+"input_tokens": 15524,
+"output_tokens": 372,
 "web_search_requests": 1
 }
 },
@@ -6466,10 +6305,10 @@
 "suggested_type": "dance",
 "confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15494,
-"output_tokens": 381,
+"input_tokens": 15933,
+"output_tokens": 363,
 "web_search_requests": 1
 }
 },
@@ -6482,12 +6321,30 @@
 "last_date": "2024-04-28",
 "verdict": "type",
 "suggested_type": "comedy",
-"confidence": 0.8,
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 16350,
-"output_tokens": 383,
+"input_tokens": 16408,
+"output_tokens": 495,
+"web_search_requests": 1
+}
+},
+{
+"title_key": "mindgame",
+"venue_id": "d9717024-7833-4e7e-8901-6d261cf9a75f",
+"title": "Mindgame",
+"venue_name": "Ambassadors Theatre",
+"first_date": "2018-05-15",
+"last_date": "2018-06-02",
+"verdict": "type",
+"suggested_type": "play",
+"confidence": 0.97,
+"provenance": "ai:claude-haiku-5-5+web_search",
+"prompt_version": 2,
+"usage": {
+"input_tokens": 15226,
+"output_tokens": 222,
 "web_search_requests": 1
 }
 },
@@ -6500,30 +6357,12 @@
 "last_date": "2021-07-05",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.9,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14689,
-"output_tokens": 265,
-"web_search_requests": 1
-}
-},
-{
-"title_key": "mongol khan",
-"venue_id": "65683668-2fb7-4527-8424-eb9de721905c",
-"title": "The Mongol Khan",
-"venue_name": "London Coliseum",
-"first_date": "2023-11-17",
-"last_date": "2023-12-02",
-"verdict": "type",
-"suggested_type": "play",
-"confidence": 0.7,
-"provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
-"usage": {
-"input_tokens": 14830,
-"output_tokens": 358,
+"input_tokens": 15139,
+"output_tokens": 331,
 "web_search_requests": 1
 }
 },
@@ -6536,12 +6375,30 @@
 "last_date": "2024-11-17",
 "verdict": "type",
 "suggested_type": "musical",
+"confidence": 0.7,
+"provenance": "ai:claude-haiku-5-5+web_search",
+"prompt_version": 2,
+"usage": {
+"input_tokens": 15892,
+"output_tokens": 342,
+"web_search_requests": 1
+}
+},
+{
+"title_key": "murmuration level 2",
+"venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+"title": "Murmuration Level 2",
+"venue_name": "Peacock Theatre",
+"first_date": "2025-09-10",
+"last_date": "2025-09-20",
+"verdict": "type",
+"suggested_type": "dance",
 "confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15525,
-"output_tokens": 429,
+"input_tokens": 16176,
+"output_tokens": 331,
 "web_search_requests": 1
 }
 },
@@ -6553,13 +6410,13 @@
 "first_date": "2020-02-05",
 "last_date": "2020-03-01",
 "verdict": "type",
-"suggested_type": "musical",
-"confidence": 0.7,
+"suggested_type": "other",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13957,
-"output_tokens": 467,
+"input_tokens": 14422,
+"output_tokens": 478,
 "web_search_requests": 1
 }
 },
@@ -6574,10 +6431,10 @@
 "suggested_type": "play",
 "confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14652,
-"output_tokens": 291,
+"input_tokens": 15082,
+"output_tokens": 184,
 "web_search_requests": 1
 }
 },
@@ -6592,10 +6449,28 @@
 "suggested_type": "dance",
 "confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13846,
-"output_tokens": 407,
+"input_tokens": 14359,
+"output_tokens": 285,
+"web_search_requests": 1
+}
+},
+{
+"title_key": "new works",
+"venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+"title": "New Works",
+"venue_name": "Royal Opera House",
+"first_date": "2024-02-15",
+"last_date": "2024-02-21",
+"verdict": "type",
+"suggested_type": "dance",
+"confidence": 0.4,
+"provenance": "ai:claude-haiku-5-5+web_search",
+"prompt_version": 2,
+"usage": {
+"input_tokens": 14732,
+"output_tokens": 361,
 "web_search_requests": 1
 }
 },
@@ -6607,13 +6482,13 @@
 "first_date": "2023-08-04",
 "last_date": "2023-08-06",
 "verdict": "type",
-"suggested_type": "play",
-"confidence": 0.7,
+"suggested_type": "musical",
+"confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13417,
-"output_tokens": 362,
+"input_tokens": 13998,
+"output_tokens": 335,
 "web_search_requests": 1
 }
 },
@@ -6628,10 +6503,10 @@
 "suggested_type": "musical",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14301,
-"output_tokens": 379,
+"input_tokens": 14805,
+"output_tokens": 270,
 "web_search_requests": 1
 }
 },
@@ -6644,30 +6519,12 @@
 "last_date": "2022-01-16",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.8,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15237,
-"output_tokens": 404,
-"web_search_requests": 1
-}
-},
-{
-"title_key": "playing burton",
-"venue_id": "ebd89b69-d391-449d-8c50-d8a812b280e9",
-"title": "Playing Burton",
-"venue_name": "The Old Vic",
-"first_date": "2025-11-16",
-"last_date": "2025-11-16",
-"verdict": "type",
-"suggested_type": "play",
-"confidence": 0.95,
-"provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
-"usage": {
-"input_tokens": 14903,
-"output_tokens": 297,
+"input_tokens": 15667,
+"output_tokens": 303,
 "web_search_requests": 1
 }
 },
@@ -6680,12 +6537,12 @@
 "last_date": "2021-05-30",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.97,
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13911,
-"output_tokens": 263,
+"input_tokens": 14331,
+"output_tokens": 304,
 "web_search_requests": 1
 }
 },
@@ -6697,13 +6554,13 @@
 "first_date": "2024-04-07",
 "last_date": "2024-04-07",
 "verdict": "type",
-"suggested_type": "other",
-"confidence": 0.6,
+"suggested_type": "concert",
+"confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15053,
-"output_tokens": 492,
+"input_tokens": 15504,
+"output_tokens": 612,
 "web_search_requests": 1
 }
 },
@@ -6718,10 +6575,28 @@
 "suggested_type": "concert",
 "confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15895,
-"output_tokens": 303,
+"input_tokens": 16416,
+"output_tokens": 315,
+"web_search_requests": 1
+}
+},
+{
+"title_key": "ramin karimloo with seth rudetsky",
+"venue_id": "0baf8e99-deea-4e45-a4e9-67aba3bcc766",
+"title": "Ramin Karimloo with Seth Rudetsky",
+"venue_name": "Leicester Square Theatre",
+"first_date": "2018-10-05",
+"last_date": "2018-10-06",
+"verdict": "type",
+"suggested_type": "concert",
+"confidence": 0.85,
+"provenance": "ai:claude-haiku-5-5+web_search",
+"prompt_version": 2,
+"usage": {
+"input_tokens": 16241,
+"output_tokens": 428,
 "web_search_requests": 1
 }
 },
@@ -6736,10 +6611,10 @@
 "suggested_type": "play",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14524,
-"output_tokens": 263,
+"input_tokens": 14738,
+"output_tokens": 369,
 "web_search_requests": 1
 }
 },
@@ -6752,30 +6627,30 @@
 "last_date": "2022-05-07",
 "verdict": "type",
 "suggested_type": "dance",
-"confidence": 0.8,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14570,
-"output_tokens": 448,
+"input_tokens": 15020,
+"output_tokens": 361,
 "web_search_requests": 1
 }
 },
 {
-"title_key": "remembrance monday",
-"venue_id": "808dcff6-bc0a-453a-9b0f-0a8cc4fe5856",
-"title": "Remembrance Monday",
-"venue_name": "Seven Dials Playhouse",
-"first_date": "2024-04-23",
-"last_date": "2024-06-01",
+"title_key": "retrograde",
+"venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
+"title": "Retrograde",
+"venue_name": "Apollo Theatre",
+"first_date": "2025-03-08",
+"last_date": "2025-06-14",
 "verdict": "type",
 "suggested_type": "play",
 "confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 16673,
-"output_tokens": 349,
+"input_tokens": 14909,
+"output_tokens": 400,
 "web_search_requests": 1
 }
 },
@@ -6787,31 +6662,13 @@
 "first_date": "2026-06-10",
 "last_date": "2026-06-20",
 "verdict": "type",
-"suggested_type": "other",
-"confidence": 0.7,
+"suggested_type": "circus",
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13971,
-"output_tokens": 323,
-"web_search_requests": 1
-}
-},
-{
-"title_key": "rob brydon probes barry humphries live on stage",
-"venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
-"title": "Rob Brydon Probes Barry Humphries Live On Stage",
-"venue_name": "London Palladium",
-"first_date": "2019-04-28",
-"last_date": "2019-04-28",
-"verdict": "type",
-"suggested_type": "other",
-"confidence": 0.5,
-"provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
-"usage": {
-"input_tokens": 14531,
-"output_tokens": 408,
+"input_tokens": 14399,
+"output_tokens": 391,
 "web_search_requests": 1
 }
 },
@@ -6824,12 +6681,12 @@
 "last_date": "2026-06-01",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.8,
+"confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15528,
-"output_tokens": 321,
+"input_tokens": 15938,
+"output_tokens": 384,
 "web_search_requests": 1
 }
 },
@@ -6842,30 +6699,12 @@
 "last_date": "2021-11-24",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.93,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15558,
-"output_tokens": 291,
-"web_search_requests": 1
-}
-},
-{
-"title_key": "samantha barks",
-"venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
-"title": "Samantha Barks",
-"venue_name": "London Palladium",
-"first_date": "2025-04-05",
-"last_date": "2025-04-05",
-"verdict": "type",
-"suggested_type": "concert",
-"confidence": 0.95,
-"provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
-"usage": {
-"input_tokens": 15030,
-"output_tokens": 248,
+"input_tokens": 15214,
+"output_tokens": 396,
 "web_search_requests": 1
 }
 },
@@ -6878,12 +6717,30 @@
 "last_date": "2025-03-23",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.7,
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14690,
-"output_tokens": 363,
+"input_tokens": 14970,
+"output_tokens": 343,
+"web_search_requests": 1
+}
+},
+{
+"title_key": "sandi toksvig",
+"venue_id": "76002057-f9e9-46cf-a6cb-b3fb87c4c83e",
+"title": "Sandi Toksvig",
+"venue_name": "Theatre Royal, Drury Lane",
+"first_date": "2024-11-13",
+"last_date": "2024-11-14",
+"verdict": "type",
+"suggested_type": "other",
+"confidence": 0.6,
+"provenance": "ai:claude-haiku-5-5+web_search",
+"prompt_version": 2,
+"usage": {
+"input_tokens": 14301,
+"output_tokens": 375,
 "web_search_requests": 1
 }
 },
@@ -6896,12 +6753,12 @@
 "last_date": "2025-04-26",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.95,
+"confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15072,
-"output_tokens": 375,
+"input_tokens": 15513,
+"output_tokens": 285,
 "web_search_requests": 1
 }
 },
@@ -6914,12 +6771,12 @@
 "last_date": "2026-03-01",
 "verdict": "type",
 "suggested_type": "musical",
-"confidence": 0.9,
+"confidence": 0.7,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15351,
-"output_tokens": 359,
+"input_tokens": 16038,
+"output_tokens": 362,
 "web_search_requests": 1
 }
 },
@@ -6932,12 +6789,12 @@
 "last_date": "2025-07-23",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.7,
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14232,
-"output_tokens": 290,
+"input_tokens": 14662,
+"output_tokens": 328,
 "web_search_requests": 1
 }
 },
@@ -6952,10 +6809,10 @@
 "suggested_type": "concert",
 "confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14040,
-"output_tokens": 368,
+"input_tokens": 14067,
+"output_tokens": 209,
 "web_search_requests": 1
 }
 },
@@ -6968,12 +6825,12 @@
 "last_date": "2024-10-12",
 "verdict": "type",
 "suggested_type": "play",
-"confidence": 0.95,
+"confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13714,
-"output_tokens": 300,
+"input_tokens": 14142,
+"output_tokens": 298,
 "web_search_requests": 1
 }
 },
@@ -6986,12 +6843,12 @@
 "last_date": "2021-06-06",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.8,
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 16129,
-"output_tokens": 446,
+"input_tokens": 15366,
+"output_tokens": 353,
 "web_search_requests": 1
 }
 },
@@ -7004,30 +6861,30 @@
 "last_date": "2024-04-07",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.8,
+"confidence": 0.85,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13032,
-"output_tokens": 308,
+"input_tokens": 13505,
+"output_tokens": 312,
 "web_search_requests": 1
 }
 },
 {
-"title_key": "so are we leon lightfoot",
-"venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
-"title": "So Are We: León & Lightfoot",
-"venue_name": "Royal Opera House",
-"first_date": "2026-06-11",
-"last_date": "2026-06-20",
+"title_key": "six chick flicks",
+"venue_id": "0baf8e99-deea-4e45-a4e9-67aba3bcc766",
+"title": "Six Chick Flicks",
+"venue_name": "Leicester Square Theatre",
+"first_date": "2024-04-09",
+"last_date": "2024-06-29",
 "verdict": "type",
-"suggested_type": "dance",
-"confidence": 0.97,
+"suggested_type": "comedy",
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14594,
-"output_tokens": 319,
+"input_tokens": 13392,
+"output_tokens": 336,
 "web_search_requests": 1
 }
 },
@@ -7040,12 +6897,12 @@
 "last_date": "2019-12-08",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.7,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 12295,
-"output_tokens": 362,
+"input_tokens": 12965,
+"output_tokens": 346,
 "web_search_requests": 1
 }
 },
@@ -7057,13 +6914,13 @@
 "first_date": "2025-07-04",
 "last_date": "2025-07-04",
 "verdict": "type",
-"suggested_type": "play",
+"suggested_type": "other",
 "confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13853,
-"output_tokens": 280,
+"input_tokens": 14419,
+"output_tokens": 369,
 "web_search_requests": 1
 }
 },
@@ -7078,10 +6935,28 @@
 "suggested_type": "other",
 "confidence": 0.5,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15977,
-"output_tokens": 533,
+"input_tokens": 16405,
+"output_tokens": 447,
+"web_search_requests": 1
+}
+},
+{
+"title_key": "tape face",
+"venue_id": "537c65ec-1bab-4108-acec-c00202d71d56",
+"title": "Tape Face",
+"venue_name": "Garrick Theatre",
+"first_date": "2017-06-06",
+"last_date": "2017-07-22",
+"verdict": "type",
+"suggested_type": "comedy",
+"confidence": 0.7,
+"provenance": "ai:claude-haiku-5-5+web_search",
+"prompt_version": 2,
+"usage": {
+"input_tokens": 15374,
+"output_tokens": 519,
 "web_search_requests": 1
 }
 },
@@ -7094,12 +6969,30 @@
 "last_date": "2026-08-23",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.93,
+"confidence": 0.95,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14859,
-"output_tokens": 321,
+"input_tokens": 14266,
+"output_tokens": 367,
+"web_search_requests": 1
+}
+},
+{
+"title_key": "time traveller s wife",
+"venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
+"title": "The Time Traveller's Wife",
+"venue_name": "Apollo Theatre",
+"first_date": "2023-10-07",
+"last_date": "2024-02-24",
+"verdict": "type",
+"suggested_type": "musical",
+"confidence": 0.97,
+"provenance": "ai:claude-haiku-5-5+web_search",
+"prompt_version": 2,
+"usage": {
+"input_tokens": 16335,
+"output_tokens": 348,
 "web_search_requests": 1
 }
 },
@@ -7112,12 +7005,12 @@
 "last_date": "2027-04-11",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.75,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14632,
-"output_tokens": 375,
+"input_tokens": 14865,
+"output_tokens": 316,
 "web_search_requests": 1
 }
 },
@@ -7129,13 +7022,13 @@
 "first_date": "2025-02-18",
 "last_date": "2025-03-01",
 "verdict": "type",
-"suggested_type": "musical",
-"confidence": 0.6,
+"suggested_type": "other",
+"confidence": 0.55,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15594,
-"output_tokens": 394,
+"input_tokens": 16024,
+"output_tokens": 398,
 "web_search_requests": 1
 }
 },
@@ -7150,10 +7043,10 @@
 "suggested_type": "musical",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13505,
-"output_tokens": 300,
+"input_tokens": 13945,
+"output_tokens": 362,
 "web_search_requests": 1
 }
 },
@@ -7166,12 +7059,12 @@
 "last_date": "2026-09-06",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.6,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 16381,
-"output_tokens": 438,
+"input_tokens": 16416,
+"output_tokens": 588,
 "web_search_requests": 1
 }
 },
@@ -7184,12 +7077,30 @@
 "last_date": "2023-10-09",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.6,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 14088,
-"output_tokens": 423,
+"input_tokens": 14647,
+"output_tokens": 395,
+"web_search_requests": 1
+}
+},
+{
+"title_key": "unbelievable",
+"venue_id": "4cb9e9b8-5fa7-477e-a857-abcacab67875",
+"title": "Unbelievable",
+"venue_name": "Criterion Theatre",
+"first_date": "2023-09-19",
+"last_date": "2024-01-07",
+"verdict": "type",
+"suggested_type": "other",
+"confidence": 0.9,
+"provenance": "ai:claude-haiku-5-5+web_search",
+"prompt_version": 2,
+"usage": {
+"input_tokens": 15940,
+"output_tokens": 369,
 "web_search_requests": 1
 }
 },
@@ -7204,10 +7115,10 @@
 "suggested_type": "play",
 "confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13622,
-"output_tokens": 467,
+"input_tokens": 14036,
+"output_tokens": 462,
 "web_search_requests": 1
 }
 },
@@ -7219,31 +7130,13 @@
 "first_date": "2018-10-28",
 "last_date": "2018-10-28",
 "verdict": "type",
-"suggested_type": "musical",
-"confidence": 0.5,
-"provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
-"usage": {
-"input_tokens": 14641,
-"output_tokens": 414,
-"web_search_requests": 1
-}
-},
-{
-"title_key": "west end musical love songs",
-"venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
-"title": "West End Musical Love Songs",
-"venue_name": "Apollo Theatre",
-"first_date": "2024-03-08",
-"last_date": "2024-03-09",
-"verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.85,
+"confidence": 0.8,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13117,
-"output_tokens": 397,
+"input_tokens": 15107,
+"output_tokens": 359,
 "web_search_requests": 1
 }
 },
@@ -7256,12 +7149,12 @@
 "last_date": "2025-03-23",
 "verdict": "type",
 "suggested_type": "other",
-"confidence": 0.6,
+"confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15796,
-"output_tokens": 370,
+"input_tokens": 16325,
+"output_tokens": 422,
 "web_search_requests": 1
 }
 },
@@ -7274,12 +7167,12 @@
 "last_date": "2025-06-23",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.9,
+"confidence": 0.93,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13411,
-"output_tokens": 277,
+"input_tokens": 13841,
+"output_tokens": 297,
 "web_search_requests": 1
 }
 },
@@ -7292,12 +7185,12 @@
 "last_date": "2026-05-07",
 "verdict": "type",
 "suggested_type": "concert",
-"confidence": 0.6,
+"confidence": 0.9,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 13761,
-"output_tokens": 401,
+"input_tokens": 14267,
+"output_tokens": 298,
 "web_search_requests": 1
 }
 },
@@ -7312,10 +7205,28 @@
 "suggested_type": "musical",
 "confidence": 0.97,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 16942,
-"output_tokens": 274,
+"input_tokens": 17365,
+"output_tokens": 332,
+"web_search_requests": 1
+}
+},
+{
+"title_key": "why we love steve brown",
+"venue_id": "bd9e8fb5-a633-4744-96c7-3c8fcaa9a356",
+"title": "Why We Love Steve Brown",
+"venue_name": "Savoy Theatre",
+"first_date": "2024-09-16",
+"last_date": "2024-09-16",
+"verdict": "type",
+"suggested_type": "concert",
+"confidence": 0.85,
+"provenance": "ai:claude-haiku-5-5+web_search",
+"prompt_version": 2,
+"usage": {
+"input_tokens": 14485,
+"output_tokens": 356,
 "web_search_requests": 1
 }
 },
@@ -7327,13 +7238,31 @@
 "first_date": "2024-03-25",
 "last_date": "2024-03-26",
 "verdict": "type",
-"suggested_type": "musical",
-"confidence": 0.8,
+"suggested_type": "concert",
+"confidence": 0.6,
 "provenance": "ai:claude-haiku-5-5+web_search",
-"prompt_version": 1,
+"prompt_version": 2,
 "usage": {
-"input_tokens": 15079,
-"output_tokens": 319,
+"input_tokens": 15359,
+"output_tokens": 449,
+"web_search_requests": 1
+}
+},
+{
+"title_key": "yamato the drummers of japan hito no chikara the power of human strength",
+"venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+"title": "Yamato, The Drummers of Japan: Hito no Chikara - The Power of Human Strength",
+"venue_name": "Peacock Theatre",
+"first_date": "2026-05-12",
+"last_date": "2026-05-30",
+"verdict": "type",
+"suggested_type": "other",
+"confidence": 0.6,
+"provenance": "ai:claude-haiku-5-5+web_search",
+"prompt_version": 2,
+"usage": {
+"input_tokens": 16324,
+"output_tokens": 581,
 "web_search_requests": 1
 }
 }

@@ -1355,3 +1355,7 @@ the venue name and the first and last run dates.
 - **Measured (2026-11-08):** of 310 held titles, 197 were confident from the title alone ($0.02). Web search on
   the other 113 made 75 more confident ($1.32). In a rolled-back dry run on hosted data, held London events fall
   from 313 to 36, with 247 new shows created. Details and the hand-check sample: `docs/catalogue-benchmark/`.
+- **Prompt v2 (2026-11-08)** after the hand check of v1: a circus type (#452); song compilations and tribute acts
+  are concerts; celebrity talks are other; judge the production by venue and dates, not the title alone. Of 310
+  titles, 280 would publish (272 in v1). The hand-checked sample is 94% right (92% in v1). The errors left are
+  famous titles shared with another kind of work.
