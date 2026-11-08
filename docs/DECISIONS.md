@@ -1327,3 +1327,28 @@ Owner's request, while tuning #450's model-suggested types: circus shows (La Cli
 Other beside magic, panto and cabaret. `show_type` gains `circus` after `concert` (`20261108220000`). Web, iOS,
 posters, share cards and admin filters list it; older iOS builds read it as Other. London's single "Circus and
 Magic" category stays unmapped because it mixes circus with magic, so circus comes from #450's suggestions or by hand.
+### #450 Model-suggested types for held shows (2026-11-08)
+
+About 313 London events (310 titles at a venue) are held as `unknown_show_type`, because past-show pages carry
+no categories. The owner chose (1b, 2a, 3a): a title-only `claude-haiku-5-5` call, plus web search for the
+answers that come back unsure; publish at confidence 0.80 or more; a confident Other publishes as Other. This
+narrows #419's "no AI on London pages" for this step only: no page HTML or text is sent, just the cleaned title,
+the venue name and the first and last run dates.
+
+- **Stored, not applied directly.** Every answer goes to `crawl_show_type_suggestions` with provenance, the exact
+  input, usage and prompt version, so it can be audited and reverted (`crawl_revert_show_type_suggestions`).
+  Postgres decides what an answer may do, so the worker can't widen the rule.
+- **Deterministic evidence wins.** A suggestion is read only where `crawl_match_show` would otherwise hold a
+  new show. It never types an event that links to an existing show; that keeps the corroboration rule. The
+  one exception: a second event of the same title at the same venue links to the show the suggestion created.
+- **Latest unreverted answer counts.** The web-search answer, written after an unsure plain answer, replaces it.
+  `created_at` uses `clock_timestamp()` so answers in one transaction still order.
+- **Plain pass: structured output, thinking off, effort low, 200 output tokens.** **Web pass:** the server
+  `web_search_20250305` tool (at most two searches) and a JSON object at the end of the text, not structured
+  output, because search answers carry citations. Its reserve includes $0.01 per search and about 10k
+  result tokens per search.
+- **Spend caps reuse the crawler's.** In database mode a `crawl_runs` row holds the reservations: the run cap
+  (`CRAWL_MAX_SPEND_USD`, at most $1 in Postgres) and a per-title cap keyed `show-type:<source>:<title>`.
+- **Revert** withdraws answers by provenance. Shows they created go back to held when no diary entry or run
+  uses them; any others are returned under `needs_review` and left alone.
+- **Off by default** (`CRAWL_TYPE_SUGGESTIONS`). London publication stays off.
