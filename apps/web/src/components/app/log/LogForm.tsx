@@ -23,6 +23,7 @@ import {
   type Visibility,
 } from "@/lib/entries";
 import { lookupNearby, preparePhoto, type Place, type PreparedPhoto } from "@/lib/import/photo-pipeline";
+import { rpcFetcher, SuggestionSession, type ShowSource, type ShowSuggestion } from "@/lib/show-suggestions";
 import { createClient } from "@/lib/supabase/client";
 import { useFreshOnReturn } from "@/lib/use-fresh-on-return";
 import { DateField } from "../DateField";
@@ -123,6 +124,12 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
     live.current = { show, venue };
   }, [show, venue]);
   const run = useRef(0);
+  // Optional "on here around then" chips (#360). They appear only for a known
+  // catalogue venue and date, never block a field or Save, and a response only
+  // shows while it still matches the current venue and date.
+  const [suggested, setSuggested] = useState<{ key: string; items: ShowSuggestion[] } | null>(null);
+  const session = useRef<SuggestionSession | null>(null);
+  const showSource = useRef<ShowSource>("manual");
   // Fields whose current value came from the photo. Removing or replacing
   // the photo clears these (and only these), so a new photo can fill them.
   const fromPhoto = useRef({ show: false, venue: false, date: false });
@@ -182,6 +189,34 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
       setRecent((entries.data as unknown as { show_id: string; venue: Venue }[] | null) ?? []);
     })();
   }, []);
+
+  const suggestKey = !editing && venue?.id && date ? `${venue.id}|${date}` : null;
+  useEffect(() => {
+    if (!suggestKey) return;
+    const [venueId, day] = suggestKey.split("|");
+    session.current ??= new SuggestionSession(rpcFetcher(createClient()));
+    const s = session.current;
+    s.request(venueId, day, (items) => setSuggested({ key: suggestKey, items }));
+    return () => s.cancel();
+  }, [suggestKey]);
+  const chips = !show && suggestKey && suggested?.key === suggestKey ? suggested.items : [];
+
+  // A chip fills the show in one tap, only if the field is still empty when
+  // the show's details arrive; a show typed meanwhile wins.
+  async function pickSuggestion(item: ShowSuggestion) {
+    if (!item.show_id || live.current.show) return;
+    const { data } = await createClient()
+      .from("shows")
+      .select("id, title, type, first_performed")
+      .eq("id", item.show_id)
+      .maybeSingle();
+    if (!data || live.current.show || touched.current.show) return;
+    touched.current.show = true;
+    fromPhoto.current.show = false;
+    showSource.current = item.source === "yours" ? "yours" : "community";
+    live.current.show = data as Show;
+    setShow(data as Show);
+  }
 
   // Trips are offered only when one covers the entry's date (a trip holds only
   // shows within its dates), so most visits never see the field. The first
@@ -268,6 +303,7 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
 
     // Saving wins over a suggestion still on its way: ignore it from here.
     run.current++;
+    session.current?.cancel();
     setSaving(true);
     const supabase = createClient();
     const entryId = initial?.id ?? crypto.randomUUID();
@@ -351,6 +387,7 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
           method: photo ? "photo" : "manual",
           // No show detection any more (#281): kept for one release.
           detection: photo ? "none" : "skipped",
+          show_source: showSource.current,
           rated: rating != null,
           has_note: Boolean(note.trim()),
         });
@@ -533,10 +570,22 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
                   // Clearing with "Change" isn't a choice; a new photo may refill it.
                   touched.current.show = s !== null;
                   fromPhoto.current.show = false;
+                  showSource.current = "manual";
+                  live.current.show = s;
                   setShow(s);
                 }}
               />
             </div>
+            {chips.length > 0 && (
+              <div role="group" aria-label="On here around then" className="flex flex-wrap items-center gap-2">
+                <span className="text-footnote text-label-secondary">On here around then:</span>
+                {chips.map((c) => (
+                  <Chip key={`${c.source}-${c.show_id ?? c.title}`} onClick={() => void pickSuggestion(c)}>
+                    {c.title}
+                  </Chip>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Venue */}

@@ -1220,3 +1220,16 @@ cards and Pro Info date fields with the shared date semantics. Treat a
 production slug as its source event key and keep transfer segments distinct.
 Only observed links enter the frontier. The sampled robots file had no sitemap
 declaration, and Playbill collection and publication remain disabled.
+
+### #360 Show suggestions from existing entries
+
+`suggest_shows(venue_ids, on_date)` returns `(show_id, title, venue_id, source, score)`
+and no user ids. `community` counts different people with public logged
+entries within 14 days (inclusive) of the date, skipping private profiles
+and blocks either way; `yours` is the caller's own history. The same
+show and venue appears once and each source is capped at three. The log
+form asks only for a known catalogue venue and date, after 250 ms, with a
+1.5 s timeout, and drops any response that no longer matches the venue,
+date, draft or a save. Chips never fill on their own or overwrite a touched
+field. Regular logging and per-photo import share the iOS orchestration.
+#278 extends the same shape with `source = 'run'`.
