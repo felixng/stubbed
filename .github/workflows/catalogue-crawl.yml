@@ -17,6 +17,10 @@ on:
         type: choice
         default: all
         options: [all, directory, venue, event]
+      scope:
+        description: Optional seed scope for the selected aggregate source (for example london-listing)
+        required: false
+        type: string
       show_types:
         description: "Show-type suggestions (#450): benchmark = answer docs/catalogue-benchmark/london-held-titles.json without writing the database; store = answer held London titles and store them; dry-run = load the stored benchmark answers and re-run London identity publication in a rolled-back transaction; load = store the answers in docs/catalogue-benchmark/london-show-type-answers.json (no model calls)"
         required: false
@@ -63,6 +67,7 @@ jobs:
       CRAWL_LOOP_ENABLED: ${{ vars.CRAWL_LOOP_ENABLED }}
       CRAWL_SOURCE: ${{ inputs.source }}
       CRAWL_STAGE: ${{ inputs.stage }}
+      CRAWL_SCOPE: ${{ inputs.scope }}
       CRAWL_MAX_SITES: ${{ vars.CRAWL_MAX_SITES || '25' }}
       CRAWL_MAX_SEARCHES: ${{ vars.CRAWL_MAX_SEARCHES || '20' }}
       CRAWL_MAX_SPEND_USD: ${{ vars.CRAWL_MAX_SPEND_USD || '1' }}
@@ -78,6 +83,7 @@ jobs:
         run: |
           args=(--scheduled --stage "${CRAWL_STAGE:-all}")
           if [[ -n "$CRAWL_SOURCE" ]]; then args+=(--source "$CRAWL_SOURCE"); fi
+          if [[ -n "$CRAWL_SCOPE" ]]; then args+=(--scope "$CRAWL_SCOPE"); fi
           node supabase/scripts/crawl/loop.mjs "${args[@]}"
       - name: Suggest show types for held shows (off unless CRAWL_TYPE_SUGGESTIONS)
         if: ${{ vars.CRAWL_TYPE_SUGGESTIONS == 'true' }}

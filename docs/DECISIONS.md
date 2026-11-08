@@ -1388,5 +1388,14 @@ listing reports `event_link` observations, which progress counts already underst
 Playbill's robots.txt allows general crawlers and names AI crawlers it blocks; the crawler identifies as Stubbed
 and never sends page content to a model.
 
+### #444 Scope option for crawl runs (2026-11-08)
+
+The scheduler gives every never-fetched page the same priority class and takes the earliest found first, so
+the 45 Playbill London pages waited behind 6,194 Broadway pages; raising `priority` has no effect on unfetched
+pages. Owner chose a scope option over pausing Broadway: the Catalogue crawl workflow takes an optional `scope`
+input (`loop.mjs --scheduled --source playbill --scope london-listing`). It needs a named aggregate source and
+must be one of that adapter's seed scopes; the run then claims only that seed's crawl. Unscoped runs and the
+daily schedule are unchanged.
+
 ### 2026-11-08: Story overlays print the show's date (#456)
 The Show overlay and Ticket stub printed the device's date, so a show logged the morning after, or an old diary entry, showed the day of sharing (a 2024 entry read today's date beside "2024 so far"). Both apps now pass the entry's own `yyyy-MM-dd` date into the card data (`CardData.day` on web, `EntryCardData.day` on iOS) and format it in the house weekday style, "Wed 6 Mar 2024" (`formatDate(day, WITH_WEEKDAY)` on web, `Day.formatPost` on iOS). This also drops the comma the web overlay had, so both apps match. The "This year so far" label still compares the entry's year with the current year.
