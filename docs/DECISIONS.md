@@ -1422,5 +1422,5 @@ and postcodes.io never ran. `venueAddress` now takes a full UK postcode out of a
 "(formerly Albery)" or "(Formerly Queen's Theatre)" out of the name into `former_names` (implying "Theatre" when
 the note leaves it out). An auditorium in brackets, such as "National Theatre (Olivier)", is not a former name.
 Matching is unchanged: the former name is evidence for venue aliases (#447), not a match key yet. Only venue
-output changed, so the parser version stays `playbill-v1`; migration `20261109000000` re-queues Playbill venue
+output changed, so the parser version stays `playbill-v1`; migration `20261109001000` re-queues Playbill venue
 pages rather than every Playbill page.
