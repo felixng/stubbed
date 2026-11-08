@@ -16,10 +16,10 @@ export function checkRules({rules,html,url,venues,knownTitles=[]}) {
 }
 export async function writeRules({site,venues,fetchPage,model,saveVersion,activate,proposed,knownTitles=[],deferActivation=false}) {
  const page=await fetchPage(site.whats_on_url);
- if(page.status!=='ok') return {failed:true,reason:'link_not_readable'};
+ if(page.status!=='ok') return {failed:true,deferred:page.status!=='failed',reason:page.error??'link_not_readable'};
  const html=trimmedHtml(page.html);
  let archive=null;
- if(site.archive_url && site.archive_url!==site.whats_on_url){const result=await fetchPage(site.archive_url);if(result.status!=='ok')return {failed:true,reason:'archive_not_readable'};archive=result.html;}
+ if(site.archive_url && site.archive_url!==site.whats_on_url){const result=await fetchPage(site.archive_url);if(result.status!=='ok')return {failed:true,deferred:result.status!=='failed',reason:result.error??'archive_not_readable'};archive=result.html;}
  const validate=rules=>{const current=checkRules({rules,html:page.html,url:site.whats_on_url,venues,knownTitles});if(!current.ok)return current;if(archive){const old=checkRules({rules,html:archive,url:site.archive_url,venues});if(!old.ok)return {...old,reason:`archive_${old.reason}`};}return current;};
  const $=load(html);
  if($.root().text().trim().length<100 || (!$('#__next, #root, #app').text().trim() && /id=["'](?:__next|root|app)["']/.test(html) && $('h1,h2,h3').length===0)) return {failed:true,reason:'javascript_only_page'};

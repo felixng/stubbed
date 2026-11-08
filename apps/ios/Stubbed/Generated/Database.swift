@@ -185,6 +185,54 @@ internal enum PublicSchema {
       case taskId = "task_id"
     }
   }
+  internal struct CrawlAiReservationsSelect: Codable, Hashable, Sendable {
+    internal let actualUsd: Decimal?
+    internal let createdAt: String
+    internal let id: UUID
+    internal let reservedUsd: Decimal
+    internal let runId: UUID
+    internal let siteKey: String
+    internal enum CodingKeys: String, CodingKey {
+      case actualUsd = "actual_usd"
+      case createdAt = "created_at"
+      case id = "id"
+      case reservedUsd = "reserved_usd"
+      case runId = "run_id"
+      case siteKey = "site_key"
+    }
+  }
+  internal struct CrawlAiReservationsInsert: Codable, Hashable, Sendable {
+    internal let actualUsd: Decimal?
+    internal let createdAt: String?
+    internal let id: UUID?
+    internal let reservedUsd: Decimal
+    internal let runId: UUID
+    internal let siteKey: String
+    internal enum CodingKeys: String, CodingKey {
+      case actualUsd = "actual_usd"
+      case createdAt = "created_at"
+      case id = "id"
+      case reservedUsd = "reserved_usd"
+      case runId = "run_id"
+      case siteKey = "site_key"
+    }
+  }
+  internal struct CrawlAiReservationsUpdate: Codable, Hashable, Sendable {
+    internal let actualUsd: Decimal?
+    internal let createdAt: String?
+    internal let id: UUID?
+    internal let reservedUsd: Decimal?
+    internal let runId: UUID?
+    internal let siteKey: String?
+    internal enum CodingKeys: String, CodingKey {
+      case actualUsd = "actual_usd"
+      case createdAt = "created_at"
+      case id = "id"
+      case reservedUsd = "reserved_usd"
+      case runId = "run_id"
+      case siteKey = "site_key"
+    }
+  }
   internal struct CrawlExtractionsSelect: Codable, Hashable, Sendable {
     internal let contentHash: String
     internal let extractedAt: String
@@ -681,6 +729,42 @@ internal enum PublicSchema {
       case processedAt = "processed_at"
       case queuedAt = "queued_at"
       case runAvailableAt = "run_available_at"
+    }
+  }
+  internal struct CrawlRepairCyclesSelect: Codable, Hashable, Sendable {
+    internal let attempts: Int32
+    internal let contentVersion: String
+    internal let lastAttemptAt: String
+    internal let siteId: UUID
+    internal enum CodingKeys: String, CodingKey {
+      case attempts = "attempts"
+      case contentVersion = "content_version"
+      case lastAttemptAt = "last_attempt_at"
+      case siteId = "site_id"
+    }
+  }
+  internal struct CrawlRepairCyclesInsert: Codable, Hashable, Sendable {
+    internal let attempts: Int32?
+    internal let contentVersion: String
+    internal let lastAttemptAt: String?
+    internal let siteId: UUID
+    internal enum CodingKeys: String, CodingKey {
+      case attempts = "attempts"
+      case contentVersion = "content_version"
+      case lastAttemptAt = "last_attempt_at"
+      case siteId = "site_id"
+    }
+  }
+  internal struct CrawlRepairCyclesUpdate: Codable, Hashable, Sendable {
+    internal let attempts: Int32?
+    internal let contentVersion: String?
+    internal let lastAttemptAt: String?
+    internal let siteId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case attempts = "attempts"
+      case contentVersion = "content_version"
+      case lastAttemptAt = "last_attempt_at"
+      case siteId = "site_id"
     }
   }
   internal struct CrawlRulesSelect: Codable, Hashable, Sendable {
@@ -1244,6 +1328,7 @@ internal enum PublicSchema {
   internal struct CrawlSourcesSelect: Codable, Hashable, Sendable {
     internal let adapterVersion: String
     internal let allowedHosts: [String]
+    internal let claimSequence: Int64
     internal let collectionEnabled: Bool
     internal let id: UUID
     internal let minIntervalMs: Int32
@@ -1255,6 +1340,7 @@ internal enum PublicSchema {
     internal enum CodingKeys: String, CodingKey {
       case adapterVersion = "adapter_version"
       case allowedHosts = "allowed_hosts"
+      case claimSequence = "claim_sequence"
       case collectionEnabled = "collection_enabled"
       case id = "id"
       case minIntervalMs = "min_interval_ms"
@@ -1268,6 +1354,7 @@ internal enum PublicSchema {
   internal struct CrawlSourcesInsert: Codable, Hashable, Sendable {
     internal let adapterVersion: String
     internal let allowedHosts: [String]?
+    internal let claimSequence: Int64?
     internal let collectionEnabled: Bool?
     internal let id: UUID?
     internal let minIntervalMs: Int32?
@@ -1279,6 +1366,7 @@ internal enum PublicSchema {
     internal enum CodingKeys: String, CodingKey {
       case adapterVersion = "adapter_version"
       case allowedHosts = "allowed_hosts"
+      case claimSequence = "claim_sequence"
       case collectionEnabled = "collection_enabled"
       case id = "id"
       case minIntervalMs = "min_interval_ms"
@@ -1292,6 +1380,7 @@ internal enum PublicSchema {
   internal struct CrawlSourcesUpdate: Codable, Hashable, Sendable {
     internal let adapterVersion: String?
     internal let allowedHosts: [String]?
+    internal let claimSequence: Int64?
     internal let collectionEnabled: Bool?
     internal let id: UUID?
     internal let minIntervalMs: Int32?
@@ -1303,6 +1392,7 @@ internal enum PublicSchema {
     internal enum CodingKeys: String, CodingKey {
       case adapterVersion = "adapter_version"
       case allowedHosts = "allowed_hosts"
+      case claimSequence = "claim_sequence"
       case collectionEnabled = "collection_enabled"
       case id = "id"
       case minIntervalMs = "min_interval_ms"
@@ -1363,6 +1453,7 @@ internal enum PublicSchema {
     internal let leaseToken: UUID?
     internal let parserVersion: String?
     internal let priority: Int32
+    internal let refreshAt: String?
     internal let sourceId: UUID
     internal let stage: String
     internal let status: String
@@ -1386,6 +1477,7 @@ internal enum PublicSchema {
       case leaseToken = "lease_token"
       case parserVersion = "parser_version"
       case priority = "priority"
+      case refreshAt = "refresh_at"
       case sourceId = "source_id"
       case stage = "stage"
       case status = "status"
@@ -1411,6 +1503,7 @@ internal enum PublicSchema {
     internal let leaseToken: UUID?
     internal let parserVersion: String?
     internal let priority: Int32?
+    internal let refreshAt: String?
     internal let sourceId: UUID
     internal let stage: String
     internal let status: String?
@@ -1434,6 +1527,7 @@ internal enum PublicSchema {
       case leaseToken = "lease_token"
       case parserVersion = "parser_version"
       case priority = "priority"
+      case refreshAt = "refresh_at"
       case sourceId = "source_id"
       case stage = "stage"
       case status = "status"
@@ -1459,6 +1553,7 @@ internal enum PublicSchema {
     internal let leaseToken: UUID?
     internal let parserVersion: String?
     internal let priority: Int32?
+    internal let refreshAt: String?
     internal let sourceId: UUID?
     internal let stage: String?
     internal let status: String?
@@ -1482,6 +1577,7 @@ internal enum PublicSchema {
       case leaseToken = "lease_token"
       case parserVersion = "parser_version"
       case priority = "priority"
+      case refreshAt = "refresh_at"
       case sourceId = "source_id"
       case stage = "stage"
       case status = "status"

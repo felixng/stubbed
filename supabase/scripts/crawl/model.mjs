@@ -1,9 +1,10 @@
 import { MODEL_PRICES, costUsd } from './sources/theatre-site.mjs';
 // Page content is an untrusted payload, never system instructions or tools.
 // Reserve the maximum possible token bill before a request, not after it.
-export function createModel({ apiKey=process.env.ANTHROPIC_API_KEY,fetchFn=fetch,spend={usd:0},budgetUsd=0,siteBudgetUsd=0.20 }={}) {
+export function createModel({ apiKey=process.env.ANTHROPIC_API_KEY,fetchFn=fetch,spend={usd:0},budgetUsd=0,siteBudgetUsd=0.20, reserveSpend, settleSpend, stopSignal }={}) {
  const siteSpend=new Map();
- return async function model({siteId,model='claude-haiku-5-5',system,payload,schema}) {
+ return async function model({siteId,model='claude-haiku-5-5',system,payload,schema,beforeRequest}) {
+  if(stopSignal?.aborted) return {deferred:true,reason:'time_limit'};
   if(!apiKey) return {deferred:true,reason:'model_unavailable'};
   const prices=MODEL_PRICES[model];if(!prices) return {deferred:true,reason:'unknown_model'};
   const input=JSON.stringify(payload);
@@ -13,10 +14,20 @@ export function createModel({ apiKey=process.env.ANTHROPIC_API_KEY,fetchFn=fetch
   const reserve=((Buffer.byteLength(input+system+' '+JSON.stringify(schema))+2048)*prices[0]+max_tokens*prices[1])/1e6;
   if(spend.usd+reserve>budgetUsd || (siteSpend.get(siteId)??0)+reserve>siteBudgetUsd) return {deferred:true,reason:'budget_limit'};
   spend.usd+=reserve;siteSpend.set(siteId,(siteSpend.get(siteId)??0)+reserve);
+  let reservation;
   try {
-   const response=await fetchFn('https://api.anthropic.com/v1/messages',{method:'POST',signal:AbortSignal.timeout(60000),headers:{'content-type':'application/json','x-api-key':apiKey,'anthropic-version':'2026-10-21'},body:JSON.stringify({model,max_tokens,system,output_config:{format:{type:'json_schema',schema}},messages:[{role:'user',content:input}]})});
+   if(reserveSpend) reservation=await reserveSpend(siteId,reserve,siteBudgetUsd);
+   const permitted=(!reserveSpend || reservation) && (!beforeRequest || await beforeRequest());
+   if(!permitted || stopSignal?.aborted) {
+    if(reservation) await settleSpend(reservation,0);
+    spend.usd-=reserve;siteSpend.set(siteId,siteSpend.get(siteId)-reserve);
+    return {deferred:true,reason:stopSignal?.aborted?'time_limit':reserveSpend&&!reservation?'budget_limit':'repair_limit'};
+   }
+   const timeout=AbortSignal.timeout(60000);
+   const response=await fetchFn('https://api.anthropic.com/v1/messages',{method:'POST',signal:stopSignal?AbortSignal.any([stopSignal,timeout]):timeout,headers:{'content-type':'application/json','x-api-key':apiKey,'anthropic-version':'2026-10-21'},body:JSON.stringify({model,max_tokens,system,output_config:{format:{type:'json_schema',schema}},messages:[{role:'user',content:input}]})});
    if(!response.ok) return {deferred:true,reason:'model_unavailable'};
    const data=await response.json();const actual=costUsd(model,data.usage);
+   if(data.usage && reservation) await settleSpend(reservation,actual);
    if(data.usage) {spend.usd+=actual-reserve;siteSpend.set(siteId,(siteSpend.get(siteId)??0)+actual-reserve);}
    const block=data.content?.find(b=>b.type==='text');
    try{return {value:JSON.parse(block?.text??'')};}catch{return {invalid:true,reason:'invalid_json'};}

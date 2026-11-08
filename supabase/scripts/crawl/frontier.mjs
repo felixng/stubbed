@@ -16,7 +16,7 @@ const RETRIES = [60, 300, 1800, 7200, 43200];
 const CLEANUP_MS = 90_000;
 const HEARTBEAT_MS = 60_000;
 
-class HostDeferred extends Error {
+export class HostDeferred extends Error {
   constructor(retryAt) {
     super('Host is cooling down');
     this.retryAt = retryAt;
@@ -30,7 +30,7 @@ function retryAt(header, now) {
     : now + 3_600_000).toISOString();
 }
 
-function hostGate({ store, now, dryRun, onRequest }) {
+export function hostGate({ store, now, dryRun, onRequest }) {
   const lastStarts = new Map();
   return async (host, gapMs, signal, task, perform) => {
     if (dryRun) {
@@ -146,7 +146,7 @@ export async function runFrontier({
     relevantSeeds.forEach(propose);
   } else {
     for (const seed of relevantSeeds) {
-      stopSignal.throwIfAborted();
+      if (stopSignal.aborted) break;
       await store.prepare(source.source_key, seed, refresh);
     }
     if (reparse && !stopSignal.aborted) await store.reparse(source.source_key, scope);
@@ -221,7 +221,7 @@ export async function runFrontier({
       claiming++;
       let task;
       try {
-        task = dryRun ? pending.shift() : await store.claim(source.source_key, stage, scope, owner);
+        task = dryRun ? pending.shift() : await store.claim(source.source_key, stage, scope, owner, adapter.version);
       } finally {
         claiming--;
       }
@@ -256,6 +256,18 @@ const official = {
 };
 
 const adapters = { official, london_theatre: londonTheatre, playbill };
+export const scheduledSources = ['london_theatre', 'playbill'];
+
+export async function runScheduledSource(source, options, store = createFrontierStore()) {
+  const key = source.source_key;
+  const adapter = adapters[key];
+  const result = await runFrontier({ ...options, source, adapter, seeds: adapter.seeds, store });
+  if (source.publication_enabled && options.stage === 'all') {
+    result.identities = await store.publishIdentities(key, 100);
+    result.runs = await store.publishRuns(key, 100);
+  }
+  return result;
+}
 
 function integer(value, name, min, max) {
   const number = Number(value);
@@ -328,21 +340,27 @@ export async function runFrontierCli(args = process.argv.slice(2), store = creat
   });
   console.log(JSON.stringify(result, null, 2));
   if (process.env.GITHUB_STEP_SUMMARY && !values['dry-run']) {
-    const first = await store.progress(key, null, null, null);
-    if (!first.stages) return;
-    const current = first.scans.filter(scan => scan.is_current && (!values.scope || scan.scope_key === values.scope));
-    const scans = current.length ? current : [first.scan];
-    for (const scan of scans) {
-      const progress = scan?.id === first.scan?.id ? first : await store.progress(key, scan.id, null, null);
-      const counts = Object.entries(progress.stages).map(([stage, row]) =>
-        `- ${stage}: ${row.processed} of ${row.discovered} discovered pages processed · ${row.pending} queued · ${row.leased} in flight · ${row.retry_wait} retrying · ${row.blocked} blocked · ${row.failed} failed`);
-      await appendFile(process.env.GITHUB_STEP_SUMMARY, [
-        `## Crawl progress · ${key}`,
-        `Scope: ${progress.scan?.scope_key ?? 'no scan'} · ${progress.scan?.enumeration_status ?? 'no enumeration recorded'}`,
-        ...counts,
-        `${progress.attempts} task attempts · ${progress.http_requests} reserved HTTP requests`,
-        '',
-      ].join('\n'));
-    }
+    await appendFile(process.env.GITHUB_STEP_SUMMARY, await formatFrontierProgress(store, key, values.scope));
   }
+}
+
+export async function formatFrontierProgress(store, key, scope) {
+  const first = await store.progress(key, null, null, null);
+  if (!first.stages) return '';
+  const current = first.scans.filter(scan => scan.is_current && (!scope || scan.scope_key === scope));
+  const scans = current.length ? current : [first.scan];
+  const sections = [];
+  for (const scan of scans) {
+    const progress = scan?.id === first.scan?.id ? first : await store.progress(key, scan.id, null, null);
+    const counts = Object.entries(progress.stages).map(([stage, row]) =>
+      `- ${stage}: ${row.processed} of ${row.discovered} discovered pages processed · ${row.pending} queued · ${row.leased} in flight · ${row.retry_wait} retrying · ${row.blocked} blocked · ${row.failed} failed`);
+    sections.push([
+      `## Crawl progress · ${key}`,
+      `Scope: ${progress.scan?.scope_key ?? 'no scan'} · ${progress.scan?.enumeration_status ?? 'no enumeration recorded'}`,
+      ...counts,
+      `${progress.attempts} task attempts · ${progress.http_requests} reserved HTTP requests`,
+      '',
+    ].join('\n'));
+  }
+  return sections.join('\n');
 }
