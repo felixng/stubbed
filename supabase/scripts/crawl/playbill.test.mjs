@@ -13,7 +13,21 @@ test('observed Broadway directory pagination and the supplied venues have separa
     { stage: 'venue', url: origin + '/venue/fixture-east' },
     { stage: 'directory', url: origin + '/broadway-theatres?page=2&locale=en-US' },
   ]);
-  assert.equal(new Set(playbill.seeds.map(seed => seed.scope)).size, 3);
+  assert.equal(new Set(playbill.seeds.map(seed => seed.scope)).size, 4);
+});
+
+test('the London show listing queues each production once, ignoring header, footer and ticket links', () => {
+  const result = parseDirectory({ url: origin + '/shows/london', html: fixture('listing') });
+  assert.deepEqual(result.children, [
+    { stage: 'event', url: origin + '/production/fixture-one-london-fixture-theatre-2026' },
+    { stage: 'event', url: origin + '/production/fixture-two-london-other-stage-2012-2013' },
+  ]);
+  assert.deepEqual(result.observations.map(row => [row.observation_kind, row.external_key, row.name]), [
+    ['event_link', 'fixture-one-london-fixture-theatre-2026', 'Fixture One'],
+    ['event_link', 'fixture-two-london-other-stage-2012-2013', null],
+  ]);
+  assert.ok(playbill.seeds.some(seed => seed.scope === 'london-listing' && seed.url === origin + '/shows/london'));
+  assert.match(parseDirectory({ url: origin + '/shows/london', html: '<main></main>' }).reason, /no production cards/);
 });
 
 test('non-Broadway venue keeps all labelled current, future and historical links', () => {

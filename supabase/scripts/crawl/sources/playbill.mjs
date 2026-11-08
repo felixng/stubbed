@@ -50,8 +50,36 @@ function pagination($, container, url) {
   }))];
 }
 
+const LISTING_PATH = /^\/shows\/[a-z-]+\/?$/i;
+
+// A show listing (/shows/london) is a list of production cards, not theatres. Each production page links its
+// venue, and each venue page lists its earlier productions, so the venue-first crawl grows from here.
+function parseListing($, url) {
+  const rows = new Map();
+  for (const element of $('[data-tab] article a[href]').toArray()) {
+    const anchor = $(element);
+    if (anchor.closest(nonContent).length) continue;
+    const link = sourceUrl(anchor.attr('href'), url);
+    const key = identity(link, EVENT_PATH);
+    if (!key) continue;
+    let name = null;
+    try { name = clean(JSON.parse(anchor.attr('data-dl-data') ?? '{}').show_name); } catch { /* label is optional */ }
+    if (!rows.has(link) || (name && !rows.get(link).name)) rows.set(link, { url: link, key, name });
+  }
+  if (!rows.size) return invalid('Playbill show listing produced no production cards');
+  const productions = [...rows.values()];
+  return {
+    children: productions.map(row => ({ stage: 'event', url: row.url })),
+    observations: productions.map(row => ({
+      observation_kind: 'event_link', external_key: row.key, name: row.name, source_url: row.url,
+      evidence: evidence('listing.production_card', row.name),
+    })),
+  };
+}
+
 export function parseDirectory({ url, html }) {
   const $ = load(html);
+  if (LISTING_PATH.test(new URL(url).pathname)) return parseListing($, url);
   // The directory's labelled theatre cards are separate from the production
   // links in each theatre's editorial description.
   const venueLinks = links($, $(titleLink), url, VENUE_PATH).filter(link => link.label);
@@ -252,6 +280,8 @@ export const playbill = {
   version: 'playbill-v1',
   seeds: [
     { scope: 'broadway-directory', stage: 'directory', url: ORIGIN + '/broadway-theatres' },
+    // London has no theatre directory on Playbill; start from its show listing (owner, 2026-11-08).
+    { scope: 'london-listing', stage: 'directory', url: ORIGIN + '/shows/london' },
     { scope: 'supplied-stratford-east', stage: 'venue', url: ORIGIN + '/venue/theatre-royal-stratford-east-london-en' },
     { scope: 'supplied-circle-in-the-square', stage: 'venue', url: ORIGIN + '/venue/circle-in-the-square-theatre-vault-0000000092' },
   ],
