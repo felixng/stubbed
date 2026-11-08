@@ -1424,3 +1424,21 @@ the note leaves it out). An auditorium in brackets, such as "National Theatre (O
 Matching is unchanged: the former name is evidence for venue aliases (#447), not a match key yet. Only venue
 output changed, so the parser version stays `playbill-v1`; migration `20261109001000` re-queues Playbill venue
 pages rather than every Playbill page.
+
+### #444 / #447 Venue name variants and theatre-name geocoding (2026-11-08)
+
+London Theatre's first pass created five venues 6–34 m from the OSM venue they duplicate (Garrick Theatre /
+Garrick, Ambassadors Theatre / Ambassadors, Wyndham's Theatre / Wyndham's, Criterion Theatre / Criterion, Soho
+Place / @sohoplace), because venue names had to match exactly. With the owner's go-ahead they were merged into
+the OSM rows (which hold the diary entries) and the five London Theatre venue links were locked to them.
+`crawl_venue_name_key` now compares names without a leading "The" or "@", a trailing "Theatre"/"Theater", spacing
+or punctuation, and a source's `former_names` count as the same name. A name still never links on its own: exactly
+one candidate must also share a postcode or street, the OSM id, or sit within the geocode radius.
+
+The geocoder gains a last fallback: the theatre's own name in its city ("Wyndham's Theatre, London, GB"),
+accepting only performance venues (several venue answers must be within 150 m). It covers retired postcodes
+that Playbill still lists and numberless streets ("Shaftesbury Avenue, London W1"). Tested live: 13 of 15 London
+misses resolved to the right theatre. Migration `20261109002000` re-queues aggregate venue pages so it runs.
+
+Open (owner, 2026-11-08): the kept OSM rows show OSM's bare names ("Garrick", "Wyndham's"); the owner prefers
+the niche sources' names. Which name is displayed is the open question on #447.

@@ -48,6 +48,16 @@ export function pickNominatim(rows) {
   return venues.length === 1 ? { lat: venues[0].lat, lng: venues[0].lng } : null;
 }
 
+// Searching by the theatre's own name ("Wyndham's Theatre, London") accepts only performance venues: a
+// building or shop with the same name is not the theatre. Several venue answers must be one place.
+export function pickNominatimVenue(rows) {
+  const venues = rows.map(row => ({ lat: Number(row.lat), lng: Number(row.lon),
+    venue: row.category === 'amenity' && VENUE_TYPES.has(row.type) }))
+    .filter(point => point.venue && valid(point.lat, point.lng));
+  if (!venues.length || !venues.every(point => metresBetween(venues[0], point) <= SAME_PLACE_M)) return null;
+  return { lat: venues[0].lat, lng: venues[0].lng };
+}
+
 // "1634 Broadway (At W. 50th St.)": a note in brackets makes Nominatim find nothing.
 export function streetForQuery(street) {
   return String(street ?? '').replace(/\s*\([^()]*\)/g, '').replace(/\s{2,}/g, ' ').trim();
@@ -117,20 +127,20 @@ export function createGeocoder({
     });
   }
 
-  async function nominatim(query, uk) {
+  async function nominatim(query, uk, pick = pickNominatim) {
     return cached('nominatim', query, async () => {
       const params = new URLSearchParams({ format: 'jsonv2', limit: '5', q: query, 'accept-language': 'en' });
       if (uk) params.set('countrycodes', 'gb');
       const response = await call(`https://nominatim.openstreetmap.org/search?${params}`, { throttle: true });
       if (!response.ok) throw new Error(`Nominatim HTTP ${response.status}`);
       const rows = await response.json();
-      const hit = pickNominatim(Array.isArray(rows) ? rows : []);
+      const hit = pick(Array.isArray(rows) ? rows : []);
       return hit && (!uk || inUk(hit.lat, hit.lng)) ? hit : null;
     });
   }
 
   // Returns { lat, lng, provider, query, precision } or null. Never throws.
-  return async function geocode({ postcode, street, city, country } = {}) {
+  return async function geocode({ postcode, street, city, country, name } = {}) {
     const uk = !country || UK_COUNTRY.test(String(country).trim());
     const code = uk ? normalisePostcode(postcode) : null;
     try {
@@ -141,11 +151,21 @@ export function createGeocoder({
     } catch (error) { log('postcodes.io failed', error?.name); }
     const cleanStreet = streetForQuery(street);
     const parts = [cleanStreet, postcode, city, country].map(part => String(part ?? '').trim()).filter(Boolean);
-    if (!cleanStreet || parts.length < 3) return null;
-    const query = parts.join(', ').slice(0, 300);
+    if (cleanStreet && parts.length >= 3) {
+      const query = parts.join(', ').slice(0, 300);
+      try {
+        const hit = await nominatim(query, uk);
+        if (hit) return { lat: hit.lat, lng: hit.lng, provider: 'nominatim', query, precision: 'address' };
+      } catch (error) { log('nominatim failed', error?.name); }
+    }
+    // Last resort: the theatre's own name in its city, for retired postcodes and numberless streets
+    // ("Shaftesbury Avenue, London W1"). Theatres are named places in OSM.
+    const venueName = String(name ?? '').replace(/^\s*@/, '').trim();
+    if (!venueName || !String(city ?? '').trim()) return null;
+    const nameQuery = [venueName, city, country].map(part => String(part ?? '').trim()).filter(Boolean).join(', ').slice(0, 300);
     try {
-      const hit = await nominatim(query, uk);
-      if (hit) return { lat: hit.lat, lng: hit.lng, provider: 'nominatim', query, precision: 'address' };
+      const hit = await nominatim(nameQuery, uk, pickNominatimVenue);
+      if (hit) return { lat: hit.lat, lng: hit.lng, provider: 'nominatim', query: nameQuery, precision: 'venue_name' };
     } catch (error) { log('nominatim failed', error?.name); }
     return null;
   };
@@ -156,7 +176,7 @@ export async function geocodeVenueObservations(observations, geocode) {
   const output = [];
   for (const observation of observations ?? []) {
     const missing = observation?.observation_kind === 'venue' && observation.lat == null && observation.lng == null;
-    const result = missing && (observation.postcode || observation.street) ? await geocode(observation) : null;
+    const result = missing && (observation.postcode || observation.street || observation.name) ? await geocode(observation) : null;
     output.push(result ? {
       ...observation, lat: result.lat, lng: result.lng,
       geocode: { provider: `geocoded:${result.provider}`, query: result.query, precision: result.precision },
