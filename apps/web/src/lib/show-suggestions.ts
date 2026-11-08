@@ -14,6 +14,11 @@ export type ShowSuggestion = {
   venue_id: string;
   source: string;
   score: number;
+  /** Run chips only (#278): the evidence reference and why it matched. */
+  run_id?: string | null;
+  eligibility_reason?: string | null;
+  /** Server decision, behind its own flag. No client autofills yet. */
+  autofill_eligible?: boolean;
 };
 
 export const SUGGESTION_DEBOUNCE_MS = 250;
@@ -25,7 +30,7 @@ export type SuggestionFetcher = (venueIds: string[], date: string) => Promise<un
 /** The RPC, as a fetcher. Errors reject; callers treat that as "no chips". */
 export function rpcFetcher(supabase: SupabaseClient): SuggestionFetcher {
   return async (venueIds, date) => {
-    const { data, error } = await supabase.rpc("suggest_shows", { venue_ids: venueIds, on_date: date });
+    const { data, error } = await supabase.rpc("suggest_shows_v2", { venue_ids: venueIds, on_date: date });
     if (error) throw error;
     return data;
   };
@@ -47,7 +52,17 @@ export function normaliseSuggestions(rows: unknown): ShowSuggestion[] {
     if ((perSource.get(source) ?? 0) >= MAX_PER_SOURCE) continue;
     seen.add(key);
     perSource.set(source, (perSource.get(source) ?? 0) + 1);
-    out.push({ show_id, title: title.trim(), venue_id, source, score: Number(score) || 0 });
+    const extra = r as Record<string, unknown>;
+    out.push({
+      show_id,
+      title: title.trim(),
+      venue_id,
+      source,
+      score: Number(score) || 0,
+      run_id: typeof extra.run_id === "string" ? extra.run_id : null,
+      eligibility_reason: typeof extra.eligibility_reason === "string" ? extra.eligibility_reason : null,
+      autofill_eligible: extra.autofill_eligible === true,
+    });
   }
   return out;
 }

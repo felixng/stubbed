@@ -10,6 +10,11 @@ struct ShowSuggestion: Decodable, Hashable, Identifiable, Sendable {
   let venueId: UUID
   let source: String
   let score: Double
+  /// Run chips only (#278): the evidence reference and why it matched.
+  var runId: UUID? = nil
+  var eligibilityReason: String? = nil
+  /// Server decision behind its own flag. No client autofills yet.
+  var autofillEligible: Bool? = nil
 
   var id: String { "\(source)-\(showId?.uuidString ?? title)" }
 
@@ -17,6 +22,9 @@ struct ShowSuggestion: Decodable, Hashable, Identifiable, Sendable {
     case showId = "show_id"
     case title, source, score
     case venueId = "venue_id"
+    case runId = "run_id"
+    case eligibilityReason = "eligibility_reason"
+    case autofillEligible = "autofill_eligible"
   }
 }
 
@@ -65,7 +73,7 @@ enum ShowSuggestions {
       let on_date: String
     }
     return await load {
-      try await supabase.rpc("suggest_shows", params: Params(venue_ids: [venueId], on_date: date))
+      try await supabase.rpc("suggest_shows_v2", params: Params(venue_ids: [venueId], on_date: date))
         .execute().value
     }
   }

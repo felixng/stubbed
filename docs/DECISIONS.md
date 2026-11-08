@@ -1233,3 +1233,19 @@ form asks only for a known catalogue venue and date, after 250 ms, with a
 date, draft or a save. Chips never fill on their own or overwrite a touched
 field. Regular logging and per-photo import share the iOS orchestration.
 #278 extends the same shape with `source = 'run'`.
+
+### #278 Run chips
+
+`suggest_shows` is unchanged for older clients; new clients call
+`suggest_shows_v2`, which adds run chips plus `run_id`,
+`eligibility_reason` and `autofill_eligible`. Flags live in
+`catalogue_consumer_flags` (`catalogue_run_chips_enabled`,
+`catalogue_run_autofill_enabled`), default off, read server-side, and an
+unreadable flag reads as off. Admins switch them with
+`admin_set_catalogue_flag`. A run matches only inside an explicit supported
+interval (performance dates, or start to confirmed closing, booking horizon
+or scheduled end); an unknown end matches only its start date. Cancelled,
+conflicting, withdrawn and legacy-only rows never match, and the same show
+appears once with community chips winning. A crawled title with no show opens
+the existing resolver. No client autofills: the server flag only reports
+eligibility until #428's gate passes and a client ships it.

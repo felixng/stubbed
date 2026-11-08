@@ -204,7 +204,19 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
   // A chip fills the show in one tap, only if the field is still empty when
   // the show's details arrive; a show typed meanwhile wins.
   async function pickSuggestion(item: ShowSuggestion) {
-    if (!item.show_id || live.current.show) return;
+    if (live.current.show || touched.current.show) return;
+    const source: ShowSource = item.source === "yours" ? "yours" : item.source === "run" ? "run" : "community";
+    if (!item.show_id) {
+      // A crawled title with no show yet: the usual "Did you mean" resolver
+      // takes it; nothing is created until Save.
+      touched.current.show = true;
+      fromPhoto.current.show = false;
+      showSource.current = source;
+      const draft = { title: item.title, type: "musical" } as const;
+      live.current.show = draft;
+      setShow(draft);
+      return;
+    }
     const { data } = await createClient()
       .from("shows")
       .select("id, title, type, first_performed")
@@ -213,7 +225,7 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
     if (!data || live.current.show || touched.current.show) return;
     touched.current.show = true;
     fromPhoto.current.show = false;
-    showSource.current = item.source === "yours" ? "yours" : "community";
+    showSource.current = source;
     live.current.show = data as Show;
     setShow(data as Show);
   }
