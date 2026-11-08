@@ -6,6 +6,8 @@ struct EntryCardData: Hashable, Sendable {
   var venue: String?
   var whereText: String
   var date: String
+  /// The entry's date, "2026-10-03": the overlays print this day, not the day of sharing.
+  var day: String
   var year: Int
   var rating: Double?
   var showOfYear: Int
@@ -165,15 +167,14 @@ private struct VenueVisitCard: View {
 private struct ShowOverlayCard: View {
   let data: EntryCardData
   let ink: Color
-  private let today = Date()
 
   var body: some View {
     ZStack(alignment: .top) {
       VStack(spacing: 8) {
         section("Show", value: data.title, title: true)
-        section("Date", value: today.formatted(.dateTime.weekday(.abbreviated).day().month(.abbreviated).year().locale(Locale(identifier: "en_GB"))))
+        section("Date", value: Day.formatPost(data.day))
         section("Seen", value: formatTimes(data.timesSeen))
-        section(data.year == Calendar.current.component(.year, from: today) ? "This year so far" : "\(data.year) so far",
+        section(data.year == Calendar.current.component(.year, from: Date()) ? "This year so far" : "\(data.year) so far",
           value: "\(ordinal(data.showOfYear)) show")
       }.padding(.top, 48)
       Image("BrandMarkOutline").renderingMode(.original).resizable().scaledToFit()
@@ -196,7 +197,6 @@ private struct ShowOverlayCard: View {
 private struct TicketOverlayCard: View {
   let data: EntryCardData
   let ink: Color
-  private let today = Date()
 
   var body: some View {
     ZStack(alignment: .top) {
@@ -207,12 +207,12 @@ private struct TicketOverlayCard: View {
           Text(data.title).font(.system(size: 30, weight: .bold)).tracking(-0.4)
             .lineLimit(2).minimumScaleFactor(0.73)
             .fixedSize(horizontal: false, vertical: true)
-          Text(today, format: .dateTime.weekday(.abbreviated).day().month(.abbreviated).year())
+          Text(verbatim: Day.formatPost(data.day))
             .font(.system(size: 18, weight: .medium))
         }.frame(width: 368, alignment: .leading).offset(x: 56, y: 44)
         stat("Seen", value: formatTimes(data.timesSeen), width: 148)
           .offset(x: 56, y: 194)
-        stat(data.year == Calendar.current.component(.year, from: today) ? "This year so far" : "\(data.year) so far",
+        stat(data.year == Calendar.current.component(.year, from: Date()) ? "This year so far" : "\(data.year) so far",
           value: "\(ordinal(data.showOfYear)) show", width: 168).offset(x: 246, y: 194)
 
         HStack(spacing: 8) {
@@ -405,7 +405,7 @@ extension View {
 
 #Preview {
   let data = EntryCardData(
-    title: "Operation Mincemeat", venue: "Golden Theatre", whereText: "Golden Theatre, New York", date: "6 Oct 2026",
+    title: "Operation Mincemeat", venue: "Golden Theatre", whereText: "Golden Theatre, New York", date: "6 Oct 2026", day: "2026-10-06",
     year: 2026, rating: 4.5, showOfYear: 14, venueVisit: 2, timesSeen: 3, handle: "felix")
   ScrollView {
     VStack {

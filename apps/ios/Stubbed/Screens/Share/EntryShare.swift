@@ -32,7 +32,7 @@ enum EntryShare {
       let (s, profile, picture, aggregate) = try await (stats, owner, image, insights)
       let data = EntryCardData(
         title: entry.show.title, venue: entry.venue?.name, whereText: entry.whereText ?? "",
-        date: Day.format(entry.date), year: Int(entry.date.prefix(4)) ?? 0, rating: entry.rating,
+        date: Day.format(entry.date), day: entry.date, year: Int(entry.date.prefix(4)) ?? 0, rating: entry.rating,
         showOfYear: s.show_of_year, venueVisit: s.venue_visit, timesSeen: s.times_seen, handle: profile.handle)
       let caption = entry.venue.map { "\(entry.show.title) at \($0.name)" } ?? entry.show.title
       let isPublic = entry.visibility == .public && !profile.isPrivate

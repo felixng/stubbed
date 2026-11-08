@@ -32,6 +32,7 @@ async function Entry({ params, searchParams }: PageProps<"/app/entries/[id]">) {
     venue: entry.venue?.name ?? null,
     where,
     date: formatDate(entry.date),
+    day: entry.date,
     year: Number(entry.date.slice(0, 4)),
     rating: entry.rating,
     showOfYear: found.showOfYear,
