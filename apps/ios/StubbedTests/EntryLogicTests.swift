@@ -12,8 +12,10 @@ struct EntryLogicTests {
     #expect(ShowType.standup.label == "Stand-up")
     #expect(try show("concert").type == .concert)
     #expect(ShowType.concert.label == "Concert")
+    #expect(try show("circus").type == .circus)
+    #expect(ShowType.circus.label == "Circus")
     // A type added after this build reads as Other instead of failing the list.
-    #expect(try show("circus").type == .other)
+    #expect(try show("puppetry").type == .other)
   }
 
   @Test func readsSimilarShowsAndVenues() throws {

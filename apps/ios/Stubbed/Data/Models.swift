@@ -9,7 +9,7 @@ typealias Visibility = PublicSchema.Visibility
 typealias EntryStatus = PublicSchema.EntryStatus
 
 extension ShowType {
-  static let ordered: [ShowType] = [.musical, .play, .opera, .dance, .comedy, .standup, .concert, .other]
+  static let ordered: [ShowType] = [.musical, .play, .opera, .dance, .comedy, .standup, .concert, .circus, .other]
 
   var label: String {
     switch self {
@@ -20,6 +20,7 @@ extension ShowType {
     case .comedy: "Comedy"
     case .standup: "Stand-up"
     case .concert: "Concert"
+    case .circus: "Circus"
     case .other: "Other"
     }
   }

@@ -26,7 +26,7 @@ test("Insights period selection cannot relabel live streaks or make a fake All t
 test("charts preserve monthly periods and canonical show-type order", () => {
   const months = monthlyShareCounts(insights);
   assert.equal(months.length, 12); assert.equal(months[0], 0); assert.equal(months[9], 24);
-  assert.deepEqual(radarShareValues(insights), [12, 6, 2, 1, 2, 1, 0, 0]);
+  assert.deepEqual(radarShareValues(insights), [12, 6, 2, 1, 2, 1, 0, 0, 0]);
 });
 
 test("one show offers all eleven designs and names the first count card truthfully", () => {
