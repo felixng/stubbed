@@ -45,7 +45,14 @@ type Finding = {
 };
 type ScoreRow = { venue_id: string | null; venue_name: string | null; findings: number; right_count: number; wrong_count: number; unsure_count: number; unreviewed: number; missed: number };
 type Missed = { id: string; venue_id: string | null; title: string; note: string | null };
-type RunRow = RunSettings & { status: string; created_at: string; log_url: string | null };
+type Decision = { actor: string; action: string; urls: string[]; detail?: string };
+type SiteDecision = { venue_id: string; venue_name?: string; status: string; reason?: string; decisions?: Decision[] };
+type RunRow = RunSettings & {
+  status: string;
+  created_at: string;
+  log_url: string | null;
+  summary?: { sites?: SiteDecision[] } | null;
+};
 type Compared = {
   status: "added" | "lost" | "changed" | "same";
   venue_name: string | null;
@@ -121,6 +128,42 @@ async function Compare({ runId, otherId }: { runId: string; otherId: string }) {
   );
 }
 
+function CrawlDecisions({ sites }: { sites: SiteDecision[] }) {
+  const recorded = sites.filter((site) => site.decisions?.length);
+  return (
+    <section className="flex flex-col gap-2 rounded-md border border-separator bg-surface p-4 shadow-sm">
+      <h2 className="text-headline text-label">Crawl decisions</h2>
+      <p className="text-footnote text-label-secondary">
+        Crawler entries show automatic checks and choices. Claude entries show model proposals and attempts that produced no usable response.
+      </p>
+      {recorded.length === 0 && <p className="text-subheadline text-label-secondary">No decisions recorded for this run.</p>}
+      {recorded.map((site) => (
+        <details key={site.venue_id} className="border-t border-separator">
+          <summary className="min-h-11 cursor-pointer py-3 text-subheadline">
+            {site.venue_name ?? site.venue_id} · {site.status.replaceAll("_", " ")}
+            {site.reason && ` · ${site.reason.replaceAll("_", " ")}`}
+          </summary>
+          <ol className="flex flex-col gap-3 pb-3">
+            {site.decisions?.map((decision, index) => (
+              <li key={index} className="flex flex-col gap-1 text-footnote">
+                <div>
+                  <Pill>{decision.actor === "Crawler" ? "Crawler" : `Claude · ${decision.actor}`}</Pill> {decision.action}
+                </div>
+                {decision.detail && <span className="text-label-secondary">{decision.detail.replaceAll("_", " ")}</span>}
+                {decision.urls.map((url) => (
+                  <span key={url} className="break-all text-label-secondary">
+                    {url}
+                  </span>
+                ))}
+              </li>
+            ))}
+          </ol>
+        </details>
+      ))}
+    </section>
+  );
+}
+
 async function Run({ params, searchParams }: Pick<PageProps<"/app/backstage/crawl/[id]">, "params" | "searchParams">) {
   const { id } = await params;
   if (!UUID.test(id)) notFound();
@@ -128,7 +171,7 @@ async function Run({ params, searchParams }: Pick<PageProps<"/app/backstage/craw
   const compareId = typeof compareParam === "string" && UUID.test(compareParam) && compareParam !== id ? compareParam : null;
   const { supabase } = await ownerContext();
   const [runRes, findingsRes, scoresRes, missedRes, othersRes, waitingRes] = await Promise.all([
-    supabase.from("crawl_runs").select("id, pipeline, status, method, model, prompt, branch, commit_sha, budget_usd, cost_usd, venue_ids, created_at, log_url").eq("id", id).maybeSingle(),
+    supabase.from("crawl_runs").select("id, pipeline, status, method, model, prompt, branch, commit_sha, budget_usd, cost_usd, venue_ids, created_at, log_url, summary").eq("id", id).maybeSingle(),
     supabase
       .from("crawl_findings")
       .select("id, venue_id, source_url, raw_title, stage_text, start_date, end_date, date_text, kind, method, confidence, evidence, review, review_note")
@@ -169,6 +212,8 @@ async function Run({ params, searchParams }: Pick<PageProps<"/app/backstage/craw
         </details>
         </>}
       </div>
+
+      {run.pipeline === "discover" && <CrawlDecisions sites={run.summary?.sites ?? []} />}
 
       <SendToReview runId={id} waiting={waitingRes.count ?? 0} />
 
