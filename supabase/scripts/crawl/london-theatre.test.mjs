@@ -112,11 +112,16 @@ const eventPage = (categories, jsonLd = '') => `<!doctype html>${jsonLd}<main><h
 const classify = (categories, jsonLd) =>
   parseEvent({ url: origin + '/show/201-hamilton', html: eventPage(categories, jsonLd) }).observations[0];
 
-test('multi-category pages resolve by specificity and never guess between two specific types', () => {
+test('multi-category pages take the first category that names a type', () => {
   assert.equal(classify(['Musicals', 'Biography', 'Drama', 'Award winners']).show_type, 'musical');
   assert.equal(classify(['Drama', 'History']).show_type, 'play');
-  assert.equal(classify(['Plays', 'Comedy']).show_type, null);
+  assert.equal(classify(['Plays', 'Comedy']).show_type, 'play');
+  assert.equal(classify(['Musicals', 'Romance', 'Comedy', 'West End']).show_type, 'musical');
+  assert.equal(classify(['Comedy Shows', 'West End']).show_type, 'comedy');
   assert.equal(classify(['Plays', 'Comedy']).event_kind, 'show');
+  assert.deepEqual(
+    (({ event_kind, show_type }) => ({ event_kind, show_type }))(classify(['Concerts', 'Classical', 'West End'])),
+    { event_kind: 'concert', show_type: 'concert' });
   assert.equal(classify(['West End', 'Family / Kid-friendly']).event_kind, 'unknown');
   assert.equal(classify(['Musicals', 'Workshop']).event_kind, 'workshop');
 });

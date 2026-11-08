@@ -6,8 +6,9 @@ Status as of 2026-11-08. Measured results only; nothing here is a claim about pr
 
 | Switch | State | Where |
 |---|---|---|
-| `CRAWL_LOOP_ENABLED` | unset | GitHub repo variable. Gates scheduled and source/stage dispatches. |
-| London Theatre / Playbill `collection_enabled` | off | `crawl_sources` |
+| `CRAWL_LOOP_ENABLED` | `true` (since 2026-11-08) | GitHub repo variable. Gates scheduled and source/stage dispatches. |
+| London Theatre `collection_enabled` | on (since 2026-11-08) | `crawl_sources` |
+| Playbill `collection_enabled` | off | `crawl_sources` |
 | All sources `publication_enabled` | off | `crawl_sources` |
 | `catalogue_run_chips_enabled` | off | `catalogue_consumer_flags` |
 | `catalogue_run_autofill_enabled` | off | `catalogue_consumer_flags`; no client autofills |
@@ -34,17 +35,30 @@ The official-site crawler's `collection_enabled` stays as before. With everythin
 
 Merged: diagnosable publication failures, worker-only free geocoding, new venue and type rules (see `docs/DECISIONS.md`, "#444"), Matilda horizon tests. Local fixture run: the London fixture publishes end to end (geocoded venue links to the existing OSM venue, shows publish); all pgTAP, crawler unit and integration tests pass. **Not yet applied to hosted Supabase and not yet run live**: the session had no `HOSTED_DB_URL`, so migration `20261108150000_london_identity_rules.sql` is pending and every flag is still as in the table above. TestFlight: `apps/ios/scripts/dev archive` stopped before building because `ASC_KEY_PATH` in `~/.config/stubbed/app-store-connect.env` points at a `.p8` that does not exist (the file on disk has a different key ID); no build was uploaded.
 
+## Update 2026-11-08 (later): hosted live run and publication rules
+
+- Migration `20261108150000` is applied on hosted; the 53 London geocodes are cached and backfilled. The
+  duplicate "Judi Dench Theatre" venue was merged into the Shaftesbury Theatre (OSM `way/81459092`) and both
+  London source entities locked to it (#447).
+- Collection: 16 bounded Actions runs. Venues 56 done (1 page 404s); events 979 done, about 80 newly
+  discovered and left for the daily schedule, 26 in redirect loops on the source.
+- Publication dry run (publication switched on and every London extraction processed inside one transaction
+  that is always rolled back; nothing written). With the #445 rules it would have created 333 shows, 316 of
+  them `other`. With the rules in `20261108200100` (see `docs/DECISIONS.md`, "#444 London type and title
+  rules"): 77 new shows (0 `other`, 21 concerts), 71 existing shows linked, 313 held as `unknown_show_type`,
+  64 runs, 0 autofill-eligible.
+
 ## Not done (epic remains open)
 
-- Apply migration `20261108150000` to hosted; London live runs, evidence spot-check, publication on (needs `HOSTED_DB_URL`).
-- Geocode backfill for the 13 venues created in the first pass: `node supabase/scripts/crawl/loop.mjs --source london_theatre --backfill-geocodes` (after the migration).
+- Apply `20261108200000` and `20261108200100` on hosted, re-check the dry run, then switch London
+  publication on.
+- Type the 313 held titles (model-assisted typing is a separate follow-up; #419 keeps London pages away from
+  AI) or review them in Backstage.
 - `docs/catalogue-benchmark/london-labelling.csv` and its scorer (needs published London data).
-
 - Independent labelled live-data benchmark and the chips >= 95% gate on real evidence.
-- Evidence inspection of the London probe and enabling publication.
 - Playbill live probe.
 - Before/after search p95.
-- iOS TestFlight build. iOS users have no chips until one ships.
+- iOS TestFlight build (the App Store Connect key path in `~/.config/stubbed/app-store-connect.env` is wrong).
 - The product brief status update (Google Doc; owner or a session with the Docs connector).
 
 ## Runbook

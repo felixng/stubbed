@@ -187,21 +187,21 @@ function eventType(fields, structured, title) {
       /\b(?:backstage|building|theatre|guided) tour\b/i.test(title)) {
     return { event_kind: 'building_tour', show_type: null };
   }
-  // Categories are multi-valued ("Musicals, Biography, Drama"). "Drama" and "Plays & drama" are generic tags that
-  // co-occur with musicals, so they only decide the type when nothing more specific is present. Two different
-  // specific types (a comedy musical) stay unknown rather than guess.
+  // Categories are multi-valued and lead with the main one ("Musicals, Romance, Comedy" is a musical), so the
+  // first category naming a type wins (owner, 2026-11-08). "Drama" and "Plays & drama" are generic tags that
+  // co-occur with musicals, so they only decide the type when nothing more specific is present.
+  // public.crawl_event_show_type applies the same rule to stored evidence.
   const specific = new Map([
     ['musical', 'musical'], ['musicals', 'musical'], ['play', 'play'], ['plays', 'play'], ['opera', 'opera'],
-    ['ballet', 'dance'], ['dance', 'dance'], ['comedy', 'comedy'], ['stand up', 'standup'], ['stand-up', 'standup'],
+    ['ballet', 'dance'], ['dance', 'dance'], ['comedy', 'comedy'], ['comedy shows', 'comedy'],
+    ['stand up', 'standup'], ['stand-up', 'standup'], ['concert', 'concert'], ['concerts', 'concert'],
   ]);
   const generic = new Set(['drama', 'plays & drama']);
-  const known = [...new Set(typeEvidence.map(value => specific.get(value)).filter(Boolean))];
-  if (known.length === 1) return { event_kind: 'show', show_type: known[0] };
-  if (known.length > 1) return { event_kind: 'show', show_type: null };
+  const first = typeEvidence.map(value => specific.get(value)).find(Boolean);
+  if (first === 'concert') return { event_kind: 'concert', show_type: 'concert' };
+  if (first) return { event_kind: 'show', show_type: first };
   if (typeEvidence.some(value => generic.has(value))) return { event_kind: 'show', show_type: 'play' };
-  if (types.includes('MusicEvent') || typeEvidence.some(value => /^concerts?$/.test(value))) {
-    return { event_kind: 'concert', show_type: null };
-  }
+  if (types.includes('MusicEvent')) return { event_kind: 'concert', show_type: 'concert' };
   if (types.includes('DanceEvent')) return { event_kind: 'show', show_type: 'dance' };
   if (types.includes('ComedyEvent')) return { event_kind: 'show', show_type: 'comedy' };
   return { event_kind: 'unknown', show_type: null };
@@ -262,7 +262,7 @@ export function parseEvent({ url, html }) {
 }
 
 export const londonTheatre = {
-  version: 'london-theatre-v3',
+  version: 'london-theatre-v4',
   maxBytes: 6_000_000,
   seeds: [{ scope: 'venue-directory', stage: 'directory', url: ORIGIN + '/venues' }],
   parsers: { directory: parseDirectory, venue: parseVenue, event: parseEvent },
