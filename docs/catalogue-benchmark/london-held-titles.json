@@ -1,0 +1,2482 @@
+[
+ {
+  "title": "360 ALLSTARS",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2026-06-06",
+  "title_key": "360 allstars",
+  "first_date": "2026-06-02",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "The 47th",
+  "venue_id": "ebd89b69-d391-449d-8c50-d8a812b280e9",
+  "last_date": "2022-05-28",
+  "title_key": "47th",
+  "first_date": "2022-03-29",
+  "venue_name": "The Old Vic"
+ },
+ {
+  "title": "A Fairytale for Christmas",
+  "venue_id": "7e9ea8d1-eec9-4b3f-a22c-dbdbcf60e95a",
+  "last_date": "2025-11-23",
+  "title_key": "a fairytale for christmas",
+  "first_date": "2025-11-23",
+  "venue_name": "Dominion Theatre"
+ },
+ {
+  "title": "A Journey to the Past",
+  "venue_id": "76dd0465-81b7-4ea8-9610-cb4a42785be2",
+  "last_date": "2022-09-12",
+  "title_key": "a journey to the past",
+  "first_date": "2022-09-12",
+  "venue_name": "Lyric Theatre"
+ },
+ {
+  "title": "A Mirror",
+  "venue_id": "c060243f-f74f-4a9e-8769-f6ba7cabf8b9",
+  "last_date": "2024-04-20",
+  "title_key": "a mirror",
+  "first_date": "2024-01-22",
+  "venue_name": "Trafalgar Theatre"
+ },
+ {
+  "title": "A Monster Calls",
+  "venue_id": "ebd89b69-d391-449d-8c50-d8a812b280e9",
+  "last_date": "2018-08-25",
+  "title_key": "a monster calls",
+  "first_date": "2018-07-07",
+  "venue_name": "The Old Vic"
+ },
+ {
+  "title": "A Musical Theatre Christmas",
+  "venue_id": "4b27c255-3b5e-45c3-98a5-41e609cd1020",
+  "last_date": "2022-12-04",
+  "title_key": "a musical theatre christmas",
+  "first_date": "2022-12-04",
+  "venue_name": "The Actors' Church"
+ },
+ {
+  "title": "A Number",
+  "venue_id": "ebd89b69-d391-449d-8c50-d8a812b280e9",
+  "last_date": "2022-03-19",
+  "title_key": "a number",
+  "first_date": "2022-01-24",
+  "venue_name": "The Old Vic"
+ },
+ {
+  "title": "A Very Expensive Poison",
+  "venue_id": "ebd89b69-d391-449d-8c50-d8a812b280e9",
+  "last_date": "2019-10-05",
+  "title_key": "a very expensive poison",
+  "first_date": "2019-08-20",
+  "venue_name": "The Old Vic"
+ },
+ {
+  "title": "A West End Fundraiser in support of The Phoenix Arts Club C.I.C.",
+  "venue_id": "d5607559-ef4c-48d7-a8cf-7c4d87de81c6",
+  "last_date": "2026-04-20",
+  "title_key": "a west end fundraiser in support of the phoenix arts club c i c",
+  "first_date": "2026-04-20",
+  "venue_name": "Phoenix Theatre"
+ },
+ {
+  "title": "Aaron Tveit",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2025-04-20",
+  "title_key": "aaron tveit",
+  "first_date": "2025-04-19",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "Abigail’s Party",
+  "venue_id": "14dbaa8d-c316-4c39-a42b-81f53b5b556a",
+  "last_date": "2026-09-19",
+  "title_key": "abigail s party",
+  "first_date": "2026-08-12",
+  "venue_name": "Harold Pinter Theatre"
+ },
+ {
+  "title": "Acorn Antiques",
+  "venue_id": "7624feff-c501-44d7-a7df-747353264d43",
+  "last_date": "2025-11-09",
+  "title_key": "acorn antiques",
+  "first_date": "2025-11-09",
+  "venue_name": "Shaftesbury Theatre"
+ },
+ {
+  "title": "Adam Kay: This is Going to Hurt",
+  "venue_id": "537c65ec-1bab-4108-acec-c00202d71d56",
+  "last_date": "2021-08-17",
+  "title_key": "adam kay this is going to hurt",
+  "first_date": "2021-08-12",
+  "venue_name": "Garrick Theatre"
+ },
+ {
+  "title": "Adam Kay: This is Going to Hurt",
+  "venue_id": "80ee04a2-eba7-4028-acdd-9efb7b283c91",
+  "last_date": "2021-06-26",
+  "title_key": "adam kay this is going to hurt",
+  "first_date": "2021-06-21",
+  "venue_name": "Palace Theatre"
+ },
+ {
+  "title": "Adam Kay: This is Going to Hurt",
+  "venue_id": "be8b6667-a54c-4d4c-b5b3-8330ce485a64",
+  "last_date": "2019-10-07",
+  "title_key": "adam kay this is going to hurt",
+  "first_date": "2019-10-07",
+  "venue_name": "Duchess Theatre"
+ },
+ {
+  "title": "Adam Kay: This is Going to Hurt",
+  "venue_id": "f7444518-365a-42d1-a492-a591dfbdeb39",
+  "last_date": "2019-11-25",
+  "title_key": "adam kay this is going to hurt",
+  "first_date": "2019-07-01",
+  "venue_name": "The Vaudeville Theatre"
+ },
+ {
+  "title": "Adam Kay: Undoctored - This is Going to Hurt More",
+  "venue_id": "76dd0465-81b7-4ea8-9610-cb4a42785be2",
+  "last_date": "2023-10-28",
+  "title_key": "adam kay undoctored this is going to hurt more",
+  "first_date": "2023-10-23",
+  "venue_name": "Lyric Theatre"
+ },
+ {
+  "title": "Alan Cumming is Not Acting His Age",
+  "venue_id": "76002057-f9e9-46cf-a6cb-b3fb87c4c83e",
+  "last_date": "2024-01-16",
+  "title_key": "alan cumming is not acting his age",
+  "first_date": "2024-01-15",
+  "venue_name": "Theatre Royal, Drury Lane"
+ },
+ {
+  "title": "Alcina",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2026-10-03",
+  "title_key": "alcina",
+  "first_date": "2026-09-15",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Alice Fearn: The Power of Love",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2024-09-30",
+  "title_key": "alice fearn the power of love",
+  "first_date": "2024-09-30",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "Alice Through The Looking Glass",
+  "venue_id": "4b27c255-3b5e-45c3-98a5-41e609cd1020",
+  "last_date": "2025-07-04",
+  "title_key": "alice through the looking glass",
+  "first_date": "2025-07-04",
+  "venue_name": "The Actors' Church"
+ },
+ {
+  "title": "All Or Nothing - Arts 2018",
+  "venue_id": "ae7d4249-d59f-4276-879d-83a5d4f1493c",
+  "last_date": "2018-03-11",
+  "title_key": "all or nothing arts 2018",
+  "first_date": "2018-02-06",
+  "venue_name": "Arts Theatre"
+ },
+ {
+  "title": "Alyssa, Memoirs of a Queen!",
+  "venue_id": "f7444518-365a-42d1-a492-a591dfbdeb39",
+  "last_date": "2021-06-13",
+  "title_key": "alyssa memoirs of a queen",
+  "first_date": "2021-06-07",
+  "venue_name": "The Vaudeville Theatre"
+ },
+ {
+  "title": "An Evening with Phil Dunster & Friends",
+  "venue_id": "2d8aaeeb-0d88-41bb-99a0-1de6ffc2e887",
+  "last_date": "2024-11-24",
+  "title_key": "an evening with phil dunster friends",
+  "first_date": "2024-11-24",
+  "venue_name": "Victoria Palace Theatre"
+ },
+ {
+  "title": "Anemoi/The Cellist",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2023-11-02",
+  "title_key": "anemoi the cellist",
+  "first_date": "2023-10-20",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "ANNA X",
+  "venue_id": "14dbaa8d-c316-4c39-a42b-81f53b5b556a",
+  "last_date": "2021-08-04",
+  "title_key": "anna x",
+  "first_date": "2021-07-09",
+  "venue_name": "Harold Pinter Theatre"
+ },
+ {
+  "title": "Ariana Debose",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2023-04-01",
+  "title_key": "ariana debose",
+  "first_date": "2023-04-01",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "Ariodante",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2025-12-21",
+  "title_key": "ariodante",
+  "first_date": "2025-12-09",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Austentatious - Fortune Theatre",
+  "venue_id": "23b90ab7-c24b-4c9c-8eb4-c4b73c20e94e",
+  "last_date": "2020-12-27",
+  "title_key": "austentatious fortune theatre",
+  "first_date": "2020-08-01",
+  "venue_name": "Fortune Theatre"
+ },
+ {
+  "title": "Backstairs Billy",
+  "venue_id": "8aa341a3-5a0e-4287-8df2-b0c1ddad748d",
+  "last_date": "2024-01-27",
+  "title_key": "backstairs billy",
+  "first_date": "2023-10-27",
+  "venue_name": "Tom Stoppard Theatre"
+ },
+ {
+  "title": "Bad Jews",
+  "venue_id": "ae7d4249-d59f-4276-879d-83a5d4f1493c",
+  "last_date": "2022-09-25",
+  "title_key": "bad jews",
+  "first_date": "2022-07-14",
+  "venue_name": "Arts Theatre"
+ },
+ {
+  "title": "Barcelona",
+  "venue_id": "8aa341a3-5a0e-4287-8df2-b0c1ddad748d",
+  "last_date": "2025-01-11",
+  "title_key": "barcelona",
+  "first_date": "2024-10-21",
+  "venue_name": "Tom Stoppard Theatre"
+ },
+ {
+  "title": "Barrett Wilbert Weed's Dear Diary",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2024-09-01",
+  "title_key": "barrett wilbert weed s dear diary",
+  "first_date": "2024-09-01",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "The Barricade Boys - West End Party",
+  "venue_id": "6bd0f3c5-4127-4259-ad54-da4f3bfef5fc",
+  "last_date": "2023-10-17",
+  "title_key": "barricade boys west end party",
+  "first_date": "2023-10-17",
+  "venue_name": "Adelphi Theatre"
+ },
+ {
+  "title": "Bat Out of Hell",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2025-06-07",
+  "title_key": "bat out of hell",
+  "first_date": "2025-05-21",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "Be Like Blippi",
+  "venue_id": "0f4a5f8b-0f9f-489a-988b-32fdbe8c03bd",
+  "last_date": "2026-08-30",
+  "title_key": "be like blippi",
+  "first_date": "2026-08-03",
+  "venue_name": "The Arts at Marble Arch Powered by TodayTix"
+ },
+ {
+  "title": "Ben Elton Live",
+  "venue_id": "14dbaa8d-c316-4c39-a42b-81f53b5b556a",
+  "last_date": "2021-12-30",
+  "title_key": "ben elton live",
+  "first_date": "2021-12-20",
+  "venue_name": "Harold Pinter Theatre"
+ },
+ {
+  "title": "Bernadette Peters",
+  "venue_id": "32a3c12f-0670-47e5-9a84-e314af322047",
+  "last_date": "2019-06-10",
+  "title_key": "bernadette peters",
+  "first_date": "2019-06-10",
+  "venue_name": "Lyceum Theatre"
+ },
+ {
+  "title": "Bernadette Peters: Live From London",
+  "venue_id": "76002057-f9e9-46cf-a6cb-b3fb87c4c83e",
+  "last_date": "2024-08-12",
+  "title_key": "bernadette peters live from london",
+  "first_date": "2024-08-12",
+  "venue_name": "Theatre Royal, Drury Lane"
+ },
+ {
+  "title": "Beyond Bollywood",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2022-09-03",
+  "title_key": "beyond bollywood",
+  "first_date": "2022-08-24",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "Bill Bailey - Thoughtifier",
+  "venue_id": "1a2631f8-c9c9-4d4b-b221-f1dd55333852",
+  "last_date": "2025-02-15",
+  "title_key": "bill bailey thoughtifier",
+  "first_date": "2024-12-28",
+  "venue_name": "Theatre Royal Haymarket"
+ },
+ {
+  "title": "Billie The Kid",
+  "venue_id": "f7444518-365a-42d1-a492-a591dfbdeb39",
+  "last_date": "2023-11-20",
+  "title_key": "billie the kid",
+  "first_date": "2023-11-13",
+  "venue_name": "The Vaudeville Theatre"
+ },
+ {
+  "title": "Billionaire Boy",
+  "venue_id": "537c65ec-1bab-4108-acec-c00202d71d56",
+  "last_date": "2021-08-22",
+  "title_key": "billionaire boy",
+  "first_date": "2021-07-17",
+  "venue_name": "Garrick Theatre"
+ },
+ {
+  "title": "Bitter Wheat",
+  "venue_id": "537c65ec-1bab-4108-acec-c00202d71d56",
+  "last_date": "2019-09-21",
+  "title_key": "bitter wheat",
+  "first_date": "2019-06-07",
+  "venue_name": "Garrick Theatre"
+ },
+ {
+  "title": "Björn Again",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2025-10-14",
+  "title_key": "bjorn again",
+  "first_date": "2025-10-14",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "Bleak Expectations",
+  "venue_id": "4cb9e9b8-5fa7-477e-a857-abcacab67875",
+  "last_date": "2023-08-13",
+  "title_key": "bleak expectations",
+  "first_date": "2023-05-03",
+  "venue_name": "Criterion Theatre"
+ },
+ {
+  "title": "Blippi: The Wonderful World Tour",
+  "venue_id": "14dbaa8d-c316-4c39-a42b-81f53b5b556a",
+  "last_date": "2024-09-07",
+  "title_key": "blippi the wonderful world tour",
+  "first_date": "2024-07-08",
+  "venue_name": "Harold Pinter Theatre"
+ },
+ {
+  "title": "Bloody Elle",
+  "venue_id": "76dd0465-81b7-4ea8-9610-cb4a42785be2",
+  "last_date": "2023-09-30",
+  "title_key": "bloody elle",
+  "first_date": "2023-09-27",
+  "venue_name": "Lyric Theatre"
+ },
+ {
+  "title": "Boris Godunov",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2026-02-18",
+  "title_key": "boris godunov",
+  "first_date": "2026-01-29",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Born With Teeth",
+  "venue_id": "ac639ef4-9618-4a06-b00f-5910048a6e0b",
+  "last_date": "2025-11-01",
+  "title_key": "born with teeth",
+  "first_date": "2025-08-13",
+  "venue_name": "Wyndham's Theatre"
+ },
+ {
+  "title": "The Boy Who Harnessed the Wind",
+  "venue_id": "a9337cab-01bf-46e3-9331-ce24fd5085d2",
+  "last_date": "2026-07-18",
+  "title_key": "boy who harnessed the wind",
+  "first_date": "2026-04-29",
+  "venue_name": "Soho Place"
+ },
+ {
+  "title": "Boys From The Blackstuff",
+  "venue_id": "537c65ec-1bab-4108-acec-c00202d71d56",
+  "last_date": "2024-08-03",
+  "title_key": "boys from the blackstuff",
+  "first_date": "2024-06-13",
+  "venue_name": "Garrick Theatre"
+ },
+ {
+  "title": "Briefs: Close Encounters",
+  "venue_id": "8cd6ac76-442a-4c6f-8af0-a5c338f0d496",
+  "last_date": "2019-01-03",
+  "title_key": "briefs close encounters",
+  "first_date": "2018-11-09",
+  "venue_name": "Leicester Square Spiegeltent"
+ },
+ {
+  "title": "The Brightening Air",
+  "venue_id": "ebd89b69-d391-449d-8c50-d8a812b280e9",
+  "last_date": "2025-06-14",
+  "title_key": "brightening air",
+  "first_date": "2025-04-10",
+  "venue_name": "The Old Vic"
+ },
+ {
+  "title": "Brokeback Mountain",
+  "venue_id": "a9337cab-01bf-46e3-9331-ce24fd5085d2",
+  "last_date": "2023-08-12",
+  "title_key": "brokeback mountain",
+  "first_date": "2023-05-10",
+  "venue_name": "Soho Place"
+ },
+ {
+  "title": "Buffy Revamped",
+  "venue_id": "76dd0465-81b7-4ea8-9610-cb4a42785be2",
+  "last_date": "2026-10-19",
+  "title_key": "buffy revamped",
+  "first_date": "2026-10-12",
+  "venue_name": "Lyric Theatre"
+ },
+ {
+  "title": "Call to Stage LIVE",
+  "venue_id": "23b90ab7-c24b-4c9c-8eb4-c4b73c20e94e",
+  "last_date": "2025-09-28",
+  "title_key": "call to stage live",
+  "first_date": "2025-09-28",
+  "venue_name": "Fortune Theatre"
+ },
+ {
+  "title": "Candace Bushnell – True Tales of Sex, Success and Sex and the City",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2024-02-07",
+  "title_key": "candace bushnell true tales of sex success and sex and the city",
+  "first_date": "2024-02-07",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "Captain Corelli's Mandolin",
+  "venue_id": "14dbaa8d-c316-4c39-a42b-81f53b5b556a",
+  "last_date": "2019-08-31",
+  "title_key": "captain corelli s mandolin",
+  "first_date": "2019-07-04",
+  "venue_name": "Harold Pinter Theatre"
+ },
+ {
+  "title": "Captain Sandy Live",
+  "venue_id": "be8b6667-a54c-4d4c-b5b3-8330ce485a64",
+  "last_date": "2023-09-25",
+  "title_key": "captain sandy live",
+  "first_date": "2023-09-25",
+  "venue_name": "Duchess Theatre"
+ },
+ {
+  "title": "The Chamber Music Sessions",
+  "venue_id": "537c65ec-1bab-4108-acec-c00202d71d56",
+  "last_date": "2021-10-04",
+  "title_key": "chamber music sessions",
+  "first_date": "2021-10-04",
+  "venue_name": "Garrick Theatre"
+ },
+ {
+  "title": "Charlie Cook's Favourite Book",
+  "venue_id": "c060243f-f74f-4a9e-8769-f6ba7cabf8b9",
+  "last_date": "2025-01-05",
+  "title_key": "charlie cook s favourite book",
+  "first_date": "2024-12-05",
+  "venue_name": "Trafalgar Theatre"
+ },
+ {
+  "title": "Chrishell Stause: Up Close and Personal",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2024-04-30",
+  "title_key": "chrishell stause up close and personal",
+  "first_date": "2024-04-30",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "Cirque Berserk!",
+  "venue_id": "537c65ec-1bab-4108-acec-c00202d71d56",
+  "last_date": "2026-10-31",
+  "title_key": "cirque berserk",
+  "first_date": "2026-10-21",
+  "venue_name": "Garrick Theatre"
+ },
+ {
+  "title": "Clarkston",
+  "venue_id": "c060243f-f74f-4a9e-8769-f6ba7cabf8b9",
+  "last_date": "2025-11-22",
+  "title_key": "clarkston",
+  "first_date": "2025-09-17",
+  "venue_name": "Trafalgar Theatre"
+ },
+ {
+  "title": "Club Briefs",
+  "venue_id": "8cd6ac76-442a-4c6f-8af0-a5c338f0d496",
+  "last_date": "2018-12-29",
+  "title_key": "club briefs",
+  "first_date": "2018-11-09",
+  "venue_name": "Leicester Square Spiegeltent"
+ },
+ {
+  "title": "The Comeback",
+  "venue_id": "153eae24-be93-4d7a-b979-d92d8a497b8a",
+  "last_date": "2021-07-25",
+  "title_key": "comeback",
+  "first_date": "2021-07-07",
+  "venue_name": "Noël Coward Theatre"
+ },
+ {
+  "title": "The Comedy About Spies",
+  "venue_id": "153eae24-be93-4d7a-b979-d92d8a497b8a",
+  "last_date": "2025-09-05",
+  "title_key": "comedy about spies",
+  "first_date": "2025-04-14",
+  "venue_name": "Noël Coward Theatre"
+ },
+ {
+  "title": "The Comedy About Spies",
+  "venue_id": "6bd0f3c5-4127-4259-ad54-da4f3bfef5fc",
+  "last_date": "2026-09-26",
+  "title_key": "comedy about spies",
+  "first_date": "2026-08-01",
+  "venue_name": "Adelphi Theatre"
+ },
+ {
+  "title": "Coming Clean",
+  "venue_id": "c060243f-f74f-4a9e-8769-f6ba7cabf8b9",
+  "last_date": "2020-02-01",
+  "title_key": "coming clean",
+  "first_date": "2020-01-08",
+  "venue_name": "Trafalgar Theatre"
+ },
+ {
+  "title": "Consent",
+  "venue_id": "14dbaa8d-c316-4c39-a42b-81f53b5b556a",
+  "last_date": "2018-08-11",
+  "title_key": "consent",
+  "first_date": "2018-05-18",
+  "venue_name": "Harold Pinter Theatre"
+ },
+ {
+  "title": "The Constituent",
+  "venue_id": "ebd89b69-d391-449d-8c50-d8a812b280e9",
+  "last_date": "2024-08-10",
+  "title_key": "constituent",
+  "first_date": "2024-06-13",
+  "venue_name": "The Old Vic"
+ },
+ {
+  "title": "The Crown Jewels",
+  "venue_id": "537c65ec-1bab-4108-acec-c00202d71d56",
+  "last_date": "2023-09-16",
+  "title_key": "crown jewels",
+  "first_date": "2023-07-07",
+  "venue_name": "Garrick Theatre"
+ },
+ {
+  "title": "Cruise",
+  "venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
+  "last_date": "2022-09-04",
+  "title_key": "cruise",
+  "first_date": "2022-08-13",
+  "venue_name": "Apollo Theatre"
+ },
+ {
+  "title": "The Curious Case Of Benjamin Button",
+  "venue_id": "d9717024-7833-4e7e-8901-6d261cf9a75f",
+  "last_date": "2025-10-11",
+  "title_key": "curious case of benjamin button",
+  "first_date": "2024-10-10",
+  "venue_name": "Ambassadors Theatre"
+ },
+ {
+  "title": "Daddy Issues",
+  "venue_id": "808dcff6-bc0a-453a-9b0f-0a8cc4fe5856",
+  "last_date": "2022-11-19",
+  "title_key": "daddy issues",
+  "first_date": "2022-10-24",
+  "venue_name": "Seven Dials Playhouse"
+ },
+ {
+  "title": "Darren Criss",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2023-10-15",
+  "title_key": "darren criss",
+  "first_date": "2023-10-15",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "Dawn French Is A Huge Twat!",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2023-10-21",
+  "title_key": "dawn french is a huge twat",
+  "first_date": "2023-09-21",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "Dead Funny",
+  "venue_id": "f7444518-365a-42d1-a492-a591dfbdeb39",
+  "last_date": "2017-02-04",
+  "title_key": "dead funny",
+  "first_date": "2016-10-27",
+  "venue_name": "The Vaudeville Theatre"
+ },
+ {
+  "title": "Death of England: Closing Time",
+  "venue_id": "a9337cab-01bf-46e3-9331-ce24fd5085d2",
+  "last_date": "2024-09-28",
+  "title_key": "death of england closing time",
+  "first_date": "2024-08-22",
+  "venue_name": "Soho Place"
+ },
+ {
+  "title": "Death of England: Delroy",
+  "venue_id": "a9337cab-01bf-46e3-9331-ce24fd5085d2",
+  "last_date": "2024-09-28",
+  "title_key": "death of england delroy",
+  "first_date": "2024-07-23",
+  "venue_name": "Soho Place"
+ },
+ {
+  "title": "Death of England: Michael",
+  "venue_id": "a9337cab-01bf-46e3-9331-ce24fd5085d2",
+  "last_date": "2024-09-28",
+  "title_key": "death of england michael",
+  "first_date": "2024-07-15",
+  "venue_name": "Soho Place"
+ },
+ {
+  "title": "Derren Brown: Only Human",
+  "venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
+  "last_date": "2027-01-30",
+  "title_key": "derren brown only human",
+  "first_date": "2026-10-10",
+  "venue_name": "Apollo Theatre"
+ },
+ {
+  "title": "DIANNE & VITO – Red Hot & Ready",
+  "venue_id": "7624feff-c501-44d7-a7df-747353264d43",
+  "last_date": "2025-06-22",
+  "title_key": "dianne vito red hot ready",
+  "first_date": "2025-06-22",
+  "venue_name": "Shaftesbury Theatre"
+ },
+ {
+  "title": "Dick Whittington",
+  "venue_id": "d5607559-ef4c-48d7-a8cf-7c4d87de81c6",
+  "last_date": "2022-01-09",
+  "title_key": "dick whittington",
+  "first_date": "2021-12-05",
+  "venue_name": "Phoenix Theatre"
+ },
+ {
+  "title": "Dimanche",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2025-02-01",
+  "title_key": "dimanche",
+  "first_date": "2025-01-29",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "Disney's Hercules",
+  "venue_id": "76002057-f9e9-46cf-a6cb-b3fb87c4c83e",
+  "last_date": "2026-09-05",
+  "title_key": "disney s hercules",
+  "first_date": "2025-06-06",
+  "venue_name": "Theatre Royal, Drury Lane"
+ },
+ {
+  "title": "Don Quixote",
+  "venue_id": "537c65ec-1bab-4108-acec-c00202d71d56",
+  "last_date": "2019-02-02",
+  "title_key": "don quixote",
+  "first_date": "2018-10-27",
+  "venue_name": "Garrick Theatre"
+ },
+ {
+  "title": "Dr Richard Shepherd",
+  "venue_id": "be8b6667-a54c-4d4c-b5b3-8330ce485a64",
+  "last_date": "2022-10-31",
+  "title_key": "dr richard shepherd",
+  "first_date": "2022-10-31",
+  "venue_name": "Duchess Theatre"
+ },
+ {
+  "title": "Dr Semmelweis",
+  "venue_id": "14dbaa8d-c316-4c39-a42b-81f53b5b556a",
+  "last_date": "2023-10-07",
+  "title_key": "dr semmelweis",
+  "first_date": "2023-06-28",
+  "venue_name": "Harold Pinter Theatre"
+ },
+ {
+  "title": "Dr Strangelove",
+  "venue_id": "153eae24-be93-4d7a-b979-d92d8a497b8a",
+  "last_date": "2025-01-25",
+  "title_key": "dr strangelove",
+  "first_date": "2024-10-08",
+  "venue_name": "Noël Coward Theatre"
+ },
+ {
+  "title": "The Drifters Girl",
+  "venue_id": "537c65ec-1bab-4108-acec-c00202d71d56",
+  "last_date": "2022-10-15",
+  "title_key": "drifters girl",
+  "first_date": "2021-11-04",
+  "venue_name": "Garrick Theatre"
+ },
+ {
+  "title": "Duke Bluebeard's Castle",
+  "venue_id": "65683668-2fb7-4527-8424-eb9de721905c",
+  "last_date": "2024-03-23",
+  "title_key": "duke bluebeard s castle",
+  "first_date": "2024-03-21",
+  "venue_name": "London Coliseum"
+ },
+ {
+  "title": "Eddie Izzard - Great Expectations",
+  "venue_id": "537c65ec-1bab-4108-acec-c00202d71d56",
+  "last_date": "2023-07-01",
+  "title_key": "eddie izzard great expectations",
+  "first_date": "2023-05-24",
+  "venue_name": "Garrick Theatre"
+ },
+ {
+  "title": "Éireann by A Taste of Ireland",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2025-08-31",
+  "title_key": "eireann by a taste of ireland",
+  "first_date": "2025-08-28",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "The Elixir of Love",
+  "venue_id": "65683668-2fb7-4527-8424-eb9de721905c",
+  "last_date": "2024-12-05",
+  "title_key": "elixir of love",
+  "first_date": "2024-11-15",
+  "venue_name": "London Coliseum"
+ },
+ {
+  "title": "Emilia",
+  "venue_id": "f7444518-365a-42d1-a492-a591dfbdeb39",
+  "last_date": "2019-06-01",
+  "title_key": "emilia",
+  "first_date": "2019-03-08",
+  "venue_name": "The Vaudeville Theatre"
+ },
+ {
+  "title": "Encounters: Four Contemporary Ballets",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2024-11-16",
+  "title_key": "encounters four contemporary ballets",
+  "first_date": "2024-10-22",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Every Brilliant Thing",
+  "venue_id": "a9337cab-01bf-46e3-9331-ce24fd5085d2",
+  "last_date": "2025-11-08",
+  "title_key": "every brilliant thing",
+  "first_date": "2025-08-01",
+  "venue_name": "Soho Place"
+ },
+ {
+  "title": "Everybody’s Talking About Jamie",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2024-03-23",
+  "title_key": "everybody s talking about jamie",
+  "first_date": "2024-02-08",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "The Exorcist",
+  "venue_id": "d5607559-ef4c-48d7-a8cf-7c4d87de81c6",
+  "last_date": "2018-03-10",
+  "title_key": "exorcist",
+  "first_date": "2017-10-20",
+  "venue_name": "Phoenix Theatre"
+ },
+ {
+  "title": "Farm Hall",
+  "venue_id": "1a2631f8-c9c9-4d4b-b221-f1dd55333852",
+  "last_date": "2024-08-31",
+  "title_key": "farm hall",
+  "first_date": "2024-08-07",
+  "venue_name": "Theatre Royal Haymarket"
+ },
+ {
+  "title": "Fawlty Towers – The Play",
+  "venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
+  "last_date": "2025-09-13",
+  "title_key": "fawlty towers the play",
+  "first_date": "2024-06-24",
+  "venue_name": "Apollo Theatre"
+ },
+ {
+  "title": "The Fifth Step",
+  "venue_id": "a9337cab-01bf-46e3-9331-ce24fd5085d2",
+  "last_date": "2025-07-26",
+  "title_key": "fifth step",
+  "first_date": "2025-05-10",
+  "venue_name": "Soho Place"
+ },
+ {
+  "title": "Fleabag",
+  "venue_id": "ac639ef4-9618-4a06-b00f-5910048a6e0b",
+  "last_date": "2019-09-14",
+  "title_key": "fleabag",
+  "first_date": "2019-08-20",
+  "venue_name": "Wyndham's Theatre"
+ },
+ {
+  "title": "For Tonight",
+  "venue_id": "6bd0f3c5-4127-4259-ad54-da4f3bfef5fc",
+  "last_date": "2023-09-05",
+  "title_key": "for tonight",
+  "first_date": "2023-09-05",
+  "venue_name": "Adelphi Theatre"
+ },
+ {
+  "title": "Frank Skinner: 30 Years of Dirt",
+  "venue_id": "97e0b0fe-ef66-4d3b-9f2e-e05f9d697959",
+  "last_date": "2024-08-24",
+  "title_key": "frank skinner 30 years of dirt",
+  "first_date": "2024-08-05",
+  "venue_name": "Gielgud Theatre"
+ },
+ {
+  "title": "Gals Aloud",
+  "venue_id": "76dd0465-81b7-4ea8-9610-cb4a42785be2",
+  "last_date": "2023-09-16",
+  "title_key": "gals aloud",
+  "first_date": "2023-09-16",
+  "venue_name": "Lyric Theatre"
+ },
+ {
+  "title": "Gary Barlow A Different Stage",
+  "venue_id": "8aa341a3-5a0e-4287-8df2-b0c1ddad748d",
+  "last_date": "2022-09-25",
+  "title_key": "gary barlow a different stage",
+  "first_date": "2022-08-30",
+  "venue_name": "Tom Stoppard Theatre"
+ },
+ {
+  "title": "Gary Barlow A Different Stage - Savoy Theatre",
+  "venue_id": "bd9e8fb5-a633-4744-96c7-3c8fcaa9a356",
+  "last_date": "2022-11-28",
+  "title_key": "gary barlow a different stage savoy theatre",
+  "first_date": "2022-11-21",
+  "venue_name": "Savoy Theatre"
+ },
+ {
+  "title": "Gerry & Sewell",
+  "venue_id": "70a2b82a-48cb-49d3-812e-333d9577394d",
+  "last_date": "2026-01-24",
+  "title_key": "gerry sewell",
+  "first_date": "2026-01-13",
+  "venue_name": "Aldwych Theatre"
+ },
+ {
+  "title": "Gingzilla's Gingerbread Haus",
+  "venue_id": "8cd6ac76-442a-4c6f-8af0-a5c338f0d496",
+  "last_date": "2018-12-11",
+  "title_key": "gingzilla s gingerbread haus",
+  "first_date": "2018-12-11",
+  "venue_name": "Leicester Square Spiegeltent"
+ },
+ {
+  "title": "The Girl on the Train",
+  "venue_id": "8aa341a3-5a0e-4287-8df2-b0c1ddad748d",
+  "last_date": "2019-08-17",
+  "title_key": "girl on the train",
+  "first_date": "2019-07-23",
+  "venue_name": "Tom Stoppard Theatre"
+ },
+ {
+  "title": "Glow Up Live",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2023-10-16",
+  "title_key": "glow up live",
+  "first_date": "2023-10-15",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "Go Your Own Way",
+  "venue_id": "6bd0f3c5-4127-4259-ad54-da4f3bfef5fc",
+  "last_date": "2024-04-02",
+  "title_key": "go your own way",
+  "first_date": "2023-12-18",
+  "venue_name": "Adelphi Theatre"
+ },
+ {
+  "title": "Godz",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2025-06-14",
+  "title_key": "godz",
+  "first_date": "2025-06-11",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "Graziano Di Prima - Believe",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2024-03-30",
+  "title_key": "graziano di prima believe",
+  "first_date": "2024-03-30",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "Groan Ups",
+  "venue_id": "f7444518-365a-42d1-a492-a591dfbdeb39",
+  "last_date": "2019-12-01",
+  "title_key": "groan ups",
+  "first_date": "2019-09-20",
+  "venue_name": "The Vaudeville Theatre"
+ },
+ {
+  "title": "The Gruffalo",
+  "venue_id": "76dd0465-81b7-4ea8-9610-cb4a42785be2",
+  "last_date": "2024-09-08",
+  "title_key": "gruffalo",
+  "first_date": "2024-07-17",
+  "venue_name": "Lyric Theatre"
+ },
+ {
+  "title": "The Gruffalo Live on Stage",
+  "venue_id": "76dd0465-81b7-4ea8-9610-cb4a42785be2",
+  "last_date": "2019-09-08",
+  "title_key": "gruffalo live on stage",
+  "first_date": "2019-07-03",
+  "venue_name": "Lyric Theatre"
+ },
+ {
+  "title": "The Gruffalo's Child",
+  "venue_id": "76dd0465-81b7-4ea8-9610-cb4a42785be2",
+  "last_date": "2026-01-11",
+  "title_key": "gruffalo s child",
+  "first_date": "2025-11-28",
+  "venue_name": "Lyric Theatre"
+ },
+ {
+  "title": "Handel's Messiah",
+  "venue_id": "76002057-f9e9-46cf-a6cb-b3fb87c4c83e",
+  "last_date": "2022-12-06",
+  "title_key": "handel s messiah",
+  "first_date": "2022-12-06",
+  "venue_name": "Theatre Royal, Drury Lane"
+ },
+ {
+  "title": "The Handmaid's Tale",
+  "venue_id": "65683668-2fb7-4527-8424-eb9de721905c",
+  "last_date": "2024-02-15",
+  "title_key": "handmaid s tale",
+  "first_date": "2024-02-01",
+  "venue_name": "London Coliseum"
+ },
+ {
+  "title": "Hansel and Gretel",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2025-01-07",
+  "title_key": "hansel and gretel",
+  "first_date": "2024-12-22",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Help! We Are Still Alive",
+  "venue_id": "808dcff6-bc0a-453a-9b0f-0a8cc4fe5856",
+  "last_date": "2022-10-15",
+  "title_key": "help we are still alive",
+  "first_date": "2022-09-05",
+  "venue_name": "Seven Dials Playhouse"
+ },
+ {
+  "title": "Henry I - The Actors’ Church",
+  "venue_id": "4b27c255-3b5e-45c3-98a5-41e609cd1020",
+  "last_date": "2023-07-22",
+  "title_key": "henry i the actors church",
+  "first_date": "2023-07-20",
+  "venue_name": "The Actors' Church"
+ },
+ {
+  "title": "Horrible Histories - Barmy Britain",
+  "venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
+  "last_date": "2018-09-01",
+  "title_key": "horrible histories barmy britain",
+  "first_date": "2018-08-02",
+  "venue_name": "Apollo Theatre"
+ },
+ {
+  "title": "Horrible Histories - Barmy Britain Part Five",
+  "venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
+  "last_date": "2021-08-28",
+  "title_key": "horrible histories barmy britain part five",
+  "first_date": "2021-07-29",
+  "venue_name": "Apollo Theatre"
+ },
+ {
+  "title": "Horrible Histories - Barmy Britain - Part Four!",
+  "venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
+  "last_date": "2019-08-31",
+  "title_key": "horrible histories barmy britain part four",
+  "first_date": "2019-08-01",
+  "venue_name": "Apollo Theatre"
+ },
+ {
+  "title": "Horrible Histories: Barmy Britain - The Best Bits",
+  "venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
+  "last_date": "2026-08-31",
+  "title_key": "horrible histories barmy britain the best bits",
+  "first_date": "2026-07-30",
+  "venue_name": "Apollo Theatre"
+ },
+ {
+  "title": "The Hound of the Baskervilles",
+  "venue_id": "4b27c255-3b5e-45c3-98a5-41e609cd1020",
+  "last_date": "2024-09-11",
+  "title_key": "hound of the baskervilles",
+  "first_date": "2024-09-10",
+  "venue_name": "The Actors' Church"
+ },
+ {
+  "title": "The Human Voice",
+  "venue_id": "14dbaa8d-c316-4c39-a42b-81f53b5b556a",
+  "last_date": "2022-04-09",
+  "title_key": "human voice",
+  "first_date": "2022-03-17",
+  "venue_name": "Harold Pinter Theatre"
+ },
+ {
+  "title": "The Hunting of the Snark",
+  "venue_id": "f7444518-365a-42d1-a492-a591dfbdeb39",
+  "last_date": "2017-08-27",
+  "title_key": "hunting of the snark",
+  "first_date": "2017-07-26",
+  "venue_name": "The Vaudeville Theatre"
+ },
+ {
+  "title": "I’m Sorry, Prime Minister",
+  "venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
+  "last_date": "2026-05-09",
+  "title_key": "i m sorry prime minister",
+  "first_date": "2026-01-29",
+  "venue_name": "Apollo Theatre"
+ },
+ {
+  "title": "I puritani",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2026-07-19",
+  "title_key": "i puritani",
+  "first_date": "2026-06-30",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Ian McKellen On Stage In London",
+  "venue_id": "14dbaa8d-c316-4c39-a42b-81f53b5b556a",
+  "last_date": "2020-01-05",
+  "title_key": "ian mckellen on stage in london",
+  "first_date": "2019-09-20",
+  "venue_name": "Harold Pinter Theatre"
+ },
+ {
+  "title": "Instructions for a Teenage Armageddon",
+  "venue_id": "537c65ec-1bab-4108-acec-c00202d71d56",
+  "last_date": "2024-04-28",
+  "title_key": "instructions for a teenage armageddon",
+  "first_date": "2024-03-17",
+  "venue_name": "Garrick Theatre"
+ },
+ {
+  "title": "Irrelevant",
+  "venue_id": "808dcff6-bc0a-453a-9b0f-0a8cc4fe5856",
+  "last_date": "2023-01-28",
+  "title_key": "irrelevant",
+  "first_date": "2023-01-09",
+  "venue_name": "Seven Dials Playhouse"
+ },
+ {
+  "title": "Irvine Welsh's PORNO",
+  "venue_id": "ae7d4249-d59f-4276-879d-83a5d4f1493c",
+  "last_date": "2023-12-10",
+  "title_key": "irvine welsh s porno",
+  "first_date": "2023-10-29",
+  "venue_name": "Arts Theatre"
+ },
+ {
+  "title": "J'OUVERT",
+  "venue_id": "14dbaa8d-c316-4c39-a42b-81f53b5b556a",
+  "last_date": "2021-07-03",
+  "title_key": "j ouvert",
+  "first_date": "2021-06-16",
+  "venue_name": "Harold Pinter Theatre"
+ },
+ {
+  "title": "Jack and the Beanstalk",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2023-01-15",
+  "title_key": "jack and the beanstalk",
+  "first_date": "2022-12-10",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "Jamie Muscato",
+  "venue_id": "76002057-f9e9-46cf-a6cb-b3fb87c4c83e",
+  "last_date": "2026-03-22",
+  "title_key": "jamie muscato",
+  "first_date": "2026-03-22",
+  "venue_name": "Theatre Royal, Drury Lane"
+ },
+ {
+  "title": "Jason Robert Brown",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2024-03-24",
+  "title_key": "jason robert brown",
+  "first_date": "2024-03-24",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "Jenufa",
+  "venue_id": "65683668-2fb7-4527-8424-eb9de721905c",
+  "last_date": "2024-03-27",
+  "title_key": "jenufa",
+  "first_date": "2024-03-13",
+  "venue_name": "London Coliseum"
+ },
+ {
+  "title": "Jenufa",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2025-02-01",
+  "title_key": "jenufa",
+  "first_date": "2025-01-15",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Jette Parker Artists Summer Performance",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2025-07-20",
+  "title_key": "jette parker artists summer performance",
+  "first_date": "2025-07-20",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Jordan Gray: Is It A Bird?",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2022-10-28",
+  "title_key": "jordan gray is it a bird",
+  "first_date": "2022-10-28",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "The Jungle",
+  "venue_id": "c5a711d0-d38a-4925-abea-801ad5221a9b",
+  "last_date": "2018-11-03",
+  "title_key": "jungle",
+  "first_date": "2018-06-16",
+  "venue_name": "Kit Kat Club at the Playhouse Theatre"
+ },
+ {
+  "title": "Jungle Rumble",
+  "venue_id": "23b90ab7-c24b-4c9c-8eb4-c4b73c20e94e",
+  "last_date": "2022-02-20",
+  "title_key": "jungle rumble",
+  "first_date": "2022-02-14",
+  "venue_name": "Fortune Theatre"
+ },
+ {
+  "title": "Kirill Richter & Richter Trio: Sands of Time",
+  "venue_id": "65683668-2fb7-4527-8424-eb9de721905c",
+  "last_date": "2024-09-11",
+  "title_key": "kirill richter richter trio sands of time",
+  "first_date": "2024-09-11",
+  "venue_name": "London Coliseum"
+ },
+ {
+  "title": "The Kite Runner | Wyndham's 2017",
+  "venue_id": "ac639ef4-9618-4a06-b00f-5910048a6e0b",
+  "last_date": "2017-03-11",
+  "title_key": "kite runner wyndham s 2017",
+  "first_date": "2016-12-21",
+  "venue_name": "Wyndham's Theatre"
+ },
+ {
+  "title": "Knights of The Rose",
+  "venue_id": "ae7d4249-d59f-4276-879d-83a5d4f1493c",
+  "last_date": "2018-08-26",
+  "title_key": "knights of the rose",
+  "first_date": "2018-06-29",
+  "venue_name": "Arts Theatre"
+ },
+ {
+  "title": "Kyoto",
+  "venue_id": "a9337cab-01bf-46e3-9331-ce24fd5085d2",
+  "last_date": "2025-05-03",
+  "title_key": "kyoto",
+  "first_date": "2025-01-09",
+  "venue_name": "Soho Place"
+ },
+ {
+  "title": "L'elisir d'amore",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2023-10-05",
+  "title_key": "l elisir d amore",
+  "first_date": "2023-09-22",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "La Bamba!",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2023-09-02",
+  "title_key": "la bamba",
+  "first_date": "2023-08-22",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "La Clique",
+  "venue_id": "8cd6ac76-442a-4c6f-8af0-a5c338f0d496",
+  "last_date": "2025-01-05",
+  "title_key": "la clique",
+  "first_date": "2024-11-06",
+  "venue_name": "Leicester Square Spiegeltent"
+ },
+ {
+  "title": "La Fille mal gardée",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2026-06-09",
+  "title_key": "la fille mal gardee",
+  "first_date": "2026-05-23",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "La forza del destino",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2023-10-09",
+  "title_key": "la forza del destino",
+  "first_date": "2023-09-19",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "La Soiree",
+  "venue_id": "70a2b82a-48cb-49d3-812e-333d9577394d",
+  "last_date": "2018-02-03",
+  "title_key": "la soiree",
+  "first_date": "2017-11-24",
+  "venue_name": "Aldwych Theatre"
+ },
+ {
+  "title": "La traviata",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2026-02-17",
+  "title_key": "la traviata",
+  "first_date": "2026-01-08",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "La Voix - The Red Ambition Tour",
+  "venue_id": "76dd0465-81b7-4ea8-9610-cb4a42785be2",
+  "last_date": "2023-10-08",
+  "title_key": "la voix the red ambition tour",
+  "first_date": "2023-10-08",
+  "venue_name": "Lyric Theatre"
+ },
+ {
+  "title": "The Last Five Years",
+  "venue_id": "537c65ec-1bab-4108-acec-c00202d71d56",
+  "last_date": "2021-10-17",
+  "title_key": "last five years",
+  "first_date": "2021-09-17",
+  "venue_name": "Garrick Theatre"
+ },
+ {
+  "title": "The Last Laugh",
+  "venue_id": "153eae24-be93-4d7a-b979-d92d8a497b8a",
+  "last_date": "2025-03-22",
+  "title_key": "last laugh",
+  "first_date": "2025-02-25",
+  "venue_name": "Noël Coward Theatre"
+ },
+ {
+  "title": "Le Corsaire",
+  "venue_id": "65683668-2fb7-4527-8424-eb9de721905c",
+  "last_date": "2020-01-14",
+  "title_key": "le corsaire",
+  "first_date": "2020-01-08",
+  "venue_name": "London Coliseum"
+ },
+ {
+  "title": "Le Jeune Homme Et La Mort / La Sylphide",
+  "venue_id": "65683668-2fb7-4527-8424-eb9de721905c",
+  "last_date": "2018-01-20",
+  "title_key": "le jeune homme et la mort la sylphide",
+  "first_date": "2018-01-16",
+  "venue_name": "London Coliseum"
+ },
+ {
+  "title": "Lemons Lemons Lemons Lemons Lemons",
+  "venue_id": "14dbaa8d-c316-4c39-a42b-81f53b5b556a",
+  "last_date": "2023-03-18",
+  "title_key": "lemons lemons lemons lemons lemons",
+  "first_date": "2023-01-18",
+  "venue_name": "Harold Pinter Theatre"
+ },
+ {
+  "title": "Les Ballets Trockadero de Monte Carlo Programme A",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2022-09-10",
+  "title_key": "les ballets trockadero de monte carlo programme a",
+  "first_date": "2022-09-06",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "Les Ballets Trockadero de Monte Carlo Programme B",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2022-09-17",
+  "title_key": "les ballets trockadero de monte carlo programme b",
+  "first_date": "2022-09-12",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "Leslie Odom, Jr.",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2026-10-31",
+  "title_key": "leslie odom jr",
+  "first_date": "2026-10-31",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "Light of Passage",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2025-03-12",
+  "title_key": "light of passage",
+  "first_date": "2025-02-20",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Like Water For Chocolate",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2025-10-24",
+  "title_key": "like water for chocolate",
+  "first_date": "2025-10-01",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Liza Pulman & Joe Stilgoe – A Couple of Swells!",
+  "venue_id": "be8b6667-a54c-4d4c-b5b3-8330ce485a64",
+  "last_date": "2023-05-15",
+  "title_key": "liza pulman joe stilgoe a couple of swells",
+  "first_date": "2023-05-15",
+  "venue_name": "Duchess Theatre"
+ },
+ {
+  "title": "Lucia di Lammermoor",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2024-05-18",
+  "title_key": "lucia di lammermoor",
+  "first_date": "2024-04-19",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Lucie Jones: Live at the Palladium",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2026-02-16",
+  "title_key": "lucie jones live at the palladium",
+  "first_date": "2026-02-16",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "Lungs",
+  "venue_id": "ebd89b69-d391-449d-8c50-d8a812b280e9",
+  "last_date": "2019-11-09",
+  "title_key": "lungs",
+  "first_date": "2019-10-14",
+  "venue_name": "The Old Vic"
+ },
+ {
+  "title": "Lyonesse",
+  "venue_id": "14dbaa8d-c316-4c39-a42b-81f53b5b556a",
+  "last_date": "2023-12-23",
+  "title_key": "lyonesse",
+  "first_date": "2023-10-17",
+  "venue_name": "Harold Pinter Theatre"
+ },
+ {
+  "title": "MADDADDAM",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2024-11-30",
+  "title_key": "maddaddam",
+  "first_date": "2024-11-14",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Maddie Moate’s Very Curious Christmas",
+  "venue_id": "537c65ec-1bab-4108-acec-c00202d71d56",
+  "last_date": "2026-01-04",
+  "title_key": "maddie moate s very curious christmas",
+  "first_date": "2025-12-12",
+  "venue_name": "Garrick Theatre"
+ },
+ {
+  "title": "The Magic Flute",
+  "venue_id": "65683668-2fb7-4527-8424-eb9de721905c",
+  "last_date": "2024-03-30",
+  "title_key": "magic flute",
+  "first_date": "2024-02-28",
+  "venue_name": "London Coliseum"
+ },
+ {
+  "title": "Magic Goes Wrong",
+  "venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
+  "last_date": "2022-02-27",
+  "title_key": "magic goes wrong",
+  "first_date": "2021-10-21",
+  "venue_name": "Apollo Theatre"
+ },
+ {
+  "title": "The Makropulos Case",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2025-11-21",
+  "title_key": "makropulos case",
+  "first_date": "2025-11-04",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Malevo",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2023-11-04",
+  "title_key": "malevo",
+  "first_date": "2023-10-31",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "The Man in the White Suit",
+  "venue_id": "ac639ef4-9618-4a06-b00f-5910048a6e0b",
+  "last_date": "2019-12-07",
+  "title_key": "man in the white suit",
+  "first_date": "2019-09-27",
+  "venue_name": "Wyndham's Theatre"
+ },
+ {
+  "title": "Manuel Liñán ¡VIVA!",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2024-10-19",
+  "title_key": "manuel linan viva",
+  "first_date": "2024-10-17",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "Marisha Wallace",
+  "venue_id": "6bd0f3c5-4127-4259-ad54-da4f3bfef5fc",
+  "last_date": "2025-03-11",
+  "title_key": "marisha wallace",
+  "first_date": "2025-03-11",
+  "venue_name": "Adelphi Theatre"
+ },
+ {
+  "title": "Marvellous",
+  "venue_id": "a9337cab-01bf-46e3-9331-ce24fd5085d2",
+  "last_date": "2022-11-26",
+  "title_key": "marvellous",
+  "first_date": "2022-10-15",
+  "venue_name": "Soho Place"
+ },
+ {
+  "title": "Mayerling",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2026-05-18",
+  "title_key": "mayerling",
+  "first_date": "2026-03-30",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Mazz Murray: The Music of Dusty Springfield",
+  "venue_id": "6bd0f3c5-4127-4259-ad54-da4f3bfef5fc",
+  "last_date": "2024-11-26",
+  "title_key": "mazz murray the music of dusty springfield",
+  "first_date": "2024-11-26",
+  "venue_name": "Adelphi Theatre"
+ },
+ {
+  "title": "Megan Hilty",
+  "venue_id": "76002057-f9e9-46cf-a6cb-b3fb87c4c83e",
+  "last_date": "2026-05-24",
+  "title_key": "megan hilty",
+  "first_date": "2026-05-24",
+  "venue_name": "Theatre Royal, Drury Lane"
+ },
+ {
+  "title": "Message in a Bottle",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2023-10-14",
+  "title_key": "message in a bottle",
+  "first_date": "2023-10-04",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "Mike Birbiglia: The Old Man and the Pool",
+  "venue_id": "ac639ef4-9618-4a06-b00f-5910048a6e0b",
+  "last_date": "2023-10-07",
+  "title_key": "mike birbiglia the old man and the pool",
+  "first_date": "2023-09-12",
+  "venue_name": "Wyndham's Theatre"
+ },
+ {
+  "title": "Mind Mangler: Member of the Tragic Circle",
+  "venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
+  "last_date": "2024-04-28",
+  "title_key": "mind mangler member of the tragic circle",
+  "first_date": "2024-03-14",
+  "venue_name": "Apollo Theatre"
+ },
+ {
+  "title": "Mindgame",
+  "venue_id": "d9717024-7833-4e7e-8901-6d261cf9a75f",
+  "last_date": "2018-06-02",
+  "title_key": "mindgame",
+  "first_date": "2018-05-15",
+  "venue_name": "Ambassadors Theatre"
+ },
+ {
+  "title": "Mirror and the Light",
+  "venue_id": "97e0b0fe-ef66-4d3b-9f2e-e05f9d697959",
+  "last_date": "2021-11-28",
+  "title_key": "mirror and the light",
+  "first_date": "2021-09-23",
+  "venue_name": "Gielgud Theatre"
+ },
+ {
+  "title": "Monday Night at the Apollo",
+  "venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
+  "last_date": "2021-07-05",
+  "title_key": "monday night at the apollo",
+  "first_date": "2021-05-24",
+  "venue_name": "Apollo Theatre"
+ },
+ {
+  "title": "The Mongol Khan",
+  "venue_id": "65683668-2fb7-4527-8424-eb9de721905c",
+  "last_date": "2023-12-02",
+  "title_key": "mongol khan",
+  "first_date": "2023-11-17",
+  "venue_name": "London Coliseum"
+ },
+ {
+  "title": "The Motive and the Cue",
+  "venue_id": "153eae24-be93-4d7a-b979-d92d8a497b8a",
+  "last_date": "2024-03-23",
+  "title_key": "motive and the cue",
+  "first_date": "2023-12-09",
+  "venue_name": "Noël Coward Theatre"
+ },
+ {
+  "title": "Mozart: Her Story",
+  "venue_id": "76002057-f9e9-46cf-a6cb-b3fb87c4c83e",
+  "last_date": "2024-11-17",
+  "title_key": "mozart her story",
+  "first_date": "2024-11-16",
+  "venue_name": "Theatre Royal, Drury Lane"
+ },
+ {
+  "title": "Murder Ballad",
+  "venue_id": "ae7d4249-d59f-4276-879d-83a5d4f1493c",
+  "last_date": "2016-12-03",
+  "title_key": "murder ballad",
+  "first_date": "2016-09-29",
+  "venue_name": "Arts Theatre"
+ },
+ {
+  "title": "Murmuration Level 2",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2025-09-20",
+  "title_key": "murmuration level 2",
+  "first_date": "2025-09-10",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "MUSIK",
+  "venue_id": "0baf8e99-deea-4e45-a4e9-67aba3bcc766",
+  "last_date": "2020-03-01",
+  "title_key": "musik",
+  "first_date": "2020-02-05",
+  "venue_name": "Leicester Square Theatre"
+ },
+ {
+  "title": "Myra's Story",
+  "venue_id": "c060243f-f74f-4a9e-8769-f6ba7cabf8b9",
+  "last_date": "2026-04-19",
+  "title_key": "myra s story",
+  "first_date": "2026-04-12",
+  "venue_name": "Trafalgar Theatre"
+ },
+ {
+  "title": "Nadiya and Kai - Behind the Magic",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2024-06-23",
+  "title_key": "nadiya and kai behind the magic",
+  "first_date": "2024-06-23",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "New Works",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2024-02-21",
+  "title_key": "new works",
+  "first_date": "2024-02-15",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Nice Fish",
+  "venue_id": "14dbaa8d-c316-4c39-a42b-81f53b5b556a",
+  "last_date": "2017-02-11",
+  "title_key": "nice fish",
+  "first_date": "2016-11-15",
+  "venue_name": "Harold Pinter Theatre"
+ },
+ {
+  "title": "Nick Mohammed Presents The Very Best & Worst of Mr. Swallow",
+  "venue_id": "8aa341a3-5a0e-4287-8df2-b0c1ddad748d",
+  "last_date": "2023-09-09",
+  "title_key": "nick mohammed presents the very best worst of mr swallow",
+  "first_date": "2023-09-05",
+  "venue_name": "Tom Stoppard Theatre"
+ },
+ {
+  "title": "Now You See Me Live",
+  "venue_id": "65683668-2fb7-4527-8424-eb9de721905c",
+  "last_date": "2026-09-06",
+  "title_key": "now you see me live",
+  "first_date": "2026-07-31",
+  "venue_name": "London Coliseum"
+ },
+ {
+  "title": "The Ocean at the End of the Lane",
+  "venue_id": "153eae24-be93-4d7a-b979-d92d8a497b8a",
+  "last_date": "2023-11-25",
+  "title_key": "ocean at the end of the lane",
+  "first_date": "2023-10-11",
+  "venue_name": "Noël Coward Theatre"
+ },
+ {
+  "title": "The Odyssey - The Actors’ Church",
+  "venue_id": "4b27c255-3b5e-45c3-98a5-41e609cd1020",
+  "last_date": "2023-08-06",
+  "title_key": "odyssey the actors church",
+  "first_date": "2023-08-04",
+  "venue_name": "The Actors' Church"
+ },
+ {
+  "title": "Onegin",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2025-06-12",
+  "title_key": "onegin",
+  "first_date": "2025-05-29",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Opening Night",
+  "venue_id": "97e0b0fe-ef66-4d3b-9f2e-e05f9d697959",
+  "last_date": "2024-05-18",
+  "title_key": "opening night",
+  "first_date": "2024-03-06",
+  "venue_name": "Gielgud Theatre"
+ },
+ {
+  "title": "Operation Ouch",
+  "venue_id": "76dd0465-81b7-4ea8-9610-cb4a42785be2",
+  "last_date": "2022-01-16",
+  "title_key": "operation ouch",
+  "first_date": "2021-12-04",
+  "venue_name": "Lyric Theatre"
+ },
+ {
+  "title": "Pantoland At The Palladium",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2022-01-09",
+  "title_key": "pantoland at the palladium",
+  "first_date": "2021-12-04",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "People, Places & Things",
+  "venue_id": "c060243f-f74f-4a9e-8769-f6ba7cabf8b9",
+  "last_date": "2024-08-10",
+  "title_key": "people places things",
+  "first_date": "2024-05-03",
+  "venue_name": "Trafalgar Theatre"
+ },
+ {
+  "title": "Peppa Pig’s Fun Day Out",
+  "venue_id": "1a2631f8-c9c9-4d4b-b221-f1dd55333852",
+  "last_date": "2025-01-05",
+  "title_key": "peppa pig s fun day out",
+  "first_date": "2024-11-28",
+  "venue_name": "Theatre Royal Haymarket"
+ },
+ {
+  "title": "Perspectives: Balanchine, Marston and Peck",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2025-12-02",
+  "title_key": "perspectives balanchine marston and peck",
+  "first_date": "2025-11-14",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Peter Grimes",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2026-05-28",
+  "title_key": "peter grimes",
+  "first_date": "2026-05-05",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Pinter Seven | A Slight Ache / The Dumb Waiter",
+  "venue_id": "14dbaa8d-c316-4c39-a42b-81f53b5b556a",
+  "last_date": "2019-02-23",
+  "title_key": "pinter seven a slight ache the dumb waiter",
+  "first_date": "2019-01-31",
+  "venue_name": "Harold Pinter Theatre"
+ },
+ {
+  "title": "Pinter Three | Landscape / A Kind of Alaska",
+  "venue_id": "14dbaa8d-c316-4c39-a42b-81f53b5b556a",
+  "last_date": "2018-12-08",
+  "title_key": "pinter three landscape a kind of alaska",
+  "first_date": "2018-10-25",
+  "venue_name": "Harold Pinter Theatre"
+ },
+ {
+  "title": "Pinter Two | The Lover / The Collection",
+  "venue_id": "14dbaa8d-c316-4c39-a42b-81f53b5b556a",
+  "last_date": "2018-10-20",
+  "title_key": "pinter two the lover the collection",
+  "first_date": "2018-09-13",
+  "venue_name": "Harold Pinter Theatre"
+ },
+ {
+  "title": "Player Kings",
+  "venue_id": "153eae24-be93-4d7a-b979-d92d8a497b8a",
+  "last_date": "2024-06-22",
+  "title_key": "player kings",
+  "first_date": "2024-04-01",
+  "venue_name": "Noël Coward Theatre"
+ },
+ {
+  "title": "Playing Burton",
+  "venue_id": "ebd89b69-d391-449d-8c50-d8a812b280e9",
+  "last_date": "2025-11-16",
+  "title_key": "playing burton",
+  "first_date": "2025-11-16",
+  "venue_name": "The Old Vic"
+ },
+ {
+  "title": "Public Domain",
+  "venue_id": "f7444518-365a-42d1-a492-a591dfbdeb39",
+  "last_date": "2021-05-30",
+  "title_key": "public domain",
+  "first_date": "2021-05-27",
+  "venue_name": "The Vaudeville Theatre"
+ },
+ {
+  "title": "QUEENZ: The Show With BALLS!",
+  "venue_id": "7e9ea8d1-eec9-4b3f-a22c-dbdbcf60e95a",
+  "last_date": "2024-04-07",
+  "title_key": "queenz the show with balls",
+  "first_date": "2024-04-07",
+  "venue_name": "Dominion Theatre"
+ },
+ {
+  "title": "Quiz",
+  "venue_id": "153eae24-be93-4d7a-b979-d92d8a497b8a",
+  "last_date": "2018-06-16",
+  "title_key": "quiz",
+  "first_date": "2018-03-31",
+  "venue_name": "Noël Coward Theatre"
+ },
+ {
+  "title": "Rachel Zegler",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2025-10-05",
+  "title_key": "rachel zegler",
+  "first_date": "2025-10-05",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "Ramin Karimloo with Seth Rudetsky",
+  "venue_id": "0baf8e99-deea-4e45-a4e9-67aba3bcc766",
+  "last_date": "2018-10-06",
+  "title_key": "ramin karimloo with seth rudetsky",
+  "first_date": "2018-10-05",
+  "venue_name": "Leicester Square Theatre"
+ },
+ {
+  "title": "The Rat Pack",
+  "venue_id": "1a2631f8-c9c9-4d4b-b221-f1dd55333852",
+  "last_date": "2018-02-03",
+  "title_key": "rat pack",
+  "first_date": "2017-12-13",
+  "venue_name": "Theatre Royal Haymarket"
+ },
+ {
+  "title": "Raymonda",
+  "venue_id": "65683668-2fb7-4527-8424-eb9de721905c",
+  "last_date": "2022-01-23",
+  "title_key": "raymonda",
+  "first_date": "2022-01-13",
+  "venue_name": "London Coliseum"
+ },
+ {
+  "title": "Red Pitch",
+  "venue_id": "a9337cab-01bf-46e3-9331-ce24fd5085d2",
+  "last_date": "2024-05-04",
+  "title_key": "red pitch",
+  "first_date": "2024-03-15",
+  "venue_name": "Soho Place"
+ },
+ {
+  "title": "Remembering The Oscars Peacock Theatre 2022",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2022-05-07",
+  "title_key": "remembering the oscars peacock theatre 2022",
+  "first_date": "2022-05-02",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "Remembrance Monday",
+  "venue_id": "808dcff6-bc0a-453a-9b0f-0a8cc4fe5856",
+  "last_date": "2024-06-01",
+  "title_key": "remembrance monday",
+  "first_date": "2024-04-23",
+  "venue_name": "Seven Dials Playhouse"
+ },
+ {
+  "title": "Retrograde",
+  "venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
+  "last_date": "2025-06-14",
+  "title_key": "retrograde",
+  "first_date": "2025-03-08",
+  "venue_name": "Apollo Theatre"
+ },
+ {
+  "title": "Return of The GODZ",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2026-06-20",
+  "title_key": "return of the godz",
+  "first_date": "2026-06-10",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "Rip it Up",
+  "venue_id": "537c65ec-1bab-4108-acec-c00202d71d56",
+  "last_date": "2019-06-02",
+  "title_key": "rip it up",
+  "first_date": "2019-02-07",
+  "venue_name": "Garrick Theatre"
+ },
+ {
+  "title": "Rob Brydon Probes Barry Humphries Live On Stage",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2019-04-28",
+  "title_key": "rob brydon probes barry humphries live on stage",
+  "first_date": "2019-04-28",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "Roles We'll Never Play",
+  "venue_id": "76dd0465-81b7-4ea8-9610-cb4a42785be2",
+  "last_date": "2026-06-01",
+  "title_key": "roles we ll never play",
+  "first_date": "2026-06-01",
+  "venue_name": "Lyric Theatre"
+ },
+ {
+  "title": "Rumi",
+  "venue_id": "65683668-2fb7-4527-8424-eb9de721905c",
+  "last_date": "2021-11-24",
+  "title_key": "rumi",
+  "first_date": "2021-11-23",
+  "venue_name": "London Coliseum"
+ },
+ {
+  "title": "Samantha Barks",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2025-04-05",
+  "title_key": "samantha barks",
+  "first_date": "2025-04-05",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "Same Dress Different Bodies Live",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2025-03-23",
+  "title_key": "same dress different bodies live",
+  "first_date": "2025-03-23",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "Sandi Toksvig",
+  "venue_id": "76002057-f9e9-46cf-a6cb-b3fb87c4c83e",
+  "last_date": "2024-11-14",
+  "title_key": "sandi toksvig",
+  "first_date": "2024-11-13",
+  "venue_name": "Theatre Royal, Drury Lane"
+ },
+ {
+  "title": "The Score",
+  "venue_id": "1a2631f8-c9c9-4d4b-b221-f1dd55333852",
+  "last_date": "2025-04-26",
+  "title_key": "score",
+  "first_date": "2025-02-20",
+  "venue_name": "Theatre Royal Haymarket"
+ },
+ {
+  "title": "Sea Wall",
+  "venue_id": "ebd89b69-d391-449d-8c50-d8a812b280e9",
+  "last_date": "2018-06-30",
+  "title_key": "sea wall",
+  "first_date": "2018-06-18",
+  "venue_name": "The Old Vic"
+ },
+ {
+  "title": "Sea Witch",
+  "venue_id": "76002057-f9e9-46cf-a6cb-b3fb87c4c83e",
+  "last_date": "2026-03-01",
+  "title_key": "sea witch",
+  "first_date": "2026-03-01",
+  "venue_name": "Theatre Royal, Drury Lane"
+ },
+ {
+  "title": "The Secret Diary of Adrian Mole",
+  "venue_id": "d9717024-7833-4e7e-8901-6d261cf9a75f",
+  "last_date": "2019-09-28",
+  "title_key": "secret diary of adrian mole",
+  "first_date": "2019-06-15",
+  "venue_name": "Ambassadors Theatre"
+ },
+ {
+  "title": "Semele",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2025-07-18",
+  "title_key": "semele",
+  "first_date": "2025-06-30",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Sense and Sensibility",
+  "venue_id": "4b27c255-3b5e-45c3-98a5-41e609cd1020",
+  "last_date": "2025-07-23",
+  "title_key": "sense and sensibility",
+  "first_date": "2025-07-22",
+  "venue_name": "The Actors' Church"
+ },
+ {
+  "title": "Sh!t-Faced Showtime: A Pissedmas Carol",
+  "venue_id": "0baf8e99-deea-4e45-a4e9-67aba3bcc766",
+  "last_date": "2025-01-11",
+  "title_key": "sh t faced showtime a pissedmas carol",
+  "first_date": "2019-11-20",
+  "venue_name": "Leicester Square Theatre"
+ },
+ {
+  "title": "Shaggers: Valentine's Day Special",
+  "venue_id": "0baf8e99-deea-4e45-a4e9-67aba3bcc766",
+  "last_date": "2024-02-14",
+  "title_key": "shaggers valentine s day special",
+  "first_date": "2024-02-14",
+  "venue_name": "Leicester Square Theatre"
+ },
+ {
+  "title": "The Shamrocks",
+  "venue_id": "12fab0b6-52b5-4411-82cf-67267451e254",
+  "last_date": "2026-10-19",
+  "title_key": "shamrocks",
+  "first_date": "2026-10-19",
+  "venue_name": "Cambridge Theatre"
+ },
+ {
+  "title": "The Shark is Broken",
+  "venue_id": "d9717024-7833-4e7e-8901-6d261cf9a75f",
+  "last_date": "2022-02-13",
+  "title_key": "shark is broken",
+  "first_date": "2021-10-09",
+  "venue_name": "Ambassadors Theatre"
+ },
+ {
+  "title": "Shifters",
+  "venue_id": "8aa341a3-5a0e-4287-8df2-b0c1ddad748d",
+  "last_date": "2024-10-12",
+  "title_key": "shifters",
+  "first_date": "2024-08-12",
+  "venue_name": "Tom Stoppard Theatre"
+ },
+ {
+  "title": "The Show Must Go On",
+  "venue_id": "80ee04a2-eba7-4028-acdd-9efb7b283c91",
+  "last_date": "2021-06-06",
+  "title_key": "show must go on",
+  "first_date": "2021-06-02",
+  "venue_name": "Palace Theatre"
+ },
+ {
+  "title": "The Show Shanties",
+  "venue_id": "4b27c255-3b5e-45c3-98a5-41e609cd1020",
+  "last_date": "2024-04-07",
+  "title_key": "show shanties",
+  "first_date": "2024-04-07",
+  "venue_name": "The Actors' Church"
+ },
+ {
+  "title": "The Sicilian Vespers",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2025-10-06",
+  "title_key": "sicilian vespers",
+  "first_date": "2025-09-19",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Sierra Boggess",
+  "venue_id": "76002057-f9e9-46cf-a6cb-b3fb87c4c83e",
+  "last_date": "2026-05-31",
+  "title_key": "sierra boggess",
+  "first_date": "2026-05-31",
+  "venue_name": "Theatre Royal, Drury Lane"
+ },
+ {
+  "title": "The Simon & Garfunkel Story",
+  "venue_id": "76002057-f9e9-46cf-a6cb-b3fb87c4c83e",
+  "last_date": "2026-01-18",
+  "title_key": "simon garfunkel story",
+  "first_date": "2026-01-18",
+  "venue_name": "Theatre Royal, Drury Lane"
+ },
+ {
+  "title": "Six Chick Flicks",
+  "venue_id": "0baf8e99-deea-4e45-a4e9-67aba3bcc766",
+  "last_date": "2024-06-29",
+  "title_key": "six chick flicks",
+  "first_date": "2024-04-09",
+  "venue_name": "Leicester Square Theatre"
+ },
+ {
+  "title": "Sleeping Beauty",
+  "venue_id": "14dbaa8d-c316-4c39-a42b-81f53b5b556a",
+  "last_date": "2023-12-31",
+  "title_key": "sleeping beauty",
+  "first_date": "2023-12-27",
+  "venue_name": "Harold Pinter Theatre"
+ },
+ {
+  "title": "The Sleeping Beauty",
+  "venue_id": "65683668-2fb7-4527-8424-eb9de721905c",
+  "last_date": "2018-06-16",
+  "title_key": "sleeping beauty",
+  "first_date": "2018-06-06",
+  "venue_name": "London Coliseum"
+ },
+ {
+  "title": "The Smeds and The Smoos",
+  "venue_id": "76dd0465-81b7-4ea8-9610-cb4a42785be2",
+  "last_date": "2025-09-07",
+  "title_key": "smeds and the smoos",
+  "first_date": "2025-07-18",
+  "venue_name": "Lyric Theatre"
+ },
+ {
+  "title": "So Are We: León & Lightfoot",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2026-06-20",
+  "title_key": "so are we leon lightfoot",
+  "first_date": "2026-06-11",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "Spice Gals",
+  "venue_id": "8cd6ac76-442a-4c6f-8af0-a5c338f0d496",
+  "last_date": "2019-12-08",
+  "title_key": "spice gals",
+  "first_date": "2019-12-08",
+  "venue_name": "Leicester Square Spiegeltent"
+ },
+ {
+  "title": "Spirited Away",
+  "venue_id": "65683668-2fb7-4527-8424-eb9de721905c",
+  "last_date": "2024-07-20",
+  "title_key": "spirited away",
+  "first_date": "2024-04-01",
+  "venue_name": "London Coliseum"
+ },
+ {
+  "title": "The Spy Who Came In From The Cold",
+  "venue_id": "a9337cab-01bf-46e3-9331-ce24fd5085d2",
+  "last_date": "2026-02-21",
+  "title_key": "spy who came in from the cold",
+  "first_date": "2025-11-15",
+  "venue_name": "Soho Place"
+ },
+ {
+  "title": "Stick Man",
+  "venue_id": "0baf8e99-deea-4e45-a4e9-67aba3bcc766",
+  "last_date": "2024-01-02",
+  "title_key": "stick man",
+  "first_date": "2023-10-21",
+  "venue_name": "Leicester Square Theatre"
+ },
+ {
+  "title": "The Tale of Jemima Puddle-Duck",
+  "venue_id": "4b27c255-3b5e-45c3-98a5-41e609cd1020",
+  "last_date": "2025-07-04",
+  "title_key": "tale of jemima puddle duck",
+  "first_date": "2025-07-04",
+  "venue_name": "The Actors' Church"
+ },
+ {
+  "title": "Tao of Glass",
+  "venue_id": "a9337cab-01bf-46e3-9331-ce24fd5085d2",
+  "last_date": "2026-09-12",
+  "title_key": "tao of glass",
+  "first_date": "2026-07-24",
+  "venue_name": "Soho Place"
+ },
+ {
+  "title": "Tape Face",
+  "venue_id": "537c65ec-1bab-4108-acec-c00202d71d56",
+  "last_date": "2017-07-22",
+  "title_key": "tape face",
+  "first_date": "2017-06-06",
+  "venue_name": "Garrick Theatre"
+ },
+ {
+  "title": "Theatre Royalty Drury Lane",
+  "venue_id": "76002057-f9e9-46cf-a6cb-b3fb87c4c83e",
+  "last_date": "2026-08-23",
+  "title_key": "theatre royalty drury lane",
+  "first_date": "2026-08-23",
+  "venue_name": "Theatre Royal, Drury Lane"
+ },
+ {
+  "title": "Till The Stars Come Down",
+  "venue_id": "1a2631f8-c9c9-4d4b-b221-f1dd55333852",
+  "last_date": "2025-09-27",
+  "title_key": "till the stars come down",
+  "first_date": "2025-07-01",
+  "venue_name": "Theatre Royal Haymarket"
+ },
+ {
+  "title": "The Time Traveller's Wife",
+  "venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
+  "last_date": "2024-02-24",
+  "title_key": "time traveller s wife",
+  "first_date": "2023-10-07",
+  "venue_name": "Apollo Theatre"
+ },
+ {
+  "title": "Touching The Void",
+  "venue_id": "8aa341a3-5a0e-4287-8df2-b0c1ddad748d",
+  "last_date": "2020-02-29",
+  "title_key": "touching the void",
+  "first_date": "2019-11-09",
+  "venue_name": "Tom Stoppard Theatre"
+ },
+ {
+  "title": "The Toxic Avenger",
+  "venue_id": "ae7d4249-d59f-4276-879d-83a5d4f1493c",
+  "last_date": "2017-12-03",
+  "title_key": "toxic avenger",
+  "first_date": "2017-09-29",
+  "venue_name": "Arts Theatre"
+ },
+ {
+  "title": "The Traitors: Live Experience",
+  "venue_id": "f624876f-8635-4a0e-ba0b-0edd3b908fd1",
+  "last_date": "2027-04-11",
+  "title_key": "traitors live experience",
+  "first_date": "2025-07-01",
+  "venue_name": "The Traitors Live Experience"
+ },
+ {
+  "title": "TRASH!",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2025-03-01",
+  "title_key": "trash",
+  "first_date": "2025-02-18",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "Treason - London Palladium",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2023-11-22",
+  "title_key": "treason london palladium",
+  "first_date": "2023-11-21",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "Trevor Ashley: A Million Years of Minnelli",
+  "venue_id": "537c65ec-1bab-4108-acec-c00202d71d56",
+  "last_date": "2026-09-06",
+  "title_key": "trevor ashley a million years of minnelli",
+  "first_date": "2026-09-06",
+  "venue_name": "Garrick Theatre"
+ },
+ {
+  "title": "Trevor Ashley – Queen of the Moment",
+  "venue_id": "76dd0465-81b7-4ea8-9610-cb4a42785be2",
+  "last_date": "2023-10-09",
+  "title_key": "trevor ashley queen of the moment",
+  "first_date": "2023-10-09",
+  "venue_name": "Lyric Theatre"
+ },
+ {
+  "title": "TriOperas",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2018-07-01",
+  "title_key": "trioperas",
+  "first_date": "2018-05-23",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "Turandot",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2026-02-04",
+  "title_key": "turandot",
+  "first_date": "2025-12-15",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "The Turn of the Screw",
+  "venue_id": "65683668-2fb7-4527-8424-eb9de721905c",
+  "last_date": "2024-10-31",
+  "title_key": "turn of the screw",
+  "first_date": "2024-10-11",
+  "venue_name": "London Coliseum"
+ },
+ {
+  "title": "Unbelievable",
+  "venue_id": "4cb9e9b8-5fa7-477e-a857-abcacab67875",
+  "last_date": "2024-01-07",
+  "title_key": "unbelievable",
+  "first_date": "2023-09-19",
+  "venue_name": "Criterion Theatre"
+ },
+ {
+  "title": "The Unfriend",
+  "venue_id": "ac639ef4-9618-4a06-b00f-5910048a6e0b",
+  "last_date": "2024-03-09",
+  "title_key": "unfriend",
+  "first_date": "2023-12-15",
+  "venue_name": "Wyndham's Theatre"
+ },
+ {
+  "title": "The Unlikely Pilgrimage of Harold Fry",
+  "venue_id": "1a2631f8-c9c9-4d4b-b221-f1dd55333852",
+  "last_date": "2026-04-18",
+  "title_key": "unlikely pilgrimage of harold fry",
+  "first_date": "2026-01-29",
+  "venue_name": "Theatre Royal Haymarket"
+ },
+ {
+  "title": "The Upstart Crow",
+  "venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
+  "last_date": "2022-12-03",
+  "title_key": "upstart crow",
+  "first_date": "2022-09-23",
+  "venue_name": "Apollo Theatre"
+ },
+ {
+  "title": "Vanity Fair",
+  "venue_id": "4b27c255-3b5e-45c3-98a5-41e609cd1020",
+  "last_date": "2025-08-08",
+  "title_key": "vanity fair",
+  "first_date": "2025-07-18",
+  "venue_name": "The Actors' Church"
+ },
+ {
+  "title": "WALDEN",
+  "venue_id": "14dbaa8d-c316-4c39-a42b-81f53b5b556a",
+  "last_date": "2021-06-12",
+  "title_key": "walden",
+  "first_date": "2021-05-19",
+  "venue_name": "Harold Pinter Theatre"
+ },
+ {
+  "title": "The Watsons",
+  "venue_id": "14dbaa8d-c316-4c39-a42b-81f53b5b556a",
+  "last_date": "2020-09-26",
+  "title_key": "watsons",
+  "first_date": "2020-08-01",
+  "venue_name": "Harold Pinter Theatre"
+ },
+ {
+  "title": "Wayne McGregor: Alchemies",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2026-05-06",
+  "title_key": "wayne mcgregor alchemies",
+  "first_date": "2026-04-18",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "West End Bares 2018",
+  "venue_id": "7624feff-c501-44d7-a7df-747353264d43",
+  "last_date": "2018-10-28",
+  "title_key": "west end bares 2018",
+  "first_date": "2018-10-28",
+  "venue_name": "Shaftesbury Theatre"
+ },
+ {
+  "title": "West End Musical Christmas",
+  "venue_id": "6bd0f3c5-4127-4259-ad54-da4f3bfef5fc",
+  "last_date": "2023-12-12",
+  "title_key": "west end musical christmas",
+  "first_date": "2023-12-12",
+  "venue_name": "Adelphi Theatre"
+ },
+ {
+  "title": "West End Musical Christmas",
+  "venue_id": "76dd0465-81b7-4ea8-9610-cb4a42785be2",
+  "last_date": "2025-12-15",
+  "title_key": "west end musical christmas",
+  "first_date": "2025-12-15",
+  "venue_name": "Lyric Theatre"
+ },
+ {
+  "title": "West End Musical Halloween",
+  "venue_id": "76dd0465-81b7-4ea8-9610-cb4a42785be2",
+  "last_date": "2025-10-27",
+  "title_key": "west end musical halloween",
+  "first_date": "2025-10-27",
+  "venue_name": "Lyric Theatre"
+ },
+ {
+  "title": "West End Musical Love Songs",
+  "venue_id": "898d199f-8903-4c5b-9cf2-b4c1fa5af6f1",
+  "last_date": "2024-03-09",
+  "title_key": "west end musical love songs",
+  "first_date": "2024-03-08",
+  "venue_name": "Apollo Theatre"
+ },
+ {
+  "title": "West End Unscripted! Nick Mohammed and Special Guests",
+  "venue_id": "76002057-f9e9-46cf-a6cb-b3fb87c4c83e",
+  "last_date": "2025-03-23",
+  "title_key": "west end unscripted nick mohammed and special guests",
+  "first_date": "2025-03-23",
+  "venue_name": "Theatre Royal, Drury Lane"
+ },
+ {
+  "title": "The Westway Sessions at the Vaudeville",
+  "venue_id": "f7444518-365a-42d1-a492-a591dfbdeb39",
+  "last_date": "2025-06-23",
+  "title_key": "westway sessions at the vaudeville",
+  "first_date": "2025-02-03",
+  "venue_name": "The Vaudeville Theatre"
+ },
+ {
+  "title": "What’s Love Got To Do With It?",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2026-05-07",
+  "title_key": "what s love got to do with it",
+  "first_date": "2026-05-07",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "Whitney - Queen of the Night",
+  "venue_id": "fd61d61c-5298-4dab-9683-a482b178c80e",
+  "last_date": "2024-02-14",
+  "title_key": "whitney queen of the night",
+  "first_date": "2024-02-14",
+  "venue_name": "London Palladium"
+ },
+ {
+  "title": "Why Am I So Single?",
+  "venue_id": "537c65ec-1bab-4108-acec-c00202d71d56",
+  "last_date": "2025-01-19",
+  "title_key": "why am i so single",
+  "first_date": "2024-08-27",
+  "venue_name": "Garrick Theatre"
+ },
+ {
+  "title": "Why We Love Steve Brown",
+  "venue_id": "bd9e8fb5-a633-4744-96c7-3c8fcaa9a356",
+  "last_date": "2024-09-16",
+  "title_key": "why we love steve brown",
+  "first_date": "2024-09-16",
+  "venue_name": "Savoy Theatre"
+ },
+ {
+  "title": "Wild About You",
+  "venue_id": "76002057-f9e9-46cf-a6cb-b3fb87c4c83e",
+  "last_date": "2024-03-26",
+  "title_key": "wild about you",
+  "first_date": "2024-03-25",
+  "venue_name": "Theatre Royal, Drury Lane"
+ },
+ {
+  "title": "The Wipers Times",
+  "venue_id": "ae7d4249-d59f-4276-879d-83a5d4f1493c",
+  "last_date": "2018-12-01",
+  "title_key": "wipers times",
+  "first_date": "2017-03-21",
+  "venue_name": "Arts Theatre"
+ },
+ {
+  "title": "Woman in Black",
+  "venue_id": "23b90ab7-c24b-4c9c-8eb4-c4b73c20e94e",
+  "last_date": "2023-03-04",
+  "title_key": "woman in black",
+  "first_date": "1989-06-05",
+  "venue_name": "Fortune Theatre"
+ },
+ {
+  "title": "Woolf Works",
+  "venue_id": "c09b13fd-c157-48de-82c5-9fb94b7637d7",
+  "last_date": "2026-02-13",
+  "title_key": "woolf works",
+  "first_date": "2026-01-17",
+  "venue_name": "Royal Opera House"
+ },
+ {
+  "title": "The Worst Witch",
+  "venue_id": "f7444518-365a-42d1-a492-a591dfbdeb39",
+  "last_date": "2019-09-08",
+  "title_key": "worst witch",
+  "first_date": "2019-07-24",
+  "venue_name": "The Vaudeville Theatre"
+ },
+ {
+  "title": "Woyzeck",
+  "venue_id": "ebd89b69-d391-449d-8c50-d8a812b280e9",
+  "last_date": "2017-06-24",
+  "title_key": "woyzeck",
+  "first_date": "2017-05-15",
+  "venue_name": "The Old Vic"
+ },
+ {
+  "title": "Yamato, The Drummers of Japan: Hito no Chikara - The Power of Human Strength",
+  "venue_id": "4db3ef7b-b31e-42e8-9c29-ba830235ea7c",
+  "last_date": "2026-05-30",
+  "title_key": "yamato the drummers of japan hito no chikara the power of human strength",
+  "first_date": "2026-05-12",
+  "venue_name": "Peacock Theatre"
+ },
+ {
+  "title": "Your Lie in April",
+  "venue_id": "14dbaa8d-c316-4c39-a42b-81f53b5b556a",
+  "last_date": "2024-08-11",
+  "title_key": "your lie in april",
+  "first_date": "2024-06-28",
+  "venue_name": "Harold Pinter Theatre"
+ }
+]

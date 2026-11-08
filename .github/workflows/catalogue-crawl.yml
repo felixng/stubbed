@@ -17,6 +17,12 @@ on:
         type: choice
         default: all
         options: [all, directory, venue, event]
+      show_types:
+        description: "Show-type suggestions (#450): benchmark = answer docs/catalogue-benchmark/london-held-titles.json without writing the database; store = answer held London titles and store them; dry-run = load the stored benchmark answers and re-run London identity publication in a rolled-back transaction; load = store the answers in docs/catalogue-benchmark/london-show-type-answers.json (no model calls)"
+        required: false
+        type: choice
+        default: ''
+        options: ['', benchmark, store, dry-run, load]
   schedule:
     - cron: "23 4 * * *"
 permissions:
@@ -48,7 +54,7 @@ jobs:
         run: node supabase/scripts/crawl/fail-run.mjs
 
   loop:
-    if: ${{ (github.event_name == 'schedule' || inputs.run_id == '') && vars.CRAWL_LOOP_ENABLED == 'true' }}
+    if: ${{ (github.event_name == 'schedule' || (inputs.run_id == '' && inputs.show_types == '')) && vars.CRAWL_LOOP_ENABLED == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -73,6 +79,51 @@ jobs:
           args=(--scheduled --stage "${CRAWL_STAGE:-all}")
           if [[ -n "$CRAWL_SOURCE" ]]; then args+=(--source "$CRAWL_SOURCE"); fi
           node supabase/scripts/crawl/loop.mjs "${args[@]}"
+      - name: Suggest show types for held shows (off unless CRAWL_TYPE_SUGGESTIONS)
+        if: ${{ vars.CRAWL_TYPE_SUGGESTIONS == 'true' }}
+        env:
+          CRAWL_TYPE_SUGGESTIONS: ${{ vars.CRAWL_TYPE_SUGGESTIONS }}
+        run: node supabase/scripts/crawl/show-type.mjs --source london_theatre --web-search --limit 100
       - name: Mark an interrupted loop failed
         if: ${{ always() && (failure() || cancelled()) && env.CRAWL_RUN_ID != '' }}
         run: node supabase/scripts/crawl/fail-run.mjs
+
+  show-types:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.show_types != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      CRAWL_TYPE_SUGGESTIONS: 'true'
+      CRAWL_MAX_SPEND_USD: ${{ vars.CRAWL_TYPE_SPEND_USD || '2' }}
+      CRAWL_SITE_SPEND_USD: '0.10'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: npm ci --prefix supabase/scripts/crawl --ignore-scripts
+      - name: Answer the held-title benchmark (no database writes)
+        if: ${{ inputs.show_types == 'benchmark' }}
+        run: |
+          mkdir -p out
+          node supabase/scripts/crawl/show-type.mjs --from-file docs/catalogue-benchmark/london-held-titles.json \
+            --limit 500 --max-minutes 25 --web-search --out out/london-show-type-answers.json --csv out/london-show-type-sample.csv
+      - name: Install PostgreSQL client
+        if: ${{ inputs.show_types == 'store' || inputs.show_types == 'dry-run' || inputs.show_types == 'load' }}
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - name: Answer and store held titles
+        if: ${{ inputs.show_types == 'store' }}
+        run: node supabase/scripts/crawl/show-type.mjs --source london_theatre --web-search --limit 500 --max-minutes 25
+      - name: Rolled-back dry run on the hosted data (nothing is kept)
+        if: ${{ inputs.show_types == 'dry-run' }}
+        run: node supabase/scripts/crawl/show-type-dry-run.mjs supabase/migrations/20261108230000_crawl_show_type_suggestions.sql docs/catalogue-benchmark/london-show-type-answers.json
+      - name: Store the benchmark answers (no model calls)
+        if: ${{ inputs.show_types == 'load' }}
+        run: node supabase/scripts/crawl/show-type.mjs --source london_theatre --load-file docs/catalogue-benchmark/london-show-type-answers.json
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() && inputs.show_types == 'benchmark' }}
+        with:
+          name: london-show-types
+          path: out/

@@ -366,6 +366,33 @@ command handles identity only. It neither reconciles runs nor activates
 suggestions.
 
 
+Suggest types for new shows held as `unknown_show_type` (#450). Only the cleaned
+title, the venue name and the run dates go to `claude-haiku-5-5`, never page
+content. `--web-search` adds a second pass, with at most two searches each,
+for titles whose first answer was unsure or below 0.80:
+
+```sh
+CRAWL_TYPE_SUGGESTIONS=true node supabase/scripts/crawl/show-type.mjs --source london_theatre --web-search --limit 50
+```
+
+It needs `ANTHROPIC_API_KEY` and is capped by `CRAWL_MAX_SPEND_USD` (per run,
+reserved on a `crawl_runs` row) and `CRAWL_SITE_SPEND_USD` (per title). Every
+answer is stored in `crawl_show_type_suggestions` with its provenance and input,
+and re-queues identity for its held events. The next `--publish-identities` batch
+publishes the confident ones. `--from-file held.json --out answers.json --csv
+sample.csv` answers a file instead, with no database access (the
+`show_types: benchmark` workflow input). `--load-file answers.json` stores answers already paid for
+(the `show_types: load` input), with no model call. To undo one model's answers:
+
+```sql
+select public.crawl_revert_show_type_suggestions('ai:claude-haiku-5-5+web_search');
+```
+
+It re-holds shows that no entry or run uses, and lists the rest under
+`needs_review`, unchanged. In the scheduled loop, the step runs only when the
+`CRAWL_TYPE_SUGGESTIONS` repository variable is `true`.
+
+
 After identities have reached their checkpoint, process the independent run
 evidence stage with:
 

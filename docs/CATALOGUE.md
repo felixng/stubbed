@@ -241,8 +241,20 @@ belongs to #426 in the venue-first epic.
 Venue pages without coordinates are geocoded in the worker (postcodes.io, Nominatim fallback, cached in
 `crawl_geocodes`, provenance `geocoded:*` in the evidence); venue matching accepts a postcode/street match, an
 exact `osm_id`, or a geocode within 250 m for exactly one same-name venue. Shows with no deterministic type link
-only on one corroborated exact title, else publish as unverified type `other`. Details and reasons:
-`docs/DECISIONS.md`, "#444".
+only on one corroborated exact title; a new one is held as `unknown_show_type` (since 20261108200100), not
+published as Other. Details and reasons: `docs/DECISIONS.md`, "#444".
+
+### Model-suggested show types (#450)
+
+The one model step in the London pipeline, approved by the owner on 2026-11-08 as a narrowing of #419's rule.
+Pages are still never sent to AI. For held new shows, `show-type.mjs` sends only the cleaned title, the venue
+name and the run dates to `claude-haiku-5-5`, plus an optional web-search pass for unsure answers. Answers live
+in `crawl_show_type_suggestions` with provenance (`ai:claude-haiku-5-5`, `ai:claude-haiku-5-5+web_search`).
+`crawl_match_show` reads `crawl_show_type_suggestion()` only where it would otherwise hold a new show: the
+latest unreverted answer, when it names a type at confidence 0.80 or more. A confident `other` publishes as
+Other. The candidate keeps `type_suggestion_id`. Off unless `CRAWL_TYPE_SUGGESTIONS`; a healthy crawl never
+needs it. Revert by provenance with `crawl_revert_show_type_suggestions`. Benchmark:
+`docs/catalogue-benchmark/`.
 
 ## 4. SQL conventions and known traps
 
