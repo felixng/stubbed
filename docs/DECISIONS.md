@@ -1387,3 +1387,16 @@ venue-first crawl grows the London archive from there. Header, footer and ticket
 listing reports `event_link` observations, which progress counts already understand; no schema change.
 Playbill's robots.txt allows general crawlers and names AI crawlers it blocks; the crawler identifies as Stubbed
 and never sends page content to a model.
+
+### #414 Membership and feature-policy foundation (2026-11-09)
+
+Database slice of #259 to `docs/PAYWALL.md` sections 3, 5 and 6; both switches seed off, so nothing changes
+for anyone. Subscription facts (`billing_customers`, `subscriptions`, `billing_events`, `membership_grants`)
+are readable by their owner only and writable by the service role only. `effective_membership(uid)` is
+internal; clients get `my_membership()` for themselves. Every paid status (trial, active, grace, cancelled)
+needs a future `period_end`, so grace is always bounded; refunded and expired never count. Rows from the other
+`billing_environment` are ignored. Grants must be finite (at most five years). `has_feature(feature)` denies
+unknown features, allows every known one while `paywall_gates_enabled` is not `true`, and otherwise compares
+the `feature_access` tier with the caller's membership. `billing_environment` seeds `sandbox`: production
+needs it set to `production` as part of the rollout (#262). Not here: webhook, refresh, reconciliation, gated
+`own_insights`/drill-downs, sharing retrofit (rest of #259).
