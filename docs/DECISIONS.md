@@ -1352,3 +1352,6 @@ the venue name and the first and last run dates.
 - **Revert** withdraws answers by provenance. Shows they created go back to held when no diary entry or run
   uses them; any others are returned under `needs_review` and left alone.
 - **Off by default** (`CRAWL_TYPE_SUGGESTIONS`). London publication stays off.
+- **Measured (2026-11-08):** of 310 held titles, 197 were confident from the title alone ($0.02). Web search on
+  the other 113 made 75 more confident ($1.32). In a rolled-back dry run on hosted data, held London events fall
+  from 313 to 36, with 247 new shows created. Details and the hand-check sample: `docs/catalogue-benchmark/`.
