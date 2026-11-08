@@ -236,6 +236,14 @@ switch and stays off unless #428's stronger acceptance gate passes.
 Wikipedia (#361), IBDB (#287) and Wayback (#292) remain deferred. Playbill
 belongs to #426 in the venue-first epic.
 
+### Geocoding and unknown-type shows (#444)
+
+Venue pages without coordinates are geocoded in the worker (postcodes.io, Nominatim fallback, cached in
+`crawl_geocodes`, provenance `geocoded:*` in the evidence); venue matching accepts a postcode/street match, an
+exact `osm_id`, or a geocode within 250 m for exactly one same-name venue. Shows with no deterministic type link
+only on one corroborated exact title, else publish as unverified type `other`. Details and reasons:
+`docs/DECISIONS.md`, "#444".
+
 ## 4. SQL conventions and known traps
 
 - **Migrations:** `supabase/migrations/YYYYMMDDHHMMSS_short_name.sql`, timestamp after the newest file. Never edit a merged migration; change functions with `create or replace` (grants survive). One migration per pull request.

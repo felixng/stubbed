@@ -105,9 +105,8 @@ select ok((select source = 'crawler' and not verified and lat is null and lng is
 select is((pg_temp.mapping('event','1')).show_id, 'b4230000-0000-0000-0000-000000000001'::uuid,
   'known type and unique exact show can bind');
 select is((pg_temp.mapping('event','2')).resolution_reason, 'multiple_exact_shows', 'duplicate exact shows remain ambiguous');
-select is((pg_temp.mapping('event','3')).resolution_reason, 'unknown_supported_show_type', 'unknown type is staged');
-select is((select status from public.show_candidates where id = (pg_temp.mapping('event','3')).candidate_id), 'pending',
-  'unknown type is visible for candidate review');
+select ok((select type = 'other' and not verified from public.shows where id = (pg_temp.mapping('event','3')).show_id),
+  'unknown type with a resolved venue and supported date publishes as an unverified other show');
 select ok((select title = 'The Violet Codex: The Musical' and not verified
   from public.shows where id = (pg_temp.mapping('event','4')).show_id),
   'system approval preserves a distinguishing suffix and is unverified');

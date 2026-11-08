@@ -27,7 +27,8 @@ export function runPsql(sql, { timeout = 120_000 } = {}) {
     child.stdout.on('data', chunk => { output += chunk; });
     child.stderr.resume();
     child.on('error', () => reject(new Error('Cannot start psql; install the PostgreSQL client')));
-    child.on('close', code => {
+    child.on('close', (code, signal) => {
+      if (signal) return reject(Object.assign(new Error('Database operation timed out; transaction rolled back'), { code: 'DB_TIMEOUT' }));
       if (code !== 0) return reject(new Error('Database operation failed (check connection, privileges and migrations); transaction rolled back'));
       try { resolve(output.split('\n').filter(line => line.trim()).map(line => JSON.parse(line))); }
       catch { reject(new Error('Unexpected database response')); }

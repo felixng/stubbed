@@ -187,13 +187,18 @@ function eventType(fields, structured, title) {
       /\b(?:backstage|building|theatre|guided) tour\b/i.test(title)) {
     return { event_kind: 'building_tour', show_type: null };
   }
-  const kinds = new Map([
-    ['musical', 'musical'], ['musicals', 'musical'], ['play', 'play'], ['plays', 'play'],
-    ['plays & drama', 'play'], ['drama', 'play'], ['opera', 'opera'], ['ballet', 'dance'],
-    ['dance', 'dance'], ['comedy', 'comedy'], ['stand up', 'standup'],
+  // Categories are multi-valued ("Musicals, Biography, Drama"). "Drama" and "Plays & drama" are generic tags that
+  // co-occur with musicals, so they only decide the type when nothing more specific is present. Two different
+  // specific types (a comedy musical) stay unknown rather than guess.
+  const specific = new Map([
+    ['musical', 'musical'], ['musicals', 'musical'], ['play', 'play'], ['plays', 'play'], ['opera', 'opera'],
+    ['ballet', 'dance'], ['dance', 'dance'], ['comedy', 'comedy'], ['stand up', 'standup'], ['stand-up', 'standup'],
   ]);
-  const known = [...new Set(typeEvidence.map(value => kinds.get(value)).filter(Boolean))];
-  if (known.length) return { event_kind: 'show', show_type: known.length === 1 ? known[0] : null };
+  const generic = new Set(['drama', 'plays & drama']);
+  const known = [...new Set(typeEvidence.map(value => specific.get(value)).filter(Boolean))];
+  if (known.length === 1) return { event_kind: 'show', show_type: known[0] };
+  if (known.length > 1) return { event_kind: 'show', show_type: null };
+  if (typeEvidence.some(value => generic.has(value))) return { event_kind: 'show', show_type: 'play' };
   if (types.includes('MusicEvent') || typeEvidence.some(value => /^concerts?$/.test(value))) {
     return { event_kind: 'concert', show_type: null };
   }
@@ -257,7 +262,7 @@ export function parseEvent({ url, html }) {
 }
 
 export const londonTheatre = {
-  version: 'london-theatre-v2',
+  version: 'london-theatre-v3',
   maxBytes: 6_000_000,
   seeds: [{ scope: 'venue-directory', stage: 'directory', url: ORIGIN + '/venues' }],
   parsers: { directory: parseDirectory, venue: parseVenue, event: parseEvent },

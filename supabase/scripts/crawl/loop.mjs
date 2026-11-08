@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { formatFrontierProgress, HostDeferred, hostGate, runFrontierCli, runScheduledSource, scheduledSources } from './frontier.mjs';
+import { formatFrontierProgress, HostDeferred, hostGate, runFrontierCli, safeError, runScheduledSource, scheduledSources } from './frontier.mjs';
 import { createFrontierStore } from './frontier-store.mjs';
 import { canonicalTaskUrl } from './frontier-url.mjs';
 import { requestPublicPage } from './frontier-network.mjs';
@@ -256,15 +256,16 @@ export async function runScheduled({
     ?await runOfficial(env,{scheduled:true,deadline:sourceDeadline,maxPages})
     :await runSource(row,{stage,maxPages,stopSignal:AbortSignal.timeout(Math.max(1,sourceDeadline-now()-90_000))},frontier);
    remaining-=result.pages??0;
-   reports.push({...result,source:key});
+   reports.push({...result,source:key,...(result.publishError?{error:`Publication failed (${result.publishError})`}:{})});
    if(env.GITHUB_STEP_SUMMARY&&key!=='official'){
     try{await appendFile(env.GITHUB_STEP_SUMMARY,await formatFrontierProgress(frontier,key));}
     catch{console.log(`Progress snapshot unavailable for ${key}; use the source progress view.`);}
    }
-  }catch{
+  }catch(error){
    // A failed process may have issued any number of its allotted requests.
    remaining-=maxPages;
-   reports.push({source:key,error:'Source operation failed; saved leases and checkpoints will resume'});
+   // Keep the error class and a URL- and secret-stripped message so the cause is visible; resume is unchanged.
+   reports.push({source:key,error:`Source operation failed (${safeError(error,300)}); saved leases and checkpoints will resume`.slice(0,400)});
   }
  }
  const summary=`## Scheduled crawl
