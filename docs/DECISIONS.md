@@ -1249,3 +1249,11 @@ conflicting, withdrawn and legacy-only rows never match, and the same show
 appears once with community chips winning. A crawled title with no show opens
 the existing resolver. No client autofills: the server flag only reports
 eligibility until #428's gate passes and a client ships it.
+
+### #428 Run-chip latency
+
+`catalogue_effective_runs` read its `bounded` CTE twice, so every engagement
+was materialised before the venue filter (p95 435 ms at 100k evidence rows).
+`NOT MATERIALIZED` lets the filter reach the evidence scan (p95 4.5 ms). Same
+columns and meaning. Rollout state, results and the runbook are in
+`docs/CATALOGUE_ROLLOUT.md`.

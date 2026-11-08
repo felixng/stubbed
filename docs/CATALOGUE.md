@@ -273,3 +273,5 @@ Follow `supabase/scripts/sync-wikidata.mjs`: Node 24+, **no npm packages** (the 
 - Web: `pnpm lint`, `pnpm typecheck`, `pnpm test` in `apps/web` (lint warnings count).
 - iOS (not in CI): `apps/ios/scripts/dev build` and `scripts/dev test`.
 - A `docs/DECISIONS.md` entry for any choice the issue left open, and the PR body says it needs `supabase db push`. Migrations reach the hosted database only when the owner applies them or says to.
+
+Rollout state, validation results and the operations runbook: [`CATALOGUE_ROLLOUT.md`](CATALOGUE_ROLLOUT.md).
