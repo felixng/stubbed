@@ -30,7 +30,15 @@ The official-site crawler's `collection_enabled` stays as before. With everythin
 
 **Cost:** no model calls were made in the probes (London Theatre and Playbill never use a model). No paid services were used.
 
+## Update 2026-11-08 (#444, PR #445 merged)
+
+Merged: diagnosable publication failures, worker-only free geocoding, new venue and type rules (see `docs/DECISIONS.md`, "#444"), Matilda horizon tests. Local fixture run: the London fixture publishes end to end (geocoded venue links to the existing OSM venue, shows publish); all pgTAP, crawler unit and integration tests pass. **Not yet applied to hosted Supabase and not yet run live**: the session had no `HOSTED_DB_URL`, so migration `20261108150000_london_identity_rules.sql` is pending and every flag is still as in the table above. TestFlight: `apps/ios/scripts/dev archive` stopped before building because `ASC_KEY_PATH` in `~/.config/stubbed/app-store-connect.env` points at a `.p8` that does not exist (the file on disk has a different key ID); no build was uploaded.
+
 ## Not done (epic remains open)
+
+- Apply migration `20261108150000` to hosted; London live runs, evidence spot-check, publication on (needs `HOSTED_DB_URL`).
+- Geocode backfill for the 13 venues created in the first pass: `node supabase/scripts/crawl/loop.mjs --source london_theatre --backfill-geocodes` (after the migration).
+- `docs/catalogue-benchmark/london-labelling.csv` and its scorer (needs published London data).
 
 - Independent labelled live-data benchmark and the chips >= 95% gate on real evidence.
 - Evidence inspection of the London probe and enabling publication.
@@ -53,7 +61,7 @@ Repeating the dispatch resumes due tasks; it does not restart. Discovery only: `
 
 Stop everything: `gh variable delete CRAWL_LOOP_ENABLED`. Pause one source: Backstage > Crawl > Sources, or set `collection_enabled = false`. Stop publication only: `update public.crawl_sources set publication_enabled = false where source_key = '...'` (published facts stay). Withdraw a source's evidence: `select public.set_crawl_source_withdrawal('london_theatre', true)` (diary entries and other sources' facts are untouched).
 
-Reparse in place: `node supabase/scripts/crawl/loop.mjs --source london_theatre --scope venue-directory --reparse --max-pages 25 --max-minutes 10`.
+Geocoding (postcodes.io, then Nominatim at 1100 ms gaps; cached in `crawl_geocodes`) happens in the worker during the venue stage; no key or secret. Reparse in place (re-geocodes from the cache): `node supabase/scripts/crawl/loop.mjs --source london_theatre --scope venue-directory --reparse --max-pages 25 --max-minutes 10`.
 
 Run chips (after publication is enabled and checked), as an admin session: `select public.admin_set_catalogue_flag('catalogue_run_chips_enabled', true);` Disable with `false`: the next suggestion call returns only community/yours chips. Autofill: leave `catalogue_run_autofill_enabled` false.
 
