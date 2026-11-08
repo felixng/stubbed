@@ -100,7 +100,7 @@ select throws_ok($$select public.record_crawl_show_type_suggestion('london_theat
 select throws_ok($$select public.record_crawl_show_type_suggestion('london_theatre',
   pg_temp.answer('halcyon tumblers', 'type', 'play', 1.5))$$, '23514', null, 'confidence stays within 0 to 1');
 select throws_ok($$select public.record_crawl_show_type_suggestion('london_theatre',
-  pg_temp.answer('halcyon tumblers', 'type', 'circus', 0.9))$$, '22P02', null, 'a type outside show_type is refused');
+  pg_temp.answer('halcyon tumblers', 'type', 'puppetry', 0.9))$$, '22P02', null, 'a type outside show_type is refused');
 select pg_temp.publish();
 
 select ok((select type = 'musical' and not verified from public.shows where id = (pg_temp.mapping('1')).show_id),

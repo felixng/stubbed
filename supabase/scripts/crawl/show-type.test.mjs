@@ -34,15 +34,16 @@ test('only the title, venue name and run dates are sent', async () => {
 test('answers are validated: out-of-list types and bad confidences are unsure', () => {
   assert.deepEqual(readAnswer({ type: 'opera', confidence: 0.876 }), { verdict: 'type', suggested_type: 'opera', confidence: 0.88 });
   assert.deepEqual(readAnswer({ type: 'unsure', confidence: 0.4 }), { verdict: 'unsure', suggested_type: null, confidence: 0.4 });
-  assert.equal(readAnswer({ type: 'circus', confidence: 0.9 }), null);
+  assert.equal(readAnswer({ type: 'puppetry', confidence: 0.9 }), null);
   assert.equal(readAnswer({ type: 'play', confidence: 1.2 }), null);
   assert.equal(readAnswer({ type: 'play' }), null);
-  assert.deepEqual(SCHEMA.properties.type.enum, ['musical', 'play', 'opera', 'dance', 'comedy', 'standup', 'concert', 'other', 'unsure']);
+  assert.deepEqual(SCHEMA.properties.type.enum, ['musical', 'play', 'opera', 'dance', 'comedy', 'standup', 'concert', 'circus', 'other', 'unsure']);
+  assert.deepEqual(readAnswer({ type: 'circus', confidence: 0.9 }), { verdict: 'type', suggested_type: 'circus', confidence: 0.9 });
 });
 
 test('answers are stored with provenance; unreadable replies are stored as unsure', async () => {
   const stored = [];
-  const texts = ['{"type":"play","confidence":0.95}', '{"type":"circus","confidence":0.9}', 'not json'];
+  const texts = ['{"type":"play","confidence":0.95}', '{"type":"puppetry","confidence":0.9}', 'not json'];
   let i = 0;
   const model = createModel({ apiKey: 'test', budgetUsd: 1, fetchFn: async () => reply(texts[i++]) });
   const rows = [row('A'), row('B'), row('C')];
@@ -51,7 +52,7 @@ test('answers are stored with provenance; unreadable replies are stored as unsur
   await suggestShowTypes({ source: 'london_theatre', rows: rows.slice(2), model, record: async a => { stored.push(a); return 'id'; } });
   assert.equal(result.confident, 1);
   assert.deepEqual(stored.map(a => [a.title, a.verdict, a.suggested_type, a.confidence, a.provenance, a.prompt_version]), [
-    ['A', 'type', 'play', 0.95, PLAIN, 1], ['B', 'unsure', null, 0, PLAIN, 1], ['C', 'unsure', null, 0, PLAIN, 1]]);
+    ['A', 'type', 'play', 0.95, PLAIN, 2], ['B', 'unsure', null, 0, PLAIN, 2], ['C', 'unsure', null, 0, PLAIN, 2]]);
   assert.equal(stored[1].usage.invalid, 'invalid_answer');
   assert.equal(stored[2].usage.invalid, 'invalid_json');
   assert.equal(stored[0].usage.input_tokens, 600);
