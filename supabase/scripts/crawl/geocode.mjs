@@ -22,6 +22,36 @@ export function normalisePostcode(value) {
 
 const inUk = (lat, lng) => lat >= 49.5 && lat <= 61.5 && lng >= -8.7 && lng <= 2.1;
 const valid = (lat, lng) => Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
+const SAME_PLACE_M = 150;
+const VENUE_TYPES = new Set(['theatre', 'arts_centre', 'concert_hall', 'opera_house', 'events_venue']);
+
+export function metresBetween(a, b) {
+  const rad = Math.PI / 180;
+  const dLat = (b.lat - a.lat) * rad;
+  const dLng = (b.lng - a.lng) * rad;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLng / 2) ** 2;
+  return 2 * 6_371_000 * Math.asin(Math.sqrt(h));
+}
+
+// Nominatim often answers one street address with several objects in the same building (the theatre and a gift
+// shop at 245 W 44th St). Those are one location. Answers far apart are ambiguous ("1634 Broadway" is in
+// Manhattan and Brooklyn), unless exactly one of them is a performance venue. Prefer the venue's own point.
+export function pickNominatim(rows) {
+  const points = rows.map(row => ({ lat: Number(row.lat), lng: Number(row.lon),
+    venue: row.category === 'amenity' && VENUE_TYPES.has(row.type) })).filter(point => valid(point.lat, point.lng));
+  if (!points.length) return null;
+  const venues = points.filter(point => point.venue);
+  if (points.every(point => metresBetween(points[0], point) <= SAME_PLACE_M)) {
+    const best = venues[0] ?? points[0];
+    return { lat: best.lat, lng: best.lng };
+  }
+  return venues.length === 1 ? { lat: venues[0].lat, lng: venues[0].lng } : null;
+}
+
+// "1634 Broadway (At W. 50th St.)": a note in brackets makes Nominatim find nothing.
+export function streetForQuery(street) {
+  return String(street ?? '').replace(/\s*\([^()]*\)/g, '').replace(/\s{2,}/g, ' ').trim();
+}
 
 // Postgres-backed cache. Only answers worth keeping are stored: a hit, or a definitive "not found".
 export function createGeocodeCache(db = sql => runPsql(sql, { timeout: 15_000 })) {
@@ -89,16 +119,13 @@ export function createGeocoder({
 
   async function nominatim(query, uk) {
     return cached('nominatim', query, async () => {
-      const params = new URLSearchParams({ format: 'jsonv2', limit: '2', q: query, 'accept-language': 'en' });
+      const params = new URLSearchParams({ format: 'jsonv2', limit: '5', q: query, 'accept-language': 'en' });
       if (uk) params.set('countrycodes', 'gb');
       const response = await call(`https://nominatim.openstreetmap.org/search?${params}`, { throttle: true });
       if (!response.ok) throw new Error(`Nominatim HTTP ${response.status}`);
       const rows = await response.json();
-      // Two different answers is ambiguity, not a location.
-      if (!Array.isArray(rows) || rows.length !== 1) return null;
-      const lat = Number(rows[0].lat);
-      const lng = Number(rows[0].lon);
-      return valid(lat, lng) && (!uk || inUk(lat, lng)) ? { lat, lng } : null;
+      const hit = pickNominatim(Array.isArray(rows) ? rows : []);
+      return hit && (!uk || inUk(hit.lat, hit.lng)) ? hit : null;
     });
   }
 
@@ -112,8 +139,9 @@ export function createGeocoder({
         if (hit) return { lat: hit.lat, lng: hit.lng, provider: 'postcodes.io', query: code, precision: 'postcode_centroid' };
       }
     } catch (error) { log('postcodes.io failed', error?.name); }
-    const parts = [street, postcode, city, country].map(part => String(part ?? '').trim()).filter(Boolean);
-    if (!street || parts.length < 3) return null;
+    const cleanStreet = streetForQuery(street);
+    const parts = [cleanStreet, postcode, city, country].map(part => String(part ?? '').trim()).filter(Boolean);
+    if (!cleanStreet || parts.length < 3) return null;
     const query = parts.join(', ').slice(0, 300);
     try {
       const hit = await nominatim(query, uk);
