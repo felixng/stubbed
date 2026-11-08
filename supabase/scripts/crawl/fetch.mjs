@@ -8,6 +8,10 @@ export const USER_AGENT = 'Stubbed/1.0 (+https://getstubbed.app; what\'s-on rese
 const ROBOTS_AGENT = 'stubbed';
 const MAX_BYTES = 2_000_000;
 const TIMEOUT_MS = 20_000;
+// A whole page fetch: queueing for the shared host slot, robots, and each redirect hop.
+// Current London Theatre shows redirect once, so with four workers and a 5 s host gap the
+// old 40 s budget expired while waiting (live probe, 2026-11-08). Leases last 5 minutes.
+const PAGE_BUDGET_MS = 120_000;
 
 // Rules for our agent if the file names it, otherwise for "*".
 export function parseRobots(text) {
@@ -238,7 +242,7 @@ export function createGuardedFetcher({ allowUrl, request, gate, minDelayMs, maxR
   }
 
   return async function fetchGuardedPage(value, { etag, lastModified, signal, context } = {}) {
-    const requestSignal = signal ? AbortSignal.any([signal, AbortSignal.timeout(40_000)]) : AbortSignal.timeout(40_000);
+    const requestSignal = signal ? AbortSignal.any([signal, AbortSignal.timeout(PAGE_BUDGET_MS)]) : AbortSignal.timeout(PAGE_BUDGET_MS);
     let target = new URL(value);
     const headers = {
       Accept: 'text/html,application/xhtml+xml,application/ld+json;q=0.9',
