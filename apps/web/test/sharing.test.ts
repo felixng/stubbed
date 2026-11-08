@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { availableEntryDesigns, cardBackground, entryMetrics, formatTimes, type CardData } from "@/lib/share-card";
+import { availableEntryDesigns, cardBackground, entryMetrics, formatTimes, shareDate, type CardData } from "@/lib/share-card";
 import { availableInsightDesigns, availableShowDesigns, isInsightDesign, monthlyShareCounts, radarShareValues, type InsightCardData } from "@/lib/share-card-insights";
-const entry: CardData = { title: "Operation Mincemeat", venue: "Fortune Theatre", where: "London", date: "1 Nov 2026", year: 2026, rating: 0.5, showOfYear: 24, venueVisit: 3, timesSeen: 5, handle: "sillyelphaba" };
+const entry: CardData = { title: "Operation Mincemeat", venue: "Fortune Theatre", where: "London", date: "1 Nov 2026", day: "2026-11-01", year: 2026, rating: 0.5, showOfYear: 24, venueVisit: 3, timesSeen: 5, handle: "sillyelphaba" };
 const insights: InsightCardData = { year: 2026, handle: "sillyelphaba", stats: { total: 24, unique_shows: 18,
   streaks: { current_weekly: 8, longest_weekly: 12, current_daily: 0, longest_daily: 4 },
   years: [{ year: 2026, count: 24 }], months: [{ month: "2025-01", count: 99 }, { month: "2026-10", count: 24 }],
@@ -16,6 +16,16 @@ test("entry sharing separates photo eligibility, saved ratings and repeat visits
 test("data cards never acquire rating fields or duplicate the missing venue", () => {
   assert.deepEqual(entryMetrics(entry).map(m => m.value), ["24th", "5 times"]);
   assert.deepEqual(entryMetrics({ ...entry, venue: null }).map(m => m.label), ["Show of 2026", "Seen"]);
+});
+test("overlays print the day the show was seen, whatever the time zone", () => {
+  assert.equal(shareDate("2024-03-06"), "Wed 6 Mar 2024");
+  const zone = process.env.TZ;
+  try {
+    process.env.TZ = "America/Los_Angeles";
+    assert.equal(shareDate(entry.day), "Sun 1 Nov 2026");
+  } finally {
+    if (zone === undefined) delete process.env.TZ; else process.env.TZ = zone;
+  }
 });
 test("Insights period selection cannot relabel live streaks or make a fake All time year", () => {
   assert.deepEqual(availableInsightDesigns(insights, 2026).map(d => d.id), ["weekly-streak", "year-in-theatre", "show-mix"]);

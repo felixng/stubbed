@@ -4,7 +4,7 @@ import { renderCard, CARD_DESIGNS, type CardData } from "../src/lib/share-card";
 import { renderInsightCard, INSIGHT_CARD_DESIGNS, type InsightCardData } from "../src/lib/share-card-insights";
 
 export const demoEntry: CardData = {
-  title: "Operation Mincemeat", venue: "Fortune Theatre", where: "", date: "4 Nov 2026",
+  title: "Operation Mincemeat", venue: "Fortune Theatre", where: "", date: "4 Nov 2026", day: "2026-11-04",
   year: 2026, rating: 4.5, showOfYear: 57, venueVisit: 9, timesSeen: 7,
   handle: "sillyelphaba",
 };

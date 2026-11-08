@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { formatFrontierProgress, HostDeferred, hostGate, runFrontierCli, safeError, runScheduledSource, scheduledSources } from './frontier.mjs';
+import { adapterScopes, formatFrontierProgress, HostDeferred, hostGate, runFrontierCli, safeError, runScheduledSource, scheduledSources } from './frontier.mjs';
 import { createFrontierStore } from './frontier-store.mjs';
 import { canonicalTaskUrl } from './frontier-url.mjs';
 import { requestPublicPage } from './frontier-network.mjs';
@@ -230,7 +230,7 @@ export async function main(env=process.env,{runId,scheduled,deadline,maxPages}={
  } catch(error){await finishRun(run.id,{status:'failed',summary:{...(await readRun(run.id))?.summary,error:'Loop interrupted'},costUsd:spend.usd});throw error;}
 }
 export async function runScheduled({
- env=process.env,source,stage='all',now=Date.now,frontier=createFrontierStore(),
+ env=process.env,source,stage='all',scope,now=Date.now,frontier=createFrontierStore(),
  runSource=runScheduledSource,runOfficial=main,
 }={}){
  const limits=loopLimits(env);
@@ -238,6 +238,9 @@ export async function runScheduled({
  if(!['all','directory','venue','event'].includes(stage))throw new Error('Unknown crawl stage');
  if(source && ![...scheduledSources,'official'].includes(source))throw new Error('Unknown crawl source');
  if(source==='official'&&stage!=='all')throw new Error('The official-site loop uses the complete site workflow');
+ // A scope limits one aggregate source to one seed's crawl (playbill: london-listing) so new work is not stuck
+ // behind an older backlog; it needs a named source and must be one of that adapter's seed scopes.
+ if(scope&&(!source||source==='official'||!adapterScopes(source).includes(scope)))throw new Error('Unknown crawl scope for that source');
  const deadline=now()+limits.maxMs;
  let remaining=Math.min(100,limits.maxPages);
  const keys=source?[source]:stage==='all'?[...scheduledSources,'official']:scheduledSources;
@@ -254,7 +257,7 @@ export async function runScheduled({
   try{
    const result=key==='official'
     ?await runOfficial(env,{scheduled:true,deadline:sourceDeadline,maxPages})
-    :await runSource(row,{stage,maxPages,stopSignal:AbortSignal.timeout(Math.max(1,sourceDeadline-now()-90_000))},frontier);
+    :await runSource(row,{stage,...(scope?{scope}:{}),maxPages,stopSignal:AbortSignal.timeout(Math.max(1,sourceDeadline-now()-90_000))},frontier);
    remaining-=result.pages??0;
    reports.push({...result,source:key,...(result.publishError?{error:`Publication failed (${result.publishError})`}:{})});
    if(env.GITHUB_STEP_SUMMARY&&key!=='official'){
@@ -286,7 +289,7 @@ Page allowance remaining: ${remaining}.
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   if (process.argv[2] === '--scheduled') {
     Promise.resolve().then(()=>{
-      const {values}=parseArgs({args:process.argv.slice(3),options:{source:{type:'string'},stage:{type:'string'}}});
+      const {values}=parseArgs({args:process.argv.slice(3),options:{source:{type:'string'},stage:{type:'string'},scope:{type:'string'}}});
       return runScheduled(values);
     }).catch(error=>{console.error(error.message);process.exitCode=1;});
   } else if (process.argv.length > 2) {
