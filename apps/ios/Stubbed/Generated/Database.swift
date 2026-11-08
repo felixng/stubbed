@@ -509,6 +509,54 @@ internal enum PublicSchema {
       case startedAt = "started_at"
     }
   }
+  internal struct CrawlGeocodesSelect: Codable, Hashable, Sendable {
+    internal let fetchedAt: String
+    internal let found: Bool
+    internal let lat: Double?
+    internal let lng: Double?
+    internal let provider: String
+    internal let queryKey: String
+    internal enum CodingKeys: String, CodingKey {
+      case fetchedAt = "fetched_at"
+      case found = "found"
+      case lat = "lat"
+      case lng = "lng"
+      case provider = "provider"
+      case queryKey = "query_key"
+    }
+  }
+  internal struct CrawlGeocodesInsert: Codable, Hashable, Sendable {
+    internal let fetchedAt: String?
+    internal let found: Bool
+    internal let lat: Double?
+    internal let lng: Double?
+    internal let provider: String
+    internal let queryKey: String
+    internal enum CodingKeys: String, CodingKey {
+      case fetchedAt = "fetched_at"
+      case found = "found"
+      case lat = "lat"
+      case lng = "lng"
+      case provider = "provider"
+      case queryKey = "query_key"
+    }
+  }
+  internal struct CrawlGeocodesUpdate: Codable, Hashable, Sendable {
+    internal let fetchedAt: String?
+    internal let found: Bool?
+    internal let lat: Double?
+    internal let lng: Double?
+    internal let provider: String?
+    internal let queryKey: String?
+    internal enum CodingKeys: String, CodingKey {
+      case fetchedAt = "fetched_at"
+      case found = "found"
+      case lat = "lat"
+      case lng = "lng"
+      case provider = "provider"
+      case queryKey = "query_key"
+    }
+  }
   internal struct CrawlHostsSelect: Codable, Hashable, Sendable {
     internal let availableAt: String
     internal let host: String

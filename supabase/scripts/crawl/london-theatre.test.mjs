@@ -104,3 +104,27 @@ test('explicit nonconsecutive performance dates remain discrete evidence', () =>
     ['performance', '2027-07-11'], ['performance', '2027-07-25'],
   ]);
 });
+
+const eventPage = (categories, jsonLd = '') => `<!doctype html>${jsonLd}<main><h1 data-test-id="product-name">Hamilton tickets</h1>
+  <div data-test-id="main-content"><div><h2 data-test-id="title-Start date">Start date</h2><p>6th December, 2017</p></div>
+  <div><h2 data-test-id="title-Categories">Categories</h2><p>${categories.map(c => `<span><a href="/whats-on/x">${c}</a>, </span>`).join('')}</p></div>
+  <h3 data-test-id="venue-name"><a href="/venues/strand-theatre">Strand Theatre</a></h3></div></main>`;
+const classify = (categories, jsonLd) =>
+  parseEvent({ url: origin + '/show/201-hamilton', html: eventPage(categories, jsonLd) }).observations[0];
+
+test('multi-category pages resolve by specificity and never guess between two specific types', () => {
+  assert.equal(classify(['Musicals', 'Biography', 'Drama', 'Award winners']).show_type, 'musical');
+  assert.equal(classify(['Drama', 'History']).show_type, 'play');
+  assert.equal(classify(['Plays', 'Comedy']).show_type, null);
+  assert.equal(classify(['Plays', 'Comedy']).event_kind, 'show');
+  assert.equal(classify(['West End', 'Family / Kid-friendly']).event_kind, 'unknown');
+  assert.equal(classify(['Musicals', 'Workshop']).event_kind, 'workshop');
+});
+
+test('a JSON-LD endDate on a long run is a scheduled end, never a closing', () => {
+  const ld = `<script type="application/ld+json">{"@type":"TheaterEvent","url":"/show/201-hamilton","name":"Matilda",
+    "startDate":"2011-11-25","endDate":"2027-09-05"}</script>`;
+  const dates = classify(['Musicals'], ld).dates;
+  assert.ok(dates.some(claim => claim.date === '2027-09-05' && claim.kind === 'end'));
+  assert.equal(dates.some(claim => claim.kind === 'closing'), false);
+});

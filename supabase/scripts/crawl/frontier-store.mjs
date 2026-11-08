@@ -5,9 +5,9 @@ const sqlText = value => '(' + jsonLiteral(value ?? null) + " #>> '{}')";
 const bool = value => value ? 'true' : 'false';
 const when = value => sqlText(value) + '::timestamptz';
 
-export function createFrontierStore(db = sql => runPsql(sql, { timeout: 15_000 })) {
-  async function scalar(expression) {
-    const [value] = await db(`select coalesce(to_jsonb(${expression}), 'null'::jsonb)`);
+export function createFrontierStore(db = (sql, timeout = 15_000) => runPsql(sql, { timeout })) {
+  async function scalar(expression, timeout) {
+    const [value] = await db(`select coalesce(to_jsonb(${expression}), 'null'::jsonb)`, timeout);
     return value;
   }
 
@@ -77,11 +77,11 @@ export function createFrontierStore(db = sql => runPsql(sql, { timeout: 15_000 }
     },
 
     async publishIdentities(source, limit) {
-      return scalar(`public.publish_crawl_identities(${sqlText(source)}, ${limit})`);
+      return scalar(`public.publish_crawl_identities(${sqlText(source)}, ${limit})`, 120_000);
     },
 
     async publishRuns(source, limit) {
-      return scalar(`public.publish_crawl_run_evidence(${sqlText(source)}, ${limit})`);
+      return scalar(`public.publish_crawl_run_evidence(${sqlText(source)}, ${limit})`, 120_000);
     },
 
     async progress(source, scan, stage, status, offset = 0) {

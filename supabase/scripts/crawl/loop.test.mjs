@@ -120,3 +120,17 @@ test('model requires a durable reservation and an allowed repair before sending 
  assert.deepEqual(attempts,['reserved']);
  assert.deepEqual(settled,[['id',0]]);
 });
+
+test('a failed source operation reports its error class and a stripped message, and still resumes safely',async()=>{
+ const env={CRAWL_LOOP_ENABLED:'true'};
+ const frontier={source:async key=>({source_key:key,collection_enabled:true})};
+ const failing=async()=>{throw Object.assign(new Error('Database operation timed out at postgresql://u:pw@h/db'),{code:'DB_TIMEOUT'});};
+ await assert.rejects(runScheduled({env,frontier,source:'london_theatre',runSource:failing}),/One or more crawl sources failed/);
+ const logs=[];const log=console.log;console.log=text=>logs.push(text);
+ try{await runScheduled({env,frontier,source:'london_theatre',runSource:failing}).catch(()=>{});}finally{console.log=log;}
+ const text=logs.join('\n');
+ assert.match(text,/london_theatre: Source operation failed \(DB_TIMEOUT: Database operation timed out/);
+ assert.doesNotMatch(text,/pw@|postgresql:/);
+ const publish=await runScheduled({env,frontier,source:'london_theatre',runSource:async()=>({pages:1,publishError:'identities: DB_TIMEOUT: timed out'})}).catch(error=>error);
+ assert.match(publish.message,/failed/);
+});

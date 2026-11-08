@@ -5,6 +5,7 @@ import { parseArgs } from 'node:util';
 import { mapFour } from './concurrent.mjs';
 import { createGuardedFetcher } from './fetch.mjs';
 import { requestPublicPage } from './frontier-network.mjs';
+import { createGeocodeCache, createGeocoder, geocodeVenueObservations, backfillVenueGeocodes } from './geocode.mjs';
 import { createFrontierStore } from './frontier-store.mjs';
 import { canonicalTaskUrl } from './frontier-url.mjs';
 import { structuredReader } from './sources/theatre-site.mjs';
@@ -117,7 +118,7 @@ function startHeartbeat(store, task, controller) {
 export async function runFrontier({
   source, adapter, seeds, stage = 'all', scope, maxPages = 25, maxMinutes = 10,
   dryRun = false, refresh = false, reparse = false, store = createFrontierStore(),
-  now = Date.now, random = Math.random, request = requestPublicPage,
+  now = Date.now, random = Math.random, request = requestPublicPage, geocoder = null,
   stopSignal = AbortSignal.timeout(maxMinutes * 60_000 - CLEANUP_MS),
 }) {
   const result = { source: source.source_key, pages: 0, requests: 0, statuses: {}, proposed: [], responses: [] };
@@ -196,6 +197,10 @@ export async function runFrontier({
         if (!parse) return await fail(task, 'Adapter does not support this stage');
         const parsed = await parse({ url: page.url, html: page.html });
         if (parsed?.status === 'invalid') return await fail(task, parsed.reason ?? 'Parser did not recognise the page');
+        // Venue pages without coordinates get a cached free geocode (worker only; failure leaves them as parsed).
+        if (geocoder && task.stage === 'venue' && parsed?.observations) {
+          parsed.observations = await geocodeVenueObservations(parsed.observations, geocoder);
+        }
         payload = { ...extraction(parsed, page.url, allowedHosts, task.stage), etag: page.etag, lastModified: page.lastModified };
       }
       signal.throwIfAborted();
@@ -210,9 +215,7 @@ export async function runFrontier({
       if (stopSignal.aborted) return finishAttempt(task, 'pending', null, null);
       if (error instanceof HostDeferred) return finishAttempt(task, 'pending', error.retryAt, error.message);
       // Keep the cause (no URLs or credentials): an operator can tell a timeout from a parser error.
-      const cause = String(error?.cause?.code ?? error?.code ?? error?.name ?? 'Error');
-      const detail = String(error?.message ?? '').replace(/https?:\/\/\S+/g, '<url>').slice(0, 120);
-      return fail(task, `Fetch or parse failed (${cause}: ${detail})`.slice(0, 300));
+      return fail(task, `Fetch or parse failed (${safeError(error, 120)})`.slice(0, 300));
     } finally {
       stopHeartbeat();
     }
@@ -261,13 +264,30 @@ const official = {
 const adapters = { official, london_theatre: londonTheatre, playbill };
 export const scheduledSources = ['london_theatre', 'playbill'];
 
+const defaultGeocoder = () => createGeocoder({ cache: createGeocodeCache() });
+
+// "Class: message" with URLs, connection strings and token-like strings removed. Safe for logs and summaries.
+export function safeError(error, max = 300) {
+  const cause = String(error?.cause?.code ?? error?.code ?? error?.name ?? 'Error');
+  const message = String(error?.message ?? '')
+    .replace(/\b[a-z][a-z0-9+.-]*:\/\/\S+/gi, '<url>')
+    .replace(/\beyJ[\w-]{10,}(\.[\w-]+)*/g, '<token>')
+    .replace(/\b(?:sk|pk|sbp|ghp|gho|ghs)[-_][\w-]{8,}/gi, '<token>')
+    .replace(/\s+/g, ' ');
+  return `${cause}: ${message}`.slice(0, max);
+}
+
 export async function runScheduledSource(source, options, store = createFrontierStore()) {
   const key = source.source_key;
   const adapter = adapters[key];
-  const result = await runFrontier({ ...options, source, adapter, seeds: adapter.seeds, store });
+  const geocoder = options.geocoder === undefined ? defaultGeocoder() : options.geocoder;
+  const result = await runFrontier({ ...options, source, adapter, seeds: adapter.seeds, store, geocoder });
   if (source.publication_enabled && options.stage === 'all') {
-    result.identities = await store.publishIdentities(key, 100);
-    result.runs = await store.publishRuns(key, 100);
+    // Publication errors must not hide the fetch results already saved; report the cause and fail the run visibly.
+    try { result.identities = await store.publishIdentities(key, 100); }
+    catch (error) { result.publishError = `identities: ${safeError(error, 140)}`; }
+    try { result.runs = await store.publishRuns(key, 100); }
+    catch (error) { result.publishError = `${result.publishError ? result.publishError + '; ' : ''}runs: ${safeError(error, 140)}`.slice(0, 300); }
   }
   return result;
 }
@@ -285,6 +305,7 @@ export async function runFrontierCli(args = process.argv.slice(2), store = creat
     'dry-run': { type: 'boolean' }, refresh: { type: 'boolean' }, reparse: { type: 'boolean' },
     'publish-identities': { type: 'boolean' },
     'publish-runs': { type: 'boolean' },
+    'backfill-geocodes': { type: 'boolean' },
     progress: { type: 'boolean' }, scan: { type: 'string' }, status: { type: 'string' },
     page: { type: 'string', default: '1' },
     'max-publications': { type: 'string', default: '25' },
@@ -293,6 +314,7 @@ export async function runFrontierCli(args = process.argv.slice(2), store = creat
   if (values.help) {
     console.log('Usage: node supabase/scripts/crawl/loop.mjs --source <key> [--scope <key>] [--stage directory|venue|event|all] [--max-pages 25] [--max-minutes 10] [--dry-run | --refresh | --reparse]');
     console.log('       node supabase/scripts/crawl/loop.mjs --source <key> (--publish-identities | --publish-runs) [--max-publications 25]');
+    console.log('       node supabase/scripts/crawl/loop.mjs --source <key> --backfill-geocodes   (geocode crawler-created venues that have a postcode but no coordinates)');
     console.log('       node supabase/scripts/crawl/loop.mjs --source <key> --progress [--scan <uuid>] [--stage venue] [--status blocked] [--page 1]');
     return;
   }
@@ -309,6 +331,10 @@ export async function runFrontierCli(args = process.argv.slice(2), store = creat
     return;
   }
   if (!Object.hasOwn(adapters, key)) throw new Error('No installed frontier adapter for that source');
+  if (values['backfill-geocodes']) {
+    console.log(JSON.stringify(await backfillVenueGeocodes(defaultGeocoder())));
+    return;
+  }
   if (values['publish-identities'] || values['publish-runs']) {
     if (values['publish-identities'] && values['publish-runs']) throw new Error('Choose one publication stage');
     if (values.scope || values.stage !== 'all' || values.refresh || values.reparse || values['dry-run']) {
@@ -340,6 +366,7 @@ export async function runFrontierCli(args = process.argv.slice(2), store = creat
   const result = await runFrontier({
     source, adapter, seeds, stage: values.stage, scope: values.scope,
     dryRun: values['dry-run'], refresh: values.refresh, reparse: values.reparse, maxPages, maxMinutes, store,
+    geocoder: values['dry-run'] ? null : defaultGeocoder(),
   });
   console.log(JSON.stringify(result, null, 2));
   if (process.env.GITHUB_STEP_SUMMARY && !values['dry-run']) {

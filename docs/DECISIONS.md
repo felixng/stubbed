@@ -1257,3 +1257,39 @@ was materialised before the venue filter (p95 435 ms at 100k evidence rows).
 `NOT MATERIALIZED` lets the filter reach the evidence scan (p95 4.5 ms). Same
 columns and meaning. Rollout state, results and the runbook are in
 `docs/CATALOGUE_ROLLOUT.md`.
+
+### #444 Free geocoding and London identity rules
+
+**Geocoder (owner, 2026-11-08).** Venue pages give a name and postcode but no coordinates, while existing venues
+mostly come from OSM with coordinates and no postcode. The crawler worker geocodes with free services that need
+no account or key: **postcodes.io** for UK postcodes (open ONS data, postcode centroid), and **OSM Nominatim**
+as the fallback and for non-UK addresses later (Playbill), under its policy: at most one request per second
+(1100 ms gap), the identifying crawler User-Agent, cached results. Geocoding runs only in the crawler worker
+(`supabase/scripts/crawl/geocode.mjs`, called from the venue stage), never in a logging request or client path.
+Results are cached in `crawl_geocodes` (hits and definitive misses; failures are not cached) and the venue
+observation carries `lat`, `lng` and `geocode: {provider: 'geocoded:postcodes.io' | 'geocoded:nominatim', query,
+precision}`, which is kept in `crawl_source_entities.evidence`. A failure, timeout, ambiguous or out-of-country
+answer returns nothing and the venue stays held; it never blocks the crawl. Tests inject a fetcher: CI never
+calls a live geocoder (the live path refuses to run inside `node --test`).
+
+**Venue matching** (`crawl_match_venue`, migration `20261108150000`). Link to an existing venue only when exactly
+one same-name venue in the same canonical city and country passes one of: postcode or street match, an exact
+`osm_id`, or coordinates within **250 m** when the source point has a trusted geocode (100 m otherwise: a
+postcode centroid is less precise than a published point). Never on name alone; two passing candidates,
+multi-auditorium and building venues stay held. A newly created venue keeps the geocoded point so the next
+source can corroborate against it; `loop.mjs --backfill-geocodes` fills crawler-created venues that have an
+address but no point (only null coordinates, never moves one). Diary venue IDs are untouched.
+
+**Show type** (`classify` in the London adapter, `crawl_match_show`). Category labels are multi-valued
+("Musicals, Biography, Drama"). The parser now picks the single specific type (musical, play, opera, dance,
+comedy, stand-up); generic "Drama" only decides when nothing specific is present; two different specific types
+stay unknown. No AI on London or Playbill pages. For a page still without a deterministic type
+(`event_kind` `unknown`, or `show` without a type): a resolved venue and a supported date are still required;
+exactly one exact normalised title match links only when the resolved venue or earlier run evidence for that
+show corroborates it (`uncorroborated_exact_show` otherwise), and an existing show's type is never changed;
+several exact matches stay held; a similar-title show stays held; otherwise the title publishes as an
+**unverified show of type `other`** through the candidate path (`crawl_approve_other_candidate`). Classes,
+workshops, building tours and concerts stay excluded.
+
+**Booking horizon.** A JSON-LD `endDate` is parsed as `end` (a scheduled end), never `closing`: it is not a
+confirmed end, cannot make a run autofill-eligible, and chips describe it as `scheduled_end`.
