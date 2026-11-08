@@ -49,8 +49,23 @@ extraction, load the answers, publish again.
   to review (`plausible_show_requires_resolution`, +17). The same title at a different venue needs
   corroboration (`uncorroborated_exact_show`, +11).
 
-### Known mistakes to look for
+### Hand check of the sample (2026-11-08)
 
-The sample holds confident mistakes, for example *Don Quixote* (Garrick Theatre, 2018–19, the RSC play) answered
-dance at 0.85, and talk-style "evenings with" answered stand-up. Hand-check the sample before London publication
-is switched on. Any wrong answers can be reverted by provenance (`crawl_revert_show_type_suggestions`).
+Checked by Claude from its own knowledge, with a web search for four titles it wasn't sure of. Not yet checked
+by the owner. Corrections are in `correct_type`; borderline calls are in `notes`.
+
+- **89 of the 100 would publish; 82 of those have the right type: 92% accurate.** The 11 held rows don't publish.
+- **The 7 wrong ones:**
+  - *Don Quixote*, the RSC play, answered dance.
+  - *Like Water for Chocolate*, the Wheeldon ballet, answered musical.
+  - *The Secret Diary of Adrian Mole*, the musical, answered play.
+  - *Go Your Own Way*, a tribute concert, answered musical.
+  - *West End Musical Christmas*, a concert, answered musical.
+  - *Unbelievable*, a magic show, answered play.
+  - *Chrishell Stause: Up Close and Personal*, a talk, answered stand-up.
+- **The pattern:** a title shared by another kind of work (the novel, the ballet or the musical), and song
+  compilations or tribute nights called musicals.
+- **8 debatable calls are counted as right:** comic plays as comedy or play, and one-person shows. Counting
+  them all wrong would give 83%.
+
+Any wrong answers can be reverted by provenance (`crawl_revert_show_type_suggestions`).
