@@ -1373,6 +1373,6 @@ The first Playbill probe held 20 of 42 Broadway venues. Playbill gives a street 
   shop in Brooklyn.
 - A bracketed note ("1634 Broadway (At W. 50th St.)") made Nominatim find nothing, so it is dropped from the
   query.
-Migration `20261108230000` forgets the cached Nominatim misses and re-queues the Playbill and London venue
+Migration `20261108235000` forgets the cached Nominatim misses and re-queues the Playbill and London venue
 pages (about 100), so the next run geocodes them again at the existing 1.1 s gap. Matching rules are unchanged:
 a geocoded point still needs exactly one same-name venue within 250 m.
