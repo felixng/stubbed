@@ -26,6 +26,22 @@ describe("normaliseSuggestions", () => {
   });
 });
 
+describe("run chips (#278)", () => {
+  it("keeps run metadata, allows a null show_id, and caps runs at three", () => {
+    const runs = [1, 2, 3, 4].map((n) => ({ ...row(n, "run"), show_id: n === 1 ? null : `s${n}`, run_id: `r${n}`, eligibility_reason: "confirmed_closing", autofill_eligible: false }));
+    const out = normaliseSuggestions(runs);
+    assert.equal(out.length, 3);
+    assert.equal(out[0].show_id, null);
+    assert.equal(out[1].run_id, "r2");
+    assert.equal(out[1].eligibility_reason, "confirmed_closing");
+  });
+  it("treats rows without metadata (older server shape) as plain chips", () => {
+    const [one] = normaliseSuggestions([row(1)]);
+    assert.equal(one.run_id, null);
+    assert.equal(one.autofill_eligible, false);
+  });
+});
+
 describe("loadSuggestions", () => {
   it("returns [] when the call fails or times out, never throws", async () => {
     assert.deepEqual(await loadSuggestions(async () => { throw new Error("rpc"); }, "v1", "2026-10-05"), []);

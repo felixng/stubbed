@@ -65,6 +65,8 @@ struct LogView: View {
   @State private var suggestions: [ShowSuggestion] = []
   /// Where the chosen show came from, for `entry_logged.show_source`.
   @State private var showSource = "manual"
+  /// A crawled title with no show yet, seeding the show search (#278).
+  @State private var runTitleSeed: String?
   /// A picked photo is on its way (an iCloud original can take seconds to
   /// download) and its thumbnail isn't ready yet.
   @State private var loadingPhoto = false
@@ -144,7 +146,11 @@ struct LogView: View {
       .sheet(item: $picking) { picker in
         switch picker {
         case .show:
-          ShowSearch { pickShow($0) }
+          ShowSearch(initialQuery: runTitleSeed ?? "") {
+            pickShow($0)
+            if runTitleSeed != nil { showSource = "run" }
+            runTitleSeed = nil
+          }
         case .venue:
           VenueSearch(nearby: nearby, suggestions: venueSuggestions, place: venuePlace) { pickVenue($0) }
         }
@@ -495,12 +501,21 @@ struct LogView: View {
 
   /// One tap fills the show, only if the field is still empty and untouched.
   private func pick(_ item: ShowSuggestion) async {
-    guard let id = item.showId, show == nil, !touchedShow else { return }
+    guard show == nil, !touchedShow else { return }
+    let source = item.source == "yours" ? "yours" : item.source == "run" ? "run" : "community"
+    guard let id = item.showId else {
+      // A crawled title with no show yet: the existing show search opens with
+      // it, so the usual "Did you mean" resolver decides; nothing is created
+      // until Save.
+      runTitleSeed = item.title
+      picking = .show
+      return
+    }
     let key = suggestKey
     guard let found = await ShowSuggestions.show(id: id) else { return }
     guard show == nil, !touchedShow, key == suggestKey else { return }
     pickShow(ShowChoice(found))
-    showSource = item.source == "yours" ? "yours" : "community"
+    showSource = source
     suggestions = []
   }
 

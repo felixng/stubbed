@@ -71,6 +71,36 @@ internal enum PublicSchema {
       case createdAt = "created_at"
     }
   }
+  internal struct CatalogueConsumerFlagsSelect: Codable, Hashable, Sendable {
+    internal let enabled: Bool
+    internal let flag: String
+    internal let updatedAt: String
+    internal enum CodingKeys: String, CodingKey {
+      case enabled = "enabled"
+      case flag = "flag"
+      case updatedAt = "updated_at"
+    }
+  }
+  internal struct CatalogueConsumerFlagsInsert: Codable, Hashable, Sendable {
+    internal let enabled: Bool?
+    internal let flag: String
+    internal let updatedAt: String?
+    internal enum CodingKeys: String, CodingKey {
+      case enabled = "enabled"
+      case flag = "flag"
+      case updatedAt = "updated_at"
+    }
+  }
+  internal struct CatalogueConsumerFlagsUpdate: Codable, Hashable, Sendable {
+    internal let enabled: Bool?
+    internal let flag: String?
+    internal let updatedAt: String?
+    internal enum CodingKeys: String, CodingKey {
+      case enabled = "enabled"
+      case flag = "flag"
+      case updatedAt = "updated_at"
+    }
+  }
   internal struct CollectionsSelect: Codable, Hashable, Sendable {
     internal let createdAt: String
     internal let endDate: String?
