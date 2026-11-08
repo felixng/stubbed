@@ -1358,4 +1358,5 @@ the venue name and the first and last run dates.
 - **Prompt v2 (2026-11-08)** after the hand check of v1: a circus type (#452); song compilations and tribute acts
   are concerts; celebrity talks are other; judge the production by venue and dates, not the title alone. Of 310
   titles, 280 would publish (272 in v1). The hand-checked sample is 94% right (92% in v1). The errors left are
-  famous titles shared with another kind of work.
+  famous titles shared with another kind of work. In the rolled-back dry run with v2 answers, held London
+  events fall from 313 to 28, with 254 new shows.

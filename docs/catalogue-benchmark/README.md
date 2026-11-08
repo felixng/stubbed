@@ -34,25 +34,26 @@ default $2) or `show_types: dry-run` (no model calls).
 
 v2 by type: 37 musical, 77 play, 25 opera, 25 dance, 22 comedy, 12 stand-up, 51 concert, 6 circus, 25 other.
 
-### Rolled-back dry run on hosted data (v1 answers; v2 waits for the circus type on hosted)
+### Rolled-back dry run on hosted data
 
-[Run 42514195298](https://github.com/felixng/stubbed/actions/runs/42514195298) did all of this in one
-transaction, then rolled it back: apply the migration, switch London publication on, publish every London
-extraction, load the answers, publish again.
+Each run did all of this in one transaction, then rolled it back: apply the migration, switch London publication
+on, publish every London extraction, load the answers, publish again.
+v1 is [run 42514195298](https://github.com/felixng/stubbed/actions/runs/42514195298); v2 is
+[run 42517121146](https://github.com/felixng/stubbed/actions/runs/42517121146).
 
-| | Before answers | With answers |
-|---|---|---|
-| Held as `unknown_show_type` | 313 | **36** |
-| Linked events | 152 | 402 |
-| `plausible_show_requires_resolution` | 222 | 239 |
-| `uncorroborated_exact_show` | 195 | 206 |
+| | No answers | v1 answers | v2 answers |
+|---|---|---|---|
+| Held as `unknown_show_type` | 313 | 36 | **28** |
+| Linked events | 152 | 402 | 409 |
+| New shows from suggestions | 0 | 247 | **254** |
+| `plausible_show_requires_resolution` | 222 | 239 | 240 |
+| `uncorroborated_exact_show` | 195 | 206 | 206 |
 
-- **247 new shows** would be created from suggestions: 78 play, 41 musical, 33 concert, 27 dance, 19 comedy,
-  19 other, 18 opera, 12 stand-up. 174 came from the title-only answer, 73 from web search. 250 events link
-  to them.
-- About 28 confident titles still wait, by design. Once one suggested show exists, a similar title elsewhere goes
-  to review (`plausible_show_requires_resolution`, +17). The same title at a different venue needs
-  corroboration (`uncorroborated_exact_show`, +11).
+- **v2's new shows by type:** 74 play, 37 musical, 45 concert, 22 dance, 19 comedy, 24 other, 20 opera, 8 stand-up,
+  5 circus.
+- **Where they came from:** 179 from the title-only answer, 75 from web search. 257 events link to them.
+- **About 26 confident titles still wait, by design.** Once one suggested show exists, a similar title elsewhere
+  goes to review. The same title at a different venue needs corroboration.
 
 ### Hand check of the sample (2026-11-08)
 
