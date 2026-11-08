@@ -4,7 +4,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type Visibility = "public" | "private";
-export type ShowType = "musical" | "play" | "opera" | "dance" | "comedy" | "standup" | "concert" | "other";
+export type ShowType = "musical" | "play" | "opera" | "dance" | "comedy" | "standup" | "concert" | "circus" | "other";
 
 export const SHOW_TYPE_LABELS: Record<ShowType, string> = {
   musical: "Musical",
@@ -14,6 +14,7 @@ export const SHOW_TYPE_LABELS: Record<ShowType, string> = {
   comedy: "Comedy",
   standup: "Stand-up",
   concert: "Concert",
+  circus: "Circus",
   other: "Other",
 };
 

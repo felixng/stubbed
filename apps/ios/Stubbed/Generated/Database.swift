@@ -27,6 +27,7 @@ internal enum PublicSchema {
     case comedy = "comedy"
     case standup = "standup"
     case concert = "concert"
+    case circus = "circus"
     case other = "other"
   }
   internal enum VenueCircuit: String, Codable, Hashable, Sendable {

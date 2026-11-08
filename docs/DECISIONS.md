@@ -1320,3 +1320,10 @@ The rules run in Postgres over stored evidence, so they apply on the next identi
 London parser (v4) applies the same first-category rule to new pages. Dry run with these rules, rolled back:
 77 new shows (14 musical, 12 play, 18 opera, 12 dance, 21 concert, 0 other), 71 existing shows linked (53
 before), 313 held as unknown type, 64 runs, 0 autofill-eligible.
+
+### #452 Circus is a show type (2026-11-08)
+
+Owner's request, while tuning #450's model-suggested types: circus shows (La Clique, 360 ALLSTARS) were landing as
+Other beside magic, panto and cabaret. `show_type` gains `circus` after `concert` (`20261108220000`). Web, iOS,
+posters, share cards and admin filters list it; older iOS builds read it as Other. London's single "Circus and
+Magic" category stays unmapped because it mixes circus with magic, so circus comes from #450's suggestions or by hand.
