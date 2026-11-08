@@ -1195,6 +1195,114 @@ internal enum PublicSchema {
       case venueIds = "venue_ids"
     }
   }
+  internal struct CrawlShowTypeSuggestionsSelect: Codable, Hashable, Sendable {
+    internal let confidence: Decimal
+    internal let createdAt: String
+    internal let firstDate: String?
+    internal let id: UUID
+    internal let lastDate: String?
+    internal let promptVersion: Int32
+    internal let provenance: String
+    internal let revertedAt: String?
+    internal let sourceKey: String
+    internal let suggestedType: ShowType?
+    internal let title: String
+    internal let titleKey: String
+    internal let usage: AnyJSON
+    internal let venueId: UUID
+    internal let venueName: String
+    internal let verdict: String
+    internal enum CodingKeys: String, CodingKey {
+      case confidence = "confidence"
+      case createdAt = "created_at"
+      case firstDate = "first_date"
+      case id = "id"
+      case lastDate = "last_date"
+      case promptVersion = "prompt_version"
+      case provenance = "provenance"
+      case revertedAt = "reverted_at"
+      case sourceKey = "source_key"
+      case suggestedType = "suggested_type"
+      case title = "title"
+      case titleKey = "title_key"
+      case usage = "usage"
+      case venueId = "venue_id"
+      case venueName = "venue_name"
+      case verdict = "verdict"
+    }
+  }
+  internal struct CrawlShowTypeSuggestionsInsert: Codable, Hashable, Sendable {
+    internal let confidence: Decimal
+    internal let createdAt: String?
+    internal let firstDate: String?
+    internal let id: UUID?
+    internal let lastDate: String?
+    internal let promptVersion: Int32
+    internal let provenance: String
+    internal let revertedAt: String?
+    internal let sourceKey: String
+    internal let suggestedType: ShowType?
+    internal let title: String
+    internal let titleKey: String
+    internal let usage: AnyJSON?
+    internal let venueId: UUID
+    internal let venueName: String
+    internal let verdict: String
+    internal enum CodingKeys: String, CodingKey {
+      case confidence = "confidence"
+      case createdAt = "created_at"
+      case firstDate = "first_date"
+      case id = "id"
+      case lastDate = "last_date"
+      case promptVersion = "prompt_version"
+      case provenance = "provenance"
+      case revertedAt = "reverted_at"
+      case sourceKey = "source_key"
+      case suggestedType = "suggested_type"
+      case title = "title"
+      case titleKey = "title_key"
+      case usage = "usage"
+      case venueId = "venue_id"
+      case venueName = "venue_name"
+      case verdict = "verdict"
+    }
+  }
+  internal struct CrawlShowTypeSuggestionsUpdate: Codable, Hashable, Sendable {
+    internal let confidence: Decimal?
+    internal let createdAt: String?
+    internal let firstDate: String?
+    internal let id: UUID?
+    internal let lastDate: String?
+    internal let promptVersion: Int32?
+    internal let provenance: String?
+    internal let revertedAt: String?
+    internal let sourceKey: String?
+    internal let suggestedType: ShowType?
+    internal let title: String?
+    internal let titleKey: String?
+    internal let usage: AnyJSON?
+    internal let venueId: UUID?
+    internal let venueName: String?
+    internal let verdict: String?
+    internal enum CodingKeys: String, CodingKey {
+      case confidence = "confidence"
+      case createdAt = "created_at"
+      case firstDate = "first_date"
+      case id = "id"
+      case lastDate = "last_date"
+      case promptVersion = "prompt_version"
+      case provenance = "provenance"
+      case revertedAt = "reverted_at"
+      case sourceKey = "source_key"
+      case suggestedType = "suggested_type"
+      case title = "title"
+      case titleKey = "title_key"
+      case usage = "usage"
+      case venueId = "venue_id"
+      case venueName = "venue_name"
+      case verdict = "verdict"
+    }
+  }
   internal struct CrawlSiteLeasesSelect: Codable, Hashable, Sendable {
     internal let expiresAt: String
     internal let owner: UUID
@@ -2627,6 +2735,7 @@ internal enum PublicSchema {
     internal let status: String
     internal let title: String
     internal let type: ShowType
+    internal let typeSuggestionId: UUID?
     internal let updatedAt: String
     internal let venueId: UUID?
     internal enum CodingKeys: String, CodingKey {
@@ -2645,6 +2754,7 @@ internal enum PublicSchema {
       case status = "status"
       case title = "title"
       case type = "type"
+      case typeSuggestionId = "type_suggestion_id"
       case updatedAt = "updated_at"
       case venueId = "venue_id"
     }
@@ -2665,6 +2775,7 @@ internal enum PublicSchema {
     internal let status: String?
     internal let title: String
     internal let type: ShowType?
+    internal let typeSuggestionId: UUID?
     internal let updatedAt: String?
     internal let venueId: UUID?
     internal enum CodingKeys: String, CodingKey {
@@ -2683,6 +2794,7 @@ internal enum PublicSchema {
       case status = "status"
       case title = "title"
       case type = "type"
+      case typeSuggestionId = "type_suggestion_id"
       case updatedAt = "updated_at"
       case venueId = "venue_id"
     }
@@ -2703,6 +2815,7 @@ internal enum PublicSchema {
     internal let status: String?
     internal let title: String?
     internal let type: ShowType?
+    internal let typeSuggestionId: UUID?
     internal let updatedAt: String?
     internal let venueId: UUID?
     internal enum CodingKeys: String, CodingKey {
@@ -2721,6 +2834,7 @@ internal enum PublicSchema {
       case status = "status"
       case title = "title"
       case type = "type"
+      case typeSuggestionId = "type_suggestion_id"
       case updatedAt = "updated_at"
       case venueId = "venue_id"
     }
