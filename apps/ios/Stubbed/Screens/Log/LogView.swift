@@ -59,6 +59,12 @@ struct LogView: View {
   @State private var fromPhoto: Set<String> = []
   /// Bumped per photo, so a newer photo cancels the older one's results.
   @State private var run = 0
+  /// Optional "on here around then" chips (#360): only for a known venue and
+  /// date, never blocking a field or Save. A response applies only while it
+  /// still matches the current venue and date.
+  @State private var suggestions: [ShowSuggestion] = []
+  /// Where the chosen show came from, for `entry_logged.show_source`.
+  @State private var showSource = "manual"
   /// A picked photo is on its way (an iCloud original can take seconds to
   /// download) and its thumbnail isn't ready yet.
   @State private var loadingPhoto = false
@@ -148,6 +154,7 @@ struct LogView: View {
     .task { await load() }
     .task { if let importing { await takeImported(importing) } }
     .onChange(of: date) { _, _ in preselectTrip() }
+    .task(id: suggestKey) { await loadSuggestions() }
     .onChange(of: photoItem) { _, item in
       guard let item else { return }
       photoItem = nil
@@ -312,8 +319,24 @@ struct LogView: View {
       } else {
         SearchButton(title: "Search shows") { picking = .show }
         ForEach(photoShows) { s in
-          Button { pickShow(ShowChoice(s)) } label: {
+          Button {
+            pickShow(ShowChoice(s))
+            showSource = "photo_text"
+          } label: {
             Label("Maybe \(s.title)?", systemImage: "text.viewfinder")
+          }
+        }
+        if !suggestions.isEmpty {
+          VStack(alignment: .leading, spacing: Space.s) {
+            Text("On here around then")
+              .font(.footnote)
+              .foregroundStyle(.secondary)
+            ForEach(suggestions) { item in
+              Button { Task { await pick(item) } } label: {
+                Label(item.title, systemImage: "ticket")
+              }
+              .accessibilityHint("Fills in the show")
+            }
           }
         }
       }
@@ -450,7 +473,39 @@ struct LogView: View {
 
   // MARK: - Your choices
 
+  private var suggestKey: String? {
+    guard editing == nil, !saving, show == nil, let id = venue?.id else { return nil }
+    return "\(id.uuidString)|\(date)"
+  }
+
+  /// Debounced and cancelled by SwiftUI whenever the venue, date, show or
+  /// saving state changes or the view goes away; a late response is dropped.
+  private func loadSuggestions() async {
+    guard let key = suggestKey, let id = venue?.id else {
+      suggestions = []
+      return
+    }
+    suggestions = []
+    try? await Task.sleep(for: ShowSuggestions.debounce)
+    if Task.isCancelled { return }
+    let found = await ShowSuggestions.fetch(venueId: id, date: date)
+    if Task.isCancelled || key != suggestKey { return }
+    suggestions = found
+  }
+
+  /// One tap fills the show, only if the field is still empty and untouched.
+  private func pick(_ item: ShowSuggestion) async {
+    guard let id = item.showId, show == nil, !touchedShow else { return }
+    let key = suggestKey
+    guard let found = await ShowSuggestions.show(id: id) else { return }
+    guard show == nil, !touchedShow, key == suggestKey else { return }
+    pickShow(ShowChoice(found))
+    showSource = item.source == "yours" ? "yours" : "community"
+    suggestions = []
+  }
+
   private func pickShow(_ choice: ShowChoice) {
+    showSource = "manual"
     touchedShow = true
     fromPhoto.remove("show")
     photoShows = []
@@ -764,6 +819,7 @@ struct LogView: View {
           "method": .string(photo != nil ? "photo" : "manual"), "detection": .string(detectionLabel),
           "rated": .bool(rating != nil), "has_note": .bool(!note.trimmingCharacters(in: .whitespaces).isEmpty),
           "platform": .string("ios"),
+          "show_source": .string(fromPhoto.contains("show") ? "photo_text" : showSource),
         ]
         if importing != nil { props["source"] = .string("photo_import") }
         Analytics.track(.entryLogged, props)
