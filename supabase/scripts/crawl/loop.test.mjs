@@ -94,6 +94,22 @@ test('scheduled dispatch shares the page and time caps and skips paused sources'
  assert.deepEqual(await runScheduled({env:{},frontier:{source:()=>assert.fail('Master switch must short circuit')}}),[]);
 });
 
+test('a scheduled run can be limited to one seed scope of a named aggregate source',async()=>{
+ const env={CRAWL_LOOP_ENABLED:'true',CRAWL_MAX_PAGES:'100'};
+ const frontier={source:async key=>({source_key:key,collection_enabled:true})};
+ const seen=[];
+ await runScheduled({env,now:()=>0,frontier,source:'playbill',scope:'london-listing',
+  runSource:async(row,options)=>{seen.push([row.source_key,options.scope,options.stage]);return {pages:3};}});
+ assert.deepEqual(seen,[['playbill','london-listing','all']]);
+ const unscoped=[];
+ await runScheduled({env,now:()=>0,frontier,source:'playbill',runSource:async(row,options)=>{unscoped.push(options.scope);return {pages:1};}});
+ assert.deepEqual(unscoped,[undefined],'no scope means the whole source, as before');
+ const never=async()=>assert.fail('An invalid scope must not start a run');
+ await assert.rejects(runScheduled({env,frontier,scope:'london-listing',runSource:never}),/Unknown crawl scope/);
+ await assert.rejects(runScheduled({env,frontier,source:'playbill',scope:'no-such-scope',runSource:never}),/Unknown crawl scope/);
+ await assert.rejects(runScheduled({env,frontier,source:'official',scope:'london-listing',runSource:never,runOfficial:never}),/Unknown crawl scope/);
+});
+
 test('access blocks and exhausted visits never start official AI repair',async()=>{
  for(const status of ['blocked','deferred']){
   const deps=loopDeps([{id:'a'}]);

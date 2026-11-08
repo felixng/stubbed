@@ -262,6 +262,11 @@ const official = {
 };
 
 const adapters = { official, london_theatre: londonTheatre, playbill };
+
+// The seed scopes a scheduled run may be limited to, per aggregate source (for example playbill: london-listing).
+export function adapterScopes(key) {
+  return key === 'official' || !Object.hasOwn(adapters, key) ? [] : adapters[key].seeds.map(seed => seed.scope);
+}
 export const scheduledSources = ['london_theatre', 'playbill'];
 
 const defaultGeocoder = () => createGeocoder({ cache: createGeocodeCache() });
