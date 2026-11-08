@@ -5,11 +5,14 @@
 // change both together. Coordinates are in 540px design units, scaled up to
 // CARD_SIZE.
 
+import { formatDate, WITH_WEEKDAY } from "./entries";
+
 export type CardData = {
   title: string;
   venue: string | null; // venue name, for the "Nth visit" stat; null if none
   where: string; // "Belasco Theatre, New York", or "" with no venue
   date: string; // "3 Oct 2026"
+  day: string; // the entry's date, "2026-10-03"
   year: number;
   rating: number | null;
   showOfYear: number; // this entry's place in its year
@@ -271,12 +274,11 @@ function drawCornerMetrics(ctx: Ctx, metrics: ReturnType<typeof entryMetrics>, c
 // A compact stack people can place over their own story photo. The year
 // ordinal is the selected visit's position, including for older diary entries.
 function drawShowOverlay(ctx: Ctx, data: CardData, color: string, mark: HTMLImageElement | null) {
-  const today = new Date();
   const sections = [
     { label: "Show", value: data.title },
-    { label: "Date", value: shareDate(today) },
+    { label: "Date", value: shareDate(data.day) },
     { label: "Seen", value: formatTimes(data.timesSeen) },
-    { label: data.year === today.getFullYear() ? "This year so far" : `${data.year} so far`, value: `${ordinal(data.showOfYear)} show` },
+    { label: data.year === new Date().getFullYear() ? "This year so far" : `${data.year} so far`, value: `${ordinal(data.showOfYear)} show` },
   ];
   ctx.fillStyle = color; ctx.textAlign = "center"; ctx.textBaseline = "top";
   sections.forEach((section, index) => {
@@ -295,8 +297,9 @@ function drawShowOverlay(ctx: Ctx, data: CardData, color: string, mark: HTMLImag
   if (mark) ctx.drawImage(mark, 241, 454, 58, 58 * 673 / 816);
 }
 
-function shareDate(date: Date) {
-  return new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric" }).format(date);
+// The day the show was seen, not the day it's shared.
+export function shareDate(day: string) {
+  return formatDate(day, WITH_WEEKDAY);
 }
 
 function drawTicketBrand(ctx: Ctx, mark: HTMLImageElement | null) {
@@ -332,12 +335,11 @@ function drawTicketOverlay(ctx: Ctx, data: CardData, color: string, ticket: HTML
   }
   if (lines.length > 2) lines = [lines[0], lines.slice(1).join(" ")];
   lines.forEach((line, i) => ctx.fillText(fit(ctx, line, 368), 56, 44 + i * 35));
-  const today = new Date();
   setFont(ctx, 500, 18, TEXT, 0);
-  ctx.fillText(shareDate(today), 56, 44 + lines.length * 35 + 14, 368);
+  ctx.fillText(shareDate(data.day), 56, 44 + lines.length * 35 + 14, 368);
   setFont(ctx, 600, 14, TEXT, 0);
   ctx.fillText("Seen", 56, 194);
-  ctx.fillText(data.year === today.getFullYear() ? "This year so far" : `${data.year} so far`, 246, 194);
+  ctx.fillText(data.year === new Date().getFullYear() ? "This year so far" : `${data.year} so far`, 246, 194);
   setFont(ctx, 700, 24, DISPLAY, -0.3);
   ctx.fillText(formatTimes(data.timesSeen), 56, 220, 148);
   ctx.fillText(`${ordinal(data.showOfYear)} show`, 246, 220, 168);

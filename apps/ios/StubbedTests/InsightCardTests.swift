@@ -57,7 +57,7 @@ struct InsightCardTests {
       UIColor.blue.setFill()
       context.fill(CGRect(x: 0, y: 0, width: 10, height: 10))
     }
-    let entry = EntryCardData(title: "A past show", venue: nil, whereText: "", date: "1 Nov 2025",
+    let entry = EntryCardData(title: "A past show", venue: nil, whereText: "", date: "1 Nov 2025", day: "2025-11-01",
       year: 2025, rating: 1, showOfYear: 12, venueVisit: 0, timesSeen: 1, handle: "ios_test")
     let insights = InsightCardData(stats: stats(total: 0, weekly: 0), year: 2026, handle: "ios_test", currentYear: 2026)
     let cards = try ShareCards.showCards(entry, photo: photo, insights: insights)

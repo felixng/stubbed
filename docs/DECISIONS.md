@@ -1387,3 +1387,6 @@ venue-first crawl grows the London archive from there. Header, footer and ticket
 listing reports `event_link` observations, which progress counts already understand; no schema change.
 Playbill's robots.txt allows general crawlers and names AI crawlers it blocks; the crawler identifies as Stubbed
 and never sends page content to a model.
+
+### 2026-11-08: Story overlays print the show's date (#456)
+The Show overlay and Ticket stub printed the device's date, so a show logged the morning after, or an old diary entry, showed the day of sharing (a 2024 entry read today's date beside "2024 so far"). Both apps now pass the entry's own `yyyy-MM-dd` date into the card data (`CardData.day` on web, `EntryCardData.day` on iOS) and format it in the house weekday style, "Wed 6 Mar 2024" (`formatDate(day, WITH_WEEKDAY)` on web, `Day.formatPost` on iOS). This also drops the comma the web overlay had, so both apps match. The "This year so far" label still compares the entry's year with the current year.

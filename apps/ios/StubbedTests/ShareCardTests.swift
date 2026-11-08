@@ -6,7 +6,13 @@ import UniformTypeIdentifiers
 struct ShareCardTests {
   private var data: EntryCardData {
     EntryCardData(title: "Operation Mincemeat", venue: "Fortune Theatre", whereText: "London",
-      date: "1 Nov 2026", year: 2026, rating: 1.5, showOfYear: 24, venueVisit: 3, timesSeen: 5, handle: "sillyelphaba")
+      date: "1 Nov 2026", day: "2026-11-01", year: 2026, rating: 1.5, showOfYear: 24, venueVisit: 3, timesSeen: 5, handle: "sillyelphaba")
+  }
+
+  /// The overlays print the day the show was seen, not the day it's shared.
+  @Test func overlayDateIsTheEntrysDay() {
+    #expect(Day.formatPost(data.day) == "Sun 1 Nov 2026")
+    #expect(Day.formatPost("2024-03-06") == "Wed 6 Mar 2024")
   }
 
   @Test @MainActor func backgroundsNeverReplacePhotoExports() throws {
