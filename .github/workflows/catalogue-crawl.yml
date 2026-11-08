@@ -18,11 +18,11 @@ on:
         default: all
         options: [all, directory, venue, event]
       show_types:
-        description: "Show-type suggestions (#450): benchmark = answer docs/catalogue-benchmark/london-held-titles.json without writing the database; store = answer held London titles and store them"
+        description: "Show-type suggestions (#450): benchmark = answer docs/catalogue-benchmark/london-held-titles.json without writing the database; store = answer held London titles and store them; dry-run = load the stored benchmark answers and re-run London identity publication in a rolled-back transaction"
         required: false
         type: choice
         default: ''
-        options: ['', benchmark, store]
+        options: ['', benchmark, store, dry-run]
   schedule:
     - cron: "23 4 * * *"
 permissions:
@@ -111,11 +111,14 @@ jobs:
           node supabase/scripts/crawl/show-type.mjs --from-file docs/catalogue-benchmark/london-held-titles.json \
             --limit 500 --max-minutes 25 --web-search --out out/london-show-type-answers.json --csv out/london-show-type-sample.csv
       - name: Install PostgreSQL client
-        if: ${{ inputs.show_types == 'store' }}
+        if: ${{ inputs.show_types == 'store' || inputs.show_types == 'dry-run' }}
         run: sudo apt-get update && sudo apt-get install -y postgresql-client
       - name: Answer and store held titles
         if: ${{ inputs.show_types == 'store' }}
         run: node supabase/scripts/crawl/show-type.mjs --source london_theatre --web-search --limit 500 --max-minutes 25
+      - name: Rolled-back dry run on the hosted data (nothing is kept)
+        if: ${{ inputs.show_types == 'dry-run' }}
+        run: node supabase/scripts/crawl/show-type-dry-run.mjs supabase/migrations/20261108230000_crawl_show_type_suggestions.sql docs/catalogue-benchmark/london-show-type-answers.json
       - uses: actions/upload-artifact@v4
         if: ${{ always() && inputs.show_types == 'benchmark' }}
         with:
