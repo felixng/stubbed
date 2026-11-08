@@ -1387,3 +1387,12 @@ venue-first crawl grows the London archive from there. Header, footer and ticket
 listing reports `event_link` observations, which progress counts already understand; no schema change.
 Playbill's robots.txt allows general crawlers and names AI crawlers it blocks; the crawler identifies as Stubbed
 and never sends page content to a model.
+
+### #444 Scope option for crawl runs (2026-11-08)
+
+The scheduler gives every never-fetched page the same priority class and takes the earliest found first, so
+the 45 Playbill London pages waited behind 6,194 Broadway pages; raising `priority` has no effect on unfetched
+pages. Owner chose a scope option over pausing Broadway: the Catalogue crawl workflow takes an optional `scope`
+input (`loop.mjs --scheduled --source playbill --scope london-listing`). It needs a named aggregate source and
+must be one of that adapter's seed scopes; the run then claims only that seed's crawl. Unscoped runs and the
+daily schedule are unchanged.
