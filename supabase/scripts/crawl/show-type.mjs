@@ -125,6 +125,22 @@ export function createSuggestionStore(db = runPsql) {
         ${jsonLiteral(source)} #>> '{}', ${jsonLiteral(answer)})), 'null'::jsonb)`);
       return id;
     },
+    // Stores answers already paid for (a benchmark file), in file order so later answers are newer.
+    // Answers for venues that no longer exist are skipped. No model call.
+    async load(source, answers) {
+      const [result] = await db(`select jsonb_build_object(
+          'stored', count(*) filter (where saved is not null),
+          'already_stored', count(*) filter (where saved is null and venue_ok),
+          'skipped_missing_venue', count(*) filter (where not venue_ok))
+        from (
+          select a.ord, exists (select 1 from public.venues v where v.id = (a.value->>'venue_id')::uuid) as venue_ok,
+            case when exists (select 1 from public.venues v where v.id = (a.value->>'venue_id')::uuid)
+              then public.record_crawl_show_type_suggestion(${jsonLiteral(source)} #>> '{}', a.value) end as saved
+          from jsonb_array_elements(${jsonLiteral(answers)}) with ordinality a(value, ord)
+          order by a.ord
+        ) x`, 120_000);
+      return result;
+    },
   };
 }
 
@@ -167,17 +183,31 @@ export function limitsFrom(env = process.env) {
 export async function main(args = process.argv.slice(2), { env = process.env, fetchFn = fetch, store = createSuggestionStore(), log = console.log } = {}) {
   const { values } = parseArgs({ args, options: {
     source: { type: 'string' }, 'web-search': { type: 'boolean' }, limit: { type: 'string', default: '50' },
-    'max-minutes': { type: 'string', default: '10' }, 'from-file': { type: 'string' }, out: { type: 'string' },
+    'max-minutes': { type: 'string', default: '10' }, 'from-file': { type: 'string' }, 'load-file': { type: 'string' }, out: { type: 'string' },
     csv: { type: 'string' }, 'sample-size': { type: 'string', default: '100' }, help: { type: 'boolean' },
   } });
   if (values.help) {
     log('Usage: node supabase/scripts/crawl/show-type.mjs --source <key> [--web-search] [--limit 50] [--max-minutes 10]');
+    log('       node supabase/scripts/crawl/show-type.mjs --load-file answers.json [--source london_theatre]   (store paid-for answers; no model calls)');
     log('       node supabase/scripts/crawl/show-type.mjs --from-file held.json --out answers.json [--web-search] [--csv sample.csv] [--sample-size 100]');
     log('Needs CRAWL_TYPE_SUGGESTIONS=true and ANTHROPIC_API_KEY. Caps: CRAWL_MAX_SPEND_USD (default 1), CRAWL_SITE_SPEND_USD per title (default 0.20).');
     return { disabled: true };
   }
   const limits = limitsFrom(env);
   if (!limits.enabled) { log('Show-type suggestions are off (set CRAWL_TYPE_SUGGESTIONS=true).'); return { disabled: true }; }
+
+  // Load mode: store answers from a benchmark file (no model calls, no spend). Postgres validates
+  // each answer; they apply on the next identity publication of the held events.
+  if (values['load-file']) {
+    const source = values.source ?? 'london_theatre';
+    if (!/^[a-z][a-z0-9_]{0,63}$/.test(source)) throw new Error('Select a valid source key');
+    const { answers } = JSON.parse(await readFile(values['load-file'], 'utf8'));
+    if (!Array.isArray(answers)) throw new Error('No answers in that file');
+    const result = { source, answers: answers.length, ...(await store.load(source, answers)) };
+    log(JSON.stringify(result, null, 2));
+    if (env.GITHUB_STEP_SUMMARY) await appendFile(env.GITHUB_STEP_SUMMARY, `## Stored show-type answers · ${source}\n\n\`\`\`json\n${JSON.stringify(result, null, 2)}\n\`\`\`\n`);
+    return result;
+  }
   const limit = integer(values.limit, '--limit', 1, 500);
   const stopSignal = AbortSignal.timeout(integer(values['max-minutes'], '--max-minutes', 1, 55) * 60_000);
   const spend = { usd: 0 };

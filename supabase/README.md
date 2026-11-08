@@ -381,7 +381,8 @@ answer is stored in `crawl_show_type_suggestions` with its provenance and input,
 and re-queues identity for its held events. The next `--publish-identities` batch
 publishes the confident ones. `--from-file held.json --out answers.json --csv
 sample.csv` answers a file instead, with no database access (the
-`show_types: benchmark` workflow input). To undo one model's answers:
+`show_types: benchmark` workflow input). `--load-file answers.json` stores answers already paid for
+(the `show_types: load` input), with no model call. To undo one model's answers:
 
 ```sql
 select public.crawl_revert_show_type_suggestions('ai:claude-haiku-5-5+web_search');

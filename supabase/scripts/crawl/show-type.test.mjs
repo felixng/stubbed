@@ -128,3 +128,15 @@ test('file mode answers, searches only the unconfident, and writes a hand-check 
   assert.deepEqual(sample(rows, 2), sample([...rows].reverse(), 2), 'the sample is deterministic');
   assert.ok(toCsv([]).startsWith('title,'));
 });
+
+test('load mode stores answers from a file in order, with no model call', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'show-type-load-'));
+  const answers = [{ title_key: 'a', provenance: PLAIN }, { title_key: 'a', provenance: WEB }];
+  await writeFile(join(dir, 'answers.json'), JSON.stringify({ answers }));
+  const loaded = [];
+  const store = { load: async (source, rows) => { loaded.push([source, rows]); return { stored: 2, already_stored: 0, skipped_missing_venue: 0 }; } };
+  const result = await main(['--load-file', join(dir, 'answers.json')], { env: { CRAWL_TYPE_SUGGESTIONS: 'true' }, store,
+    fetchFn: async () => { throw new Error('must not call the model'); }, log: () => {} });
+  assert.deepEqual(loaded, [['london_theatre', answers]]);
+  assert.deepEqual(result, { source: 'london_theatre', answers: 2, stored: 2, already_stored: 0, skipped_missing_venue: 0 });
+});
