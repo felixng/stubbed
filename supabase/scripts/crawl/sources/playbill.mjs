@@ -95,35 +95,68 @@ export function parseDirectory({ url, html }) {
   };
 }
 
-function venueAddress(raw) {
+export function venueAddress(raw) {
   const parts = (raw ?? '').split(',').map(value => value.trim()).filter(Boolean);
   const last = parts.at(-1);
   let country = null;
   if (/^(?:EN|GB|UK|England|United Kingdom)$/i.test(last ?? '')) {
     country = 'GB';
     parts.pop();
+    // "…, London, England, EN": a second country word is not the city.
+    while (/^(?:EN|GB|UK|England|United Kingdom)$/i.test(parts.at(-1) ?? '')) parts.pop();
   } else if (/^(?:US|USA|United States)$/i.test(last ?? '')) {
     country = 'US';
     parts.pop();
   }
-  const postcode = /^(?:[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}|\d{5}(?:-\d{4})?)$/i.test(parts.at(-1) ?? '')
+  let postcode = /^(?:[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}|\d{5}(?:-\d{4})?)$/i.test(parts.at(-1) ?? '')
     ? parts.pop() : null;
+  // London addresses often carry the postcode inside a part ("The Strand, London WC2E 7NA, London, EN").
+  // Take it out so the UK postcode lookup can run, and a full UK postcode implies GB.
+  if (!postcode && country !== 'US') {
+    for (let index = parts.length - 1; index >= 0; index -= 1) {
+      const match = UK_POSTCODE_IN_TEXT.exec(parts[index]);
+      if (!match) continue;
+      postcode = match[1].toUpperCase().replace(/\s*(\d[A-Z]{2})$/, ' $1');
+      parts[index] = parts[index].slice(0, match.index).trim();
+      if (!parts[index]) parts.splice(index, 1);
+      country ??= 'GB';
+      break;
+    }
+  }
   // Playbill uses the conventional New York, NY address notation on Broadway.
   if (parts.at(-1) === 'NY' && parts.at(-2) === 'New York') {
     parts.pop();
     country ??= 'US';
   }
   const city = parts.length > 1 && (country || parts.length === 2) ? parts.pop() : null;
+  // "…, London WC2E 7NA, London": once the postcode is out, the repeated city is noise.
+  while (city && parts.length > 1 && parts.at(-1).toLowerCase() === city.toLowerCase()) parts.pop();
   if (parts.at(-1) === city) parts.pop();
   return { street: parts.join(', ') || null, city, country, postcode };
+}
+
+const UK_POSTCODE_IN_TEXT = /\b([A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2})\s*$/i;
+
+// "Noël Coward Theatre (formerly Albery)": the current name, plus the former one as alias evidence.
+export function venueName(raw) {
+  const formerly = /\s*\((?:formerly|previously|was)\s+([^()]+)\)\s*$/i.exec(raw ?? '');
+  if (!formerly) return { name: raw, former: null };
+  const name = clean(raw.slice(0, formerly.index));
+  let former = clean(formerly[1]);
+  // "(Formerly Queen's Theatre)" names the building; "(formerly Albery)" leaves the word implied.
+  if (former && !/\b(?:theatre|theater|playhouse|hall|house|studios?)\b/i.test(former) && /\bTheatre\b/.test(name ?? '')) {
+    former = `${former} Theatre`;
+  }
+  return name ? { name, former } : { name: raw, former: null };
 }
 
 export function parseVenue({ url, html }) {
   const $ = load(html);
   const key = identity(url, VENUE_PATH);
   const bio = $('.bsp-bio').first();
-  const name = clean(bio.find('.bsp-bio-title').first().text());
-  if (!key || !name) return invalid('Playbill venue identity missing');
+  const rawName = clean(bio.find('.bsp-bio-title').first().text());
+  if (!key || !rawName) return invalid('Playbill venue identity missing');
+  const { name, former } = venueName(rawName);
   const rawAddress = clean(bio.find('.bsp-bio-subtitle .map-link').first().text());
   const eventLinks = new Map();
   const pageLinks = new Set(pagination($, $('body'), url));
@@ -149,9 +182,10 @@ export function parseVenue({ url, html }) {
       .concat([...pageLinks].map(link => ({ stage: 'venue', url: link }))),
     observations: [{
       observation_kind: 'venue', external_key: key, source_url: url, name, ...address,
+      ...(former ? { former_names: [former] } : {}),
       auditorium: auditoria.length === 1 ? auditoria[0] : null, auditoria,
       resolution_reason: auditoria.length > 1 ? 'multiple_auditoria' : address.country ? null : 'incomplete_address',
-      evidence: { name: evidence('venue.bio_title', name), address: evidence('venue.map_address', rawAddress) },
+      evidence: { name: evidence('venue.bio_title', rawName), address: evidence('venue.map_address', rawAddress) },
     }, ...[...eventLinks.values()].map(link => ({
       observation_kind: 'event_link', external_key: link.key, source_url: link.url,
       label: link.label, referring_venue_key: key, listings: [link.labelGroup],

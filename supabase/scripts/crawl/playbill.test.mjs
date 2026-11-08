@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { parseDirectory, parseVenue, parseEvent, playbill } from './sources/playbill.mjs';
+import { parseDirectory, parseVenue, parseEvent, playbill, venueAddress, venueName } from './sources/playbill.mjs';
 
 const origin = 'https://playbill.com';
 const fixture = name => readFileSync(new URL(`./fixtures/playbill/${name}.html`, import.meta.url), 'utf8');
@@ -85,4 +85,26 @@ test('explicit transfer segments retain venue and dates without assuming shared 
 test('unsupported render and layout loss produce an actionable failure', () => {
   assert.match(parseDirectory({ url: origin + '/broadway-theatres', html: '<script>loadList()</script>' }).reason, /no labelled venue cards/);
   assert.match(parseEvent({ url: origin + '/production/fixture-current', html: '<h2>News</h2>' }).reason, /Pro Info missing/);
+});
+
+test('a London postcode inside the street is taken out, and implies GB', () => {
+  assert.deepEqual(venueAddress('The Strand, London WC2E 7NA, London, EN'),
+    { street: 'The Strand', city: 'London', country: 'GB', postcode: 'WC2E 7NA' });
+  assert.deepEqual(venueAddress('41 Earlham Street, London WC2H 9LX, London'),
+    { street: '41 Earlham Street', city: 'London', country: 'GB', postcode: 'WC2H 9LX' });
+  assert.deepEqual(venueAddress('Charing Cross Road, London WC2H 0JP, London, London'),
+    { street: 'Charing Cross Road', city: 'London', country: 'GB', postcode: 'WC2H 0JP' });
+  // An outward code alone ("W1") is not a postcode; it stays in the street for the address lookup.
+  assert.equal(venueAddress('Shaftesbury Avenue, London W1, London, EN').postcode, null);
+  // Broadway addresses are unchanged.
+  assert.deepEqual(venueAddress('245 W. 44th St., New York, NY, 10036, US'),
+    { street: '245 W. 44th St.', city: 'New York', country: 'US', postcode: '10036' });
+});
+
+test('a "(formerly …)" note leaves the current name and keeps the former one', () => {
+  assert.deepEqual(venueName('Noël Coward Theatre (formerly Albery)'), { name: 'Noël Coward Theatre', former: 'Albery Theatre' });
+  assert.deepEqual(venueName("Sondheim Theatre (Formerly Queen's Theatre)"), { name: 'Sondheim Theatre', former: "Queen's Theatre" });
+  assert.deepEqual(venueName('Gillian Lynne Theatre (Formerly New London Theatre)'), { name: 'Gillian Lynne Theatre', former: 'New London Theatre' });
+  assert.deepEqual(venueName('National Theatre (Olivier)'), { name: 'National Theatre (Olivier)', former: null }, 'an auditorium is not a former name');
+  assert.deepEqual(venueName('Majestic Theatre'), { name: 'Majestic Theatre', former: null });
 });

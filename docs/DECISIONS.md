@@ -1412,3 +1412,15 @@ daily schedule are unchanged.
 
 ### 2026-11-08: Story overlays print the show's date (#456)
 The Show overlay and Ticket stub printed the device's date, so a show logged the morning after, or an old diary entry, showed the day of sharing (a 2024 entry read today's date beside "2024 so far"). Both apps now pass the entry's own `yyyy-MM-dd` date into the card data (`CardData.day` on web, `EntryCardData.day` on iOS) and format it in the house weekday style, "Wed 6 Mar 2024" (`formatDate(day, WITH_WEEKDAY)` on web, `Day.formatPost` on iOS). This also drops the comma the web overlay had, so both apps match. The "This year so far" label still compares the entry's year with the current year.
+
+### #444 Playbill London venue parsing (2026-11-08)
+
+The Playbill London crawl collected 45 venues, but only 24 geocoded and several names carried history. Playbill
+writes London addresses as "The Strand, London WC2E 7NA, London, EN", so the postcode stayed inside the street
+and postcodes.io never ran. `venueAddress` now takes a full UK postcode out of any part (an outward code such as
+"W1" alone stays in the street), treats it as GB, and drops a repeated city or country word. `venueName` moves
+"(formerly Albery)" or "(Formerly Queen's Theatre)" out of the name into `former_names` (implying "Theatre" when
+the note leaves it out). An auditorium in brackets, such as "National Theatre (Olivier)", is not a former name.
+Matching is unchanged: the former name is evidence for venue aliases (#447), not a match key yet. Only venue
+output changed, so the parser version stays `playbill-v1`; migration `20261109000000` re-queues Playbill venue
+pages rather than every Playbill page.
