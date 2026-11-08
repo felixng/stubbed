@@ -47,17 +47,26 @@ export async function runLoop({limits,deps,now=Date.now,deadline=now()+limits.ma
    claimed.add(candidate.id);return true;
   }
   let site;
-  const record={venue_id:venue.id,status:'pending'};sites.push(record);
+  const record={venue_id:venue.id,venue_name:venue.name,status:'pending'};sites.push(record);
+  const audit=(actor,action,urls=[],detail)=>{
+   // Decision metadata only: no query strings, fragments or credentials.
+   const publicUrls=urls.flatMap(value=>{
+    if(typeof value!=='string')return [];
+    try{const url=new URL(value);return ['http:','https:'].includes(url.protocol)?[(url.origin+url.pathname).slice(0,512)]:[];}catch{return [];}
+   });
+   const decisions=record.decisions??=[];
+   if(decisions.length<60)decisions.push({actor,action,urls:[...new Set(publicUrls)],...(detail?{detail:String(detail).slice(0,200)}:{})});
+  };
   try{site=await deps.loadSite(venue);}catch{record.status='failed';record.reason='site_load_failed';await deps.recordVenue(venue,record.reason).catch(()=>{});await checkpoint();return;}
   const budgetKey=site?.id??venue.website??venue.id;
   const model=request=>deps.model({...request,siteId:budgetKey});
   const knownTitles=site?.pages?.filter(p=>p.type==='whats_on').flatMap(p=>p.titles??[])??[];
   async function setup(repair=false, repairModel=model) {
    if(repair && site) {
-    const links=await deps.discover({venue,model:repairModel,limits:counters,repair:true});
+    const links=await deps.discover({venue,model:repairModel,limits:counters,repair:true,audit});
     if(links.deferred||links.failed)return links;
     const candidate={...site,whats_on_url:links.whats_on_url,archive_url:links.archive_url??site.archive_url};
-    const prepared=await deps.writeRules({site:candidate,venues:site.venues,model:repairModel,knownTitles,deferActivation:true});
+    const prepared=await deps.writeRules({site:candidate,venues:site.venues,model:repairModel,knownTitles,deferActivation:true,audit});
     if(prepared.deferred||prepared.failed)return prepared;
     // Keep existing links and rules live until the replacement has passed the
     // page, date and known-show checks. Failed proposals never replace them.
@@ -67,14 +76,14 @@ export async function runLoop({limits,deps,now=Date.now,deadline=now()+limits.ma
     return {ok:true};
    }
    if(!site) {
-    const links=await deps.discover({venue,model,limits:counters,repair:false});
+    const links=await deps.discover({venue,model,limits:counters,repair:false,audit});
     if(links.deferred||links.failed) return links;
     await deps.saveLinks(venue,links);site=await deps.loadSite(venue);
    }
    if(!site) return {failed:true,reason:'site_not_saved'};
    if(!await claimSite(site))return {deferred:true,reason:'site_busy'};
    if((!site.rules||repair) && !(!site.rules && await deps.hasStructured?.(site))) {
-    const result=await deps.writeRules({site,venues:site.venues,model,knownTitles});
+    const result=await deps.writeRules({site,venues:site.venues,model,knownTitles,audit});
     if(result.deferred||result.failed)return result;
     site=await deps.loadSite(venue);
    }
@@ -85,12 +94,12 @@ export async function runLoop({limits,deps,now=Date.now,deadline=now()+limits.ma
    if(site?.status==='needs_attention' && !deps.manual && !deps.reserveRepair) {record.status='needs_attention';return;}
    let ready=await setup();
    if(!ready.ok) {
-    record.status=ready.deferred?'deferred':'needs_attention';record.reason=ready.reason;
+    record.status=ready.deferred?'deferred':'needs_attention';record.reason=ready.reason;record.detail=ready.detail;audit('Crawler','Source setup stopped',[site?.whats_on_url],ready.detail??ready.reason);
     if(ready.reason==='site_busy')return;
     if(site)await deps.recordSite(site,{status:ready.deferred?'pending':'needs_attention',reason:ready.reason});
     await deps.recordVenue(venue,ready.deferred?null:ready.reason);return;
    }
-   let result=await deps.crawl(site,{deadline,maxPages:limits.maxPages});
+   let result=await deps.crawl(site,{deadline,maxPages:limits.maxPages,audit});
    if(result.status==='failed'&&result.reason!=='access_blocked') {
     if(!deps.reserveRepair && (site.repair_attempts??0)>=3 && !deps.manual){record.status='needs_attention';record.reason='repair_limit';await deps.recordSite(site,{status:'needs_attention',reason:'repair_limit'});await deps.recordVenue(venue,'repair_limit');return;}
     if(now()>=deadline-90000){record.status='deferred';record.reason='time_limit';return;}
@@ -102,9 +111,9 @@ export async function runLoop({limits,deps,now=Date.now,deadline=now()+limits.ma
     const repaired=await setup(true,repairModel);
     if(repaired.reason==='site_busy'){record.status='deferred';record.reason='site_busy';return;}
     if(!repaired.deferred) await deps.recordSite(site,{status:'pending',reason:repaired.reason??null,attempt:true});
-    if(repaired.ok)result=await deps.crawl(site,{deadline,maxPages:limits.maxPages});
+    if(repaired.ok)result=await deps.crawl(site,{deadline,maxPages:limits.maxPages,audit});
     else {
-     record.status=repaired.deferred?'deferred':'needs_attention';record.reason=repaired.reason;
+     record.status=repaired.deferred?'deferred':'needs_attention';record.reason=repaired.reason;record.detail=repaired.detail;audit('Crawler','Repair did not activate a replacement',[site.whats_on_url],repaired.detail??repaired.reason);
      // Outages/budget exhaustion wait; only exhausted repair attempts need the owner.
      const exhausted=repaired.reason==='repair_limit'||(!repaired.deferred&&attempt===3)||(!deps.reserveRepair&&(site.repair_attempts??0)+1>=3);
      if(exhausted)record.status='needs_attention';
@@ -135,6 +144,13 @@ export async function runLoop({limits,deps,now=Date.now,deadline=now()+limits.ma
  const failed=workers.find(w=>w.status==='rejected');if(failed)throw failed.reason;
  return {sites,searches:counters.searches};
 }
+// Every attempted theatre failed or needs attention: the run did not work, even though the loop did.
+export function loopOutcome(sites){
+ return {
+  findings:sites.reduce((n,site)=>n+(site.findings??0),0),
+  allFailed:sites.length>0&&sites.every(site=>['needs_attention','failed'].includes(site.status)),
+ };
+}
 export async function main(env=process.env,{runId,scheduled,deadline,maxPages}={}) {
  let run=runId?await readRun(runId):null;
  if(runId && (!run || run.status!=='queued'))throw new Error('Run is missing or already started');
@@ -160,11 +176,13 @@ export async function main(env=process.env,{runId,scheduled,deadline,maxPages}={
    if(stopSignal.aborted||pages>=maxPages)return {status:'deferred',error:stopSignal.aborted?'time_limit':'page_budget'};
    let host;
    try{host=new URL(value).hostname;}catch{return {status:'failed',error:'Invalid source URL'};}
-   const url=canonicalTaskUrl(value,{allowedHosts:[host]});
+   // example.com <-> www.example.com is one site; any other host stays refused.
+   const hosts=[host,host.startsWith('www.')?host.slice(4):`www.${host}`];
+   const url=canonicalTaskUrl(value,{allowedHosts:hosts});
    if(!url)return {status:'failed',error:'Invalid source URL'};
    pages++;
    if(!guarded.has(host))guarded.set(host,createGuardedFetcher({
-    allowUrl:target=>canonicalTaskUrl(target,{allowedHosts:[host]}),
+    allowUrl:target=>canonicalTaskUrl(target,{allowedHosts:hosts}),
     minDelayMs:2000,request:requestPublicPage,gate:officialGate,
    }));
    try{
@@ -201,9 +219,13 @@ export async function main(env=process.env,{runId,scheduled,deadline,maxPages}={
    crawl:(site,options)=>{const cache=Object.fromEntries((site.pages??[]).filter(p=>p.status==='ok'&&p.rule_id===site.rule_id).map(p=>[p.url,{etag:p.etag,lastModified:p.last_modified}]));return crawlPersistentSite({site,venues:site.venues,run,spend,readers:[rulesReader,structuredReader],fetchPage:makeFetcher(cache),bounded:scheduled,store:{page:savePage,site:saveSite},load:(url,findings)=>loadSite(run.id,url,findings),publish:()=>publish(run.id),...options});},checkpoint}});
   if(scheduled) result.pages=pages;
   const progress=await store.progress();
-  await finishRun(run.id,{status:'done',summary:{...result,progress,findings:result.sites.reduce((n,s)=>n+(s.findings??0),0)},costUsd:spend.usd});
-  const report=`# Crawl loop\n\n${result.sites.length} sites, ${result.searches} searches, $${spend.usd.toFixed(4)}.\n\n${Object.entries(progress).map(([key,value])=>`- ${key}: ${value}`).join('\n')}\n\n${result.sites.map(s=>`- ${s.venue_id}: ${s.status}${s.reason?` (${s.reason})`:''}`).join('\n')}\n`;
+  const {findings,allFailed}=loopOutcome(result.sites);
+  await finishRun(run.id,{status:allFailed?'failed':'done',summary:{...result,progress,findings},costUsd:spend.usd});
+  const words=value=>String(value).split('_').join(' ');
+  const detail=site=>`${site.venue_name??site.venue_id}: ${site.status}${site.reason?` (${words(site.reason)}${site.detail?`: ${words(site.detail)}`:''})`:''}`;
+  const report=`# Crawl loop\n\n${result.sites.length} sites, ${findings} findings, ${result.searches} searches, $${spend.usd.toFixed(4)}.${allFailed?'\n\nEvery attempted theatre failed or needs attention.':''}\n\n${Object.entries(progress).map(([key,value])=>`- ${key}: ${value}`).join('\n')}\n\n${result.sites.map(site=>`- ${detail(site)}`).join('\n')}\n`;
   console.log(report);if(env.GITHUB_STEP_SUMMARY)await appendFile(env.GITHUB_STEP_SUMMARY,report);
+  result.allFailed=allFailed;
   return result;
  } catch(error){await finishRun(run.id,{status:'failed',summary:{...(await readRun(run.id))?.summary,error:'Loop interrupted'},costUsd:spend.usd});throw error;}
 }
@@ -256,7 +278,7 @@ Page allowance remaining: ${remaining}.
 `).join('');
  console.log(summary);
  if(env.GITHUB_STEP_SUMMARY)await appendFile(env.GITHUB_STEP_SUMMARY,summary);
- if(reports.some(report=>report.error))throw new Error('One or more crawl sources failed; see run summary');
+ if(reports.some(report=>report.error||report.allFailed))throw new Error('One or more crawl sources failed; see run summary');
  return reports;
 }
 
@@ -269,6 +291,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   } else if (process.argv.length > 2) {
     runFrontierCli().catch(error => { console.error(error.message); process.exitCode = 1; });
   } else {
-    main().catch(() => { console.error('Crawl loop failed; see saved run for progress.'); process.exitCode = 1; });
+    main().then(result => { if (result?.allFailed) process.exitCode = 1; }).catch(() => { console.error('Crawl loop failed; see saved run for progress.'); process.exitCode = 1; });
   }
 }
