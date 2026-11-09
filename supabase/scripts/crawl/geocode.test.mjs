@@ -140,3 +140,22 @@ test('a bracketed note is left out of the street query', async () => {
   assert.equal(hit.query, '1634 Broadway, New York, US');
   assert.equal(new URL(calls[0].url).searchParams.get('countrycodes'), null, 'a US address is not limited to GB');
 });
+
+test('a theatre-name search is the last fallback and accepts only a performance venue', async () => {
+  const { pickNominatimVenue } = await import('./geocode.mjs');
+  // Retired postcode, then a numberless street that matches nothing, then the theatre's own name.
+  const { fetcher, calls } = mock([
+    ['postcodes.io', json({}, 404)],
+    ['Charing+Cross+Road', json([])],
+    ["Wyndham%27s+Theatre", json([{ lat: '51.5111', lon: '-0.1281', category: 'amenity', type: 'theatre' }])],
+  ]);
+  const hit = await createGeocoder({ fetcher, sleep: async () => {} })(
+    { name: "Wyndham's Theatre", street: 'Charing Cross Road', postcode: 'WC2N 0DA', city: 'London', country: 'GB' });
+  assert.equal(hit.precision, 'venue_name');
+  assert.equal(hit.query, "Wyndham's Theatre, London, GB");
+  assert.equal(calls.length, 3);
+  // A same-named building is not the theatre; two theatres far apart are ambiguous.
+  assert.equal(pickNominatimVenue([{ lat: '51.50', lon: '-0.11', category: 'building', type: 'commercial' }]), null);
+  assert.equal(pickNominatimVenue([{ lat: '51.51', lon: '-0.12', category: 'amenity', type: 'theatre' },
+    { lat: '51.49', lon: '-0.23', category: 'amenity', type: 'theatre' }]), null);
+});
