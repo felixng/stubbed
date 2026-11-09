@@ -166,3 +166,14 @@ Re-planned 8 Nov 2026. Epic #219 is the build, which Claude does end to end with
 | 7 | #261 | Web locks, Profile callout and the one paywall (placeholder offer) |
 | 8 | #468 | Web checkout with `purchases-js`, and the membership page |
 | launch | #469, #262 | Owner setup (section 9); sandbox matrix and the rollout in section 8 |
+
+## 11. Support runbook
+
+Start at **/app/backstage/membership** (admins only). Look the person up by handle: it shows their membership, every subscription row (provider, environment, status, end date, renewal), grants and the last 10 billing events, plus **billing health** (which of the five variables are set, never their values; a button that tests the RevenueCat key; the config switches; the time of the last processed webhook and last reconcile). "Re-sync from RevenueCat" runs the same fetch-and-apply as `/api/billing/refresh` for that person.
+
+- **Paid but still locked.** Look them up. If they show Free, press Re-sync. Still Free: check the subscription's **environment** against `billing_environment` in the config (a sandbox purchase doesn't count in production), and that RevenueCat's App User ID for the purchase is their Stubbed user id (a purchase under an `$RCAnonymousID` or another account belongs to that id; the RevenueCat dashboard can transfer it). A billing event with an error means the webhook failed; Re-sync fixes the state and the daily reconcile would anyway.
+- **Restore on a new phone.** The person signs in to the same Stubbed account and taps Restore purchases (iOS) or opens Membership (web). Pro follows the account, not the phone.
+- **Subscribed on the wrong account.** Apple ties the purchase to the Apple ID, RevenueCat to the App User ID it was made under. Ask the person to sign in to the account they want on the phone and restore; RevenueCat transfers it (a `TRANSFER` event syncs both accounts). If it doesn't, transfer it in the RevenueCat dashboard, then Re-sync both people.
+- **Cancelling and refunds.** The person cancels in the App Store (iOS) or from the web Membership page; Pro continues to the end of the period. Apple refunds go through Apple (reportaproblem.apple.com). Web refunds go through the RevenueCat dashboard. A refund makes the subscription `refunded` and the person Free at once.
+- **Turning sales or gates off without touching subscribers.** Set `paywall_sales_enabled` or `paywall_gates_enabled` to `false` in `app_config`. Off sales: no prompts or paywall, existing subscribers keep Pro. Off gates: everything is free again. No subscription rows change either way.
+- **Missing keys.** Any of the billing variables missing makes the billing routes answer 503 and the apps show "Upgrades aren't available yet"; nothing else is affected.

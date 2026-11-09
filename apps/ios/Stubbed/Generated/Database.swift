@@ -126,11 +126,13 @@ internal enum PublicSchema {
     internal let eventId: String
     internal let processedAt: String?
     internal let receivedAt: String
+    internal let userId: UUID?
     internal enum CodingKeys: String, CodingKey {
       case error = "error"
       case eventId = "event_id"
       case processedAt = "processed_at"
       case receivedAt = "received_at"
+      case userId = "user_id"
     }
   }
   internal struct BillingEventsInsert: Codable, Hashable, Sendable {
@@ -138,11 +140,13 @@ internal enum PublicSchema {
     internal let eventId: String
     internal let processedAt: String?
     internal let receivedAt: String?
+    internal let userId: UUID?
     internal enum CodingKeys: String, CodingKey {
       case error = "error"
       case eventId = "event_id"
       case processedAt = "processed_at"
       case receivedAt = "received_at"
+      case userId = "user_id"
     }
   }
   internal struct BillingEventsUpdate: Codable, Hashable, Sendable {
@@ -150,11 +154,13 @@ internal enum PublicSchema {
     internal let eventId: String?
     internal let processedAt: String?
     internal let receivedAt: String?
+    internal let userId: UUID?
     internal enum CodingKeys: String, CodingKey {
       case error = "error"
       case eventId = "event_id"
       case processedAt = "processed_at"
       case receivedAt = "received_at"
+      case userId = "user_id"
     }
   }
   internal struct BlocksSelect: Codable, Hashable, Sendable {

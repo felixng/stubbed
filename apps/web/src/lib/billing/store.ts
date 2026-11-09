@@ -27,10 +27,14 @@ function supabaseStore(): BillingStore | null {
       const { data } = check(await db.from("profiles").select("id").eq("id", id).maybeSingle());
       return Boolean(data);
     },
-    async recordEvent(eventId) {
-      check(await db.from("billing_events").upsert({ event_id: eventId }, { onConflict: "event_id", ignoreDuplicates: true }));
+    async recordEvent(eventId, userId) {
+      check(await db.from("billing_events").upsert({ event_id: eventId, user_id: userId }, { onConflict: "event_id", ignoreDuplicates: true }));
       const { data } = check(await db.from("billing_events").select("processed_at").eq("event_id", eventId).single());
       return { processed: Boolean(data?.processed_at) };
+    },
+    async recordReconcile() {
+      const now = new Date().toISOString();
+      check(await db.from("billing_events").insert({ event_id: `reconcile:${now}`, processed_at: now }));
     },
     async failEvent(eventId, error) {
       check(await db.from("billing_events").update({ error: error.slice(0, 500) }).eq("event_id", eventId));
