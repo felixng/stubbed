@@ -1442,3 +1442,9 @@ misses resolved to the right theatre. Migration `20261109002000` re-queues aggre
 
 Open (owner, 2026-11-08): the kept OSM rows show OSM's bare names ("Garrick", "Wyndham's"); the owner prefers
 the niche sources' names. Which name is displayed is the open question on #447.
+
+### 2026-11-08: Pro is split into a build epic and a launch epic (#219, #470)
+Owner's call, so that Claude can build the paid tier end to end. #219 is the code, merged with both switches off; #470 is what needs the owner (store, RevenueCat and Stripe accounts, secrets, sandbox purchases on a device, the commercial Vercel plan, switching on). #219 has eight slices (#465, #259, #466, #260, #467, #226, #261, #468; `docs/PAYWALL.md` §10). #226 (web Insights) moved here from #165 so one run delivers the web journey. Spreadsheet import (#139) moved to its own epic, #471.
+- **The server writes membership with a Supabase secret key in Vercel.** This is the first such key there (the crawl dispatch, #358, avoided one). It's confined to a `server-only` client that only `lib/billing/*` imports. Edge Functions would have kept it inside Supabase, but the epic and ship skills can only `db push`. The daily reconcile is a Vercel cron, because epic runs may not edit `.github/workflows/`.
+- **The web uses `@revenuecat/purchases-js`**, a new dependency approved by the owner, for localised prices and trial eligibility like the iOS SDK. Web Purchase Links would have avoided the dependency but needed a separate price lookup. The SDK takes the user id from the client, so a tampered client could only pay for Pro on another account; membership still comes only from the server's fetch.
+- **Billing code ships before the keys exist.** Routes return 503 and the apps show an unavailable offer until #469 is done.

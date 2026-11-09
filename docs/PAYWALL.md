@@ -107,6 +107,8 @@ membership_grants   user_id, reason, starts_at, ends_at, granted_by   -- deliber
 - **Webhook.** `POST /api/billing/revenuecat` (Vercel), authenticated with RevenueCat's authorization header secret. It records the event id, then **fetches the customer's current state from RevenueCat's API** and upserts `subscriptions` from that, rather than trusting the event body. Duplicate and out-of-order events converge on the same state. An event is marked processed only after the upsert succeeds; failures are logged with the error and retried by RevenueCat.
 - **Refresh.** `POST /api/billing/refresh` (signed-in caller, Bearer token from iOS) does the same fetch for the caller. Both apps call it after a purchase or restore, on foreground and on sign-in. The SDK's success alone never shows Pro; the UI shows "Confirming…" until `my_membership()` says Pro.
 - **Reconciliation.** A daily job re-fetches every user with a non-expired subscription, so a missed webhook heals within a day. It is runnable by hand for support ("paid but still locked").
+- **How the server writes** (owner, 8 Nov 2026). The billing routes use a Supabase secret key (`SUPABASE_SECRET_KEY`) held in Vercel, through a `server-only` client that only `lib/billing/*` may import. The daily reconcile is a Vercel cron (`/api/billing/reconcile`, `CRON_SECRET`). Every billing route returns 503 while its keys are missing, so the code ships before the setup in section 9. #259 has the RevenueCat field mapping.
+- **Account deletion.** Billing rows cascade with the user. A trigger queues the RevenueCat App User ID, and the daily reconcile deletes that customer in RevenueCat.
 
 ## 6. Config
 
@@ -127,7 +129,7 @@ The two flags are separate so sales and locks can be switched independently and 
 - **Offer copy** from the current RevenueCat offering: localised price, billing period and trial terms (only when the user is eligible). Buttons say "Start free trial" only with an eligible trial, otherwise "Upgrade". Restore is always visible on iOS.
 - **Pro users** see their membership and a manage button for the right store, never an upgrade prompt.
 - **Analytics** (`docs/ANALYTICS.md`): `paywall_viewed` and `purchase_completed`, with `source` (`profile`, `show_mix`, `past_year`, `all_time`) and `platform`. Payment truth comes from `subscriptions`, not events.
-- iOS uses the RevenueCat SDK (Swift Package; a new dependency, approved with this epic). The web uses RevenueCat's Web Billing checkout, started by the server for the signed-in user.
+- iOS uses the RevenueCat SDK (Swift Package; a new dependency, approved with this epic). The web uses RevenueCat's browser SDK, `@revenuecat/purchases-js` (a new dependency, approved 8 Nov 2026), configured with the signed-in user's id from the server-rendered session. A tampered client could at most pay for Pro on a different account; membership still comes only from the server's fetch.
 
 ## 8. Rollout order
 
@@ -144,15 +146,23 @@ Old iOS builds (before step 2) keep working after step 4: they decode the same s
 - [ ] App Store Connect: subscription group "Stubbed Pro" with `stubbed_pro_monthly` (£2.99) and `stubbed_pro_annual` (£19.99), each with a 30-day free introductory offer; enable Billing Grace Period.
 - [ ] RevenueCat: project with an iOS app and a Web Billing app; entitlement `pro` attached to all four products; offering `default` with monthly and annual packages; webhook to `/api/billing/revenuecat` with an authorization secret.
 - [ ] Stripe: account connected to RevenueCat Web Billing; matching monthly and annual web products with the 30-day trial.
-- [ ] Secrets in Vercel and Supabase (never in the repo): RevenueCat secret API key, webhook secret, iOS public SDK key, Web Billing public key.
+- [ ] Secrets in Vercel (never in the repo): `SUPABASE_SECRET_KEY`, `REVENUECAT_SECRET_API_KEY`, `REVENUECAT_WEBHOOK_AUTH`, `CRON_SECRET`, `NEXT_PUBLIC_REVENUECAT_WEB_BILLING_KEY`. The iOS public SDK key goes in `REVENUECAT_IOS_API_KEY` in the xcconfigs. Exact steps: #469.
 - [ ] VAT: check registration and collection for web sales, where Stubbed is the seller. Apple handles tax for iOS.
 - [ ] Vercel: a commercial plan (or another host) before `paywall_sales_enabled` goes on in production.
 
 ## 10. Build slices
 
-| Issue | Delivers |
-|---|---|
-| #259 | Sections 3–6 in Postgres and the server routes: membership tables, webhook, refresh, reconciliation, `feature_access`, `has_feature`, gated `own_insights` and drill-downs, config. Tests for every row of section 2 and section 5's lifecycle table. |
-| #260 | iOS: RevenueCat SDK, paywall, Profile callout, Show mix banner, locked periods, restore and manage, insight cards' locked state. |
-| #261 | Web: the same on Profile and Insights (with #226), Web Billing checkout and management. |
-| #262 | Sandbox matrix, support runbook, the rollout in section 8. |
+Re-planned 8 Nov 2026. Epic #219 is the build, which Claude does end to end with both switches off. Epic #470 is the launch, which needs the owner.
+
+| Order | Issue | Delivers |
+|---|---|---|
+| done | #414 | Membership tables, `my_membership`, `feature_access`, `has_feature`, `app_config` |
+| 1 | #465 | Sections 2–4 in Postgres: gated `own_insights` and drill-downs, the `access` key, the trusted year, analytics event names |
+| 2 | #259 | Section 5's sync: webhook, refresh, daily reconcile, deletion queue |
+| 3 | #466 | Backstage membership lookup, billing health, support runbook (section 11) |
+| 4 | #260 | iOS locks, Profile callout and the one paywall (placeholder offer) |
+| 5 | #467 | iOS RevenueCat purchase, restore and manage |
+| 6 | #226 | Web Insights screen, with neutral locked slots |
+| 7 | #261 | Web locks, Profile callout and the one paywall (placeholder offer) |
+| 8 | #468 | Web checkout with `purchases-js`, and the membership page |
+| launch | #469, #262 | Owner setup (section 9); sandbox matrix and the rollout in section 8 |
