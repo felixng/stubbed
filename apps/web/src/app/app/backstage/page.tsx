@@ -28,6 +28,11 @@ const PAGES = [
     text: "What the crawler read from theatre websites: check findings, mark them right or wrong, and compare runs.",
   },
   {
+    href: "/app/backstage/membership",
+    title: "Membership",
+    text: "Look up someone’s Pro membership, re-sync it from RevenueCat, and check billing is set up.",
+  },
+  {
     href: "/dressingroom",
     title: "Dressing room",
     text: "Edit the words on the landing page, FAQ, press kit and other public pages.",
