@@ -41,7 +41,9 @@ select is((select count(*) from public.venues where name = 'Faraway Theatre'), 0
 select is((pg_temp.match('nameonly', 'Fixture Lyric Theatre')).resolution_status, 'ambiguous', 'a name variant with no location never links');
 select is((pg_temp.match('hammersmith', 'Fixture Lyric Hammersmith',
   '{"lat":51.5301,"lng":-0.1501,"geocode":{"provider":"geocoded:postcodes.io"}}')).resolution_status,
-  'ambiguous', 'a different name at the same spot is held, not linked or duplicated');
+  'linked', 'a different name at the same spot is a rename candidate (#447): linked, flagged, not duplicated');
+select is((select review_reason from public.crawl_source_entities where external_key = 'hammersmith'), 'possible_rename',
+  'and flagged for review');
 
 select * from finish();
 rollback;

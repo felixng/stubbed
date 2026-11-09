@@ -1442,3 +1442,7 @@ misses resolved to the right theatre. Migration `20261109002000` re-queues aggre
 
 Open (owner, 2026-11-08): the kept OSM rows show OSM's bare names ("Garrick", "Wyndham's"); the owner prefers
 the niche sources' names. Which name is displayed is the open question on #447.
+
+## Venue aliases (#447)
+
+`venue_aliases` stores a theatre's other names (former, alternative, per-source spelling), modelled on `show_aliases`. `search_venues` ranks a venue by its best name or alias and returns it once under its current name. `crawl_match_venue` treats an alias as the same name, but a name still never links without location evidence and exactly one candidate. A rename in the same building (no venue or alias has the name; exactly one venue within 100 m, or the same postcode and street, and not already linked to another entity of that source) links, keeps the name as an alias, and sets `crawl_source_entities.review_reason = 'possible_rename'` as the review item. Two qualifying venues are never auto-linked. `merge_venues` keeps the merged name and aliases on the survivor. Display name rules and the admin alias editor are follow-ups.
