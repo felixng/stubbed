@@ -67,6 +67,30 @@ internal enum PublicSchema {
       case value = "value"
     }
   }
+  internal struct BillingCustomerDeletionsSelect: Codable, Hashable, Sendable {
+    internal let appUserId: String
+    internal let queuedAt: String
+    internal enum CodingKeys: String, CodingKey {
+      case appUserId = "app_user_id"
+      case queuedAt = "queued_at"
+    }
+  }
+  internal struct BillingCustomerDeletionsInsert: Codable, Hashable, Sendable {
+    internal let appUserId: String
+    internal let queuedAt: String?
+    internal enum CodingKeys: String, CodingKey {
+      case appUserId = "app_user_id"
+      case queuedAt = "queued_at"
+    }
+  }
+  internal struct BillingCustomerDeletionsUpdate: Codable, Hashable, Sendable {
+    internal let appUserId: String?
+    internal let queuedAt: String?
+    internal enum CodingKeys: String, CodingKey {
+      case appUserId = "app_user_id"
+      case queuedAt = "queued_at"
+    }
+  }
   internal struct BillingCustomersSelect: Codable, Hashable, Sendable {
     internal let createdAt: String
     internal let revenuecatAppUserId: String
