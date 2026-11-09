@@ -4,6 +4,8 @@ import SwiftUI
 struct InsightsView: View {
   @Environment(AppRouter.self) private var router
   @Environment(AppSession.self) private var session
+  @Environment(Membership.self) private var membership
+  @Environment(PaywallRouter.self) private var paywall
   @Environment(\.dynamicTypeSize) private var typeSize
   @ScaledMetric(relativeTo: .body) private var monthlyChartHeight: CGFloat = 140
   @State private var year: Int? = InsightStats.currentYear
@@ -12,6 +14,7 @@ struct InsightsView: View {
   @State private var shareHandle: String?
   @State private var years: [Int] = [InsightStats.currentYear]
   @State private var error: String?
+  @State private var lockedPeriodNote = false
   @State private var shareRequest: ShareRequest?
   private struct ShareRequest: Identifiable {
     let id = UUID()
@@ -21,13 +24,21 @@ struct InsightsView: View {
   var body: some View {
     List {
       Section {
-        Picker("Year", selection: $year) {
-          ForEach(years, id: \.self) { Text(String($0)).tag(Optional($0)) }
-          Text("All time").tag(Int?.none)
+        Picker("Year", selection: yearSelection) {
+          ForEach(years, id: \.self) { periodLabel(String($0), locked: !canUse(year: $0)).tag(Optional($0)) }
+          periodLabel("All time", locked: !canUse(year: nil)).tag(Int?.none)
         }
         .accessibilityIdentifier("insights-year")
+        if lockedPeriodNote {
+          ProNote()
+        }
       }
-      if let stats {
+      if let stats, stats.isLocked("total") {
+        Section {
+          ProBanner(headline: year == nil ? "Every show, all time" : "Your \(String(year ?? 0)) in theatre",
+            source: year == nil ? .allTime : .pastYear)
+        }
+      } else if let stats {
         overview(stats)
         streaks(stats)
         activity(stats)
@@ -65,7 +76,7 @@ struct InsightsView: View {
         InsightShareSheet(stats: stats, year: year, activityYear: gridYear, initialDesign: request.design, handle: shareHandle)
       }
     }
-    .task(id: "\(year ?? 0)-\(router.dataVersion)") { await load() }
+    .task(id: "\(year ?? 0)-\(router.dataVersion)-\(membership.version)") { await load() }
     .refreshable { await load() }
     .task(id: "\(session.userId?.uuidString ?? "")-\(router.dataVersion)") {
       // Fetch the footer handle while browsing Insights rather than after Share.
@@ -78,6 +89,34 @@ struct InsightsView: View {
         } catch { /* Sharing can retry the profile read if this prefetch fails. */ }
       }
     }
+  }
+
+  /// Choosing a period the plan doesn't include opens the paywall and keeps the current one;
+  /// after a confirmed upgrade the paywall's resume closure selects what was asked for.
+  private var yearSelection: Binding<Int?> {
+    Binding(
+      get: { year },
+      set: { new in
+        if canUse(year: new) {
+          year = new
+          lockedPeriodNote = false
+        } else if membership.salesEnabled {
+          paywall.present(source: new == nil ? .allTime : .pastYear) { year = new }
+        } else {
+          lockedPeriodNote = true
+        }
+      })
+  }
+
+  private func canUse(year: Int?) -> Bool {
+    membership.canUse(
+      year == nil ? "insights.all_time"
+        : year == InsightStats.currentYear ? "insights.current_year" : "insights.past_years")
+  }
+
+  @ViewBuilder
+  private func periodLabel(_ title: String, locked: Bool) -> some View {
+    if locked { Label(title, systemImage: "lock.fill") } else { Text(title) }
   }
 
   private func overview(_ stats: InsightStats) -> some View {
@@ -239,7 +278,11 @@ struct InsightsView: View {
 
   private func categories(_ stats: InsightStats) -> some View {
     Section {
-      if stats.total == 0 {
+      if stats.isLocked("types") {
+        ProBanner(
+          headline: "See your Show mix", source: .showMix,
+          resume: { year = InsightStats.currentYear })
+      } else if stats.total == 0 {
         ContentUnavailableView(
           "Your mix starts here", systemImage: "chart.pie",
           description: Text("Log a show to see your favourite show types."))
@@ -269,12 +312,14 @@ struct InsightsView: View {
 
   private func history(_ stats: InsightStats) -> some View {
     Section {
-      if stats.years.isEmpty {
+      if stats.isLocked("years") {
+        ProBanner(headline: "Every year, side by side", source: .pastYear)
+      } else if stats.years.isEmpty {
         Text("Your history appears after your first logged show.").foregroundStyle(.secondary)
       }
       ForEach(stats.years) { item in
         Button {
-          year = item.year
+          yearSelection.wrappedValue = item.year
         } label: {
           LabeledContent(String(item.year), value: showCount(item.count))
         }
@@ -376,10 +421,13 @@ private struct InsightInfoButton: View {
 struct InsightVisitsView: View {
   let filter: Insights.Filter
   @Environment(AppRouter.self) private var router
+  @Environment(Membership.self) private var membership
+  @Environment(PaywallRouter.self) private var paywall
   @State private var visits: [Insights.Visit] = []
   @State private var loading = true
   @State private var more = false
   @State private var error: String?
+  @State private var locked = false
 
   var body: some View {
     List {
@@ -395,7 +443,17 @@ struct InsightVisitsView: View {
         }
       }
       if loading { PlaceholderRows(count: 2) }
-      if let error {
+      if locked {
+        ContentUnavailableView {
+          Label("Part of \(membership.name)", systemImage: "lock.fill")
+        } description: {
+          Text(filter.type != nil ? "Show mix is part of \(membership.name)." : "Earlier years and All time are part of \(membership.name).")
+        } actions: {
+          if membership.salesEnabled {
+            Button("Upgrade") { presentPaywall() }.buttonStyle(.borderedProminent)
+          }
+        }
+      } else if let error {
         Text(error).foregroundStyle(.secondary)
         Button("Try again") { Task { await load(reset: visits.isEmpty) } }
       } else if !loading && visits.isEmpty {
@@ -409,19 +467,34 @@ struct InsightVisitsView: View {
     .tabBarClearance()
     .navigationTitle(filter.title)
     .navigationBarTitleDisplayMode(.inline)
-    .task(id: router.dataVersion) { await load(reset: true) }
+    .task(id: "\(router.dataVersion)-\(membership.version)") { await load(reset: true) }
     .refreshable { await load(reset: true) }
+  }
+
+  private func presentPaywall() {
+    let source: PaywallRouter.Source = filter.type != nil ? .showMix : filter.year == nil ? .allTime : .pastYear
+    paywall.present(source: source)
   }
 
   private func load(reset: Bool) async {
     loading = true
     error = nil
+    locked = false
     do {
       let page = try await Insights.visits(filter, offset: reset ? 0 : visits.count)
       try Task.checkCancellation()
       visits = reset ? page : visits + page
       more = page.count == 100
-    } catch { if !Task.isCancelled { self.error = "Couldn’t load these shows. Try again." } }
+    } catch {
+      if Insights.isUpgradeRequired(error) {
+        // A locked filter opens the paywall, not an error message.
+        locked = true
+        visits = []
+        if membership.salesEnabled { presentPaywall() }
+      } else if !Task.isCancelled {
+        self.error = "Couldn’t load these shows. Try again."
+      }
+    }
     loading = false
   }
 }

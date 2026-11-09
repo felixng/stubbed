@@ -7,6 +7,7 @@ struct EntryView: View {
   var notice: AppRouter.Notice?
 
   @Environment(AppRouter.self) private var router
+  @Environment(Membership.self) private var membership
   @Environment(\.dismiss) private var dismiss
   @State private var state: Loadable<Entry> = .loading
   @State private var photo: URL?
@@ -50,7 +51,7 @@ struct EntryView: View {
         }
       }
     }
-    .task(id: router.dataVersion) { await load() }
+    .task(id: "\(router.dataVersion)-\(membership.version)") { await load() }
     .sheet(isPresented: $sharing) {
       if let share {
         ShareScreen {

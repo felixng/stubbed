@@ -28,7 +28,42 @@ enum InsightCardDesign: String, CaseIterable, Identifiable {
     case .history: "Year by year"
     }
   }
+  /// The fields of `own_insights` a card is drawn from. A card is locked when the server
+  /// withheld any of them (`access.locked`), so cards never check a tier themselves
+  /// (docs/PAYWALL.md section 2, "Share cards").
+  var needs: [String] {
+    switch self {
+    case .year: ["total"]
+    case .weekly, .daily: []
+    case .bestWeekly: ["streaks.longest_weekly"]
+    case .bestDaily: ["streaks.longest_daily"]
+    case .activity: ["days"]
+    case .repeats: ["repeated_shows"]
+    case .countries: ["countries"]
+    case .mix: ["types"]
+    case .history: ["years"]
+    }
+  }
+  func isLocked(by stats: InsightStats) -> Bool { needs.contains { stats.isLocked($0) } }
+  /// Where the paywall was opened from, for analytics.
+  func paywallSource(_ stats: InsightStats) -> PaywallRouter.Source {
+    if self == .mix { return .showMix }
+    return stats.access?.period == "all" || self == .history ? .allTime : .pastYear
+  }
+
+  /// The designs to offer. A locked design stays in the list, so Free users see its upgrade
+  /// preview in place of a card they can't have.
   static func available(
+    _ stats: InsightStats, year: Int?, currentYear: Int = InsightStats.currentYear,
+    activityYear: Int? = nil, includingEmpty: Bool = false
+  ) -> [Self] {
+    let open = availableWithData(
+      stats, year: year, currentYear: currentYear, activityYear: activityYear, includingEmpty: includingEmpty)
+    guard stats.access?.locked.isEmpty == false else { return open }
+    return allCases.filter { $0.isLocked(by: stats) || open.contains($0) }
+  }
+
+  private static func availableWithData(
     _ stats: InsightStats, year: Int?, currentYear: Int = InsightStats.currentYear,
     activityYear: Int? = nil, includingEmpty: Bool = false
   ) -> [Self] {
@@ -285,6 +320,7 @@ extension ShareCards {
       data.stats, year: data.year, currentYear: data.currentYear,
       activityYear: data.activityYear, includingEmpty: includingEmpty)
     return try (designs ?? available).filter { available.contains($0) }.map { design in
+      if design.isLocked(by: data.stats) { return try lockedCard(design, data: data) }
       let name = "stubbed-\(design.id)-\(data.filenamePeriod(for: design))"
       var variants: [ShareAppearance: ShareAsset] = [:]
       for appearance in ShareAppearance.variants {
@@ -295,9 +331,24 @@ extension ShareCards {
     }
   }
 
+  /// The stand-in for a card the caller's plan doesn't include: drawn from made-up sample
+  /// numbers, never from their stats, with no background variants to export.
+  @MainActor static func lockedCard(_ design: InsightCardDesign, data: InsightCardData) throws -> RenderedCard {
+    let sample = InsightCardData(
+      stats: .sample, year: data.year, handle: data.handle, currentYear: data.currentYear,
+      activityYear: data.activityYear)
+    let full = try render(
+      InsightCardView(design: design, data: sample), name: "locked-\(design.id)")
+    return RenderedCard(
+      id: design.id, name: design == .year && data.year == nil ? "All time in theatre" : design.name,
+      file: full.file, image: full.image, isInsights: true, isLocked: true,
+      paywallSource: design.paywallSource(data.stats))
+  }
+
   @MainActor static func prepareInsightCard(
     _ data: InsightCardData, design: InsightCardDesign
   ) async throws -> RenderedCard {
+    if design.isLocked(by: data.stats) { return try lockedCard(design, data: data) }
     let name = "stubbed-\(design.id)-\(data.filenamePeriod(for: design))"
     var variants: [ShareAppearance: ShareAsset] = [:]
     for appearance in ShareAppearance.variants {
@@ -324,11 +375,15 @@ struct InsightShareSheet: View {
   var activityYear: Int? = nil
   var initialDesign: InsightCardDesign? = nil
   var handle: String? = nil
+  @Environment(Membership.self) private var membership
   @State private var cards: [RenderedCard] = []
+  /// Fresh stats after membership changed, so a card unlocked by an upgrade is drawn for real.
+  @State private var refreshed: InsightStats?
   @State private var loadedHandle: String?
   @State private var failed = false
+  private var current: InsightStats { refreshed ?? stats }
   private var designs: [InsightCardDesign] {
-    InsightCardDesign.available(stats, year: year, activityYear: activityYear)
+    InsightCardDesign.available(current, year: year, activityYear: activityYear)
   }
   var body: some View {
     ShareScreen {
@@ -341,6 +396,12 @@ struct InsightShareSheet: View {
           options: designs.map { ShareCardOption(id: $0.id, name: $0 == .year && year == nil ? "All time in theatre" : $0.name) },
           prepareCard: prepare)
       }
+    }
+    // Access can change while this is open (an upgrade, a policy change): drop every rendered
+    // card and draw from fresh stats.
+    .onChange(of: membership.version) { _, _ in
+      cards = []
+      Task { refreshed = try? await Insights.load(year: year) }
     }
   }
 
@@ -358,7 +419,7 @@ struct InsightShareSheet: View {
         loadedHandle = profile.handle
         ownerHandle = profile.handle
       }
-      let data = InsightCardData(stats: stats, year: year, handle: ownerHandle, activityYear: activityYear)
+      let data = InsightCardData(stats: current, year: year, handle: ownerHandle, activityYear: activityYear)
       let card = try await ShareCards.prepareInsightCard(data, design: design)
       try Task.checkCancellation()
       cards.append(card)

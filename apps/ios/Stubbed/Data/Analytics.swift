@@ -9,6 +9,8 @@ enum Analytics {
   enum Event: String {
     case entryLogged = "entry_logged"
     case cardShared = "card_shared"
+    case paywallViewed = "paywall_viewed"
+    case purchaseCompleted = "purchase_completed"
   }
 
   static func track(_ event: Event, _ props: [String: AnyJSON] = [:]) {

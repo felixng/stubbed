@@ -13,6 +13,9 @@ struct RenderedCard: Identifiable {
   let image: UIImage
   var backgrounds: [ShareAppearance: ShareAsset] = [:]
   var isInsights = false
+  /// A stand-in drawn from sample numbers: shown with an upgrade prompt and never exported.
+  var isLocked = false
+  var paywallSource: PaywallRouter.Source = .showMix
   var showsRating = false
   var supportsBackground: Bool { !backgrounds.isEmpty }
   func asset(for appearance: ShareAppearance) -> ShareAsset {
@@ -88,6 +91,8 @@ struct ShareCarousel: View {
   var prepareCard: (@MainActor (String) async -> Void)? = nil
   @Environment(\.sharePreviewSize) private var previewSize
   @Environment(\.shareScreenHeight) private var screenHeight
+  @Environment(Membership.self) private var membership
+  @Environment(PaywallRouter.self) private var paywall
   /// The background sheet's height: the swatches, plus the text colours on
   /// a transparent card. Kept short so the whole card shows above it.
   @ScaledMetric(relativeTo: .body) private var actionIconSide: CGFloat = 56
@@ -129,7 +134,8 @@ struct ShareCarousel: View {
   private var current: RenderedCard? { cards?.first(where: { $0.id == selectedID }) }
   private var currentText: String { current?.isInsights == true ? "" : text }
   private var currentLink: URL? { current?.isInsights == true ? nil : link }
-  private var currentAsset: ShareAsset? { current?.asset(for: appearance) }
+  private var isLocked: Bool { current?.isLocked == true }
+  private var currentAsset: ShareAsset? { isLocked ? nil : current?.asset(for: appearance) }
   private var selection: Binding<String> {
     Binding(get: { selectedID ?? "loading" }, set: { active = $0 })
   }
@@ -172,7 +178,7 @@ struct ShareCarousel: View {
           if subject != .trip {
             // Available for show and stats cards; photo cards have no background
             // to change, so it's dimmed there.
-            let canPick = current?.supportsBackground == true
+            let canPick = current?.supportsBackground == true && !isLocked
             let shown = canPick || subject == .insights ? appearance.background : .dark
             action("Background") {
               ZStack {
@@ -203,20 +209,20 @@ struct ShareCarousel: View {
           } perform: {
             Task { await shareToStories() }
           }
-          .disabled(current == nil)
+          .disabled(current == nil || isLocked)
           action("Copy", systemImage: "doc.on.doc") { copyImage() }
-            .disabled(current == nil)
+            .disabled(current == nil || isLocked)
             .accessibilityHint("Copy the selected card image")
           action("Download", systemImage: "arrow.down.to.line") { Task { await download() } }
-            .disabled(current == nil)
-          if !currentText.isEmpty {
+            .disabled(current == nil || isLocked)
+          if !currentText.isEmpty && !isLocked {
             action("Copy text", systemImage: "doc.on.doc") {
               UIPasteboard.general.string = currentText
               record("copy_text")
               notice = "Text copied."
             }
           }
-          if let link = currentLink {
+          if let link = currentLink, !isLocked {
             action("Link", systemImage: "link") {
               UIPasteboard.general.url = link
               record("copy_link")
@@ -224,7 +230,7 @@ struct ShareCarousel: View {
             }
           }
           action("More", systemImage: "square.and.arrow.up") { share(withText: true) }
-            .disabled(current == nil)
+            .disabled(current == nil || isLocked)
         }
         .padding(.horizontal, Space.l)
       }
@@ -284,6 +290,39 @@ struct ShareCarousel: View {
   }
 
   private func cardImage(_ card: RenderedCard, index: Int) -> some View {
+    if card.isLocked { return AnyView(lockedCard(card, index: index)) }
+    return AnyView(unlockedCard(card, index: index))
+  }
+
+  /// A card the plan doesn't include: sample numbers behind a lock. Tapping opens the paywall,
+  /// or, with sales off, only says what it's part of.
+  private func lockedCard(_ card: RenderedCard, index: Int) -> some View {
+    ZStack {
+      Image(uiImage: card.image).resizable().scaledToFit().blur(radius: 10)
+      Color.black.opacity(0.35)
+      VStack(spacing: Space.m) {
+        Image(systemName: "lock.fill").font(.largeTitle)
+        Text("\(card.name) is part of \(membership.name)").font(.headline).multilineTextAlignment(.center)
+        if membership.salesEnabled {
+          Button("Upgrade") { openPaywall(card) }.buttonStyle(.borderedProminent)
+        }
+      }
+      .foregroundStyle(.white)
+      .padding(Space.l)
+    }
+    .clipShape(.rect(cornerRadius: 20))
+    .contentShape(.rect)
+    .onTapGesture { if membership.salesEnabled { openPaywall(card) } }
+    .accessibilityElement(children: .combine)
+    .accessibilityLabel("Share card \(index + 1) of \(designs.count), \(card.name.lowercased()), locked")
+    .accessibilityIdentifier("share-card-locked-\(card.id)")
+  }
+
+  private func openPaywall(_ card: RenderedCard) {
+    paywall.present(source: card.paywallSource)
+  }
+
+  private func unlockedCard(_ card: RenderedCard, index: Int) -> some View {
     ZStack {
       // Light checks behind dark text, so it reads while you choose.
       if card.isTransparent(appearance) { Checkerboard(light: appearance.ink == .dark) }
@@ -528,6 +567,7 @@ struct ShareScreen<Content: View>: View {
         ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } }
       }
     }
+    .paywallHost()
   }
 }
 
