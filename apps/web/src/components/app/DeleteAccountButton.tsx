@@ -11,7 +11,7 @@ import { fieldClass } from "./log/Typeahead";
 // Opens a confirmation modal; the account is deleted only once the user types
 // their handle. Native <dialog>: focus moves in and stays there, Escape
 // closes it.
-export function DeleteAccountButton({ handle, asRow = false }: { handle: string; asRow?: boolean }) {
+export function DeleteAccountButton({ handle, asRow = false, appStoreSubscriber = false }: { handle: string; asRow?: boolean; appStoreSubscriber?: boolean }) {
   const id = useId();
   const dialog = useRef<HTMLDialogElement>(null);
   const [typed, setTyped] = useState("");
@@ -61,6 +61,7 @@ export function DeleteAccountButton({ handle, asRow = false }: { handle: string;
           <p id={`${id}-desc`} className="text-subheadline text-label-secondary">
             This permanently deletes your profile, every show in your diary, your trips and labels, and your
             photos. It can’t be undone. Shows and venues you added stay in the catalogue for others.
+            {appStoreSubscriber ? " If you subscribe through the App Store, cancel it in Settings › Apple ID › Subscriptions too." : ""}
           </p>
           <div className="flex flex-col gap-2">
             <label htmlFor={`${id}-confirm`} className="text-subheadline font-medium text-label">
