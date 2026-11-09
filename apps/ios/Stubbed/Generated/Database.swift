@@ -1529,6 +1529,7 @@ internal enum PublicSchema {
     internal let overrideLocked: Bool
     internal let resolutionReason: String?
     internal let resolutionStatus: String
+    internal let reviewReason: String?
     internal let showId: UUID?
     internal let sourceId: UUID
     internal let venueId: UUID?
@@ -1542,6 +1543,7 @@ internal enum PublicSchema {
       case overrideLocked = "override_locked"
       case resolutionReason = "resolution_reason"
       case resolutionStatus = "resolution_status"
+      case reviewReason = "review_reason"
       case showId = "show_id"
       case sourceId = "source_id"
       case venueId = "venue_id"
@@ -1557,6 +1559,7 @@ internal enum PublicSchema {
     internal let overrideLocked: Bool?
     internal let resolutionReason: String?
     internal let resolutionStatus: String?
+    internal let reviewReason: String?
     internal let showId: UUID?
     internal let sourceId: UUID
     internal let venueId: UUID?
@@ -1570,6 +1573,7 @@ internal enum PublicSchema {
       case overrideLocked = "override_locked"
       case resolutionReason = "resolution_reason"
       case resolutionStatus = "resolution_status"
+      case reviewReason = "review_reason"
       case showId = "show_id"
       case sourceId = "source_id"
       case venueId = "venue_id"
@@ -1585,6 +1589,7 @@ internal enum PublicSchema {
     internal let overrideLocked: Bool?
     internal let resolutionReason: String?
     internal let resolutionStatus: String?
+    internal let reviewReason: String?
     internal let showId: UUID?
     internal let sourceId: UUID?
     internal let venueId: UUID?
@@ -1598,6 +1603,7 @@ internal enum PublicSchema {
       case overrideLocked = "override_locked"
       case resolutionReason = "resolution_reason"
       case resolutionStatus = "resolution_status"
+      case reviewReason = "review_reason"
       case showId = "show_id"
       case sourceId = "source_id"
       case venueId = "venue_id"
@@ -3155,6 +3161,78 @@ internal enum PublicSchema {
       case updatedAt = "updated_at"
       case userId = "user_id"
       case willRenew = "will_renew"
+    }
+  }
+  internal struct VenueAliasesSelect: Codable, Hashable, Sendable {
+    internal let alias: String
+    internal let createdAt: String
+    internal let createdBy: UUID?
+    internal let id: UUID
+    internal let kind: String
+    internal let searchText: String?
+    internal let source: String
+    internal let validFrom: String?
+    internal let validTo: String?
+    internal let venueId: UUID
+    internal enum CodingKeys: String, CodingKey {
+      case alias = "alias"
+      case createdAt = "created_at"
+      case createdBy = "created_by"
+      case id = "id"
+      case kind = "kind"
+      case searchText = "search_text"
+      case source = "source"
+      case validFrom = "valid_from"
+      case validTo = "valid_to"
+      case venueId = "venue_id"
+    }
+  }
+  internal struct VenueAliasesInsert: Codable, Hashable, Sendable {
+    internal let alias: String
+    internal let createdAt: String?
+    internal let createdBy: UUID?
+    internal let id: UUID?
+    internal let kind: String
+    internal let searchText: String?
+    internal let source: String
+    internal let validFrom: String?
+    internal let validTo: String?
+    internal let venueId: UUID
+    internal enum CodingKeys: String, CodingKey {
+      case alias = "alias"
+      case createdAt = "created_at"
+      case createdBy = "created_by"
+      case id = "id"
+      case kind = "kind"
+      case searchText = "search_text"
+      case source = "source"
+      case validFrom = "valid_from"
+      case validTo = "valid_to"
+      case venueId = "venue_id"
+    }
+  }
+  internal struct VenueAliasesUpdate: Codable, Hashable, Sendable {
+    internal let alias: String?
+    internal let createdAt: String?
+    internal let createdBy: UUID?
+    internal let id: UUID?
+    internal let kind: String?
+    internal let searchText: String?
+    internal let source: String?
+    internal let validFrom: String?
+    internal let validTo: String?
+    internal let venueId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case alias = "alias"
+      case createdAt = "created_at"
+      case createdBy = "created_by"
+      case id = "id"
+      case kind = "kind"
+      case searchText = "search_text"
+      case source = "source"
+      case validFrom = "valid_from"
+      case validTo = "valid_to"
+      case venueId = "venue_id"
     }
   }
   internal struct VenuesSelect: Codable, Hashable, Sendable {
