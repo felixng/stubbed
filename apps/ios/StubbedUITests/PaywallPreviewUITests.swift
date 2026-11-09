@@ -6,9 +6,11 @@ final class PaywallPreviewUITests: XCTestCase {
   override func setUp() { continueAfterFailure = false }
 
   @MainActor
-  private func launchFree() throws -> XCUIApplication {
+  private func launchFree(offer: String? = nil, largeText: Bool = false) throws -> XCUIApplication {
     let app = XCUIApplication()
     app.launchArguments += ["-paywallPreview", "free"]
+    if let offer { app.launchArguments += ["-paywallOffer", offer] }
+    if largeText { app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"] }
     app.launch()
     if app.buttons["Profile"].waitForExistence(timeout: 5) { openTab("Profile", in: app) }
     if !app.staticTexts["@ios_test"].waitForExistence(timeout: 3) {
@@ -58,6 +60,51 @@ final class PaywallPreviewUITests: XCTestCase {
     snapshot("paywall-card-locked")
     XCTAssertTrue(found)
     XCTAssertFalse(app.buttons["Download"].isEnabled)
+  }
+
+  /// The paywall with a mocked store offering (DEBUG-only `-paywallOffer`): trial-eligible and
+  /// not, the Confirming… state, the timeout state, and the largest Dynamic Type.
+  @MainActor
+  private func openPaywall(offer: String, largeText: Bool = false) throws -> XCUIApplication {
+    let app = try launchFree(offer: offer, largeText: largeText)
+    reveal(app.otherElements["pro-banner"], in: app)
+    app.buttons["pro-banner-upgrade"].tap()
+    XCTAssertTrue(app.otherElements["paywall"].waitForExistence(timeout: 5))
+    return app
+  }
+
+  @MainActor func testPaywallOfferTrialEligible() throws {
+    let app = try openPaywall(offer: "eligible")
+    XCTAssertTrue(app.buttons["Start free trial"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["paywall-restore"].exists)
+    snapshot("paywall-offer-trial")
+  }
+
+  @MainActor func testPaywallOfferNotEligible() throws {
+    let app = try openPaywall(offer: "standard")
+    XCTAssertTrue(app.buttons["Upgrade"].waitForExistence(timeout: 5))
+    snapshot("paywall-offer-standard")
+  }
+
+  @MainActor func testPaywallConfirming() throws {
+    let app = try openPaywall(offer: "confirming")
+    XCTAssertTrue(app.otherElements["paywall-confirming"].waitForExistence(timeout: 5)
+      || app.staticTexts["Confirming…"].waitForExistence(timeout: 5))
+    app.swipeUp()
+    snapshot("paywall-confirming")
+  }
+
+  @MainActor func testPaywallTimeout() throws {
+    let app = try openPaywall(offer: "timeout")
+    XCTAssertTrue(app.buttons["paywall-retry"].waitForExistence(timeout: 5))
+    app.swipeUp()
+    snapshot("paywall-timeout")
+  }
+
+  @MainActor func testPaywallLargestDynamicType() throws {
+    let app = try openPaywall(offer: "eligible", largeText: true)
+    XCTAssertTrue(app.buttons["paywall-buy"].waitForExistence(timeout: 5))
+    snapshot("paywall-largest-type")
   }
 
   @MainActor private func reveal(_ element: XCUIElement, in app: XCUIApplication) {

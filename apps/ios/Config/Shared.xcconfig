@@ -42,3 +42,7 @@ ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor
 ENABLE_PREVIEWS = YES
 SWIFT_EMIT_LOC_STRINGS = YES
 LD_RUNPATH_SEARCH_PATHS = $(inherited) @executable_path/Frameworks
+
+// RevenueCat's public iOS SDK key (#467). Left empty here: the owner sets it in the Pro launch
+// epic (#470). Empty means purchases are off and the paywall says upgrades aren't available.
+REVENUECAT_IOS_API_KEY =

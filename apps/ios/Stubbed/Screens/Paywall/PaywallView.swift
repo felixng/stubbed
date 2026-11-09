@@ -1,3 +1,4 @@
+import StoreKit
 import SwiftUI
 
 /// The one paywall: what the paid tier adds and the offer the provider returns. Opened only
@@ -7,6 +8,11 @@ struct PaywallView: View {
   @Environment(Membership.self) private var membership
   @Environment(PaywallRouter.self) private var paywall
   @Environment(\.dismiss) private var dismiss
+  @State private var selected: String?
+
+  private var flow: PurchaseFlow { paywall.flow }
+  private var offer: PaywallOffer { paywall.offer }
+  private var chosen: String? { selected ?? offer.plans.last?.id }
 
   var body: some View {
     NavigationStack {
@@ -24,22 +30,41 @@ struct PaywallView: View {
           benefit("Earlier years", "Insights for any year you’ve logged, not just this one.", "calendar")
           benefit("All time", "Every show you’ve logged, together.", "infinity")
         }
-        Section {
-          if paywall.offer.isAvailable {
-            ForEach(paywall.offer.plans) { plan in
-              LabeledContent(plan.title, value: plan.price)
+        if membership.isPro {
+          Section { ManageMembershipButton() } header: { Text("You’re a \(membership.name) member") }
+        } else {
+          Section {
+            if offer.isAvailable {
+              ForEach(offer.plans) { plan in
+                Button {
+                  selected = plan.id
+                } label: {
+                  HStack {
+                    Text(plan.title)
+                    Spacer()
+                    Text(plan.price).foregroundStyle(.secondary)
+                    Image(systemName: chosen == plan.id ? "checkmark.circle.fill" : "circle")
+                      .foregroundStyle(chosen == plan.id ? Palette.tint : Color.secondary)
+                  }
+                  .contentShape(.rect)
+                }
+                .foregroundStyle(.primary)
+                .accessibilityAddTraits(chosen == plan.id ? .isSelected : [])
+              }
+            } else {
+              Label("Upgrades aren’t available yet", systemImage: "clock")
+                .foregroundStyle(.secondary)
+                .accessibilityIdentifier("paywall-unavailable")
             }
-          } else {
-            Label("Upgrades aren’t available yet", systemImage: "clock")
-              .foregroundStyle(.secondary)
-              .accessibilityIdentifier("paywall-unavailable")
+          } footer: {
+            if let terms = offer.terms { Text(terms) }
           }
-        } footer: {
-          if let terms = paywall.offer.terms { Text(terms) }
-        }
-        Section {
-          Button("Restore purchases") {}
-            .disabled(!paywall.offer.isAvailable)
+          status
+          Section {
+            Button("Restore purchases") { Task { await flow.restore(source: source) } }
+              .disabled(!flow.isAvailable || flow.isBusy)
+              .accessibilityIdentifier("paywall-restore")
+          }
         }
       }
       .listStyle(.insetGrouped)
@@ -49,20 +74,61 @@ struct PaywallView: View {
         ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() } }
       }
       .safeAreaInset(edge: .bottom) {
-        Button(paywall.offer.trialEligible ? "Start free trial" : "Upgrade") {}
+        if !membership.isPro {
+          Button {
+            if let chosen { Task { await flow.buy(chosen, source: source) } }
+          } label: {
+            Text(offer.trialEligible ? "Start free trial" : "Upgrade").frame(maxWidth: .infinity)
+          }
           .buttonStyle(.borderedProminent)
           .controlSize(.large)
-          .disabled(!paywall.offer.isAvailable)
+          .disabled(!offer.isAvailable || chosen == nil || flow.isBusy || flow.state == .timedOut)
+          .accessibilityIdentifier("paywall-buy")
           .padding(Space.l)
           .frame(maxWidth: .infinity)
           .background(.bar)
+        }
       }
+      .interactiveDismissDisabled(flow.state == .working)
     }
     .task {
       Analytics.track(.paywallViewed, ["source": .string(source.rawValue), "platform": .string("ios")])
       await paywall.loadOffer()
     }
     .accessibilityIdentifier("paywall")
+  }
+
+  /// The purchase's progress. Pro closes the sheet from the router; these are the states in
+  /// between and the ways out.
+  @ViewBuilder private var status: some View {
+    switch flow.state {
+    case .idle, .working:
+      EmptyView()
+    case .confirming:
+      Section {
+        HStack(spacing: Space.m) {
+          ProgressView()
+          Text("Confirming…")
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityIdentifier("paywall-confirming")
+      }
+    case .timedOut:
+      Section {
+        Text("Your purchase is still confirming. It’ll unlock as soon as it’s through.")
+          .accessibilityIdentifier("paywall-timeout")
+        Button("Retry") { Task { await flow.retry() } }
+          .accessibilityIdentifier("paywall-retry")
+      }
+    case .pendingApproval:
+      Section {
+        Text("Your purchase is waiting for approval. \(membership.name) unlocks once it’s approved.")
+          .accessibilityIdentifier("paywall-pending")
+        Button("Close") { dismiss() }
+      }
+    case .failed(let message):
+      Section { Text(message).foregroundStyle(.red).accessibilityIdentifier("paywall-error") }
+    }
   }
 
   private func benefit(_ title: String, _ text: String, _ symbol: String) -> some View {
@@ -151,4 +217,37 @@ private struct PaywallHost: ViewModifier {
 
 extension View {
   func paywallHost() -> some View { modifier(PaywallHost()) }
+}
+
+/// Manage the plan where it was bought: the App Store's subscription sheet, or the web
+/// membership page; both when the member has both. A web member is never shown a purchase.
+struct ManageMembershipButton: View {
+  @Environment(Membership.self) private var membership
+  @Environment(\.openURL) private var openURL
+  @State private var choosing = false
+
+  private var manage: [String] { membership.info?.manage ?? [] }
+
+  var body: some View {
+    if !manage.isEmpty {
+      Button("Manage \(membership.name)") {
+        if manage.count > 1 { choosing = true } else { open(manage[0]) }
+      }
+      .accessibilityIdentifier("manage-membership")
+      .confirmationDialog("Manage \(membership.name)", isPresented: $choosing) {
+        if manage.contains("app_store") { Button("Manage in the App Store") { open("app_store") } }
+        if manage.contains("web") { Button("Manage on the web") { open("web") } }
+      }
+    }
+  }
+
+  private func open(_ place: String) {
+    if place == "app_store" {
+      guard let scene = UIApplication.shared.connectedScenes.first(where: { $0 is UIWindowScene }) as? UIWindowScene
+      else { return }
+      Task { try? await AppStore.showManageSubscriptions(in: scene) }
+    } else {
+      openURL(AppConfig.current.webURL.appending(path: "app/settings/membership"))
+    }
+  }
 }
