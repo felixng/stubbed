@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import { InsightsScreen } from "@/components/app/insights/InsightsScreen";
 import { PlaceholderRows } from "@/components/ui/PlaceholderRows";
 import { parsePeriod } from "@/lib/insights";
+import { previewFree } from "@/lib/paywall";
 
 export const metadata: Metadata = { title: "Insights" };
 
@@ -25,8 +26,9 @@ export default function StatsPage({ searchParams }: PageProps<"/app/stats">) {
 async function Content({ searchParams }: Pick<PageProps<"/app/stats">, "searchParams">) {
   // Per request: the current year needs the clock, which can't prerender.
   await connection();
-  const raw = (await searchParams).year;
+  const params = await searchParams;
+  const raw = params.year;
   // The server year is only the starting point; own_insights decides what "this year" is.
   const thisYear = new Date().getUTCFullYear();
-  return <InsightsScreen initialYear={parsePeriod(Array.isArray(raw) ? raw[0] : raw, thisYear)} thisYear={thisYear} />;
+  return <InsightsScreen initialYear={parsePeriod(Array.isArray(raw) ? raw[0] : raw, thisYear)} thisYear={thisYear} preview={previewFree(params.paywallPreview)} />;
 }

@@ -111,3 +111,49 @@ export function gridYear(period: number | null, thisYear: number, days: { date: 
   const latest = days.map((d) => Number(d.date.slice(0, 4))).filter((y) => y <= thisYear).sort((a, b) => b - a)[0];
   return latest ?? thisYear;
 }
+
+// ---- Locks and the period menu (#261). Everything reads `access.locked`; no tier checks. ----
+
+// The data each insight share card draws, declared once. A card is locked when any of it is.
+export const CARD_NEEDS: Record<string, string[]> = {
+  "weekly-streak": ["streaks.current_weekly"],
+  "year-in-theatre": ["total", "months"],
+  "show-mix": ["types"],
+};
+
+export function isCardLocked(id: string, stats: Pick<OwnInsights, "access"> | null | undefined): boolean {
+  return (CARD_NEEDS[id] ?? []).some((field) => isLocked(stats, field));
+}
+
+export type PeriodChoice = { value: string; label: string; year: number | null | "earlier"; locked: boolean };
+
+// The period control. Earlier years aren't listed while `years` is locked (the list itself would
+// reveal them), so one "Earlier years" entry stands for them; it and All time carry the lock.
+export function periodChoices(thisYear: number, stats: Pick<OwnInsights, "years" | "access"> | null | undefined): PeriodChoice[] {
+  const lockedYears = isLocked(stats, "years");
+  const years = lockedYears ? [thisYear] : periodOptions(thisYear, stats?.years ?? []).filter((y): y is number => y != null);
+  return [
+    ...years.map((y) => ({ value: String(y), label: String(y), year: y, locked: false })),
+    ...(lockedYears ? [{ value: "earlier", label: "Earlier years", year: "earlier" as const, locked: true }] : []),
+    { value: "all", label: "All time", year: null, locked: lockedYears },
+  ];
+}
+
+// The page a locked choice returns to after upgrading.
+export function periodNext(choice: PeriodChoice, thisYear: number): string {
+  return choice.year === null ? "/app/stats?year=all" : `/app/stats?year=${choice.year === "earlier" ? thisYear - 1 : choice.year}`;
+}
+
+// Development preview: the response a Free caller gets with gates on (PAYWALL.md section 2),
+// built from a real one with the locked fields emptied.
+export function previewStats(stats: OwnInsights, year: number | null, thisYear: number): OwnInsights {
+  const period = year == null ? "all" : year === thisYear ? "current" : "past";
+  if (period !== "current") {
+    return {
+      ...stats, total: 0, unique_shows: 0, unlocated: 0, repeated_shows: [], years: [], months: [], days: [], types: [], countries: [],
+      streaks: { ...stats.streaks, longest_daily: 0, longest_weekly: 0 },
+      access: { tier: "free", period, locked: ["total", "unique_shows", "repeated_shows", "unlocated", "streaks.longest_daily", "streaks.longest_weekly", "years", "months", "days", "types", "countries"] },
+    };
+  }
+  return { ...stats, years: [], types: [], access: { tier: "free", period, locked: ["years", "types"] } };
+}

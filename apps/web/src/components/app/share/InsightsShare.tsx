@@ -1,12 +1,18 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useId, useMemo, useState } from "react";
 import { ShareSheet, type ShareSubject } from "@/components/app/share/ShareSheet";
 import { Button } from "@/components/ui/Button";
 import { availableInsightDesigns, type InsightStats } from "@/lib/share-card-insights";
+import { periodChoices, periodNext, previewStats, type OwnInsights } from "@/lib/insights";
+import { paywallHref } from "@/lib/paywall";
 import { createClient } from "@/lib/supabase/client";
+import { useMembership } from "@/lib/use-membership";
 
-export function InsightsShare({ handle }: { handle: string }) {
+export function InsightsShare({ handle, preview = false }: { handle: string; preview?: boolean }) {
+  const router = useRouter();
+  const { config, leave } = useMembership(preview);
   const periodId = useId();
   const currentYear = new Date().getFullYear();
   const [year, setYear] = useState<number | null>(currentYear);
@@ -20,24 +26,32 @@ export function InsightsShare({ handle }: { handle: string }) {
     (async () => {
       const { data, error } = await createClient().rpc("own_insights", { selected_year: year, today });
       if (error || !data) throw new Error("Stats unavailable");
-      if (!cancelled) { setLoaded({ year, stats: data as InsightStats }); setError(null); }
+      // Development preview: the response a Free caller gets with gates on.
+      const stats = preview ? previewStats(data as unknown as OwnInsights, year, currentYear) as unknown as InsightStats : data as InsightStats;
+      if (!cancelled) { setLoaded({ year, stats }); setError(null); }
     })().catch(() => { if (!cancelled) setError("Couldn’t load your stats. Try again."); });
     return () => { cancelled = true; };
-  }, [year, attempt]);
+  }, [year, attempt, preview, currentYear]);
   const stats = loaded?.year === year ? loaded.stats : null;
   const subject = useMemo<ShareSubject | null>(() => stats ? ({ kind: "insights", data: { stats, year, handle } }) : null, [stats, year, handle]);
-  const years = [...new Set([currentYear, ...(loaded?.stats.years.map(y => y.year) ?? [])])].sort((a, b) => b - a);
+  // Locked periods are offered as a lock that opens the paywall, never as a shareable year.
+  const choices = periodChoices(currentYear, loaded?.stats ? { years: loaded.stats.years, access: loaded.stats.access } : null);
+  function choose(value: string) {
+    const choice = choices.find(c => c.value === value);
+    if (!choice) return;
+    if (choice.locked) { leave(); router.push(paywallHref(choice.year === null ? "all_time" : "past_year", periodNext(choice, currentYear), preview)); return; }
+    setYear(choice.year as number | null); setError(null);
+  }
   return <div className="flex flex-col gap-5">
     <div className="flex flex-col gap-2 text-subheadline font-medium"><label htmlFor={periodId}>Period</label>
-      <select id={periodId} value={year ?? "all"} onChange={event => { setYear(event.target.value === "all" ? null : Number(event.target.value)); setError(null); }}
+      <select id={periodId} value={year ?? "all"} onChange={event => choose(event.target.value)}
         className="min-h-11 rounded-md border border-separator bg-surface px-3 py-2 text-body text-label">
-        {years.map(value => <option key={value} value={value}>{value}</option>)}
-        <option value="all">All time</option>
+        {choices.map(c => <option key={c.value} value={c.value}>{c.locked ? `${c.label} (Part of ${config.name})` : c.label}</option>)}
       </select>
     </div>
     {error ? <div role="alert" className="flex flex-col gap-3"><p>{error}</p><Button variant="secondary" onClick={() => setAttempt(n => n + 1)}>Try again</Button></div>
       : subject && subject.kind === "insights" ? availableInsightDesigns(subject.data).length
-        ? <ShareSheet subject={subject} slug={`theatre-${year ?? "all-time"}`} />
+        ? <ShareSheet subject={subject} slug={`theatre-${year ?? "all-time"}`} preview={preview} />
         : <p className="rounded-md bg-fill p-5 text-label-secondary">No shows to share for this period. Choose another year or log a show.</p>
       : <div className="aspect-square animate-pulse rounded-md bg-fill motion-reduce:animate-none" role="status" aria-label="Loading your stats" />}
   </div>;
