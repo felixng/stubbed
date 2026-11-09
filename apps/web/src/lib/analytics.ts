@@ -5,7 +5,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Keep in step with the check constraint on events.name.
-export type EventName = "entry_logged" | "card_shared";
+export type EventName = "entry_logged" | "card_shared" | "paywall_viewed" | "purchase_completed";
 
 // Small, non-personal details only: no emails, notes or free text.
 export type EventProps = Record<string, string | number | boolean | null>;

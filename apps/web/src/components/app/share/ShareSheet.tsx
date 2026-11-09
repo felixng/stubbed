@@ -1,16 +1,20 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useEffectEvent, useId, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/Button";
 import { copyCardImage } from "@/lib/share-clipboard";
 import { track } from "@/lib/analytics";
 import { cardBackground, renderCard, CARD_DOMAIN, type CardData, type CardDesign, type ShareBackground, type ShareInk } from "@/lib/share-card";
-import { availableInsightDesigns, availableShowDesigns, isInsightDesign, renderInsightCard, type InsightCardData, type InsightStats } from "@/lib/share-card-insights";
+import { isCardLocked } from "@/lib/insights";
+import { paywallHref, withPreview, type PaywallSource } from "@/lib/paywall";
+import { availableInsightDesigns, availableShowDesigns, isInsightDesign, renderInsightCard, sampleInsightData, type InsightCardData, type InsightStats } from "@/lib/share-card-insights";
 import { renderTripCard, TRIP_CARD_DESIGNS, type TripCardData } from "@/lib/share-card-trip";
 import { createClient } from "@/lib/supabase/client";
+import { useMembership } from "@/lib/use-membership";
 
 type Rendered = { file: File; url: string };
-type DrawnCard = { isInsights?: boolean; design: CardDesign; variants: Record<string, Rendered>; story?: Rendered };
+type DrawnCard = { isInsights?: boolean; locked?: boolean; design: CardDesign; variants: Record<string, Rendered>; story?: Rendered };
 export type ShareSubject =
   | { kind: "entry"; data: CardData; photoUrl: string | null }
   | { kind: "trip"; data: TripCardData; photoUrls: (string | null)[] }
@@ -21,7 +25,9 @@ const checkerLight = "bg-[repeating-conic-gradient(#fff_0%_25%,#d6d6d6_0%_50%)] 
 const checkerDark = "bg-[repeating-conic-gradient(#474747_0%_25%,#5c5c5c_0%_50%)] bg-[length:20px_20px]";
 const pill = "min-h-11 rounded-pill px-4 py-2 text-subheadline font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus disabled:opacity-50";
 
-export function ShareSheet({ subject, slug, publicHref = null }: { subject: ShareSubject; slug: string; publicHref?: string | null }) {
+export function ShareSheet({ subject, slug, publicHref = null, preview = false }: { subject: ShareSubject; slug: string; publicHref?: string | null; preview?: boolean }) {
+  const router = useRouter();
+  const { config, leave } = useMembership(preview);
   const [drawn, setDrawn] = useState<{ subject: ShareSubject; cards: DrawnCard[] } | null>(null);
   const [error, setError] = useState<ShareSubject | null>(null);
   const [active, setActive] = useState<string | null>(null);
@@ -39,8 +45,10 @@ export function ShareSheet({ subject, slug, publicHref = null }: { subject: Shar
   const background = (current?.design.id === "overlay" || current?.design.id === "ticket") ? overlayBackground : baseBackground;
   const setBackground = (current?.design.id === "overlay" || current?.design.id === "ticket") ? setOverlayBackground : setBaseBackground;
   const key = current?.design.background ? background === "transparent" ? `transparent-${ink}` : background : "photo";
-  const card = current?.variants[key];
-  const storyCard = current?.story ?? card;
+  // A locked card is drawn from sample content and can't be shared, saved or copied.
+  const locked = current?.locked === true;
+  const card = locked ? undefined : current?.variants[key];
+  const storyCard = locked ? undefined : current?.story ?? card;
   const storiesShare = useSyncExternalStore(noSubscribe, sharesFiles, () => true);
 
   useEffect(() => {
@@ -75,16 +83,19 @@ export function ShareSheet({ subject, slug, publicHref = null }: { subject: Shar
         const designs = subject.kind === "entry" ? availableShowDesigns(subject.data, photo != null, insightData) : availableInsightDesigns(insightData);
         for (const design of designs) {
           const variants: Record<string, Rendered> = {};
+          // A card whose data is locked (from access.locked) is drawn from sample content, never the person's.
+          const lockedCard = isInsightDesign(design.id) && isCardLocked(design.id, insightData.stats);
+          const drawData = lockedCard ? sampleInsightData(insightData.year ?? new Date().getFullYear()) : insightData;
           for (const variant of design.background ? keys : ["photo"]) {
             const bg: ShareBackground = variant.startsWith("transparent") ? "transparent" : variant === "gradient" ? "gradient" : "solid";
             const textInk: ShareInk = variant.endsWith("dark") ? "dark" : "light";
             const options = { background: bg, ink: textInk, includingEmpty: subject.kind === "entry" };
-            const blob = subject.kind === "entry" && !isInsightDesign(design.id) ? await renderCard(design.id, subject.data, photo, options) : await renderInsightCard(design.id, insightData, options);
+            const blob = subject.kind === "entry" && !isInsightDesign(design.id) ? await renderCard(design.id, subject.data, photo, options) : await renderInsightCard(design.id, drawData, options);
             const exportID = design.id === "encore" && subject.kind === "entry" && subject.data.timesSeen === 1 ? "first-visit" : design.id;
             const name = isInsightDesign(design.id) ? `stubbed-${design.id}-${insightData.year ?? "all-time"}` : `stubbed-${slug}-${exportID}`;
             variants[variant] = make(blob, `${name}-${variant}.png`);
           }
-          result.push({ design, variants, isInsights: isInsightDesign(design.id) });
+          result.push({ design, variants, isInsights: isInsightDesign(design.id), locked: lockedCard });
         }
       }
       if (cancelled) { pending.forEach(URL.revokeObjectURL); return; }
@@ -153,6 +164,12 @@ export function ShareSheet({ subject, slug, publicHref = null }: { subject: Shar
     try { await navigator.clipboard.writeText(value); record(action); setNotice(action === "copy_link" ? "Link copied." : "Text copied."); }
     catch { setNotice("Couldn’t copy. Try again."); }
   }
+  // A locked card opens the one paywall and comes back to this page.
+  function openPaywall(designId: string) {
+    const source: PaywallSource = designId === "show-mix" ? "show_mix" : "past_year";
+    leave();
+    router.push(paywallHref(source, withPreview(location.pathname + location.search, false), preview));
+  }
   function goTo(id: string) {
     const node = scroller.current?.querySelector<HTMLElement>(`[data-design="${id}"]`);
     if (node) scroller.current?.scrollTo({ left: node.offsetLeft, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth" });
@@ -176,7 +193,10 @@ export function ShareSheet({ subject, slug, publicHref = null }: { subject: Shar
             return <div key={item.design.id} data-design={item.design.id} role="group" aria-label={`${i + 1} of ${cards.length}: ${item.design.name}`}
               className={`relative aspect-square w-full shrink-0 snap-center overflow-hidden rounded-[6%] ${clear ? ink === "dark" ? checkerLight : checkerDark : ""}`}>
               {/* eslint-disable-next-line @next/next/no-img-element -- locally drawn PNG */}
-              <img src={item.variants[variant].url} alt={`Share card, ${item.design.name.toLowerCase()}${clear ? ", no background" : ""}: ${item.isInsights ? "My theatre stats" : title}`} className="size-full" />
+              <img src={item.variants[variant].url} alt={`${item.locked ? "Sample share card" : "Share card"}, ${item.design.name.toLowerCase()}${clear ? ", no background" : ""}: ${item.isInsights ? "My theatre stats" : title}`} className="size-full" />
+              {item.locked && <button type="button" onClick={() => openPaywall(item.design.id)}
+                className="absolute inset-x-3 bottom-3 min-h-11 rounded-pill bg-label px-4 text-subheadline font-semibold text-background focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">
+                Sample · Part of {config.name}. Unlock</button>}
             </div>;
           })}
         </div>

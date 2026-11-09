@@ -5,15 +5,21 @@ import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { PlaceholderRows } from "@/components/ui/PlaceholderRows";
 import { count } from "@/lib/plural";
+import { isPro } from "@/lib/membership";
+import { withPreview } from "@/lib/paywall";
+import { useMembership } from "@/lib/use-membership";
 import { useOwnInsights } from "@/lib/use-own-insights";
 import { ActivityGrid } from "./ActivityGrid";
+import { UpgradeBanner } from "./UpgradeBanner";
 
 // The owner's current-year summary on Profile (#226): visits, weekly streak, best streak this
 // year, the activity grid and a link to Insights. Always the current year, whatever period Insights
 // has open. Owner only; the public profile never uses it.
-export function ProfileInsightsSummary({ thisYear }: { thisYear: number }) {
-  const { stats, failed, retry } = useOwnInsights(thisYear);
+export function ProfileInsightsSummary({ thisYear, preview = false }: { thisYear: number; preview?: boolean }) {
+  const { stats, failed, retry } = useOwnInsights(thisYear, preview);
+  const { membership, config, leave } = useMembership(preview);
   return (
+    <>
     <section aria-label={`${thisYear} in theatre`} className="flex flex-col gap-3 rounded-md border border-separator bg-surface p-4 shadow-sm">
       <h2 className="text-headline text-label">{thisYear}</h2>
       {failed ? (
@@ -36,5 +42,14 @@ export function ProfileInsightsSummary({ thisYear }: { thisYear: number }) {
         Insights
       </Link>
     </section>
+    {/* Free with sales on: the upgrade banner. Pro: a member row. Gates and sales off: nothing. */}
+    {membership && isPro(membership) ? (
+      <Link href="/app/settings/membership" className="flex min-h-11 items-center justify-between rounded-md bg-surface px-4 py-3 text-headline text-label focus-visible:outline-2 focus-visible:outline-focus">
+        {config.name} member <span aria-hidden="true" className="text-label-secondary">›</span>
+      </Link>
+    ) : membership && config.salesEnabled ? (
+      <UpgradeBanner headline="Unlock more of your theatre story" source="profile" next={withPreview("/app/profile", preview)} name={config.name} preview={preview} onLeave={leave} />
+    ) : null}
+    </>
   );
 }

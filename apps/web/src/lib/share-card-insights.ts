@@ -10,6 +10,7 @@ export type InsightStats = {
   years: { year: number; count: number }[];
   months: { month: string; count: number }[];
   types: { type: string; count: number }[];
+  access?: { tier: "free" | "pro"; period: "current" | "past" | "all"; locked: string[] };
 };
 export type InsightCardData = { stats: InsightStats; year: number | null; handle: string | null };
 export const SHOW_TYPES = [
@@ -119,4 +120,19 @@ export async function renderInsightCard(id: string, data: InsightCardData,
     }
     drawShareFooter(ctx, data.handle, color, mark);
   });
+}
+
+// What a locked card shows instead of the person's data: fixed sample content, never their numbers
+// (docs/PAYWALL.md section 2, "Share cards").
+export function sampleInsightData(year: number): InsightCardData {
+  return {
+    year, handle: null,
+    stats: {
+      total: 24, unique_shows: 19,
+      streaks: { current_weekly: 3, current_daily: 1, longest_weekly: 5, longest_daily: 2 },
+      years: [{ year, count: 24 }],
+      months: [3, 1, 2, 0, 2, 4, 1, 3, 2, 2, 3, 1].map((count, i) => ({ month: `${year}-${String(i + 1).padStart(2, "0")}`, count })),
+      types: [{ type: "musical", count: 10 }, { type: "play", count: 7 }, { type: "opera", count: 3 }, { type: "dance", count: 2 }, { type: "comedy", count: 2 }],
+    },
+  };
 }

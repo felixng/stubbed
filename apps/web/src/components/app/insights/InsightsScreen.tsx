@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useId, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { PlaceholderRows } from "@/components/ui/PlaceholderRows";
-import { gridYear, isLocked, isPeriodLocked, periodLabel, periodOptions, type InsightFilter } from "@/lib/insights";
+import { gridYear, isLocked, isPeriodLocked, periodChoices, periodLabel, periodNext, type InsightFilter } from "@/lib/insights";
+import { paywallHref, withPreview } from "@/lib/paywall";
 import { count } from "@/lib/plural";
+import { useMembership } from "@/lib/use-membership";
 import { useOwnInsights } from "@/lib/use-own-insights";
 import { ActivityGrid } from "./ActivityGrid";
 import { MonthBars, ShowMix } from "./Charts";
@@ -28,14 +31,29 @@ const Empty = ({ children }: { children: React.ReactNode }) => <p className="tex
 
 // The owner's Insights (#226). Every number comes from own_insights; a section the server
 // reports in `access.locked` becomes a LockedInsight slot, never zeros or an empty chart.
-export function InsightsScreen({ initialYear, thisYear }: { initialYear: number | null; thisYear: number }) {
+export function InsightsScreen({ initialYear, thisYear, preview = false }: { initialYear: number | null; thisYear: number; preview?: boolean }) {
   const [year, setYear] = useState<number | null>(initialYear);
   const [filter, setFilter] = useState<InsightFilter | null>(null);
-  const { stats, failed, proName, retry } = useOwnInsights(year);
+  const { stats, failed, proName, retry } = useOwnInsights(year, preview);
+  const { config, leave } = useMembership(preview);
+  const router = useRouter();
   const periodId = useId();
-  const options = periodOptions(thisYear, stats?.years ?? []);
+  const choices = periodChoices(thisYear, stats);
+  const here = withPreview(year == null ? "/app/stats?year=all" : `/app/stats?year=${year}`, preview);
 
-  const choose = (next: number | null) => { setYear(next); setFilter(null); };
+  // A locked period opens the paywall and leaves the selection where it was.
+  const choose = (value: string) => {
+    const choice = choices.find((c) => c.value === value);
+    if (!choice) return;
+    if (choice.locked) {
+      leave();
+      router.push(paywallHref(choice.year === null ? "all_time" : "past_year", periodNext(choice, thisYear), preview));
+      return;
+    }
+    setYear(choice.year as number | null);
+    setFilter(null);
+  };
+  const sales = config.salesEnabled;
   const open = (f: InsightFilter) => setFilter(f);
   const label = periodLabel(year);
 
@@ -43,9 +61,9 @@ export function InsightsScreen({ initialYear, thisYear }: { initialYear: number 
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-2 text-subheadline font-medium">
         <label htmlFor={periodId}>Period</label>
-        <select id={periodId} value={year ?? "all"} onChange={(e) => choose(e.target.value === "all" ? null : Number(e.target.value))}
+        <select id={periodId} value={year ?? "all"} onChange={(e) => choose(e.target.value)}
           className="min-h-11 rounded-md border border-separator bg-surface px-3 text-body text-label focus-visible:outline-2 focus-visible:outline-focus">
-          {options.map((o) => <option key={o ?? "all"} value={o ?? "all"}>{periodLabel(o)}</option>)}
+          {choices.map((c) => <option key={c.value} value={c.value}>{c.locked ? `${c.label} (Part of ${proName})` : c.label}</option>)}
         </select>
       </div>
 
@@ -57,12 +75,14 @@ export function InsightsScreen({ initialYear, thisYear }: { initialYear: number 
       ) : !stats ? <PlaceholderRows rows={3} />
       : isPeriodLocked(stats) ? (
         <>
-          <LockedInsight feature={stats.access?.period === "all" ? "insights.all_time" : "insights.past_years"} name={proName} title={`Your ${label} stats`} />
+          <LockedInsight feature={stats.access?.period === "all" ? "insights.all_time" : "insights.past_years"} name={proName} title={`Your ${label} stats`}
+            sales={sales} preview={preview} onLeave={leave}
+            upgrade={{ headline: year == null ? "Every show, all time" : `Your ${label} in theatre`, source: year == null ? "all_time" : "past_year", next: here }} />
           <Section title="Weekly streak"><p className="text-subheadline">Current streak: {count(stats.streaks.current_weekly, "week")}</p></Section>
         </>
       ) : (
         <>
-          {filter && <InsightVisits year={year} filter={filter} proName={proName} onClose={() => setFilter(null)} />}
+          {filter && <InsightVisits year={year} filter={filter} proName={proName} sales={sales} preview={preview} next={here} onLeave={leave} onClose={() => setFilter(null)} />}
 
           <Section title={`${label} overview`}>
             {stats.total === 0 ? <Empty>Log a show to start your Insights. Only logged visits count.</Empty> : (
@@ -104,7 +124,8 @@ export function InsightsScreen({ initialYear, thisYear }: { initialYear: number 
           )}
 
           {isLocked(stats, "years")
-            ? <LockedInsight feature="insights.past_years" name={proName} title="Year by year" />
+            ? <LockedInsight feature="insights.past_years" name={proName} title="Year by year" sales={sales} preview={preview} onLeave={leave}
+                upgrade={{ headline: "Look back at every year", source: "past_year", next: here }} />
             : (
               <Section title="Year by year">
                 {stats.years.length === 0 ? <Empty>Your history appears after your first logged show.</Empty> : (
@@ -136,7 +157,8 @@ export function InsightsScreen({ initialYear, thisYear }: { initialYear: number 
           </Section>
 
           {isLocked(stats, "types")
-            ? <LockedInsight feature="insights.show_mix" name={proName} title="Show mix" />
+            ? <LockedInsight feature="insights.show_mix" name={proName} title="Show mix" sales={sales} preview={preview} onLeave={leave}
+                upgrade={{ headline: "See your Show mix", source: "show_mix", next: here }} />
             : (
               <Section title="Show mix">
                 {stats.types.length === 0 ? <Empty>Log a show to see your favourite show types.</Empty>
@@ -145,7 +167,7 @@ export function InsightsScreen({ initialYear, thisYear }: { initialYear: number 
             )}
         </>
       )}
-      <Link href="/app/insights/share" className="self-start text-subheadline font-semibold text-tint-text">Share theatre stats</Link>
+      <Link href={withPreview("/app/insights/share", preview)} className="self-start text-subheadline font-semibold text-tint-text">Share theatre stats</Link>
     </div>
   );
 }
