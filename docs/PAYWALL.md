@@ -142,6 +142,8 @@ Old iOS builds (before step 2) keep working after step 4: they decode the same s
 
 ## 9. Owner setup (needs-human)
 
+The seller on both the App Store and the web is the owner's company, not the owner personally (owner, 9 Nov 2026). That means an organisation Apple Developer account (needs a D-U-N-S number), EU trader details in the company's name, and Stripe and VAT in the company's name, all before the steps below. Full list: #469.
+
 - [ ] App Store Connect: sign the Paid Apps Agreement; add banking and tax details.
 - [ ] App Store Connect: subscription group "Stubbed Pro" with `stubbed_pro_monthly` (£2.99) and `stubbed_pro_annual` (£19.99), each with a 30-day free introductory offer; enable Billing Grace Period.
 - [ ] RevenueCat: project with an iOS app and a Web Billing app; entitlement `pro` attached to all four products; offering `default` with monthly and annual packages; webhook to `/api/billing/revenuecat` with an authorization secret.
