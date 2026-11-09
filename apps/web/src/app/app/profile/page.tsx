@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
 
 import { Diary } from "@/components/app/Diary";
+import { ProfileInsightsSummary } from "@/components/app/insights/ProfileInsightsSummary";
 import { TripsList } from "@/components/app/TripsList";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { ProfileIconLink } from "@/components/profile/ProfileIconLink";
@@ -93,6 +95,12 @@ async function Header() {
   );
 }
 
+// The owner's current-year stats (#226), read in the browser through own_insights.
+async function YearSummary() {
+  await connection();
+  return <ProfileInsightsSummary thisYear={new Date().getUTCFullYear()} />;
+}
+
 const VIEWS = [
   { id: "diary", label: "Diary" },
   { id: "trips", label: "Trips" },
@@ -151,6 +159,9 @@ export default function ProfilePage({ searchParams }: PageProps<"/app/profile">)
       </div>
       <Suspense fallback={loading}>
         <Header />
+      </Suspense>
+      <Suspense fallback={loading}>
+        <YearSummary />
       </Suspense>
       <Link href="/app/insights/share" className="inline-flex min-h-11 items-center justify-between rounded-md bg-surface px-4 py-3 text-headline text-tint-text focus-visible:outline-2 focus-visible:outline-focus">
         Share theatre stats <span aria-hidden="true">›</span>
