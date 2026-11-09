@@ -11,6 +11,9 @@ struct AppConfig: Sendable {
   /// Meta's app ID for sharing to Instagram Stories; nil until it's set.
   let facebookAppID: String?
 
+  /// RevenueCat's public iOS SDK key; nil until it's set in Config/*.xcconfig (purchases off).
+  let revenueCatKey: String?
+
   static let current = AppConfig(info: Bundle.main.infoDictionary ?? [:])
 
   init(info: [String: Any]) {
@@ -30,6 +33,7 @@ struct AppConfig: Sendable {
     supabasePublishableKey = value("SupabasePublishableKey")
     webURL = url("WebURL")
     googleClientID = (info["GoogleIOSClientID"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+    revenueCatKey = (info["RevenueCatIOSAPIKey"] as? String).flatMap { $0.isEmpty ? nil : $0 }
     facebookAppID = (info["FacebookAppID"] as? String).flatMap { $0.isEmpty ? nil : $0 }
   }
 }

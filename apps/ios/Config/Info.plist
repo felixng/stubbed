@@ -7,6 +7,9 @@
 	<string>$(SUPABASE_URL)</string>
 	<key>SupabasePublishableKey</key>
 	<string>$(SUPABASE_PUBLISHABLE_KEY)</string>
+	<!-- Public SDK key; empty until the Pro launch epic (#470) fills it in. Empty: no purchases. -->
+	<key>RevenueCatIOSAPIKey</key>
+	<string>$(REVENUECAT_IOS_API_KEY)</string>
 	<key>WebURL</key>
 	<string>$(WEB_URL)</string>
 	<key>FacebookAppID</key>

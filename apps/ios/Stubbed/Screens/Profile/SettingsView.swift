@@ -86,6 +86,7 @@ struct DeleteAccountSheet: View {
   let handle: String
 
   @Environment(AppSession.self) private var session
+  @Environment(Membership.self) private var membership
   @Environment(\.dismiss) private var dismiss
   @State private var typed = ""
   @State private var busy = false
@@ -105,7 +106,11 @@ struct DeleteAccountSheet: View {
           if let error {
             Text(error).foregroundStyle(.red)
           } else {
-            Text("This permanently deletes your profile, diary, trips, photos, follows, likes and comments.")
+            Text(
+              "This permanently deletes your profile, diary, trips, photos, follows, likes and comments."
+                + (membership.info?.manage.contains("app_store") == true
+                  ? " If you subscribe through the App Store, cancel it in Settings › Apple ID › Subscriptions too."
+                  : ""))
           }
         }
       }
