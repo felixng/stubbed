@@ -49,11 +49,12 @@ test("mapping: the same user on iOS and web gives two rows; a duplicate transact
 const USER = "aaaaaaaa-0000-0000-0000-000000000000";
 const OTHER = "bbbbbbbb-0000-0000-0000-000000000000";
 function setup(options: { failApply?: boolean; states?: Record<string, Record<string, RcSubscription>> } = {}) {
-  const state = { events: new Map<string, { processed: boolean; error?: string }>(), applied: [] as { user: string; rows: unknown; event?: string }[], deleted: [] as string[], rcDeleted: [] as string[], cleared: [] as string[], users: new Set([USER, OTHER]) };
+  const state = { events: new Map<string, { processed: boolean; error?: string }>(), applied: [] as { user: string; rows: unknown; event?: string }[], deleted: [] as string[], rcDeleted: [] as string[], cleared: [] as string[], reconciles: 0, users: new Set([USER, OTHER]) };
   const states = options.states ?? { [USER]: { pro: sub({}) }, [OTHER]: {} };
   const store: BillingStore = {
     async userExists(id) { return state.users.has(id); },
     async recordEvent(id) { const e = state.events.get(id) ?? { processed: false }; state.events.set(id, e); return { processed: e.processed }; },
+    async recordReconcile() { state.reconciles++; },
     async failEvent(id, error) { state.events.get(id)!.error = error; },
     async applySnapshot(user, rows, event) {
       if (options.failApply) throw new Error("db down");
@@ -140,6 +141,7 @@ test("reconcile: needs the cron secret, re-syncs users and clears queued deletio
   assert.deepEqual(await response.json(), { reconciled: 2, failed: 0, deleted: 1, remaining_deletions: 0 });
   assert.deepEqual(state.rcDeleted, ["gone-user"]);
   assert.deepEqual(state.cleared, ["gone-user"]);
+  assert.equal(state.reconciles, 1);
 });
 
 test("every route is 503 when its configuration is missing", async () => {
@@ -168,4 +170,34 @@ test("only the billing code imports the service-key client", () => {
   const importers = files.filter((f) => /supabase\/admin["']/.test(readFileSync(f, "utf8")))
     .map((f) => f.slice(src.length + 1));
   assert.deepEqual(importers, ["lib/billing/store.ts"]);
+});
+
+import { billingHealth, resyncAsAdmin, testRevenueCatKey } from "../src/lib/billing/admin";
+
+test("billing health reports whether each variable is set and never its value", () => {
+  const env = { SUPABASE_SECRET_KEY: "super-secret-value", CRON_SECRET: "", REVENUECAT_SECRET_API_KEY: "sk_live_x" };
+  const health = billingHealth(env);
+  assert.deepEqual(health.map((v) => [v.name, v.set]), [
+    ["SUPABASE_SECRET_KEY", true], ["REVENUECAT_SECRET_API_KEY", true], ["REVENUECAT_WEBHOOK_AUTH", false],
+    ["CRON_SECRET", false], ["NEXT_PUBLIC_REVENUECAT_WEB_BILLING_KEY", false]]);
+  assert.ok(!JSON.stringify(health).includes("super-secret-value") && !JSON.stringify(health).includes("sk_live_x"));
+});
+
+test("re-sync: a non-admin is refused before anything is fetched; an admin syncs the member", async () => {
+  const { state, deps } = setup();
+  const refused = await resyncAsAdmin(false, USER, deps);
+  assert.equal(refused.ok, false);
+  assert.equal(state.applied.length, 0);
+  assert.equal((await resyncAsAdmin(true, USER, deps)).ok, true);
+  assert.deepEqual(state.applied.map((a) => a.user), [USER]);
+  assert.equal((await resyncAsAdmin(true, USER, setup({ failApply: true }).deps)).ok, false);
+});
+
+test("key test: refused for a non-admin, reports success or failure for an admin", async () => {
+  const ok = (async () => Response.json({ subscriber: {} })) as unknown as typeof fetch;
+  const denied = (async () => new Response(null, { status: 401 })) as unknown as typeof fetch;
+  assert.equal((await testRevenueCatKey(false, "k", ok)).ok, false);
+  assert.equal((await testRevenueCatKey(true, undefined, ok)).ok, false);
+  assert.equal((await testRevenueCatKey(true, "k", ok)).ok, true);
+  assert.equal((await testRevenueCatKey(true, "k", denied)).ok, false);
 });

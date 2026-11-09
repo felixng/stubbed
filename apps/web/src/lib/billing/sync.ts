@@ -12,7 +12,9 @@ export type BillingSecrets = { revenuecatKey?: string; webhookAuth?: string; cro
 export interface BillingStore {
   userExists(id: string): Promise<boolean>;
   /** Records an event id; reports whether it was already processed. */
-  recordEvent(eventId: string): Promise<{ processed: boolean }>;
+  recordEvent(eventId: string, userId: string): Promise<{ processed: boolean }>;
+  /** Notes that a reconcile run finished, for the backstage billing health. */
+  recordReconcile(): Promise<void>;
   failEvent(eventId: string, error: string): Promise<void>;
   /** Replaces the user's subscriptions and returns the resulting membership. */
   applySnapshot(userId: string, rows: SubscriptionRow[], eventId?: string): Promise<unknown>;
@@ -38,7 +40,7 @@ function safeEqual(a: string | null | undefined, b: string | undefined): boolean
   return x.length === y.length && timingSafeEqual(x, y);
 }
 
-async function syncUser(userId: string, deps: BillingDeps, eventId?: string) {
+export async function syncUser(userId: string, deps: BillingDeps, eventId?: string) {
   const subscriber = await rcFetch(userId, deps.secrets.revenuecatKey!, deps.fetcher);
   const rows = toSubscriptionRows(subscriber, deps.now?.(), (why) => deps.log?.(`billing: skipped ${why}`));
   return deps.store!.applySnapshot(userId, rows, eventId);
@@ -69,7 +71,7 @@ export async function handleWebhook(request: Request, deps: BillingDeps): Promis
   if (!users.length) return Response.json({ ok: true, skipped: true });
 
   try {
-    if ((await store.recordEvent(eventId)).processed) return Response.json({ ok: true, duplicate: true });
+    if ((await store.recordEvent(eventId, users[0])).processed) return Response.json({ ok: true, duplicate: true });
     // The event is marked processed by the last apply, so a failure part-way is retried in full.
     for (const [i, id] of users.entries()) await syncUser(id, deps, i === users.length - 1 ? eventId : undefined);
   } catch (error) {
@@ -120,5 +122,6 @@ export async function handleReconcile(request: Request, deps: BillingDeps): Prom
     try { await rcDelete(id, secrets.revenuecatKey, deps.fetcher); await store.clearDeletion(id); counts.deleted++; }
     catch (error) { counts.failed++; counts.remaining_deletions++; deps.log?.(`billing: deleting ${id} failed: ${error instanceof Error ? error.message : String(error)}`); }
   }
+  await store.recordReconcile().catch((error) => deps.log?.(`billing: could not record reconcile: ${error instanceof Error ? error.message : String(error)}`));
   return Response.json(counts);
 }
