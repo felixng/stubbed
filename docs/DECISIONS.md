@@ -1500,3 +1500,11 @@ Owner's call, so that Claude can build the paid tier end to end. #219 is the cod
 - **`/app/pro?from=<source>&next=<path>`**: `next` is accepted only as a path inside `/app/` (no `//host`, backslashes, schemes or control characters), else Insights. After `my_membership()` says Pro it replaces to `next`; the client never decides. `paywall_viewed` records `source` and `platform: web`.
 - **Development preview**: `?paywallPreview=free` fakes gates on, sales on and a Free caller (response shaped like PAYWALL.md section 2); ignored when `NODE_ENV=production`.
 - **Noticed, not changed:** the Show mix card's radar labels overlap in the existing renderer (nine types drawn on a seven-point layout).
+
+### 2026-11-09: Web checkout with RevenueCat's browser SDK (#468, epic #219)
+- **`@revenuecat/purchases-js` 1.73.1**, pinned exactly (`pnpm add -E`), published 23 Oct 2026, 17 days before this change (the rule is two weeks). It is dynamically imported, in the browser only, and only when the public key is set. The app sets no Content-Security-Policy today, so none was changed; if one is added, the SDK and Stripe's card form need their hosts allowed.
+- **Identity.** The SDK is configured with the user id from the server-rendered session (`/app/pro` reads it with `currentUser()`), never from the URL or a form. A tampered client can only buy Pro for a different account: it can't grant Pro without paying, and membership still comes only from `/api/billing/refresh` and the webhook.
+- **Trial eligibility** is the SDK's `freeTrialPhase`, which the SDK reports only when a trial applies to the customer; this was not verified against a real account (no key here), so check it in the sandbox run (#470).
+- **Purchase flow** (`PurchaseFlow`): one purchase at a time (a second click does nothing); after a timeout only Retry runs, which re-checks membership and never reopens checkout; cancel returns quietly; a thrown error shows "you haven't been charged" copy.
+- **Membership page and Settings link.** The link shows only when the person has, or had, a `subscriptions` row (their own, by RLS). The account-deletion dialog adds the App Store cancel note when one of those rows is `app_store`.
+- **Development-only previews** (`?checkoutPreview=trial|standard|confirming|timeout`, `?membershipPreview=free|web|app_store`) are ignored when `NODE_ENV=production`.

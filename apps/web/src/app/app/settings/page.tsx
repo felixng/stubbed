@@ -5,7 +5,7 @@ import { Group, SettingsLink, settingsRow } from "@/components/app/SettingsGroup
 import { SignOutButton } from "@/components/notifications/SignOutButton";
 import { DeleteAccountButton } from "@/components/app/DeleteAccountButton";
 import { BackLink } from "@/components/ui/BackLink";
-import { getOwnProfile } from "@/lib/supabase/data";
+import { getOwnProfile, ownerContext } from "@/lib/supabase/data";
 
 export const metadata: Metadata = { title: "Settings" };
 async function PublicProfile() {
@@ -13,9 +13,28 @@ async function PublicProfile() {
   return profile?.handle ? <SettingsLink href={`/@${profile.handle}`}>View public profile</SettingsLink> : null;
 }
 
+// Whether this person has, or ever had, a subscription (their own rows, by RLS), and whether one is
+// through the App Store, for the cancel note when deleting the account.
+async function subscriptionProviders(): Promise<string[]> {
+  const { supabase, userId } = await ownerContext();
+  if (!userId) return [];
+  const { data } = await supabase.from("subscriptions").select("provider");
+  return [...new Set((data ?? []).map((row) => row.provider as string))];
+}
+
+async function MembershipLink() {
+  return (await subscriptionProviders()).length ? <SettingsLink href="/app/settings/membership">Membership</SettingsLink> : null;
+}
+
 async function DeleteAccount() {
   const profile = await getOwnProfile();
-  return profile?.handle ? <DeleteAccountButton handle={profile.handle} asRow /> : null;
+  const appStore = (await subscriptionProviders()).includes("app_store");
+  return profile?.handle ? <DeleteAccountButton handle={profile.handle} asRow appStoreSubscriber={appStore} /> : null;
+}
+
+async function MembershipGroup() {
+  const link = await MembershipLink();
+  return link ? <Group title="Membership">{link}</Group> : null;
 }
 
 export default function SettingsPage() {
@@ -29,6 +48,7 @@ export default function SettingsPage() {
         <SettingsLink href="/app/settings/profile?from=settings">Edit profile</SettingsLink>
         <Suspense fallback={<p className="p-4 text-subheadline text-label-secondary">Loading…</p>}><PublicProfile /></Suspense>
       </Group>
+      <Suspense fallback={null}><MembershipGroup /></Suspense>
       <Group title="Notifications"><SettingsLink href="/app/settings/notifications">Notifications</SettingsLink></Group>
       <Group title="Privacy">
         <SettingsLink href="/app/settings/privacy">Profile privacy</SettingsLink>

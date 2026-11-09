@@ -12,6 +12,7 @@
     "cms:seed": "node --env-file-if-exists=.env.local --import ./test/setup.mjs --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/seed-cms.ts"
   },
   "dependencies": {
+    "@revenuecat/purchases-js": "1.73.1",
     "@sanity/client": "^8.14.1",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.3",
