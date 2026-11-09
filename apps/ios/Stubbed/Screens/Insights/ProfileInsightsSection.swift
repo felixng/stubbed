@@ -5,6 +5,7 @@ struct ProfileInsightsSection: View {
   var refreshVersion = 0
   var tripCount = 0
   @Environment(AppRouter.self) private var router
+  @Environment(Membership.self) private var membership
   @State private var current: InsightStats?
   @State private var failed = false
 
@@ -26,6 +27,14 @@ struct ProfileInsightsSection: View {
       } else {
         PlaceholderRows(count: 1)
       }
+      // Free members get the upgrade callout; members see their plan. Sales off: no callout.
+      if membership.isFree, membership.salesEnabled {
+        ProBanner(headline: "Get more from your stats", source: .profile)
+      } else if membership.isPro {
+        Label("\(membership.name) member", systemImage: "checkmark.seal.fill")
+          .foregroundStyle(Palette.tintText)
+          .accessibilityIdentifier("profile-pro-member")
+      }
       // Router buttons avoid duplicate pushes inside Profile's selection List.
       destination("Trips", systemImage: "suitcase", route: .trips, count: tripCount)
         .accessibilityIdentifier("profile-trips")
@@ -36,7 +45,7 @@ struct ProfileInsightsSection: View {
         .accessibilityIdentifier("profile-year-header")
     }
     .selectionDisabled()
-    .task(id: "\(router.dataVersion)-\(refreshVersion)") { await load() }
+    .task(id: "\(router.dataVersion)-\(refreshVersion)-\(membership.version)") { await load() }
   }
 
   private func destination(

@@ -65,6 +65,7 @@ struct EntryShareSheet: View {
   let entry: Entry
   let photo: URL?
 
+  @Environment(Membership.self) private var membership
   @State private var prepared: EntryShare.Prepared?
 
   var body: some View {
@@ -73,6 +74,6 @@ struct EntryShareSheet: View {
         subject: .show, cards: prepared?.cards, failed: prepared != nil && prepared?.cards == nil,
         text: prepared?.info.text ?? entry.show.title, link: prepared?.info.link)
     }
-    .task { prepared = await EntryShare.prepare(entry, photo: photo) }
+    .task(id: membership.version) { prepared = await EntryShare.prepare(entry, photo: photo) }
   }
 }

@@ -7,6 +7,8 @@ import UIKit
 /// stack, so switching tabs and back returns you where you were.
 struct RootView: View {
   @Environment(AppSession.self) private var session
+  @Environment(Membership.self) private var membership
+  @Environment(PaywallRouter.self) private var paywall
   @Environment(\.scenePhase) private var scenePhase
   private var router: AppRouter { session.router }
 
@@ -36,6 +38,8 @@ struct RootView: View {
       TripForm(request: request)
     }
     .environment(router)
+    .paywallHost()
+    .onChange(of: membership.isPro) { _, isPro in paywall.membershipChanged(isPro: isPro) }
     .task(id: session.userId) { await PushRegistration.shared.activate() }
     .onChange(of: scenePhase) { _, phase in if phase == .active { Task { await PushRegistration.shared.refresh() } } }
     .onChange(of: PushRegistration.shared.activityVersion) { _, _ in router.dataChanged() }
