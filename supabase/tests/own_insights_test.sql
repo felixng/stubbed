@@ -1,5 +1,5 @@
 begin;
-select plan(22);
+select plan(23);
 insert into auth.users(id,email) values
  ('aaaaaaaa-0000-0000-0000-000000000000','insight-a@example.com'),
  ('bbbbbbbb-0000-0000-0000-000000000000','insight-b@example.com');
@@ -15,31 +15,31 @@ insert into public.entries(user_id,show_id,venue_id,date,visibility,status) valu
  ('aaaaaaaa-0000-0000-0000-000000000000','5a000000-0000-0000-0000-000000000001',null,'2026-01-05','private','logged'),
  ('aaaaaaaa-0000-0000-0000-000000000000','5a000000-0000-0000-0000-000000000002',null,'2026-01-05','private','logged'),
  ('aaaaaaaa-0000-0000-0000-000000000000','5a000000-0000-0000-0000-000000000002',null,'2026-01-07','public','planned');
-set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"aaaaaaaa-0000-0000-0000-000000000000","role":"authenticated"}',true);
-select is(public.own_insights(null,'2026-01-06')->>'total','4','includes private and repeated visits, excludes planned');
-select is(public.own_insights(2026,'2026-01-06')->>'total','3','filters by performance year');
-select is(public.own_insights(null,'2026-01-06')->>'unique_shows','2','unique shows separate from performances');
-select is(public.own_insights(null,'2026-01-06')->>'unlocated','2','missing venues still counted');
-select is(public.own_insights(null,'2026-01-06')->'streaks'->>'current_daily','2','yesterday keeps daily streak alive; same date not doubled');
-select is(public.own_insights(null,'2026-01-06')->'streaks'->>'longest_weekly','3','Monday weeks span year boundary');
-select is(public.own_insights(null,'2026-01-12')->'streaks'->>'current_weekly','3','unfinished new week keeps streak');
-select is(public.own_insights(null,'2026-01-19')->'streaks'->>'current_weekly','0','missing complete week ends streak');
-select is(public.own_insights(2026,'2026-01-06')->'streaks'->>'longest_weekly','2','historical/selected year streak uses only selected visits');
-select is(public.own_insights(null,'2026-01-06')->'countries'->0->>'count','2','country aliases merge');
-select is(public.own_insights(null,'2026-01-06')->'countries'->0->>'country','GB','canonical country code');
+select is(public.own_insights_core(null,'2026-01-06',true,true,true)->>'total','4','includes private and repeated visits, excludes planned');
+select is(public.own_insights_core(2026,'2026-01-06',true,true,true)->>'total','3','filters by performance year');
+select is(public.own_insights_core(null,'2026-01-06',true,true,true)->>'unique_shows','2','unique shows separate from performances');
+select is(public.own_insights_core(null,'2026-01-06',true,true,true)->>'unlocated','2','missing venues still counted');
+select is(public.own_insights_core(null,'2026-01-06',true,true,true)->'streaks'->>'current_daily','2','yesterday keeps daily streak alive; same date not doubled');
+select is(public.own_insights_core(null,'2026-01-06',true,true,true)->'streaks'->>'longest_weekly','3','Monday weeks span year boundary');
+select is(public.own_insights_core(null,'2026-01-12',true,true,true)->'streaks'->>'current_weekly','3','unfinished new week keeps streak');
+select is(public.own_insights_core(null,'2026-01-19',true,true,true)->'streaks'->>'current_weekly','0','missing complete week ends streak');
+select is(public.own_insights_core(2026,'2026-01-06',true,true,true)->'streaks'->>'longest_weekly','2','historical/selected year streak uses only selected visits');
+select is(public.own_insights_core(null,'2026-01-06',true,true,true)->'countries'->0->>'count','2','country aliases merge');
+select is(public.own_insights_core(null,'2026-01-06',true,true,true)->'countries'->0->>'country','GB','canonical country code');
 select is((select count(*)::integer from public.own_insight_entries(selected_country=>'GB')),2,'country drill-down matches counts');
 select is((select count(*)::integer from public.own_insight_entries(selected_day=>'2026-01-05')),2,'day drill-down includes both shows');
-select is(public.own_insights(2026,'2026-01-06')->'days'->1->>'count','2','grid intensity counts both performances');
-select is(public.own_insights(2026,'2026-01-06')->'types'->0->>'count','2','category totals count repeated visits');
+select is(public.own_insights_core(2026,'2026-01-06',true,true,true)->'days'->1->>'count','2','grid intensity counts both performances');
+select is(public.own_insights_core(2026,'2026-01-06',true,true,true)->'types'->0->>'count','2','category totals count repeated visits');
 select is((select count(*)::integer from public.own_insight_entries(page_offset=>1)),3,'drill-down offset supports pagination');
-select is(public.own_insights(2024,'2026-01-06')->>'total','0','empty selected year returns zero');
-select is(public.own_insights(2026,'2026-01-06')->'streaks'->>'current_weekly','3','current streak spans years even in current-year view');
+select is(public.own_insights_core(2024,'2026-01-06',true,true,true)->>'total','0','empty selected year returns zero');
+select is(public.own_insights_core(2026,'2026-01-06',true,true,true)->'streaks'->>'current_weekly','3','current streak spans years even in current-year view');
 select set_config('request.jwt.claims','{"sub":"bbbbbbbb-0000-0000-0000-000000000000","role":"authenticated"}',true);
-select is(public.own_insights(null,'2026-01-06')->>'total','0','other user sees only own empty history');
+select is(public.own_insights_core(null,'2026-01-06',true,true,true)->>'total','0','other user sees only own empty history');
 select is((select count(*)::integer from public.own_insight_entries()),0,'drill-down isolates caller');
 reset role;
 select ok(not has_function_privilege('anon','public.own_insights(integer,date)','execute'),'anon cannot read aggregates');
+select ok(not has_function_privilege('authenticated','public.own_insights_core(integer,date,boolean,boolean,boolean)','execute'),'clients cannot call the unlocked computation');
 select ok(not has_function_privilege('anon','public.own_insight_entries(integer,date,text,text,integer,uuid)','execute'),'anon cannot drill down');
 select * from finish();
 rollback;
