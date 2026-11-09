@@ -4,5 +4,6 @@
     "deploymentEnabled": {
       "feat/notifications-*": false
     }
-  }
+  },
+  "crons": [{ "path": "/api/billing/reconcile", "schedule": "17 4 * * *" }]
 }
