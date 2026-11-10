@@ -4,9 +4,9 @@ Generated from `scripts/emails.mjs` (`pnpm emails:build`); preview with `pnpm em
 
 | File | Hosted dashboard name | Subject |
 |---|---|---|
-| `confirmation.html` | Confirm signup | Confirm your Stubbed account |
+| `confirmation.html` | Confirm signup | Your Stubbed verification code |
 | `recovery.html` | Reset password | Reset your Stubbed password |
-| `magic_link.html` | Magic link | Your Stubbed sign-in link |
+| `magic_link.html` | Magic link | Your Stubbed verification code |
 | `invite.html` | Invite user | You’re invited to Stubbed |
 | `email_change.html` | Change email address | Confirm your new email for Stubbed |
 | `reauthentication.html` | Reauthentication | Your Stubbed verification code |

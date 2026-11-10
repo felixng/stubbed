@@ -252,7 +252,7 @@ otp_expiry = 3600
 # Links to /auth/confirm with a token hash, so they work in any browser; the
 # hosted project needs the same templates (Authentication → Emails).
 [auth.email.template.confirmation]
-subject = "Confirm your Stubbed account"
+subject = "Your Stubbed verification code"
 content_path = "./supabase/templates/confirmation.html"
 
 [auth.email.template.recovery]
@@ -260,7 +260,7 @@ subject = "Reset your Stubbed password"
 content_path = "./supabase/templates/recovery.html"
 
 [auth.email.template.magic_link]
-subject = "Your Stubbed sign-in link"
+subject = "Your Stubbed verification code"
 content_path = "./supabase/templates/magic_link.html"
 
 [auth.email.template.invite]
