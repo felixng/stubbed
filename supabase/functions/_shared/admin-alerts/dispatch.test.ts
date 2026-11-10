@@ -41,7 +41,7 @@ Deno.test("email skipped when Resend or the owner address is unset; push still g
   const h = harness([alert()], { mailer: null });
   await h.run();
   eq(h.sent.push.length, 1, "push");
-  eq(h.sent.finished, [["done", "skipped", undefined]], "finished");
+  eq(h.sent.finished, [["done", "skipped", "email_skipped"]], "finished");
   const h2 = harness([alert()], { ownerEmail: null });
   await h2.run();
   eq(h2.sent.email.length, 0, "no email");
@@ -81,4 +81,13 @@ Deno.test("a retryable push is retried, a thrown send is retryable", async () =>
   await h.run();
   eq(h.sent.finished[0][0], "retry", "push retry");
   eq(h.sent.finished[0][1], "done", "email still done");
+});
+
+Deno.test("a refused or missing push is recorded, not silently done", async () => {
+  const refused = harness([alert()], { native: { send: () => Promise.resolve("invalid_destination") } });
+  await refused.run();
+  eq(refused.sent.finished[0], ["done", "done", "push_invalid_destination"], "refused");
+  const none = harness([alert({ destinations: [] })]);
+  await none.run();
+  eq(none.sent.finished[0][2], "push_no_destinations", "no destinations");
 });

@@ -71,9 +71,13 @@ export async function dispatchAlerts(queue: AlertQueue, config: AlertConfig) {
         } catch { results.push("retryable"); }
       }
       if (results.includes("retryable")) { push = "retry"; error = "push_retryable"; }
+      // Say what actually came back, so a push that was refused isn't mistaken for one that arrived.
+      const refused = results.filter(r => r !== "accepted" && r !== "retryable");
+      if (!error && refused.length) error = `push_${refused.join("+")}`;
+      if (!error && results.length === 0) error = "push_no_destinations";
     }
     if (alert.email_pending) {
-      if (!config.mailer || !config.ownerEmail) email = "skipped";
+      if (!config.mailer || !config.ownerEmail) { email = "skipped"; error = error ? `${error},email_skipped` : "email_skipped"; }
       else {
         const c = emailContent(alert, config.siteUrl);
         try {
