@@ -10,6 +10,8 @@
     "build": "pnpm --filter web build",
     "lint": "pnpm --filter web lint",
     "typecheck": "pnpm --filter web typecheck",
-    "test": "pnpm --filter web test"
+    "test": "pnpm --filter web test",
+    "emails:build": "node scripts/emails.mjs build",
+    "emails:preview": "node scripts/emails.mjs preview"
   }
 }
