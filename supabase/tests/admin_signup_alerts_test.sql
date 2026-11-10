@@ -1,7 +1,7 @@
 -- Owner sign-up alerts (#486): one row per new user, service-only, admin
 -- devices only. Run with `supabase test db`.
 begin;
-select plan(11);
+select plan(10);
 
 insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data)
 values
