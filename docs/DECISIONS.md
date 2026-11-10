@@ -1524,3 +1524,6 @@ Owner's call, so that Claude can build the paid tier end to end. #219 is the cod
 
 ### 2026-11-10: Horizontal logo PNG for email (#483)
 - **`public/brand/stubbed-logo-email.png`** (480×112, transparent, derived from `public/press/stubbed-logo.png`) is the horizontal logo as a flat image, shown at 160px wide with alt "Stubbed". The auth emails and the owner alert email use it in place of the mark plus live text, so the wordmark's type is the brand's, not a mail client's fallback font. It's listed in the design system's Logo section and `/design-system.md`. Light backgrounds only.
+
+### 2026-11-10: Making the sign-up code easy for Gmail to offer (#483)
+- Gmail's "Copy code" card (mobile apps, and the suggestion card on web) has **no documented sender markup**: Gmail infers it from the email. So we match what it recognises: subject "Your Stubbed verification code" on the confirm-sign-up and magic-link emails (the same as reauthentication), the label "Your verification code:" directly above the code, the six digits as one plain-text element with nothing else numeric beside it, and only one code per email. Whether Gmail shows the card can only be confirmed by sending a real email; check it after the hosted templates are updated.
