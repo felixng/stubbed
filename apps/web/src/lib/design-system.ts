@@ -82,6 +82,16 @@ export const LOGO_VARIANTS = [
   },
 ];
 
+/** The horizontal logo (mark and wordmark) as a PNG, for places that can't use the live lockup: emails first. */
+export const LOGO_HORIZONTAL = {
+  name: "Horizontal logo for email",
+  file: "stubbed-logo-email",
+  width: 480,
+  height: 112,
+  background: "White or `background`",
+  use: "Email headers and anywhere a flat image is required (documents, slides). A transparent PNG, 480×112, shown at 160px wide (3× for sharp screens) with the alt text \"Stubbed\". Light backgrounds only; for a dark one use `public/press/stubbed-logo-white.png`.",
+};
+
 export const LOGO_GRADIENT = [
   { stop: "0%", color: "#e8247f", name: "magenta" },
   { stop: "50%", color: "#ff5a5a", name: "coral" },
@@ -309,6 +319,8 @@ export function designSystemMarkdown(pageUrl: string) {
       ["Variant", "File", "Background", "Use"],
       LOGO_VARIANTS.map((v) => [v.name, `[${v.file}.svg](${new URL(`/brand/${v.file}.svg`, pageUrl).href})`, v.background, v.use]),
     ),
+    "",
+    `${LOGO_HORIZONTAL.name}: [${LOGO_HORIZONTAL.file}.png](${new URL(`/brand/${LOGO_HORIZONTAL.file}.png`, pageUrl).href}). ${LOGO_HORIZONTAL.use}`,
     "",
     `Gradient: ${LOGO_GRADIENT.map((g) => `${g.color} (${g.name}) at ${g.stop}`).join(", ")}.`,
     "",
