@@ -1508,3 +1508,9 @@ Owner's call, so that Claude can build the paid tier end to end. #219 is the cod
 - **Purchase flow** (`PurchaseFlow`): one purchase at a time (a second click does nothing); after a timeout only Retry runs, which re-checks membership and never reopens checkout; cancel returns quietly; a thrown error shows "you haven't been charged" copy.
 - **Membership page and Settings link.** The link shows only when the person has, or had, a `subscriptions` row (their own, by RLS). The account-deletion dialog adds the App Store cancel note when one of those rows is `app_store`.
 - **Development-only previews** (`?checkoutPreview=trial|standard|confirming|timeout`, `?membershipPreview=free|web|app_store`) are ignored when `NODE_ENV=production`.
+
+### 2026-11-10: Branded auth emails (#484, epic #483)
+- **One layout, seven emails** (confirm sign up, reset password, magic link, invite, change email, reauthentication, password changed). `scripts/emails.mjs` holds the shared layout and the copy; `pnpm emails:build` writes `supabase/templates/*.html` (committed, so Supabase and the owner's paste read plain files) and `pnpm emails:preview` renders them with sample values to `tmp/emails/`. No new dependency.
+- **Email rules:** table layout with inline styles, 600px max, light only (the app is light), system fonts, no tracking pixels or external scripts, the wordmark is a hosted PNG with the word "Stubbed" beside it so nothing depends on images loading. One coral pill button, a plain fallback link, a small footer, copy in the brand voice and never a city or region.
+- **Links** all go to `/auth/confirm?token_hash=…&type=<type>`; the route now also accepts `magiclink` and `invite`. Confirm sign up and magic link also show the 6-digit `{{ .Token }}` for the iOS sheet. `otp_length` stays 6.
+- `supabase/templates/README.md` maps each file to its hosted dashboard name and subject, for pasting once SMTP is on (#485).

@@ -5,12 +5,12 @@ import { safeNext } from "@/lib/safe-next";
 import { createClient } from "@/lib/supabase/server";
 
 // The links in Supabase's emails (supabase/templates): confirming a new
-// account, and resetting a password. They carry a token hash rather than a
+// account, resetting a password, a magic link, an invite and an email change. They carry a token hash rather than a
 // PKCE code, so they work in any browser, not just the one that asked (a
 // phone's mail app, or after signing up in the iOS app). Verifying it signs
 // the visitor in; a new account then goes on to /welcome (the proxy sends
 // anyone without a handle there), a reset to /reset-password.
-const TYPES = new Set<EmailOtpType>(["signup", "email", "recovery", "email_change"]);
+const TYPES = new Set<EmailOtpType>(["signup", "email", "recovery", "email_change", "magiclink", "invite"]);
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
