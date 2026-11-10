@@ -37,7 +37,7 @@ export function emailContent(a: AdminAlert, siteUrl: string) {
   const html = `<!DOCTYPE html><html lang="en"><body style="margin:0;padding:0;background:#f2f2f7;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f2f2f7;"><tr><td align="center" style="padding:32px 16px;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1c1c1e;">
-<tr><td style="padding:0 0 16px;"><img src="${siteUrl}/brand/stubbed-mark.png" width="40" alt="" style="display:inline-block;vertical-align:middle;border:0;"><span style="font-size:20px;font-weight:700;vertical-align:middle;padding-left:8px;">Stubbed</span></td></tr>
+<tr><td style="padding:0 0 16px;"><img src="${siteUrl}/brand/stubbed-logo-email.png" width="160" height="37" alt="Stubbed" style="display:block;border:0;font-size:20px;font-weight:700;color:#1c1c1e;"></td></tr>
 <tr><td style="background:#ffffff;border-radius:16px;padding:32px 28px;">
 <div style="font-size:24px;line-height:30px;font-weight:700;padding:0 0 16px;">New sign-up${a.confirmed ? "" : " (not confirmed yet)"}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="font-size:16px;line-height:24px;">

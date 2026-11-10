@@ -20,6 +20,7 @@ import {
   IOS_SCREENSHOTS,
   IOS_TOKENS,
   LOGO_GRADIENT,
+  LOGO_HORIZONTAL,
   LOGO_RULES,
   LOGO_VARIANTS,
   PRINCIPLES,
@@ -259,6 +260,31 @@ export default function DesignSystemPage() {
                   </div>
                 </div>
               ))}
+            </div>
+            <div className="mt-4 flex flex-col overflow-hidden rounded-md border border-separator bg-surface sm:flex-row">
+              <div className="flex items-center justify-center bg-white p-6 sm:w-72">
+                <Image
+                  src={`/brand/${LOGO_HORIZONTAL.file}.png`}
+                  alt="Stubbed"
+                  width={160}
+                  height={Math.round((160 * LOGO_HORIZONTAL.height) / LOGO_HORIZONTAL.width)}
+                  unoptimized
+                />
+              </div>
+              <div className="flex flex-1 flex-col gap-1 border-t border-separator px-4 py-3 sm:border-l sm:border-t-0">
+                <p className="text-headline text-label">{LOGO_HORIZONTAL.name}</p>
+                <p className="text-footnote text-label-secondary">
+                  On: <Inline text={LOGO_HORIZONTAL.background} />
+                </p>
+                <p className="text-subheadline text-label-secondary">
+                  <Inline text={LOGO_HORIZONTAL.use} />
+                </p>
+                <p className="mt-auto pt-2 text-subheadline">
+                  <a className="text-tint-text underline-offset-2 hover:underline" href={`/brand/${LOGO_HORIZONTAL.file}.png`} download>
+                    PNG, {LOGO_HORIZONTAL.width}px
+                  </a>
+                </p>
+              </div>
             </div>
             <div className="mt-6 flex flex-wrap items-center gap-8 rounded-md border border-separator bg-background p-6">
               <Wordmark size={48} mark />

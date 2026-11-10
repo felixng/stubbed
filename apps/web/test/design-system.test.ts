@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { test } from "node:test";
 
-import { COLORS, IOS_SCREENSHOTS, IOS_TOKENS, LOGO_VARIANTS, designSystemMarkdown } from "@/lib/design-system";
+import { COLORS, IOS_SCREENSHOTS, IOS_TOKENS, LOGO_HORIZONTAL, LOGO_VARIANTS, designSystemMarkdown } from "@/lib/design-system";
 
 const css = readFileSync(new URL("../src/app/globals.css", import.meta.url), "utf8");
 
@@ -50,4 +50,5 @@ test("logo: every variant has its SVG and PNG", () => {
     }
   }
   assert.ok(designSystemMarkdown("https://example.com/design-system").includes("## Logo"));
+  assert.ok(existsSync(new URL(`../public/brand/${LOGO_HORIZONTAL.file}.png`, import.meta.url)), "horizontal email logo");
 });
