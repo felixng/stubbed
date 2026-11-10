@@ -102,7 +102,7 @@ Free-tier limits change often. Check the vendor pricing pages before relying on 
 | Database | **Supabase Postgres** | All app data, RLS, stats functions | 500 MB per project, 2 active projects |
 | Auth | **Supabase Auth** | Email one-time code, Google, Apple | 50,000 monthly active users |
 | File storage | **Supabase Storage** | Entry photos, avatars | 1 GB |
-| Login emails | **Resend** (via Supabase custom SMTP) | Sends sign-in codes | ~3,000/mo, 100/day |
+| Login emails | **Resend** (via Supabase custom SMTP), and from `notification-worker` over Resend's HTTP API for owner sign-up alerts (#486) | Sends sign-in codes and the owner's alerts | ~3,000/mo, 100/day |
 | iOS app | **Xcode** + TestFlight | Build locally, beta-test via TestFlight | Free with the Apple Developer Program. Xcode Cloud includes some free build hours/mo if CI is wanted. Avoid macOS GitHub runners on a private repo: they burn free minutes at 10×. |
 | Code, CI, cron | **GitHub** + Actions | Repo, lint/test, migrations, backup, keep-alive | Free for public repos; 2,000 min/mo private |
 | Domain (optional) | Any registrar, **Cloudflare** DNS | Nicer share links than `*.vercel.app` | ~$10/yr |
