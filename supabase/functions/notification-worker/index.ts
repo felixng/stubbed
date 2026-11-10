@@ -3,6 +3,7 @@ import webpush from "npm:web-push@3.6.7";
 import { createBrowserPushSender } from "../_shared/notifications/browser-push.ts";
 import { createAPNsSender } from "../_shared/notifications/apns.ts";
 import { dispatchBatch } from "../_shared/notifications/dispatch.ts";
+import { createResendMailer, dispatchAlerts, type AdminAlert, type AlertQueue } from "../_shared/admin-alerts/dispatch.ts";
 import type { DeliveryQueue, Lease, PreparedJob, SendResult } from "../_shared/notifications/contracts.ts";
 
 const required = (name: string) => { const value = Deno.env.get(name); if (!value) throw new Error(`Missing ${name}`); return value; };
@@ -47,8 +48,18 @@ Deno.serve(async request => {
       if (job.kind === "web" && browser && job.subscription) return browser.send(job.subscription, job.notification, new Date(job.expires_at));
       return Promise.resolve("retryable");
     });
+    // Owner alerts for new sign-ups (#486): push to admins, email via Resend.
+    const resendKey = Deno.env.get("RESEND_API_KEY");
+    const alertQueue: AlertQueue = {
+      claim: async () => (await rpc<{ alert: AdminAlert }[]>("claim_admin_alerts", { batch_size: 3 })).map(row => row.alert),
+      finish: (alert, push, email, error) => rpc<void>("finish_admin_alert", { alert_id: alert.id, lease_token: alert.lease, push, email, error: error ?? null }),
+    };
+    const alerts = await dispatchAlerts(alertQueue, {
+      siteUrl: Deno.env.get("SITE_URL") ?? "https://getstubbed.app", ownerEmail: Deno.env.get("OWNER_ALERT_EMAIL") ?? null, native, browser,
+      mailer: resendKey ? createResendMailer(resendKey, "Stubbed <alerts@getstubbed.app>") : null,
+    }).catch(() => ({ error: "alerts unavailable" }));
     // Counts only: never log tokens, endpoints, actors, entry titles or bodies.
-    return Response.json(result);
+    return Response.json({ ...result, alerts });
   } catch {
     return Response.json({ error: "Notification worker unavailable" }, { status: 503 });
   }

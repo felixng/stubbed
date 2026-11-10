@@ -43,6 +43,90 @@ internal enum PublicSchema {
     case `public` = "public"
     case `private` = "private"
   }
+  internal struct AdminAlertsSelect: Codable, Hashable, Sendable {
+    internal let attempts: Int32
+    internal let createdAt: String
+    internal let emailDoneAt: String?
+    internal let id: UUID
+    internal let kind: String
+    internal let lastError: String?
+    internal let lease: UUID?
+    internal let leaseUntil: String?
+    internal let nextAttemptAt: String
+    internal let provider: String
+    internal let pushDoneAt: String?
+    internal let userId: UUID
+    internal enum CodingKeys: String, CodingKey {
+      case attempts = "attempts"
+      case createdAt = "created_at"
+      case emailDoneAt = "email_done_at"
+      case id = "id"
+      case kind = "kind"
+      case lastError = "last_error"
+      case lease = "lease"
+      case leaseUntil = "lease_until"
+      case nextAttemptAt = "next_attempt_at"
+      case provider = "provider"
+      case pushDoneAt = "push_done_at"
+      case userId = "user_id"
+    }
+  }
+  internal struct AdminAlertsInsert: Codable, Hashable, Sendable {
+    internal let attempts: Int32?
+    internal let createdAt: String?
+    internal let emailDoneAt: String?
+    internal let id: UUID?
+    internal let kind: String
+    internal let lastError: String?
+    internal let lease: UUID?
+    internal let leaseUntil: String?
+    internal let nextAttemptAt: String?
+    internal let provider: String?
+    internal let pushDoneAt: String?
+    internal let userId: UUID
+    internal enum CodingKeys: String, CodingKey {
+      case attempts = "attempts"
+      case createdAt = "created_at"
+      case emailDoneAt = "email_done_at"
+      case id = "id"
+      case kind = "kind"
+      case lastError = "last_error"
+      case lease = "lease"
+      case leaseUntil = "lease_until"
+      case nextAttemptAt = "next_attempt_at"
+      case provider = "provider"
+      case pushDoneAt = "push_done_at"
+      case userId = "user_id"
+    }
+  }
+  internal struct AdminAlertsUpdate: Codable, Hashable, Sendable {
+    internal let attempts: Int32?
+    internal let createdAt: String?
+    internal let emailDoneAt: String?
+    internal let id: UUID?
+    internal let kind: String?
+    internal let lastError: String?
+    internal let lease: UUID?
+    internal let leaseUntil: String?
+    internal let nextAttemptAt: String?
+    internal let provider: String?
+    internal let pushDoneAt: String?
+    internal let userId: UUID?
+    internal enum CodingKeys: String, CodingKey {
+      case attempts = "attempts"
+      case createdAt = "created_at"
+      case emailDoneAt = "email_done_at"
+      case id = "id"
+      case kind = "kind"
+      case lastError = "last_error"
+      case lease = "lease"
+      case leaseUntil = "lease_until"
+      case nextAttemptAt = "next_attempt_at"
+      case provider = "provider"
+      case pushDoneAt = "push_done_at"
+      case userId = "user_id"
+    }
+  }
   internal struct AppConfigSelect: Codable, Hashable, Sendable {
     internal let key: String
     internal let value: String
