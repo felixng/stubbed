@@ -77,6 +77,6 @@ Stop everything: `gh variable delete CRAWL_LOOP_ENABLED`. Pause one source: Back
 
 Geocoding (postcodes.io, then Nominatim at 1100 ms gaps; cached in `crawl_geocodes`) happens in the worker during the venue stage; no key or secret. Reparse in place (re-geocodes from the cache): `node supabase/scripts/crawl/loop.mjs --source london_theatre --scope venue-directory --reparse --max-pages 25 --max-minutes 10`.
 
-Run chips (after publication is enabled and checked), as an admin session: `select public.admin_set_catalogue_flag('catalogue_run_chips_enabled', true);` Disable with `false`: the next suggestion call returns only community/yours chips. Autofill: leave `catalogue_run_autofill_enabled` false.
+Publication and run chips are buttons on **Backstage > Crawl > Sources** (2026-11-10): Turn publication on/off per source, and Turn run chips on/off under Logging suggestions. Run chips (after publication is enabled and checked) can still be set by SQL as an admin session: `select public.admin_set_catalogue_flag('catalogue_run_chips_enabled', true);` Disable with `false`: the next suggestion call returns only community/yours chips. Autofill: leave `catalogue_run_autofill_enabled` false.
 
 Spend: the official-site AI path is capped at $1 per run and $0.20 per site (`CRAWL_MAX_SPEND_USD`, `CRAWL_SITE_SPEND_USD`). London Theatre and Playbill use no model.
