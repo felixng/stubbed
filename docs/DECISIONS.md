@@ -1554,3 +1554,12 @@ that says what members will see. Publish goes through `admin_crawl_source_action
 admin-only, recorded in `crawl_admin_actions`; a withdrawn source must be reinstated first). Run chips use the
 existing `admin_set_catalogue_flag`; admins read the flags through `admin_catalogue_flags`. Autofill is shown but
 stays database-only until its accuracy gate passes. Migration `20261111130000_backstage_publish_chips.sql`.
+
+### Backstage crawler controls: switches versus actions (2026-11-11)
+
+Owner: some controls were actions (retry) and some toggles, and they looked alike. On Backstage > Catalogue crawler, settings that stay on or off are now switches showing On/Off (Crawling and Publication per source, Run chips for everyone; Autofill is a locked switch). One-off jobs (Retry failed pages, Retry blocked pages, Rediscover directory) stay buttons under "Actions". "Crawling" is the old pause/resume of new claims. Collection is still changed in the database. Backstage index now links the page directly.
+
+### Backstage crawl pages lead with the result (2026-11-11)
+
+Owner: "Succeeded" next to "Reachable event work incomplete" didn't say whether we got the data. Each page row on Backstage > Catalogue crawler now has one status (Complete, Waiting on N show pages, N show pages stuck, No location found, No dates found, Failed) and a line of what we got: venue name, address and how it was located, show pages read out of listed; for show pages the opening and closing dates (a scheduled end is labelled as not a confirmed close) and type. Anything missing is named. URL, attempts, HTTP requests, parser and timestamps moved under "Details". `admin_crawl_task_results(uuid[])` (migration `20261111140000`) reads the latest extraction per page; until it is applied rows fall back to a plain "Succeeded".
+
