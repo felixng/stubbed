@@ -70,6 +70,19 @@ test("membership loads from my_membership and app_config; an unreadable membersh
   await assert.rejects(loadMembership(reader({ data: null, error: { message: "no" } }, []) as never));
 });
 
+test("an admin testing the paywall sees both switches on; nobody else does", async () => {
+  const reader = (data: unknown) => ({
+    rpc: async () => ({ data, error: null }),
+    from: () => ({ select: async () => ({ data: [{ key: "paywall_sales_enabled", value: "false" }] }) }),
+  });
+  const admin = await loadMembership(reader({ ...FREE, paywall_preview: true }) as never);
+  assert.equal(admin.config.salesEnabled, true);
+  assert.equal(admin.config.gatesEnabled, true);
+  const user = await loadMembership(reader({ ...FREE, paywall_preview: false }) as never);
+  assert.deepEqual(user.config, DEFAULT_CONFIG);
+  assert.deepEqual((await loadMembership(reader(FREE) as never)).config, DEFAULT_CONFIG);
+});
+
 const free = (locked: string[]) => ({ access: { tier: "free" as const, period: "current" as const, locked } });
 
 test("a card locks from its declared data needs, via access.locked only", () => {

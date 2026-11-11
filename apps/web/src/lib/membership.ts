@@ -10,6 +10,9 @@ export type MembershipInfo = {
   will_renew: boolean;
   is_trial: boolean;
   manage: string[];
+  // An admin testing the paywall before launch (`paywall_preview_admins`): show it as if both
+  // switches were on. The database already locks their paid stats.
+  paywall_preview?: boolean;
 };
 
 export type ProConfig = { name: string; salesEnabled: boolean; gatesEnabled: boolean };
@@ -18,12 +21,13 @@ export const FREE: MembershipInfo = { tier: "free", source: null, expires_at: nu
 // A missing key means off, never a crash.
 export const DEFAULT_CONFIG: ProConfig = { name: DEFAULT_PRO_NAME, salesEnabled: false, gatesEnabled: false };
 
-export function parseConfig(rows: { key: string; value: string }[] | null | undefined): ProConfig {
+// `adminPreview`: the caller is an admin testing the paywall, so both switches count as on.
+export function parseConfig(rows: { key: string; value: string }[] | null | undefined, adminPreview = false): ProConfig {
   const map = new Map((rows ?? []).map((r) => [r.key, r.value]));
   return {
     name: map.get("pro_display_name")?.trim() || DEFAULT_PRO_NAME,
-    salesEnabled: map.get("paywall_sales_enabled") === "true",
-    gatesEnabled: map.get("paywall_gates_enabled") === "true",
+    salesEnabled: adminPreview || map.get("paywall_sales_enabled") === "true",
+    gatesEnabled: adminPreview || map.get("paywall_gates_enabled") === "true",
   };
 }
 
@@ -45,7 +49,8 @@ export async function loadMembership(supabase: Reader): Promise<MembershipState>
     Promise.resolve(supabase.from("app_config").select("key, value")).catch(() => ({ data: null })),
   ]);
   if (membership.error || !membership.data) throw new Error("Membership unavailable");
-  return { info: membership.data as MembershipInfo, config: parseConfig(config.data) };
+  const info = membership.data as MembershipInfo;
+  return { info, config: parseConfig(config.data, info.paywall_preview === true) };
 }
 
 // Whether to show the upgrade banner (sales on) rather than the plain "Part of {Pro}" note.

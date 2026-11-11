@@ -81,6 +81,20 @@ struct PaywallTests {
     #expect(!config.gatesEnabled)
   }
 
+  @Test func adminPreviewTurnsBothSwitchesOnForThatCallerOnly() throws {
+    let preview = try JSONDecoder().decode(
+      MembershipInfo.self,
+      from: Data(
+        #"{"tier":"free","source":null,"expires_at":null,"will_renew":false,"is_trial":false,"manage":[],"paywall_preview":true}"#
+          .utf8))
+    #expect(preview.paywall_preview == true)
+    let admin = ProConfig(rows: ["paywall_sales_enabled": "false"], adminPreview: true)
+    #expect(admin.salesEnabled && admin.gatesEnabled)
+    #expect(ProConfig(rows: ["paywall_sales_enabled": "false"]) == ProConfig())
+    // Older servers send no flag: no preview.
+    #expect(MembershipInfo.free.paywall_preview == nil)
+  }
+
   @Test func membershipClearsOnSignOut() async {
     let membership = Membership()
     membership.apply(

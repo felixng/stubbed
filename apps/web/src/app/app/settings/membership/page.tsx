@@ -30,7 +30,7 @@ async function Membership({ searchParams }: Pick<PageProps<"/app/settings/member
     supabase.from("app_config").select("key, value"),
   ]);
   const info = (membership.data ?? FREE) as MembershipInfo;
-  const settings = parseConfig(config.data);
+  const settings = parseConfig(config.data, info.paywall_preview === true);
   const targets = manageTargets(info);
   const pro = info.tier === "pro";
 

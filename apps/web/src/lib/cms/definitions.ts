@@ -894,6 +894,20 @@ export const copyDefinitions = {
         "fieldset": "collect",
         "fieldsetTitle": "What we collect and why"
       },
+      "stubbedProSubscription": {
+        "title": "If you subscribe to Stubbed Pro",
+        "value": "If you subscribe to Stubbed Pro",
+        "multiline": false,
+        "fieldset": "collect",
+        "fieldsetTitle": "What we collect and why"
+      },
+      "whichPlanYoureOn": {
+        "title": ": which plan you’re on, when it started and renews or ends, wh…",
+        "value": ": which plan you’re on, when it started and renews or ends, whether it’s a trial, and the store’s reference for the purchase, so we can unlock Pro in the app and on the website. We never see your card or bank details. Legal basis: our contract with you.",
+        "multiline": true,
+        "fieldset": "collect",
+        "fieldsetTitle": "What we collect and why"
+      },
       "showsAndVenuesYouAdd": {
         "title": "Shows and venues you add",
         "value": "Shows and venues you add",
@@ -1090,6 +1104,48 @@ export const copyDefinitions = {
         "fieldset": "sharing",
         "fieldsetTitle": "Who we share data with"
       },
+      "revenuecat": {
+        "title": "RevenueCat",
+        "value": "RevenueCat",
+        "multiline": false,
+        "fieldset": "sharing",
+        "fieldsetTitle": "Who we share data with"
+      },
+      "managesProSubscriptions": {
+        "title": ": manages Stubbed Pro subscriptions for the app and the websit…",
+        "value": ": manages Stubbed Pro subscriptions for the app and the website, linked to your account by its anonymous ID. When you delete your account, we delete your RevenueCat record too.",
+        "multiline": true,
+        "fieldset": "sharing",
+        "fieldsetTitle": "Who we share data with"
+      },
+      "stripe": {
+        "title": "Stripe",
+        "value": "Stripe",
+        "multiline": false,
+        "fieldset": "sharing",
+        "fieldsetTitle": "Who we share data with"
+      },
+      "takesCardPaymentsOnTheWebsite": {
+        "title": ": takes card payments for Stubbed Pro on the website, under St…",
+        "value": ": takes card payments for Stubbed Pro on the website, under Stripe’s own privacy policy.",
+        "multiline": true,
+        "fieldset": "sharing",
+        "fieldsetTitle": "Who we share data with"
+      },
+      "appleAppStore": {
+        "title": "Apple (App Store)",
+        "value": "Apple (App Store)",
+        "multiline": false,
+        "fieldset": "sharing",
+        "fieldsetTitle": "Who we share data with"
+      },
+      "takesPaymentInTheApp": {
+        "title": ": takes payment for Stubbed Pro bought in the iPhone app, unde…",
+        "value": ": takes payment for Stubbed Pro bought in the iPhone app, under Apple’s own privacy policy.",
+        "multiline": true,
+        "fieldset": "sharing",
+        "fieldsetTitle": "Who we share data with"
+      },
       "vercel": {
         "title": "Vercel",
         "value": "Vercel",
@@ -1226,6 +1282,20 @@ export const copyDefinitions = {
       "forAsLongAsYouHave": {
         "title": ": for as long as you have an account. When you delete your acc…",
         "value": ": for as long as you have an account. When you delete your account or an entry, we delete it from the live service within 30 days; copies in backups are overwritten within a further 90 days.",
+        "multiline": true,
+        "fieldset": "retention",
+        "fieldsetTitle": "How long we keep it"
+      },
+      "subscriptionRecords": {
+        "title": "Subscription records",
+        "value": "Subscription records",
+        "multiline": false,
+        "fieldset": "retention",
+        "fieldsetTitle": "How long we keep it"
+      },
+      "subscriptionRecordsKept": {
+        "title": ": for as long as you have an account. Apple, RevenueCat and St…",
+        "value": ": for as long as you have an account. Apple, RevenueCat and Stripe keep their own payment and tax records for as long as the law requires them to.",
         "multiline": true,
         "fieldset": "retention",
         "fieldsetTitle": "How long we keep it"
@@ -1782,9 +1852,44 @@ export const copyDefinitions = {
         "fieldset": "price",
         "fieldsetTitle": "Price"
       },
-      "stubbedIsFreeIfWeEver": {
-        "title": "Stubbed is free. If we ever introduce paid features, we’ll tel…",
-        "value": "Stubbed is free. If we ever introduce paid features, we’ll tell you the price and terms clearly before you buy anything, and you won’t be charged unless you choose to pay.",
+      "proIsOptional": {
+        "title": "Most of Stubbed is free, including logging, your diary, trips,…",
+        "value": "Most of Stubbed is free, including logging, your diary, trips, share cards and getting your data out. Stubbed Pro is an optional paid subscription that adds more stats: Show mix, earlier years and All time. Before you buy, the app or website shows the price in your currency, the billing period and any free trial.",
+        "multiline": true,
+        "fieldset": "price",
+        "fieldsetTitle": "Price"
+      },
+      "proHowYouPay": {
+        "title": "In the iPhone app you buy Pro through Apple, and Apple’s own t…",
+        "value": "In the iPhone app you buy Pro through Apple, and Apple’s own terms apply to the payment. On the website, payments are processed for us by RevenueCat and Stripe. We never see your card details.",
+        "multiline": true,
+        "fieldset": "price",
+        "fieldsetTitle": "Price"
+      },
+      "proRenewal": {
+        "title": "Pro renews automatically at the end of each billing period, at…",
+        "value": "Pro renews automatically at the end of each billing period, at the price shown when you bought it, until you cancel. If your plan starts with a free trial, you’re charged when the trial ends unless you cancel before then. If the price changes, we or the store will tell you before it applies, and you can cancel first.",
+        "multiline": true,
+        "fieldset": "price",
+        "fieldsetTitle": "Price"
+      },
+      "proCancelling": {
+        "title": "You can cancel any time: in the iPhone app’s subscriptions in…",
+        "value": "You can cancel any time: in the iPhone app’s subscriptions in Settings › Apple Account › Subscriptions, or on the website in Settings › Membership. Cancelling stops the next renewal, and you keep Pro until the end of the period you’ve paid for.",
+        "multiline": true,
+        "fieldset": "price",
+        "fieldsetTitle": "Price"
+      },
+      "proRefunds": {
+        "title": "Refunds for purchases made in the iPhone app are handled by Ap…",
+        "value": "Refunds for purchases made in the iPhone app are handled by Apple under its policies. If you bought Pro on the website and you’re a consumer in the UK or EU, you can cancel within 14 days of buying and get a refund, less a proportionate amount for any days of Pro you’ve already had: email us to do this. Nothing here affects your other rights under consumer law.",
+        "multiline": true,
+        "fieldset": "price",
+        "fieldsetTitle": "Price"
+      },
+      "proEnding": {
+        "title": "If your subscription ends, you go back to the free plan. Nothi…",
+        "value": "If your subscription ends, you go back to the free plan. Nothing you’ve logged is deleted; only the Pro stats are locked again.",
         "multiline": true,
         "fieldset": "price",
         "fieldsetTitle": "Price"
@@ -2444,7 +2549,7 @@ export const copyDefinitions = {
       },
       "updated": {
         "title": "Updated",
-        "value": "18 October 2026",
+        "value": "11 November 2026",
         "multiline": false
       },
       "seoTitle": {
@@ -2470,7 +2575,7 @@ export const copyDefinitions = {
       },
       "updated": {
         "title": "Updated",
-        "value": "18 October 2026",
+        "value": "11 November 2026",
         "multiline": false
       },
       "seoTitle": {

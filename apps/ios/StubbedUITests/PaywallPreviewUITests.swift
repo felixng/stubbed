@@ -78,6 +78,10 @@ final class PaywallPreviewUITests: XCTestCase {
     XCTAssertTrue(app.buttons["Start free trial"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.buttons["paywall-restore"].exists)
     snapshot("paywall-offer-trial")
+    // App Review's subscription requirements: renewal terms and the two legal links.
+    reveal(app.buttons["paywall-privacy"], in: app)
+    XCTAssertTrue(app.buttons["paywall-terms"].exists)
+    snapshot("paywall-legal")
   }
 
   @MainActor func testPaywallOfferNotEligible() throws {

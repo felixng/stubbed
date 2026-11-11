@@ -4,10 +4,10 @@
 // CMS-enabled pages use their own editable dates; this is the repo fallback.
 type Legal = {
   // The person or company legally responsible for Stubbed (the "controller"),
-  // and a postal address for legal notices. Left out for the private beta
-  // (owner's call). UK/EU GDPR Art. 13 and the UK E-Commerce Regulations 2002
-  // expect both, so fill them in before public launch; the pages show them
-  // as soon as they're set.
+  // and a postal address for legal notices. Act II Limited is the seller of
+  // Stubbed Pro (owner, 9 Nov 2026). UK/EU GDPR Art. 13 and the UK E-Commerce
+  // Regulations 2002 expect the address too, so fill it in before Pro goes on
+  // sale; the pages show it as soon as it's set.
   operator: string | null;
   address: string | null;
   // Monitored inbox for privacy requests, legal notices and content reports.
@@ -22,12 +22,12 @@ type Legal = {
 };
 
 export const LEGAL: Legal = {
-  operator: null,
+  operator: "Act II Limited",
   address: null,
   email: "support@getstubbed.app",
   governingLaw: "England and Wales (United Kingdom)",
   courts: "the courts of England and Wales",
-  updated: "18 October 2026",
+  updated: "11 November 2026",
   minimumAge: 16,
 };
 

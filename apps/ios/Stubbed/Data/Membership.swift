@@ -10,6 +10,9 @@ struct MembershipInfo: Decodable, Equatable, Sendable {
   let will_renew: Bool
   let is_trial: Bool
   let manage: [String]
+  /// An admin testing the paywall before launch (`paywall_preview_admins`): show it as if both
+  /// switches were on. The database already locks their paid stats.
+  var paywall_preview: Bool? = nil
   var isPro: Bool { tier == "pro" }
   static let free = MembershipInfo(
     tier: "free", source: nil, expires_at: nil, will_renew: false, is_trial: false, manage: [])
@@ -27,10 +30,11 @@ struct ProConfig: Equatable, Sendable {
     self.gatesEnabled = gatesEnabled
   }
 
-  init(rows: [String: String]) {
+  /// `adminPreview`: the caller is an admin testing the paywall, so both switches count as on.
+  init(rows: [String: String], adminPreview: Bool = false) {
     if let name = rows["pro_display_name"], !name.isEmpty { displayName = name }
-    salesEnabled = rows["paywall_sales_enabled"] == "true"
-    gatesEnabled = rows["paywall_gates_enabled"] == "true"
+    salesEnabled = adminPreview || rows["paywall_sales_enabled"] == "true"
+    gatesEnabled = adminPreview || rows["paywall_gates_enabled"] == "true"
   }
 }
 
@@ -100,7 +104,10 @@ final class Membership {
       let (m, c, p) = try await (membership, configRows, policyRows)
       guard self.loadedFor == nil || self.loadedFor == userId else { return }
       apply(
-        info: m, config: ProConfig(rows: Dictionary(c.map { ($0.key, $0.value) }, uniquingKeysWith: { $1 })),
+        info: m,
+        config: ProConfig(
+          rows: Dictionary(c.map { ($0.key, $0.value) }, uniquingKeysWith: { $1 }),
+          adminPreview: m.paywall_preview == true),
         featureTiers: Dictionary(p.map { ($0.feature, $0.tier) }, uniquingKeysWith: { $1 }))
       loadedFor = userId
     } catch {
