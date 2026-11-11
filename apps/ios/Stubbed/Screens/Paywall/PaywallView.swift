@@ -257,7 +257,7 @@ struct ProBanner: View {
       .padding(Space.xl)
       .background { ProBannerGlow() }
       .clipShape(Grouped.shape)
-      .listRowInsets(EdgeInsets(top: Space.s, leading: Space.l, bottom: Space.s, trailing: Space.l))
+      .listRowInsets(EdgeInsets())
       .listRowBackground(Color.clear)
       .accessibilityElement(children: .contain)
       .accessibilityIdentifier("pro-banner")

@@ -49,6 +49,7 @@ struct PeriodSheet: View {
     }
     .paywallHost()
     .presentationDetents([.medium, .large])
+    .presentationBackground(Color(.systemGroupedBackground))
     .presentationDragIndicator(.visible)
     .accessibilityIdentifier("period-sheet")
   }
@@ -67,11 +68,14 @@ struct PeriodSheet: View {
         }
         Spacer(minLength: Space.s)
         if locked {
-          Label(membership.name, systemImage: "lock.fill")
-            .font(.subheadline.weight(.semibold))
-            .foregroundStyle(Palette.tintText)
-            .padding(.horizontal, Space.m).padding(.vertical, Space.xs)
-            .background(Palette.tintFill, in: Capsule())
+          HStack(spacing: Space.xs) {
+            Text(membership.name)
+            Image(systemName: "lock.fill").imageScale(.small)
+          }
+          .font(.subheadline.weight(.semibold))
+          .foregroundStyle(Palette.tintText)
+          .padding(.horizontal, Space.m).padding(.vertical, Space.xs)
+          .background(Palette.tintFill, in: Capsule())
         } else if selected {
           Image(systemName: "checkmark").font(.body.weight(.semibold)).foregroundStyle(Palette.tintText)
         }
