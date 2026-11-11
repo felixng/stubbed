@@ -1,8 +1,8 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { AdminOnly } from "@/components/app/admin/AdminOnly";
-import { RunChipsControl } from "@/components/app/admin/CatalogueFlagControl";
 import { CrawlSourceControl } from "@/components/app/admin/CrawlSourceControl";
+import { CrawlSwitch } from "@/components/app/admin/CrawlSwitch";
 import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
 import {
@@ -84,13 +84,16 @@ async function Sources({ searchParams }: Pick<PageProps<"/app/backstage/crawl/so
     <>
       <section className={`flex flex-col gap-3 ${panel}`} aria-labelledby="logging-suggestions">
         <h2 id="logging-suggestions" className="text-headline">Logging suggestions</h2>
-        <p className="text-subheadline text-label-secondary">For everyone, on web and iOS. Run chips suggest the show from a venue and date, using published run dates.</p>
-        <dl className="grid grid-cols-2 gap-3 text-subheadline sm:grid-cols-3">
-          <div><dt className="text-label-secondary">Run chips</dt><dd>{chips === undefined ? "Unknown" : chips ? "On" : "Off"}</dd></div>
-          <div><dt className="text-label-secondary">Autofill</dt><dd>{autofill ? "On" : "Off"}</dd></div>
-        </dl>
-        {chips !== undefined && <RunChipsControl enabled={chips} />}
-        <p className="text-footnote text-label-secondary">Autofill stays off until its accuracy check passes; it isn’t a button here.</p>
+        <p className="text-subheadline text-label-secondary">For everyone, on web and iOS. Switches stay as you leave them.</p>
+        <div className="flex flex-col divide-y divide-separator">
+          {chips !== undefined && (
+            <CrawlSwitch kind={{ type: "run_chips" }} label="Run chips" checked={chips}
+              description="Suggest the show from a venue and date, using published run dates." />
+          )}
+          <CrawlSwitch label="Autofill" checked={Boolean(autofill)}
+            description="Fill in the show for the member."
+            note="Locked until it scores 99% on 100 labelled cases." />
+        </div>
       </section>
       <nav aria-label="Crawl sources" className="flex flex-wrap gap-3">
         {data.sources.map(item => (
@@ -107,27 +110,39 @@ async function Sources({ searchParams }: Pick<PageProps<"/app/backstage/crawl/so
             <h2 id="crawl-source-state" className="text-headline">{crawlSourceName(source.source_key)}</h2>
             <dl className="grid grid-cols-2 gap-3 text-subheadline sm:grid-cols-3">
               <div><dt className="text-label-secondary">Collection</dt><dd>{source.collection_enabled ? "Enabled" : "Off"}</dd></div>
-              <div><dt className="text-label-secondary">Publication</dt><dd>{source.publication_enabled ? "Enabled" : "Off"}</dd></div>
               <div><dt className="text-label-secondary">Parser</dt><dd className="break-words">{source.adapter_version}</dd></div>
-              <div><dt className="text-label-secondary">Claims</dt><dd>{source.paused_reason ? "Blocked" : source.operator_paused_at ? "Paused by operator" : source.collection_enabled ? "Accepting new claims" : "Disabled"}</dd></div>
               <div><dt className="text-label-secondary">Last scan activity</dt><dd>{data.last_activity_at ? timestamp(data.last_activity_at) : "None recorded"}</dd></div>
               {source.withdrawn_at && <div><dt className="text-label-secondary">Evidence</dt><dd>Withdrawn</dd></div>}
             </dl>
             {source.paused_reason && <p className="break-words text-subheadline">{source.paused_reason}</p>}
             {source.source_key === "official" && <p className="text-footnote text-label-secondary">Legacy official-site activity is listed under Crawl sites and Crawl runs.</p>}
-            <div className="flex flex-wrap gap-2">
-              <CrawlSourceControl source={source.source_key} operation={source.publication_enabled ? "publish_off" : "publish_on"}
-                disabled={!source.publication_enabled && Boolean(source.withdrawn_at)} />
-              <CrawlSourceControl source={source.source_key} operation={source.operator_paused_at ? "resume" : "pause"} />
-              {scan?.is_current && (
-                <>
+            <div className="flex flex-col gap-1">
+              <h3 className="text-footnote font-semibold uppercase text-label-secondary">Switches</h3>
+              <div className="flex flex-col divide-y divide-separator">
+                <CrawlSwitch kind={{ type: "crawling", source: source.source_key }} label="Crawling"
+                  checked={source.collection_enabled && !source.operator_paused_at && !source.paused_reason}
+                  disabled={!source.collection_enabled || Boolean(source.paused_reason)}
+                  description="Fetch new pages for this source. Off pauses it; work in progress finishes."
+                  note={!source.collection_enabled ? "Collection is off for this source (set in the database)." : source.paused_reason ? "Blocked by the source; use Retry blocked pages below." : undefined} />
+                <CrawlSwitch kind={{ type: "publication", source: source.source_key }} label="Publication"
+                  checked={source.publication_enabled}
+                  disabled={!source.publication_enabled && Boolean(source.withdrawn_at)}
+                  description="Put validated shows, venues and run dates from this source into the catalogue."
+                  note={source.withdrawn_at && !source.publication_enabled ? "Evidence withdrawn; reinstate it first." : undefined} />
+              </div>
+            </div>
+            {scan?.is_current && (
+              <div className="flex flex-col gap-2">
+                <h3 className="text-footnote font-semibold uppercase text-label-secondary">Actions</h3>
+                <p className="text-footnote text-label-secondary">Each runs once. None of them changes a switch.</p>
+                <div className="flex flex-wrap gap-2">
                   <CrawlSourceControl source={source.source_key} operation="retry_failed" scan={scan.id} />
                   <CrawlSourceControl source={source.source_key} operation="retry_blocked" scan={scan.id} />
                   <CrawlSourceControl source={source.source_key} operation="rediscover" scan={scan.id}
                     disabled={!source.collection_enabled || Boolean(source.operator_paused_at || source.paused_reason)} />
-                </>
-              )}
-            </div>
+                </div>
+              </div>
+            )}
           </section>
 
           <section className="flex flex-col gap-3" aria-labelledby="crawl-scan-heading">

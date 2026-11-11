@@ -1554,3 +1554,7 @@ that says what members will see. Publish goes through `admin_crawl_source_action
 admin-only, recorded in `crawl_admin_actions`; a withdrawn source must be reinstated first). Run chips use the
 existing `admin_set_catalogue_flag`; admins read the flags through `admin_catalogue_flags`. Autofill is shown but
 stays database-only until its accuracy gate passes. Migration `20261111130000_backstage_publish_chips.sql`.
+
+### Backstage crawler controls: switches versus actions (2026-11-11)
+
+Owner: some controls were actions (retry) and some toggles, and they looked alike. On Backstage > Catalogue crawler, settings that stay on or off are now switches showing On/Off (Crawling and Publication per source, Run chips for everyone; Autofill is a locked switch). One-off jobs (Retry failed pages, Retry blocked pages, Rediscover directory) stay buttons under "Actions". "Crawling" is the old pause/resume of new claims. Collection is still changed in the database. Backstage index now links the page directly.
