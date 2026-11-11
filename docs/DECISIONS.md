@@ -1553,4 +1553,4 @@ button per source and a **Logging suggestions** panel with **Turn run chips on/o
 that says what members will see. Publish goes through `admin_crawl_source_action` (`publish_on` / `publish_off`,
 admin-only, recorded in `crawl_admin_actions`; a withdrawn source must be reinstated first). Run chips use the
 existing `admin_set_catalogue_flag`; admins read the flags through `admin_catalogue_flags`. Autofill is shown but
-stays database-only until its accuracy gate passes. Migration `20261110130000_backstage_publish_chips.sql`.
+stays database-only until its accuracy gate passes. Migration `20261111130000_backstage_publish_chips.sql`.

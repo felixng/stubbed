@@ -1,6 +1,6 @@
 begin;
 select no_plan();
--- 20261110130000: Publish and Run chips as Backstage buttons.
+-- 20261111130000: Publish and Run chips as Backstage buttons.
 
 insert into auth.users (id, email) values ('d4730000-0000-0000-0000-000000000001', 'switches@example.com');
 update public.crawl_sources set publication_enabled = false, withdrawn_at = null where source_key in ('london_theatre', 'playbill');
