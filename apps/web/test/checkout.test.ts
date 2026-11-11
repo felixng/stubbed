@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { FREE, type MembershipInfo, type ProConfig } from "../src/lib/membership";
+import { checkoutEmail } from "../src/lib/revenuecat-web";
 import {
   PurchaseFlow, checkoutAvailable, checkoutPreview, confirmMembership, manageTargets, membershipPreview, sourceLabel, statusLine, termsFor,
   type PurchaseState, type PurchasesClient,
@@ -111,4 +112,10 @@ test("preview overrides are ignored in production", () => {
   assert.equal(checkoutPreview("nonsense", "development"), null);
   assert.equal(membershipPreview("web", "development"), "web");
   assert.equal(membershipPreview("web", "production"), null);
+});
+
+test("checkout gets the account's email, so it doesn't ask again; anything odd is left out", () => {
+  assert.equal(checkoutEmail("nfelix@example.com"), "nfelix@example.com");
+  assert.equal(checkoutEmail("  someone@example.co.uk "), "someone@example.co.uk");
+  for (const bad of [null, undefined, "", "   ", "not-an-email", "a@b", "a b@example.com"]) assert.equal(checkoutEmail(bad), undefined);
 });
