@@ -47,10 +47,16 @@ final class PaywallPreviewUITests: XCTestCase {
     // A locked period opens the paywall and stays on this year.
     for _ in 0..<6 { app.collectionViews.firstMatch.swipeDown() }
     app.buttons["insights-year"].tap()
+    // The period sheet lists this year, then Earlier years and All time marked as Pro.
+    XCTAssertTrue(app.buttons["period-earlier"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["period-all"].exists)
+    snapshot("paywall-period-sheet")
     app.buttons["All time"].tap()
     XCTAssertTrue(app.staticTexts["paywall-unavailable"].waitForExistence(timeout: 5))
     snapshot("paywall-period-locked")
     app.buttons["Close"].tap()
+    // The paywall opened over the period sheet, so closing it leaves the sheet; close that too.
+    app.buttons["period-close"].tap()
 
     // A locked card: the share sheet opens on the Show mix card.
     reveal(app.buttons["insights-share-mix"], in: app)
@@ -76,8 +82,9 @@ final class PaywallPreviewUITests: XCTestCase {
   @MainActor func testPaywallOfferTrialEligible() throws {
     let app = try openPaywall(offer: "eligible")
     XCTAssertTrue(app.buttons["Start free trial"].waitForExistence(timeout: 5))
-    XCTAssertTrue(app.buttons["paywall-restore"].exists)
     snapshot("paywall-offer-trial")
+    reveal(app.buttons["paywall-restore"], in: app)
+    XCTAssertTrue(app.buttons["paywall-restore"].exists)
     // App Review's subscription requirements: renewal terms and the two legal links.
     reveal(app.buttons["paywall-privacy"], in: app)
     XCTAssertTrue(app.buttons["paywall-terms"].exists)

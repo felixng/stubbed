@@ -29,7 +29,7 @@ struct ProfileInsightsSection: View {
       }
       // Free members get the upgrade callout; members see their plan. Sales off: no callout.
       if membership.isFree, membership.salesEnabled {
-        ProBanner(headline: "Get more from your stats", source: .profile)
+        ProBanner(source: .profile)
       } else if membership.isPro {
         HStack {
           Label("\(membership.name) member", systemImage: "checkmark.seal.fill")

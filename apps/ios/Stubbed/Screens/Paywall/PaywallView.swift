@@ -1,3 +1,4 @@
+import Charts
 import StoreKit
 import SwiftUI
 
@@ -10,6 +11,52 @@ struct PaywallView: View {
   @Environment(\.dismiss) private var dismiss
   @State private var selected: String?
 
+  /// An illustration, not the member's data: labelled "Example" and hidden from VoiceOver.
+  private static let sample: [(label: String, share: Int, color: Color)] = [
+    ("Musicals", 58, Palette.tint), ("Plays", 27, Color.primary),
+    ("Opera", 10, Color.gray), ("Other", 5, Color(.systemFill)),
+  ]
+
+  /// What Show mix looks like: one stacked bar and its legend, drawn with Swift Charts.
+  private var sampleMix: some View {
+    VStack(alignment: .leading, spacing: Space.m) {
+      HStack {
+        Text("Show mix").font(.headline)
+        Spacer()
+        Text("Example").font(.footnote).foregroundStyle(.secondary)
+      }
+      Chart(Self.sample, id: \.label) { item in
+        BarMark(x: .value("Share", item.share), y: .value("Mix", ""))
+          .foregroundStyle(item.color)
+      }
+      .chartXScale(domain: 0...100)
+      .chartXAxis(.hidden)
+      .chartYAxis(.hidden)
+      .chartLegend(.hidden)
+      .frame(height: 14)
+      .clipShape(Capsule())
+      Grid(alignment: .leading, horizontalSpacing: Space.xl, verticalSpacing: Space.xs) {
+        GridRow {
+          legend(Self.sample[0]); legend(Self.sample[1])
+        }
+        GridRow {
+          legend(Self.sample[2]); legend(Self.sample[3])
+        }
+      }
+    }
+    .padding(.vertical, Space.xs)
+    .accessibilityHidden(true)
+  }
+
+  private func legend(_ item: (label: String, share: Int, color: Color)) -> some View {
+    HStack(spacing: Space.s) {
+      Circle().fill(item.color).frame(width: 10, height: 10)
+      Text(item.label).font(.footnote).foregroundStyle(.secondary)
+      Spacer(minLength: Space.xs)
+      Text("\(item.share)%").font(.footnote).monospacedDigit()
+    }
+  }
+
   private var flow: PurchaseFlow { paywall.flow }
   private var offer: PaywallOffer { paywall.offer }
   private var chosen: String? { selected ?? offer.plans.last?.id }
@@ -19,12 +66,17 @@ struct PaywallView: View {
       List {
         Section {
           VStack(alignment: .leading, spacing: Space.s) {
-            Text("Get more from your stats").font(.title2.bold())
-            Text("\(membership.name) adds the parts of Insights that look back.")
-              .font(.subheadline).foregroundStyle(.secondary)
+            Text("Look back at every year").font(.title.bold())
+            Text(
+              "\(membership.name) adds Show mix, earlier years and All time stats. Logging, your diary, trips and sharing stay free."
+            )
+            .font(.body).foregroundStyle(.secondary)
           }
-          .padding(.vertical, Space.s)
+          .listRowBackground(Color.clear)
+          .listRowInsets(EdgeInsets(top: Space.s, leading: 0, bottom: Space.s, trailing: 0))
         }
+        if !membership.isPro { status }
+        Section { sampleMix }
         Section("Included") {
           benefit("Show mix", "How your shows split across musicals, plays, opera and more.", "chart.pie")
           benefit("Earlier years", "Insights for any year you’ve logged, not just this one.", "calendar")
@@ -39,13 +91,20 @@ struct PaywallView: View {
                 Button {
                   selected = plan.id
                 } label: {
-                  HStack {
-                    Text(plan.title)
-                    Spacer()
-                    Text(plan.price).foregroundStyle(.secondary)
+                  HStack(spacing: Space.m) {
                     Image(systemName: chosen == plan.id ? "checkmark.circle.fill" : "circle")
+                      .font(.title3)
                       .foregroundStyle(chosen == plan.id ? Palette.tint : Color.secondary)
+                    VStack(alignment: .leading, spacing: Space.xs) {
+                      Text(plan.title).font(.headline)
+                      if offer.trialEligible {
+                        Text("Free trial").font(.footnote).foregroundStyle(.secondary)
+                      }
+                    }
+                    Spacer(minLength: Space.s)
+                    Text(plan.price).font(.headline).monospacedDigit()
                   }
+                  .padding(.vertical, Space.xs)
                   .contentShape(.rect)
                 }
                 .foregroundStyle(.primary)
@@ -59,7 +118,6 @@ struct PaywallView: View {
           } footer: {
             if let terms = offer.terms { Text(terms) }
           }
-          status
           Section {
             Button("Restore purchases") { Task { await flow.restore(source: source) } }
               .disabled(!flow.isAvailable || flow.isBusy)
@@ -159,12 +217,12 @@ struct PaywallView: View {
   }
 }
 
-/// The upgrade banner (the Personal Best pattern from #219): free content stays above it, and
-/// it sits where the locked section would be. A rounded card with a headline naming the
-/// benefit, one line on what the plan adds, one primary button and the provider's terms.
-/// With sales off it is only a plain "Part of {Pro}" note, with no button.
+/// The one upgrade banner (the Personal Best pattern from #219, restyled in #497): the same card
+/// and words wherever a stat is locked, shown once per screen after the free content. A dark card
+/// lit by soft glows in the icon's magenta, coral and amber, with a native prominent capsule
+/// button. It never draws the real chart and never blocks the screen. With sales off the locked
+/// sections show only a plain "Part of {Pro}" note.
 struct ProBanner: View {
-  let headline: String
   let source: PaywallRouter.Source
   var resume: (@MainActor () -> Void)?
   @Environment(Membership.self) private var membership
@@ -172,24 +230,33 @@ struct ProBanner: View {
 
   var body: some View {
     if membership.salesEnabled {
-      VStack(alignment: .leading, spacing: Space.m) {
-        Label(membership.name, systemImage: "lock.fill")
-          .font(.footnote.weight(.semibold)).foregroundStyle(Palette.tintText)
-        Text(headline).font(.title3.bold())
-        Text("\(membership.name) adds Show mix, earlier years and All time stats.")
-          .font(.subheadline).foregroundStyle(.secondary)
-        Button(paywall.offer.trialEligible ? "Start free trial" : "Upgrade") {
+      VStack(alignment: .leading, spacing: Space.l) {
+        VStack(alignment: .leading, spacing: Space.xs) {
+          Text("Unlock all your stats").font(.title2.bold())
+          Text("Unlock these stats with \(membership.name).")
+            .font(.body).foregroundStyle(.white.opacity(0.85))
+        }
+        Button {
           paywall.present(source: source, resume: resume)
+        } label: {
+          Text(paywall.offer.trialEligible ? "Start free trial" : "Upgrade")
+            .frame(maxWidth: .infinity)
         }
         .buttonStyle(.borderedProminent)
+        .buttonBorderShape(.capsule)
+        .controlSize(.large)
+        .tint(.white)
+        .foregroundStyle(.black)
         .accessibilityIdentifier("pro-banner-upgrade")
         if let terms = paywall.offer.terms {
-          Text(terms).font(.caption).foregroundStyle(.secondary)
+          Text(terms).font(.footnote).foregroundStyle(.white.opacity(0.8))
+            .frame(maxWidth: .infinity)
         }
       }
-      .frame(maxWidth: .infinity, alignment: .leading)
-      .padding(Space.l)
-      .background(Palette.tintFill, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+      .foregroundStyle(.white)
+      .padding(Space.xl)
+      .background { ProBannerGlow() }
+      .clipShape(Grouped.shape)
       .listRowInsets(EdgeInsets(top: Space.s, leading: Space.l, bottom: Space.s, trailing: Space.l))
       .listRowBackground(Color.clear)
       .accessibilityElement(children: .contain)
@@ -198,6 +265,26 @@ struct ProBanner: View {
     } else {
       ProNote()
     }
+  }
+}
+
+/// Velvet Ink lit by three soft glows from the app icon's sweep. Dark in both appearances, so the
+/// white text keeps its contrast (the glows are dimmed to stay above 4.5:1 under it).
+private struct ProBannerGlow: View {
+  var body: some View {
+    ZStack {
+      Color(red: 28 / 255, green: 28 / 255, blue: 30 / 255)
+      RadialGradient(
+        colors: [Color(red: 232 / 255, green: 36 / 255, blue: 127 / 255).opacity(0.55), .clear],
+        center: .topLeading, startRadius: 0, endRadius: 260)
+      RadialGradient(
+        colors: [Color(red: 255 / 255, green: 160 / 255, blue: 64 / 255).opacity(0.42), .clear],
+        center: .bottomTrailing, startRadius: 0, endRadius: 240)
+      RadialGradient(
+        colors: [Color(red: 255 / 255, green: 90 / 255, blue: 90 / 255).opacity(0.3), .clear],
+        center: .topTrailing, startRadius: 0, endRadius: 200)
+    }
+    .accessibilityHidden(true)
   }
 }
 
