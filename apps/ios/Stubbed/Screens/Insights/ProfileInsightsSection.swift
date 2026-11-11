@@ -10,6 +10,16 @@ struct ProfileInsightsSection: View {
   @State private var failed = false
 
   var body: some View {
+    Group {
+      yearSection
+      // The upgrade banner is its own container under the year, as wide as the others.
+      if membership.isFree, membership.salesEnabled {
+        Section { ProBanner(source: .profile) }
+      }
+    }
+  }
+
+  private var yearSection: some View {
     Section {
       if let current {
         VStack(alignment: .leading, spacing: Space.l) {
@@ -27,10 +37,8 @@ struct ProfileInsightsSection: View {
       } else {
         PlaceholderRows(count: 1)
       }
-      // Free members get the upgrade callout; members see their plan. Sales off: no callout.
-      if membership.isFree, membership.salesEnabled {
-        ProBanner(source: .profile)
-      } else if membership.isPro {
+      // Members see their plan; Free members get the banner in its own section below.
+      if membership.isPro {
         HStack {
           Label("\(membership.name) member", systemImage: "checkmark.seal.fill")
             .foregroundStyle(Palette.tintText)
