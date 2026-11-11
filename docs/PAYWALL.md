@@ -120,6 +120,7 @@ membership_grants   user_id, reason, starts_at, ends_at, granted_by   -- deliber
 | `paywall_sales_enabled` | `false` until launch | Shows upgrade prompts and the paywall. Off: no prompts, existing subscribers keep Pro. |
 | `paywall_gates_enabled` | `false` until launch | Turns on section 2's locks. Off: everything free. |
 | `billing_environment` | `sandbox` / `production` | Which subscription rows count |
+| `paywall_preview_admins` | `true` until launch | Admins (`app_metadata.role = "admin"`) get both switches as if on, so they can test the real locks, prompts and sandbox checkout in TestFlight and production. `my_membership()` reports it as `paywall_preview`. Turn off once Pro is live. |
 
 The two flags are separate so sales and locks can be switched independently and rolled back without touching subscribers. Prices, periods and trials are **not** stored here: they come from RevenueCat offerings at runtime, so they change in the dashboards without a release.
 
