@@ -7,9 +7,17 @@ export const webBillingKey = () => process.env.NEXT_PUBLIC_REVENUECAT_WEB_BILLIN
 
 const NONE: LoadedOffer = { offer: { available: false, trialEligible: false, terms: null }, plans: [] };
 
+// The account's email, passed to checkout so RevenueCat doesn't ask for it again. Anything that
+// isn't a plausible address is left out, and checkout asks as before.
+export function checkoutEmail(email: string | null | undefined): string | undefined {
+  const value = email?.trim();
+  return value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? value : undefined;
+}
+
 // `userId` is the signed-in user's id from the server-rendered session: it becomes RevenueCat's
 // App User ID. A tampered page could only buy Pro for a different account; it can't grant Pro.
-export function createRevenueCatClient(apiKey: string, userId: string): PurchasesClient {
+// `email` (also from the session) fills in checkout's email field.
+export function createRevenueCatClient(apiKey: string, userId: string, email?: string | null): PurchasesClient {
   const sdk = async () => {
     const { Purchases } = await import("@revenuecat/purchases-js");
     const purchases = Purchases.isConfigured() ? Purchases.getSharedInstance() : Purchases.configure({ apiKey, appUserId: userId });
@@ -50,7 +58,7 @@ export function createRevenueCatClient(apiKey: string, userId: string): Purchase
       const rcPackage = byId.get(planId);
       if (!rcPackage) throw new Error("That plan isn’t available.");
       try {
-        await purchases.purchase({ rcPackage });
+        await purchases.purchase({ rcPackage, customerEmail: checkoutEmail(email) });
         return "purchased";
       } catch (error) {
         const { ErrorCode, PurchasesError } = await import("@revenuecat/purchases-js");

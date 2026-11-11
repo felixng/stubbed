@@ -11,16 +11,18 @@ export async function requireUserId(): Promise<string | null> {
   return (await currentUser())?.id ?? null;
 }
 
-// The signed-in user and whether they're an admin (see lib/admin), or null.
+// The signed-in user, their email (from the verified token, when their account has one) and
+// whether they're an admin (see lib/admin), or null.
 // The web app signs in with its session cookie; the iOS app sends its access
 // token as `Authorization: Bearer`. A request with that header is judged on
 // the token alone, never the cookie. getClaims verifies the token's signature
 // either way, so a forged or expired token gets null.
-export async function currentUser(): Promise<{ id: string; admin: boolean } | null> {
+export async function currentUser(): Promise<{ id: string; email: string | null; admin: boolean } | null> {
   const token = bearerToken((await headers()).get("authorization"));
   const { data } = token
     ? await createPublicClient().auth.getClaims(token)
     : await (await createClient()).auth.getClaims();
   const sub = data?.claims?.sub;
-  return typeof sub === "string" ? { id: sub, admin: isAdmin(data?.claims) } : null;
+  const email = data?.claims?.email;
+  return typeof sub === "string" ? { id: sub, email: typeof email === "string" && email ? email : null, admin: isAdmin(data?.claims) } : null;
 }

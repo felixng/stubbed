@@ -26,7 +26,7 @@ async function Content({ searchParams }: Pick<PageProps<"/app/pro">, "searchPara
   const params = await searchParams;
   const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
   const preview = previewFree(params.paywallPreview);
-  // The signed-in user's id comes from the server-rendered session, never the URL or a form.
+  // The signed-in user's id and email come from the server-rendered session, never the URL or a form.
   const user = await currentUser();
   return (
     <Paywall
@@ -34,6 +34,7 @@ async function Content({ searchParams }: Pick<PageProps<"/app/pro">, "searchPara
       next={safePaywallNext(one(params.next))}
       preview={preview}
       userId={user?.id ?? ""}
+      email={user?.email ?? null}
       checkout={checkoutPreview(params.checkoutPreview)}
     />
   );

@@ -35,8 +35,8 @@ function mockClient(trial: boolean): PurchasesClient {
 // The one paywall page. Offer copy comes from RevenueCat; when membership says Pro it goes on to
 // `next`. A purchase is never trusted from the client: only my_membership(), after the server has
 // refreshed from RevenueCat, moves the person on, and a success in the URL does nothing.
-export function Paywall({ source, next, preview = false, userId, checkout = null }: {
-  source: PaywallSource; next: string; preview?: boolean; userId: string; checkout?: CheckoutPreview | null;
+export function Paywall({ source, next, preview = false, userId, email = null, checkout = null }: {
+  source: PaywallSource; next: string; preview?: boolean; userId: string; email?: string | null; checkout?: CheckoutPreview | null;
 }) {
   const router = useRouter();
   const { membership, config, ready, failed, leave } = useMembership(preview);
@@ -48,8 +48,8 @@ export function Paywall({ source, next, preview = false, userId, checkout = null
   const client = useMemo<PurchasesClient | null>(() => {
     if (checkout) return mockClient(checkout !== "standard");
     const key = webBillingKey();
-    return key && userId ? createRevenueCatClient(key, userId) : null;
-  }, [checkout, userId]);
+    return key && userId ? createRevenueCatClient(key, userId, email) : null;
+  }, [checkout, userId, email]);
 
   useEffect(() => {
     let cancelled = false;
