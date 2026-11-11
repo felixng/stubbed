@@ -1563,3 +1563,7 @@ Owner: some controls were actions (retry) and some toggles, and they looked alik
 
 Owner: "Succeeded" next to "Reachable event work incomplete" didn't say whether we got the data. Each page row on Backstage > Catalogue crawler now has one status (Complete, Waiting on N show pages, N show pages stuck, No location found, No dates found, Failed) and a line of what we got: venue name, address and how it was located, show pages read out of listed; for show pages the opening and closing dates (a scheduled end is labelled as not a confirmed close) and type. Anything missing is named. URL, attempts, HTTP requests, parser and timestamps moved under "Details". `admin_crawl_task_results(uuid[])` (migration `20261111140000`) reads the latest extraction per page; until it is applied rows fall back to a plain "Succeeded".
 
+### Venue rows list the shows we got (2026-11-11)
+
+Owner: a venue row said Complete but not what we got from it. A venue row on Backstage > Catalogue crawler now lists the shows found on that page, each with its title, whether its page has been read, and the dates (opening, closing, or "scheduled until" when only a booking horizon exists). Migration `20261111150000_crawl_venue_shows.sql` extends `admin_crawl_task_results` with `shows` (up to 50 per venue; the page shows six and folds the rest).
+

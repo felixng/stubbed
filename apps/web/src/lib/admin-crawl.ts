@@ -185,10 +185,11 @@ export type CrawlTaskResult = {
   venues_listed?: number;
   name?: string | null; street?: string | null; city?: string | null; postcode?: string | null;
   located?: boolean; located_by?: string | null;
-  shows_total?: number; shows_read?: number; shows_stuck?: number;
+  shows_total?: number; shows_read?: number; shows_stuck?: number; shows?: CrawlShowResult[];
   title?: string | null; show_type?: string | null; event_kind?: string | null; venue_name?: string | null;
   dates?: { date: string; kind: string }[];
 };
+export type CrawlShowResult = { title: string; status: CrawlStatus; opens: string | null; closes: string | null; ends: string | null };
 export type TaskTone = "good" | "waiting" | "bad" | "neutral";
 export type TaskSummary = { title: string; outcome: { label: string; tone: TaskTone }; got: string[]; missing: string[] };
 
@@ -246,4 +247,19 @@ export function summariseCrawlTask(row: Pick<CrawlPage, "stage" | "status" | "ca
   if (result.event_kind && result.event_kind !== "show") got.push(`Not a show (${result.event_kind})`);
   if (!opens && !closes && !end) return { title, outcome: { label: "No dates found", tone: "bad" }, got, missing: ["No dates", ...missing] };
   return { title, outcome: { label: "Complete", tone: "good" }, got, missing };
+}
+
+// One line per show listed on a venue page: what we have, or why we have nothing yet.
+export function summariseCrawlShow(show: CrawlShowResult): { title: string; mark: "✓" | "…" | "✕"; detail: string } {
+  const title = show.title.startsWith("http") ? slug(show.title) : show.title;
+  if (show.status === "succeeded") {
+    const parts: string[] = [];
+    if (show.opens) parts.push(`opens ${when(show.opens)}`);
+    if (show.closes) parts.push(`closes ${when(show.closes)}`);
+    else if (show.ends) parts.push(`scheduled until ${when(show.ends)}`);
+    return { title, mark: "✓", detail: parts.length ? parts.join(", ") : "no dates found" };
+  }
+  if (show.status === "failed" || show.status === "blocked") return { title, mark: "✕", detail: show.status === "blocked" ? "blocked" : "failed" };
+  if (show.status === "retry_wait") return { title, mark: "✕", detail: "retrying" };
+  return { title, mark: "…", detail: "not read yet" };
 }

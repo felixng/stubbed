@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { summariseCrawlTask, crawlSourceFilters, crawlSourceHref, crawlStageProgress, rerunCommand, scoreLine, settingsLine, shareRight, sumScores, UUID } from "@/lib/admin-crawl";
+import { summariseCrawlShow, summariseCrawlTask, crawlSourceFilters, crawlSourceHref, crawlStageProgress, rerunCommand, scoreLine, settingsLine, shareRight, sumScores, UUID } from "@/lib/admin-crawl";
 
 const score = { right: 3, wrong: 1, unsure: 1, unreviewed: 2, findings: 7, missed: 2 };
 
@@ -65,4 +65,13 @@ test("an event page separates a confirmed close from a booking horizon", () => {
   assert.deepEqual(closed.missing, ["Show type not on the page"]);
   assert.equal(summariseCrawlTask(row, { stage: "event", title: "X", dates: [] }).outcome.label, "No dates found");
   assert.equal(summariseCrawlTask({ ...row, status: "failed" }).outcome.tone, "bad");
+});
+
+test("a listed show says what we have or why we have nothing yet", () => {
+  const read = summariseCrawlShow({ title: "Elf The Musical", status: "succeeded", opens: "2025-11-01", closes: "2026-01-04", ends: null });
+  assert.deepEqual(read, { title: "Elf The Musical", mark: "✓", detail: "opens 1 Nov 2025, closes 4 Jan 2026" });
+  assert.equal(summariseCrawlShow({ title: "X", status: "succeeded", opens: "2021-11-12", closes: null, ends: "2027-09-05" }).detail, "opens 12 Nov 2021, scheduled until 5 Sept 2027");
+  assert.equal(summariseCrawlShow({ title: "https://playbill.com/production/tina-1", status: "pending", opens: null, closes: null, ends: null }).title, "tina-1");
+  assert.equal(summariseCrawlShow({ title: "X", status: "pending", opens: null, closes: null, ends: null }).detail, "not read yet");
+  assert.equal(summariseCrawlShow({ title: "X", status: "failed", opens: null, closes: null, ends: null }).mark, "✕");
 });

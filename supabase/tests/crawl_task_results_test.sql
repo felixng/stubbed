@@ -31,6 +31,10 @@ select is((public.admin_crawl_task_results(array[:'venue_task']::uuid[])->(:'ven
 select is((public.admin_crawl_task_results(array[:'venue_task']::uuid[])->(:'venue_task'))->>'shows_stuck','2','venue page counts show pages that failed');
 select is(public.admin_crawl_task_results(array[:'event_task']::uuid[])->(:'event_task')#>>'{dates,1,kind}','end','event page result keeps date kinds');
 select is(public.admin_crawl_task_results(array[:'event_task']::uuid[])->(:'event_task')#>>'{dates,0,evidence}',null,'event page result leaves evidence out');
+select is(jsonb_array_length(public.admin_crawl_task_results(array[:'venue_task']::uuid[])->(:'venue_task')->'shows'),3,'venue page lists its show pages');
+select is((select s->>'opens' from jsonb_array_elements(public.admin_crawl_task_results(array[:'venue_task']::uuid[])->(:'venue_task')->'shows') s where s->>'status' = 'succeeded'),'2026-01-02','a read show carries its opening date');
+select is((select s->>'ends' from jsonb_array_elements(public.admin_crawl_task_results(array[:'venue_task']::uuid[])->(:'venue_task')->'shows') s where s->>'status' = 'succeeded'),'2027-01-02','a read show carries its scheduled end apart from a closing date');
+select is((select count(*) from jsonb_array_elements(public.admin_crawl_task_results(array[:'venue_task']::uuid[])->(:'venue_task')->'shows') s where s->>'title' like 'https://%'),2::bigint,'unread shows fall back to their address');
 select is(public.admin_crawl_task_results('{}'::uuid[]),'{}'::jsonb,'no pages gives an empty result');
 select * from finish();
 rollback;
