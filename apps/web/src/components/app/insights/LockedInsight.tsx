@@ -6,7 +6,7 @@ import type { PaywallSource } from "@/lib/paywall";
 // "Part of {Pro}" note with nothing to tap. `feature` is the feature_access key that locked it.
 export function LockedInsight({ feature, name, title, sales = false, upgrade, preview = false, onLeave }: {
   feature: string; name: string; title: string; sales?: boolean;
-  upgrade?: { headline: string; source: PaywallSource; next: string };
+  upgrade?: { source: PaywallSource; next: string };
   preview?: boolean; onLeave?: () => void;
 }) {
   if (sales && upgrade) {

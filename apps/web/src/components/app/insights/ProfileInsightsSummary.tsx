@@ -48,7 +48,7 @@ export function ProfileInsightsSummary({ thisYear, preview = false }: { thisYear
         {config.name} member <span aria-hidden="true" className="text-label-secondary">›</span>
       </Link>
     ) : membership && config.salesEnabled ? (
-      <UpgradeBanner headline="Unlock more of your theatre story" source="profile" next={withPreview("/app/profile", preview)} name={config.name} preview={preview} onLeave={leave} />
+      <UpgradeBanner source="profile" next={withPreview("/app/profile", preview)} name={config.name} preview={preview} onLeave={leave} />
     ) : null}
     </>
   );

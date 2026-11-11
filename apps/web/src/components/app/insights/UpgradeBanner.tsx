@@ -3,15 +3,17 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { buttonClass } from "@/components/ui/Button";
-import { UNAVAILABLE_OFFER, benefitsLine, buttonLabel, paywallHref, unavailableOfferProvider, type Offer, type PaywallSource } from "@/lib/paywall";
+import { buttonLabel, paywallHref, UNAVAILABLE_OFFER, unavailableOfferProvider, type Offer, type PaywallSource } from "@/lib/paywall";
 
-// The upgrade banner (the Personal Best pattern from #219). Free content stays above it and it
-// sits where the locked section would be: a rounded card with a headline naming the benefit, one
-// line on what the plan adds, one primary action and the provider's terms. It links to the one
-// paywall page; nothing here blocks the screen, and it never draws the real chart.
-export function UpgradeBanner({ headline, source, next, name, preview = false, onLeave }: {
-  headline: string; source: PaywallSource; next: string; name: string; preview?: boolean; onLeave?: () => void;
+// The one upgrade banner (the Personal Best pattern from #219, restyled in #497). The same card
+// and the same words wherever a stat is locked, so it reads as one invitation, not several. Free
+// content stays above it; it never draws the real chart and never blocks the screen. A dark
+// Velvet Ink card lit by soft glows in the icon's magenta, coral and amber, white text, and a white
+// capsule that links to the one paywall page. The offer's terms sit under the button when the
+// provider has them. (Owner's call, 11 Nov 2026: the glow is a deliberate exception to "the sweep
+// is never decoration"; see docs/DECISIONS.md.)
+export function UpgradeBanner({ source, next, name, preview = false, onLeave }: {
+  source: PaywallSource; next: string; name: string; preview?: boolean; onLeave?: () => void;
 }) {
   const [offer, setOffer] = useState<Offer>(UNAVAILABLE_OFFER);
   useEffect(() => {
@@ -20,17 +22,19 @@ export function UpgradeBanner({ headline, source, next, name, preview = false, o
     return () => { cancelled = true; };
   }, []);
   return (
-    <section aria-label={`${name}: ${headline}`} data-pro-banner className="flex flex-col items-start gap-3 rounded-lg bg-tint-fill p-5">
-      <p className="flex items-center gap-1.5 text-footnote font-semibold text-tint-text">
-        <svg viewBox="0 0 24 24" width={14} height={14} aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-          <rect x="5" y="11" width="14" height="9" rx="2" /><path d="M8 11V8a4 4 0 0 1 8 0v3" />
-        </svg>
-        {name}
-      </p>
-      <h3 className="text-title-3 font-display text-label">{headline}</h3>
-      <p className="text-subheadline text-label-secondary">{benefitsLine(name)}</p>
-      <Link href={paywallHref(source, next, preview)} onClick={onLeave} className={buttonClass("primary", "md")}>{buttonLabel(offer)}</Link>
-      {offer.terms && <p className="text-footnote text-label-secondary">{offer.terms}</p>}
+    <section aria-label={`${name}: unlock all your stats`} data-pro-banner
+      className="relative isolate flex flex-col gap-4 overflow-hidden rounded-lg bg-[#1c1c1e] p-5 text-white">
+      <div aria-hidden="true" className="absolute inset-0 -z-10"
+        style={{ backgroundImage: "radial-gradient(90% 120% at 0% 0%, rgb(232 36 127 / 0.55), transparent 60%), radial-gradient(70% 100% at 100% 100%, rgb(255 160 64 / 0.42), transparent 62%), radial-gradient(60% 80% at 100% 0%, rgb(255 90 90 / 0.3), transparent 65%)" }} />
+      <div className="flex flex-col gap-1">
+        <h3 className="text-title-2 font-display">Unlock all your stats</h3>
+        <p className="text-body text-white/85">Unlock these stats with {name}.</p>
+      </div>
+      <Link href={paywallHref(source, next, preview)} onClick={onLeave}
+        className="inline-flex min-h-[50px] items-center justify-center rounded-pill bg-white px-6 text-headline font-semibold text-label transition-colors hover:bg-white/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+        {buttonLabel(offer)}
+      </Link>
+      {offer.terms && <p className="text-center text-footnote text-white/80">{offer.terms}</p>}
     </section>
   );
 }

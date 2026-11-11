@@ -264,3 +264,14 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .landing-fan-left, .landing-fan-right { animation: none; }
 }
+
+/* The Insights period sheet (PeriodControl): rises from the bottom on a phone, fades in on a wide
+   screen. Reduced motion shows it at once. */
+@media (prefers-reduced-motion: no-preference) {
+  .period-sheet[open] { animation: sheet-up 0.32s cubic-bezier(0.16, 1, 0.3, 1); }
+  .period-sheet[open]::backdrop { animation: card-in 0.2s ease-out; }
+  @media (min-width: 40rem) { .period-sheet[open] { animation-name: card-in; } }
+}
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+}
