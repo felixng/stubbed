@@ -37,16 +37,6 @@ struct ProfileInsightsSection: View {
       } else {
         PlaceholderRows(count: 1)
       }
-      // Members see their plan; Free members get the banner in its own section below.
-      if membership.isPro {
-        HStack {
-          Label("\(membership.name) member", systemImage: "checkmark.seal.fill")
-            .foregroundStyle(Palette.tintText)
-            .accessibilityIdentifier("profile-pro-member")
-          Spacer()
-          ManageMembershipButton().buttonStyle(.borderless)
-        }
-      }
       // Router buttons avoid duplicate pushes inside Profile's selection List.
       destination("Trips", systemImage: "suitcase", route: .trips, count: tripCount)
         .accessibilityIdentifier("profile-trips")

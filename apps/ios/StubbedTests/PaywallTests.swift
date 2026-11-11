@@ -81,6 +81,19 @@ struct PaywallTests {
     #expect(!config.gatesEnabled)
   }
 
+  @Test func settingsShowsWhenMembershipRenewsOrEnds() {
+    func info(trial: Bool, renews: Bool, ends: String? = "2026-11-12T21:25:01+00:00", tier: String = "pro") -> MembershipInfo {
+      MembershipInfo(tier: tier, source: "subscription", expires_at: ends, will_renew: renews, is_trial: trial, manage: ["app_store"])
+    }
+    #expect(MembershipStatus.line(info(trial: true, renews: true))?.hasPrefix("Free trial until ") == true)
+    #expect(MembershipStatus.line(info(trial: false, renews: true))?.hasPrefix("Renews ") == true)
+    #expect(MembershipStatus.line(info(trial: false, renews: false))?.hasPrefix("Ends ") == true)
+    #expect(MembershipStatus.line(info(trial: false, renews: true, ends: "2026-11-12T21:25:01.123+00:00")) != nil)
+    #expect(MembershipStatus.line(info(trial: false, renews: true, ends: nil)) == nil)
+    #expect(MembershipStatus.line(info(trial: false, renews: true, tier: "free")) == nil)
+    #expect(MembershipStatus.line(nil) == nil)
+  }
+
   @Test func adminPreviewTurnsBothSwitchesOnForThatCallerOnly() throws {
     let preview = try JSONDecoder().decode(
       MembershipInfo.self,

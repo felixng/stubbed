@@ -5,6 +5,8 @@ import SwiftUI
 struct SettingsView: View {
   @Environment(AppSession.self) private var session
   @Environment(AppRouter.self) private var router
+  @Environment(Membership.self) private var membership
+  @Environment(PaywallRouter.self) private var paywall
   @State private var profile: Loadable<Profile> = .loading
   @State private var deleting = false
 
@@ -20,6 +22,7 @@ struct SettingsView: View {
           }
         }
       }
+      membershipSection
       Section("Notifications") {
         NavigationLink(value: AppRouter.Route.notificationSettings) { Label("Notifications", systemImage: "bell") }
       }
@@ -73,10 +76,62 @@ struct SettingsView: View {
     }
   }
 
+  /// The paid tier: a member sees their plan and where to manage it; a Free user sees the way in,
+  /// only while upgrades are on sale. Nothing shows until membership has loaded.
+  @ViewBuilder private var membershipSection: some View {
+    if membership.isPro {
+      Section {
+        LabeledContent {
+          ManageMembershipButton()
+        } label: {
+          Label {
+            VStack(alignment: .leading, spacing: Space.xs) {
+              Text("\(membership.name) member")
+              if let status = MembershipStatus.line(membership.info) {
+                Text(status).font(.footnote).foregroundStyle(.secondary)
+              }
+            }
+          } icon: {
+            Image(systemName: "checkmark.seal.fill").foregroundStyle(Palette.tint)
+          }
+          .accessibilityIdentifier("settings-membership")
+        }
+      } header: {
+        Text("Membership")
+      }
+    } else if membership.isFree, membership.salesEnabled {
+      Section("Membership") {
+        Button {
+          paywall.present(source: .profile)
+        } label: {
+          Label("Upgrade to \(membership.name)", systemImage: "sparkles")
+        }
+        .accessibilityIdentifier("settings-upgrade")
+      }
+    }
+  }
+
   private func load() async {
     guard let id = session.userId else { return }
     do { profile = .loaded(try await Profiles.profile(id)) }
     catch { profile = .failed("Couldn’t load your account. Try again.") }
+  }
+}
+
+/// "Free trial until 12 Nov 2026", "Renews 12 Nov 2026" or "Ends 12 Nov 2026", from my_membership().
+enum MembershipStatus {
+  static func line(_ info: MembershipInfo?) -> String? {
+    guard let info, info.isPro, let raw = info.expires_at, let date = parse(raw) else { return nil }
+    let day = date.formatted(.dateTime.day().month(.abbreviated).year())
+    if info.is_trial { return "Free trial until \(day)" }
+    return info.will_renew ? "Renews \(day)" : "Ends \(day)"
+  }
+
+  private static func parse(_ raw: String) -> Date? {
+    let plain = ISO8601DateFormatter()
+    let fractional = ISO8601DateFormatter()
+    fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    return plain.date(from: raw) ?? fractional.date(from: raw)
   }
 }
 

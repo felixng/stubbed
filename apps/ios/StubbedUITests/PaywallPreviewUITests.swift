@@ -6,9 +6,9 @@ final class PaywallPreviewUITests: XCTestCase {
   override func setUp() { continueAfterFailure = false }
 
   @MainActor
-  private func launchFree(offer: String? = nil, largeText: Bool = false) throws -> XCUIApplication {
+  private func launchFree(offer: String? = nil, largeText: Bool = false, mode: String = "free") throws -> XCUIApplication {
     let app = XCUIApplication()
-    app.launchArguments += ["-paywallPreview", "free"]
+    app.launchArguments += ["-paywallPreview", mode]
     if let offer { app.launchArguments += ["-paywallOffer", offer] }
     if largeText { app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"] }
     app.launch()
@@ -20,6 +20,25 @@ final class PaywallPreviewUITests: XCTestCase {
       openTab("Profile", in: app)
     }
     return app
+  }
+
+  /// Membership lives in Settings: a member manages it there, a Free user upgrades from there.
+  @MainActor
+  func testSettingsShowsMembership() throws {
+    let pro = try launchFree(mode: "pro")
+    pro.navigationBars.buttons["Settings"].tap()
+    XCTAssertTrue(pro.descendants(matching: .any)["settings-membership"].waitForExistence(timeout: 5), pro.debugDescription)
+    XCTAssertTrue(pro.buttons["manage-membership"].exists)
+    XCTAssertFalse(pro.descendants(matching: .any)["profile-pro-member"].exists)
+    snapshot("settings-membership-pro")
+    pro.terminate()
+
+    let free = try launchFree()
+    free.navigationBars.buttons["Settings"].tap()
+    XCTAssertTrue(free.buttons["settings-upgrade"].waitForExistence(timeout: 5), free.debugDescription)
+    snapshot("settings-membership-free")
+    free.buttons["settings-upgrade"].tap()
+    XCTAssertTrue(free.otherElements["paywall"].waitForExistence(timeout: 5))
   }
 
   @MainActor
