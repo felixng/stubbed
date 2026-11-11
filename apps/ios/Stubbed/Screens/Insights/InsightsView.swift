@@ -15,6 +15,7 @@ struct InsightsView: View {
   @State private var years: [Int] = [InsightStats.currentYear]
   @State private var error: String?
   @State private var lockedPeriodNote = false
+  @State private var choosingPeriod = false
   @State private var shareRequest: ShareRequest?
   private struct ShareRequest: Identifiable {
     let id = UUID()
@@ -24,10 +25,22 @@ struct InsightsView: View {
   var body: some View {
     List {
       Section {
-        Picker("Year", selection: yearSelection) {
-          ForEach(years, id: \.self) { periodLabel(String($0), locked: !canUse(year: $0)).tag(Optional($0)) }
-          periodLabel("All time", locked: !canUse(year: nil)).tag(Int?.none)
+        Button {
+          choosingPeriod = true
+        } label: {
+          HStack(spacing: Space.xs) {
+            Text(verbatim: year.map(String.init) ?? "All time").font(.title2.bold())
+            Image(systemName: "chevron.down").font(.footnote.weight(.bold)).foregroundStyle(.secondary)
+          }
+          .frame(minHeight: Space.touch, alignment: .leading)
+          .contentShape(.rect)
         }
+        .foregroundStyle(.primary)
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets(top: 0, leading: Space.s, bottom: 0, trailing: Space.l))
+        .accessibilityLabel("Time period")
+        .accessibilityValue(year.map(String.init) ?? "All time")
+        .accessibilityHint("Choose a year or All time")
         .accessibilityIdentifier("insights-year")
         if lockedPeriodNote {
           ProNote()
@@ -35,8 +48,7 @@ struct InsightsView: View {
       }
       if let stats, stats.isLocked("total") {
         Section {
-          ProBanner(headline: year == nil ? "Every show, all time" : "Your \(String(year ?? 0)) in theatre",
-            source: year == nil ? .allTime : .pastYear)
+          ProBanner(source: year == nil ? .allTime : .pastYear)
         }
       } else if let stats {
         overview(stats)
@@ -46,6 +58,7 @@ struct InsightsView: View {
         geography(stats)
         categories(stats)
         history(stats)
+        upgrade(stats)
       } else if let error {
         ContentUnavailableView {
           Label("Couldn’t load Insights", systemImage: "wifi.exclamationmark")
@@ -71,6 +84,13 @@ struct InsightsView: View {
         }
       }
     }
+    .sheet(isPresented: $choosingPeriod) {
+      PeriodSheet(
+        year: year, years: years,
+        counts: Dictionary(uniqueKeysWithValues: (stats?.years ?? []).map { ($0.year, $0.count) }),
+        showsEarlierYears: !membership.canUse("insights.past_years"),
+        pick: choosePeriod)
+    }
     .sheet(item: $shareRequest) { request in
       if let stats {
         InsightShareSheet(stats: stats, year: year, activityYear: gridYear, initialDesign: request.design, handle: shareHandle)
@@ -94,29 +114,29 @@ struct InsightsView: View {
   /// Choosing a period the plan doesn't include opens the paywall and keeps the current one;
   /// after a confirmed upgrade the paywall's resume closure selects what was asked for.
   private var yearSelection: Binding<Int?> {
-    Binding(
-      get: { year },
-      set: { new in
-        if canUse(year: new) {
-          year = new
-          lockedPeriodNote = false
-        } else if membership.salesEnabled {
-          paywall.present(source: new == nil ? .allTime : .pastYear) { year = new }
-        } else {
-          lockedPeriodNote = true
-        }
-      })
+    Binding(get: { year }, set: { _ = choosePeriod($0) })
+  }
+
+  /// Picks a period, or opens the paywall for one the plan lacks. Returns true when the period
+  /// sheet should close (it was selected, or there's no paywall to open and a note explains).
+  private func choosePeriod(_ new: Int?) -> Bool {
+    if canUse(year: new) {
+      year = new
+      lockedPeriodNote = false
+      return true
+    } else if membership.salesEnabled {
+      paywall.present(source: new == nil ? .allTime : .pastYear) { year = new }
+      return false
+    } else {
+      lockedPeriodNote = true
+      return true
+    }
   }
 
   private func canUse(year: Int?) -> Bool {
     membership.canUse(
       year == nil ? "insights.all_time"
         : year == InsightStats.currentYear ? "insights.current_year" : "insights.past_years")
-  }
-
-  @ViewBuilder
-  private func periodLabel(_ title: String, locked: Bool) -> some View {
-    if locked { Label(title, systemImage: "lock.fill") } else { Text(title) }
   }
 
   private func overview(_ stats: InsightStats) -> some View {
@@ -279,9 +299,7 @@ struct InsightsView: View {
   private func categories(_ stats: InsightStats) -> some View {
     Section {
       if stats.isLocked("types") {
-        ProBanner(
-          headline: "See your Show mix", source: .showMix,
-          resume: { year = InsightStats.currentYear })
+        ProNote()
       } else if stats.total == 0 {
         ContentUnavailableView(
           "Your mix starts here", systemImage: "chart.pie",
@@ -310,10 +328,20 @@ struct InsightsView: View {
     }
   }
 
+  /// The one upgrade banner, after the last section, when anything on this screen is locked.
+  @ViewBuilder
+  private func upgrade(_ stats: InsightStats) -> some View {
+    if stats.isLocked("types") {
+      Section { ProBanner(source: .showMix, resume: { year = InsightStats.currentYear }) }
+    } else if stats.isLocked("years") {
+      Section { ProBanner(source: .pastYear) }
+    }
+  }
+
   private func history(_ stats: InsightStats) -> some View {
     Section {
       if stats.isLocked("years") {
-        ProBanner(headline: "Every year, side by side", source: .pastYear)
+        ProNote()
       } else if stats.years.isEmpty {
         Text("Your history appears after your first logged show.").foregroundStyle(.secondary)
       }
