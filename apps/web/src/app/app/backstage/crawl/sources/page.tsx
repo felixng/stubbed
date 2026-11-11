@@ -7,8 +7,8 @@ import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
 import {
   CRAWL_PAGE_SIZE, CRAWL_SOURCES_PATH, CRAWL_STAGES, CRAWL_STATUS_LABELS,
-  crawlSourceFilters, crawlSourceHref, crawlSourceName, crawlStageProgress, summariseCrawlTask,
-  type CrawlPage, type CrawlScan, type CrawlSourceProgress, type CrawlTaskResult, type TaskTone,
+  crawlSourceFilters, crawlSourceHref, crawlSourceName, crawlStageProgress, summariseCrawlShow, summariseCrawlTask,
+  type CrawlPage, type CrawlScan, type CrawlShowResult, type CrawlSourceProgress, type CrawlTaskResult, type TaskTone,
 } from "@/lib/admin-crawl";
 import { ownerContext } from "@/lib/supabase/data";
 
@@ -39,6 +39,18 @@ const tones: Record<TaskTone, string> = {
 };
 const marks: Record<TaskTone, string> = { good: "✓", waiting: "…", bad: "✕", neutral: "·" };
 
+const SHOWS_SHOWN = 6;
+
+function ShowLine({ show }: { show: CrawlShowResult }) {
+  const line = summariseCrawlShow(show);
+  return (
+    <li className="flex gap-2">
+      <span aria-hidden className={line.mark === "✕" ? "text-destructive" : "text-label-secondary"}>{line.mark}</span>
+      <span className="min-w-0 break-words"><span className="font-semibold">{line.title}</span> <span className="text-label-secondary">· {line.detail}</span></span>
+    </li>
+  );
+}
+
 function TaskRow({ row, result, known, source, scan }: { row: CrawlPage; result?: CrawlTaskResult; known: boolean; source: string; scan: CrawlScan }) {
   const summary = summariseCrawlTask(row, result, known);
   return (
@@ -50,6 +62,22 @@ function TaskRow({ row, result, known, source, scan }: { row: CrawlPage; result?
         </span>
       </div>
       {summary.got.length > 0 && <p className="text-subheadline">{summary.got.join(" · ")}</p>}
+      {result?.shows && result.shows.length > 0 && (
+        <div className="flex flex-col gap-1">
+          <p className="text-footnote font-semibold text-label-secondary">Shows listed</p>
+          <ul className="flex flex-col gap-0.5 text-subheadline">
+            {result.shows.slice(0, SHOWS_SHOWN).map((show, i) => <ShowLine key={i} show={show} />)}
+          </ul>
+          {result.shows.length > SHOWS_SHOWN && (
+            <details className="text-footnote text-label-secondary">
+              <summary className="min-h-6 cursor-pointer">Show {result.shows.length - SHOWS_SHOWN} more</summary>
+              <ul className="mt-1 flex flex-col gap-0.5 text-subheadline text-label">
+                {result.shows.slice(SHOWS_SHOWN).map((show, i) => <ShowLine key={i} show={show} />)}
+              </ul>
+            </details>
+          )}
+        </div>
+      )}
       {summary.missing.length > 0 && <p className="text-footnote text-destructive">Missing: {summary.missing.join(", ")}</p>}
       {row.status !== "succeeded" && row.last_error && <p className="break-words text-footnote">{row.last_error}</p>}
       {row.status === "retry_wait" && <p className="text-footnote text-label-secondary">Next try {timestamp(row.available_at)}</p>}
