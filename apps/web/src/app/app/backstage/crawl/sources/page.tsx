@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { AdminOnly } from "@/components/app/admin/AdminOnly";
+import { RunChipsControl } from "@/components/app/admin/CatalogueFlagControl";
 import { CrawlSourceControl } from "@/components/app/admin/CrawlSourceControl";
 import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
@@ -62,11 +63,17 @@ function TaskRow({ row, source, scan }: { row: CrawlPage; source: string; scan: 
 async function Sources({ searchParams }: Pick<PageProps<"/app/backstage/crawl/sources">, "searchParams">) {
   const filters = crawlSourceFilters(await searchParams);
   const { supabase } = await ownerContext();
-  const { data: payload, error } = await supabase.rpc("crawl_source_progress", {
-    for_source: filters.source, for_generation: filters.scan, for_stage: filters.stage,
-    for_status: filters.status, page_size: CRAWL_PAGE_SIZE, page_offset: (filters.page - 1) * CRAWL_PAGE_SIZE,
-  });
+  const [{ data: payload, error }, { data: flagRows }] = await Promise.all([
+    supabase.rpc("crawl_source_progress", {
+      for_source: filters.source, for_generation: filters.scan, for_stage: filters.stage,
+      for_status: filters.status, page_size: CRAWL_PAGE_SIZE, page_offset: (filters.page - 1) * CRAWL_PAGE_SIZE,
+    }),
+    supabase.rpc("admin_catalogue_flags"),
+  ]);
   if (error || !payload) return <p>Couldn’t load source progress.</p>;
+  const flags = new Map(((flagRows ?? []) as { flag: string; enabled: boolean }[]).map(row => [row.flag, row.enabled]));
+  const chips = flags.get("catalogue_run_chips_enabled");
+  const autofill = flags.get("catalogue_run_autofill_enabled");
   const data = payload as unknown as CrawlSourceProgress;
   const source = data.sources.find(item => item.source_key === filters.source);
   const scan = data.scan;
@@ -75,6 +82,16 @@ async function Sources({ searchParams }: Pick<PageProps<"/app/backstage/crawl/so
 
   return (
     <>
+      <section className={`flex flex-col gap-3 ${panel}`} aria-labelledby="logging-suggestions">
+        <h2 id="logging-suggestions" className="text-headline">Logging suggestions</h2>
+        <p className="text-subheadline text-label-secondary">For everyone, on web and iOS. Run chips suggest the show from a venue and date, using published run dates.</p>
+        <dl className="grid grid-cols-2 gap-3 text-subheadline sm:grid-cols-3">
+          <div><dt className="text-label-secondary">Run chips</dt><dd>{chips === undefined ? "Unknown" : chips ? "On" : "Off"}</dd></div>
+          <div><dt className="text-label-secondary">Autofill</dt><dd>{autofill ? "On" : "Off"}</dd></div>
+        </dl>
+        {chips !== undefined && <RunChipsControl enabled={chips} />}
+        <p className="text-footnote text-label-secondary">Autofill stays off until its accuracy check passes; it isn’t a button here.</p>
+      </section>
       <nav aria-label="Crawl sources" className="flex flex-wrap gap-3">
         {data.sources.map(item => (
           <Link key={item.source_key} href={crawlSourceHref({ ...filters, source: item.source_key, scan: undefined, status: undefined, page: 1 })}
@@ -99,6 +116,8 @@ async function Sources({ searchParams }: Pick<PageProps<"/app/backstage/crawl/so
             {source.paused_reason && <p className="break-words text-subheadline">{source.paused_reason}</p>}
             {source.source_key === "official" && <p className="text-footnote text-label-secondary">Legacy official-site activity is listed under Crawl sites and Crawl runs.</p>}
             <div className="flex flex-wrap gap-2">
+              <CrawlSourceControl source={source.source_key} operation={source.publication_enabled ? "publish_off" : "publish_on"}
+                disabled={!source.publication_enabled && Boolean(source.withdrawn_at)} />
               <CrawlSourceControl source={source.source_key} operation={source.operator_paused_at ? "resume" : "pause"} />
               {scan?.is_current && (
                 <>

@@ -1546,3 +1546,11 @@ Owner's call, so that Claude can build the paid tier end to end. #219 is the cod
 - **Period:** the `Picker` row is now a "2026 ⌄" trigger opening `PeriodSheet` (`.medium` and `.large` detents, drag indicator, Close in the navigation bar). Rows are this year, Earlier years (a Free member's `own_insights` lists no earlier years on purpose) and All time, with a check on the current one, show counts for Pro and a Pro pill on locked ones. The paywall presents on top of the sheet (`.paywallHost()` on the sheet), so closing the paywall leaves the person in the sheet; a confirmed upgrade's resume changes the year, which closes it. Accessibility identifiers `insights-year`, `period-<year|earlier|all>`, `period-close`.
 - **Paywall:** heading "Look back at every year" (same as web), a Swift Charts Show mix sample labelled Example and hidden from VoiceOver, plan rows with a leading radio, a "Free trial" caption only when eligible and the price in headline weight (App Review wants the billed amount prominent). Purchase status (Confirming, timeout, error) sits above the sample so it stays on screen, not below the plans. Restore, renewal terms and the Terms and Privacy links are unchanged.
 
+### Publish and Run chips as Backstage buttons (2026-11-10)
+
+Owner: "Let's make them buttons in backstage." Backstage > Crawl > Sources now has a **Turn publication on/off**
+button per source and a **Logging suggestions** panel with **Turn run chips on/off**, each behind a confirmation
+that says what members will see. Publish goes through `admin_crawl_source_action` (`publish_on` / `publish_off`,
+admin-only, recorded in `crawl_admin_actions`; a withdrawn source must be reinstated first). Run chips use the
+existing `admin_set_catalogue_flag`; admins read the flags through `admin_catalogue_flags`. Autofill is shown but
+stays database-only until its accuracy gate passes. Migration `20261111130000_backstage_publish_chips.sql`.
