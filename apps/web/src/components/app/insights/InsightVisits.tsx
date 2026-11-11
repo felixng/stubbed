@@ -62,7 +62,7 @@ export function InsightVisits({ year, filter, proName, sales = false, preview = 
         <Button size="sm" variant="ghost" onClick={onClose}>Close</Button>
       </div>
       {typeof state === "object" ? <LockedInsight feature={state.locked} name={proName} title="These visits" sales={sales} preview={preview} onLeave={onLeave}
-        upgrade={{ headline: state.locked === "insights.show_mix" ? "See your Show mix" : "See every visit", source: sourceForFeature(state.locked), next }} />
+        upgrade={{ source: sourceForFeature(state.locked), next }} />
         : state === "error" ? (
           <div role="alert" className="flex flex-col items-start gap-2">
             <p className="text-subheadline text-label-secondary">Couldn’t load these visits.</p>

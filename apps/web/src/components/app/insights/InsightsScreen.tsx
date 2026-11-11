@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useId, useState } from "react";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { PlaceholderRows } from "@/components/ui/PlaceholderRows";
@@ -15,6 +15,8 @@ import { ActivityGrid } from "./ActivityGrid";
 import { MonthBars, ShowMix } from "./Charts";
 import { InsightVisits } from "./InsightVisits";
 import { LockedInsight } from "./LockedInsight";
+import { UpgradeBanner } from "./UpgradeBanner";
+import { PeriodControl } from "./PeriodControl";
 
 const CARD = "flex flex-col gap-3 rounded-md border border-separator bg-surface p-4 shadow-sm";
 
@@ -37,7 +39,6 @@ export function InsightsScreen({ initialYear, thisYear, preview = false }: { ini
   const { stats, failed, proName, retry } = useOwnInsights(year, preview);
   const { config, leave } = useMembership(preview);
   const router = useRouter();
-  const periodId = useId();
   const choices = periodChoices(thisYear, stats);
   const here = withPreview(year == null ? "/app/stats?year=all" : `/app/stats?year=${year}`, preview);
 
@@ -59,13 +60,8 @@ export function InsightsScreen({ initialYear, thisYear, preview = false }: { ini
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2 text-subheadline font-medium">
-        <label htmlFor={periodId}>Period</label>
-        <select id={periodId} value={year ?? "all"} onChange={(e) => choose(e.target.value)}
-          className="min-h-11 rounded-md border border-separator bg-surface px-3 text-body text-label focus-visible:outline-2 focus-visible:outline-focus">
-          {choices.map((c) => <option key={c.value} value={c.value}>{c.locked ? `${c.label} (Part of ${proName})` : c.label}</option>)}
-        </select>
-      </div>
+      <PeriodControl choices={choices} value={year == null ? "all" : String(year)} proName={proName} onChoose={choose}
+        visits={Object.fromEntries((stats?.years ?? []).map((y) => [String(y.year), y.count]))} />
 
       {failed ? (
         <div role="alert" className="flex flex-col items-start gap-3">
@@ -77,7 +73,7 @@ export function InsightsScreen({ initialYear, thisYear, preview = false }: { ini
         <>
           <LockedInsight feature={stats.access?.period === "all" ? "insights.all_time" : "insights.past_years"} name={proName} title={`Your ${label} stats`}
             sales={sales} preview={preview} onLeave={leave}
-            upgrade={{ headline: year == null ? "Every show, all time" : `Your ${label} in theatre`, source: year == null ? "all_time" : "past_year", next: here }} />
+            upgrade={{ source: year == null ? "all_time" : "past_year", next: here }} />
           <Section title="Weekly streak"><p className="text-subheadline">Current streak: {count(stats.streaks.current_weekly, "week")}</p></Section>
         </>
       ) : (
@@ -124,8 +120,7 @@ export function InsightsScreen({ initialYear, thisYear, preview = false }: { ini
           )}
 
           {isLocked(stats, "years")
-            ? <LockedInsight feature="insights.past_years" name={proName} title="Year by year" sales={sales} preview={preview} onLeave={leave}
-                upgrade={{ headline: "Look back at every year", source: "past_year", next: here }} />
+            ? (sales ? null : <LockedInsight feature="insights.past_years" name={proName} title="Year by year" />)
             : (
               <Section title="Year by year">
                 {stats.years.length === 0 ? <Empty>Your history appears after your first logged show.</Empty> : (
@@ -157,14 +152,18 @@ export function InsightsScreen({ initialYear, thisYear, preview = false }: { ini
           </Section>
 
           {isLocked(stats, "types")
-            ? <LockedInsight feature="insights.show_mix" name={proName} title="Show mix" sales={sales} preview={preview} onLeave={leave}
-                upgrade={{ headline: "See your Show mix", source: "show_mix", next: here }} />
+            ? (sales ? null : <LockedInsight feature="insights.show_mix" name={proName} title="Show mix" />)
             : (
               <Section title="Show mix">
                 {stats.types.length === 0 ? <Empty>Log a show to see your favourite show types.</Empty>
                   : <ShowMix types={stats.types} total={stats.total} onPick={(type, name) => open({ type, title: name })} />}
               </Section>
             )}
+
+          {/* One banner for everything locked on this screen, after the free content. */}
+          {sales && (isLocked(stats, "years") || isLocked(stats, "types")) && (
+            <UpgradeBanner name={proName} preview={preview} onLeave={leave} next={here} source={isLocked(stats, "types") ? "show_mix" : "past_year"} />
+          )}
         </>
       )}
       <Link href={withPreview("/app/insights/share", preview)} className="self-start text-subheadline font-semibold text-tint-text">Share theatre stats</Link>

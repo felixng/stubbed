@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { PlaceholderRows } from "@/components/ui/PlaceholderRows";
+import { ProPreview } from "./ProPreview";
 import { track } from "@/lib/analytics";
 import { isPro, loadMembership } from "@/lib/membership";
 import { PAYWALL_BENEFITS, UNAVAILABLE_OFFER, buttonLabel, type PaywallSource } from "@/lib/paywall";
@@ -102,30 +103,44 @@ export function Paywall({ source, next, preview = false, userId, email = null, c
   const plan = loaded.plans.find((p) => p.id === planId) ?? null;
   const working = busy(state);
   return (
-    <section aria-labelledby="paywall-title" className="flex flex-col gap-5">
-      <Link href={next} onClick={leave} className="self-start text-subheadline text-tint-text focus-visible:outline-2 focus-visible:outline-focus">Not now</Link>
+    <section aria-labelledby="paywall-title" className="flex flex-col gap-6">
+      <Link href={next} onClick={leave} className="-mt-2 inline-flex min-h-11 items-center gap-1 self-start text-body text-tint-text focus-visible:outline-2 focus-visible:outline-focus">
+        <svg viewBox="0 0 24 24" width={18} height={18} aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round"><path d="m15 5-7 7 7 7" /></svg>
+        Not now
+      </Link>
       <div className="flex flex-col gap-2">
-        <h1 id="paywall-title" className="text-large-title font-bold tracking-tight">{config.name}</h1>
-        <p className="text-subheadline text-label-secondary">{config.name} adds Show mix, earlier years and All time stats. Logging, your diary, trips and sharing stay free.</p>
+        <h1 id="paywall-title" className="text-balance text-title font-bold tracking-tight">Look back at every year</h1>
+        <p className="text-pretty text-body text-label-secondary">{config.name} adds Show mix, earlier years and All time stats. Logging, your diary, trips and sharing stay free.</p>
       </div>
-      <ul className="flex flex-col gap-3 rounded-md border border-separator bg-surface p-4 shadow-sm">
+      <ProPreview thisYear={new Date().getFullYear()} />
+      <ul className="flex flex-col divide-y divide-separator rounded-md border border-separator bg-surface shadow-sm">
         {PAYWALL_BENEFITS.map((b) => (
-          <li key={b.title} className="flex flex-col">
-            <span className="text-headline text-label">{b.title}</span>
-            <span className="text-subheadline text-label-secondary">{b.text}</span>
+          <li key={b.title} className="flex items-start gap-3 px-4 py-3">
+            <svg viewBox="0 0 24 24" width={22} height={22} aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round" className="mt-px flex-none text-tint-text"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+            <span className="flex flex-col">
+              <span className="text-headline text-label">{b.title}</span>
+              <span className="text-subheadline text-label-secondary">{b.text}</span>
+            </span>
           </li>
         ))}
       </ul>
       {available ? (
-        <div className="flex flex-col items-start gap-3">
+        <div className="flex flex-col gap-3">
           {loaded.plans.length > 1 && (
             <fieldset disabled={working} className="flex w-full flex-col gap-2">
               <legend className="sr-only">Plan</legend>
               {loaded.plans.map((p) => (
-                <label key={p.id} className="flex min-h-12 cursor-pointer items-center gap-3 rounded-md border border-separator bg-surface px-4 py-2 has-[:checked]:border-tint has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-focus">
-                  <input type="radio" name="plan" value={p.id} checked={p.id === planId} onChange={() => setPlanId(p.id)} className="accent-[var(--color-tint)]" />
-                  <span className="text-headline text-label">{p.name}</span>
-                  <span className="ml-auto text-subheadline text-label-secondary">{p.price} per {p.period}</span>
+                <label key={p.id} className="flex min-h-16 cursor-pointer items-center gap-3 rounded-md border border-separator bg-surface px-4 py-3 transition-shadow has-[:checked]:border-tint has-[:checked]:ring-1 has-[:checked]:ring-tint has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-focus">
+                  <input type="radio" name="plan" value={p.id} checked={p.id === planId} onChange={() => setPlanId(p.id)} className="peer sr-only" />
+                  <span aria-hidden="true" className="grid size-6 flex-none place-items-center rounded-full border-2 border-outline after:size-2.5 after:rounded-full after:bg-on-tint after:opacity-0 peer-checked:border-tint peer-checked:bg-tint peer-checked:after:opacity-100" />
+                  <span className="flex flex-col">
+                    <span className="text-headline text-label">{p.name}</span>
+                    {p.trial && <span className="text-footnote text-label-secondary">Free trial</span>}
+                  </span>
+                  <span className="ml-auto flex flex-col items-end">
+                    <span className="text-headline text-label tabular-nums">{p.price}</span>
+                    <span className="text-footnote text-label-secondary">per {p.period}</span>
+                  </span>
                 </label>
               ))}
             </fieldset>
@@ -134,25 +149,23 @@ export function Paywall({ source, next, preview = false, userId, email = null, c
           {state === "timeout" ? (
             <>
               <p role="status" className="text-subheadline text-label-secondary">Your purchase is still confirming. It’ll unlock as soon as it’s through.</p>
-              <Button variant="secondary" onClick={() => { void flowFor()?.retry(); }}>Retry</Button>
+              <Button variant="secondary" className="w-full" onClick={() => { void flowFor()?.retry(); }}>Retry</Button>
             </>
           ) : (
-            <Button disabled={working || !plan} onClick={() => { if (plan) void flowFor()?.start(plan.id); }}>
+            <Button className="w-full" disabled={working || !plan} onClick={() => { if (plan) void flowFor()?.start(plan.id); }}>
               {state === "purchasing" ? "Opening checkout…" : state === "confirming" ? "Confirming…" : buttonLabel(loaded.offer)}
             </Button>
           )}
           {state === "error" && <p role="alert" className="text-footnote text-destructive">Something went wrong with the payment. You haven’t been charged. Try again.</p>}
-          {plan && !working && state !== "timeout" && <p className="text-footnote text-label-secondary">{termsFor(plan)}</p>}
+          {plan && !working && state !== "timeout" && <p className="text-center text-footnote text-label-secondary">{termsFor(plan)}</p>}
         </div>
       ) : (
-        <p role="status" className="flex items-center gap-2 text-subheadline text-label-secondary">
-          <span aria-hidden="true">⏳</span> Upgrades aren’t available yet
-        </p>
+        <p role="status" className="rounded-md bg-fill px-4 py-3 text-subheadline text-label-secondary">Upgrades aren’t available yet.</p>
       )}
-      <p className="text-footnote text-label-secondary">
+      <p className="text-center text-footnote text-label-secondary">
         {config.name} renews automatically until you cancel. Cancel any time in Settings › Membership and you keep {config.name} until the end of the period you’ve paid for. By upgrading you agree to the{" "}
-        <Link href="/terms" className="text-tint-text underline focus-visible:outline-2 focus-visible:outline-focus">Terms of Use</Link> and the{" "}
-        <Link href="/privacy" className="text-tint-text underline focus-visible:outline-2 focus-visible:outline-focus">Privacy Policy</Link>.
+        <Link href="/terms" className="text-tint-text underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-focus">Terms of Use</Link> and the{" "}
+        <Link href="/privacy" className="text-tint-text underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-focus">Privacy Policy</Link>.
       </p>
     </section>
   );
