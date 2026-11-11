@@ -7,8 +7,8 @@ import { BackLink } from "@/components/ui/BackLink";
 import { Button } from "@/components/ui/Button";
 import {
   CRAWL_PAGE_SIZE, CRAWL_SOURCES_PATH, CRAWL_STAGES, CRAWL_STATUS_LABELS,
-  crawlSourceFilters, crawlSourceHref, crawlSourceName, crawlStageProgress,
-  type CrawlPage, type CrawlScan, type CrawlSourceProgress,
+  crawlSourceFilters, crawlSourceHref, crawlSourceName, crawlStageProgress, summariseCrawlTask,
+  type CrawlPage, type CrawlScan, type CrawlSourceProgress, type CrawlTaskResult, type TaskTone,
 } from "@/lib/admin-crawl";
 import { ownerContext } from "@/lib/supabase/data";
 
@@ -31,22 +31,37 @@ function discovery(scan: CrawlScan | null) {
   return "Discovery in progress — total may grow.";
 }
 
-function TaskRow({ row, source, scan }: { row: CrawlPage; source: string; scan: CrawlScan }) {
+const tones: Record<TaskTone, string> = {
+  good: "bg-fill text-label",
+  waiting: "bg-tint-fill text-tint-text",
+  bad: "bg-fill text-destructive",
+  neutral: "bg-fill text-label-secondary",
+};
+const marks: Record<TaskTone, string> = { good: "✓", waiting: "…", bad: "✕", neutral: "·" };
+
+function TaskRow({ row, result, known, source, scan }: { row: CrawlPage; result?: CrawlTaskResult; known: boolean; source: string; scan: CrawlScan }) {
+  const summary = summariseCrawlTask(row, result, known);
   return (
     <li className={`flex flex-col gap-2 ${panel}`}>
       <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
-        <p className="min-w-0 break-all text-subheadline font-semibold">{row.canonical_url}</p>
-        <span className="rounded-pill bg-fill px-2 py-1 text-footnote">{CRAWL_STATUS_LABELS[row.status]}</span>
+        <p className="min-w-0 break-words text-subheadline font-semibold">{summary.title}</p>
+        <span className={`rounded-pill px-2 py-1 text-footnote font-semibold ${tones[summary.outcome.tone]}`}>
+          {marks[summary.outcome.tone]} {summary.outcome.label}
+        </span>
       </div>
-      <p className="text-footnote text-label-secondary">
-        {row.attempts} attempts · {row.http_requests} reserved HTTP requests · Parser {row.parser_version ?? "pending"}
-      </p>
-      {row.last_success_at && <p className="text-footnote text-label-secondary">Last processed {timestamp(row.last_success_at)}</p>}
-      {row.stage === "venue" && row.last_success_at && (
-        <p className="text-footnote">{row.enriched ? "Reachable event work complete" : "Reachable event work incomplete"}</p>
-      )}
-      {row.status === "retry_wait" && <p className="text-footnote">Retry due {timestamp(row.available_at)}</p>}
-      {row.last_error && <p className="break-words text-footnote">{row.last_error}</p>}
+      {summary.got.length > 0 && <p className="text-subheadline">{summary.got.join(" · ")}</p>}
+      {summary.missing.length > 0 && <p className="text-footnote text-destructive">Missing: {summary.missing.join(", ")}</p>}
+      {row.status !== "succeeded" && row.last_error && <p className="break-words text-footnote">{row.last_error}</p>}
+      {row.status === "retry_wait" && <p className="text-footnote text-label-secondary">Next try {timestamp(row.available_at)}</p>}
+      <details className="text-footnote text-label-secondary">
+        <summary className="min-h-6 cursor-pointer">Details</summary>
+        <div className="mt-1 flex flex-col gap-1">
+          <a href={row.canonical_url} target="_blank" rel="noreferrer" className="break-all text-tint-text">{row.canonical_url}</a>
+          <p>{row.attempts} {row.attempts === 1 ? "attempt" : "attempts"} · {row.http_requests} HTTP requests · Parser {row.parser_version ?? "pending"}</p>
+          {row.last_success_at && <p>Last read {timestamp(row.last_success_at)}</p>}
+          {row.last_error && row.status === "succeeded" && <p className="break-words">Last error: {row.last_error}</p>}
+        </div>
+      </details>
       {scan.is_current && (
         <div className="flex flex-wrap gap-2">
           {row.status === "blocked" ? <CrawlSourceControl source={source} operation="retry_blocked" scan={scan.id} task={row.id} />
@@ -75,6 +90,10 @@ async function Sources({ searchParams }: Pick<PageProps<"/app/backstage/crawl/so
   const chips = flags.get("catalogue_run_chips_enabled");
   const autofill = flags.get("catalogue_run_autofill_enabled");
   const data = payload as unknown as CrawlSourceProgress;
+  const { data: resultRows, error: resultsError } = data.rows.length
+    ? await supabase.rpc("admin_crawl_task_results", { for_tasks: data.rows.map(row => row.id) })
+    : { data: {} };
+  const results = (resultRows ?? {}) as Record<string, CrawlTaskResult>;
   const source = data.sources.find(item => item.source_key === filters.source);
   const scan = data.scan;
   const first = (filters.page - 1) * CRAWL_PAGE_SIZE + 1;
@@ -204,7 +223,7 @@ async function Sources({ searchParams }: Pick<PageProps<"/app/backstage/crawl/so
               <Button type="submit" variant="secondary" size="sm">Apply filters</Button>
             </form>
             {scan && data.rows.length > 0 ? (
-              <ul className="flex flex-col gap-2">{data.rows.map(row => <TaskRow key={row.id} row={row} source={source.source_key} scan={scan} />)}</ul>
+              <ul className="flex flex-col gap-2">{data.rows.map(row => <TaskRow key={row.id} row={row} result={results[row.id]} known={!resultsError} source={source.source_key} scan={scan} />)}</ul>
             ) : <p className="text-subheadline text-label-secondary">No pages match these filters.</p>}
             <nav aria-label="Page results" className="flex flex-wrap items-center gap-4 text-subheadline">
               <span>{first <= last ? `${number.format(first)}–${number.format(last)} of ${number.format(data.filtered_total)}` : `${number.format(data.filtered_total)} matching pages`}</span>

@@ -178,3 +178,72 @@ export function crawlStageProgress(stage: CrawlStage, counts: CrawlStageCounts) 
   const label = stage === "event" ? "event detail pages" : `${stage} pages`;
   return `${countFormat.format(counts.processed)} of ${countFormat.format(counts.discovered)} discovered ${label} processed`;
 }
+
+// What a crawled page produced (admin_crawl_task_results). Absent for pages not read yet.
+export type CrawlTaskResult = {
+  stage: CrawlStage;
+  venues_listed?: number;
+  name?: string | null; street?: string | null; city?: string | null; postcode?: string | null;
+  located?: boolean; located_by?: string | null;
+  shows_total?: number; shows_read?: number; shows_stuck?: number;
+  title?: string | null; show_type?: string | null; event_kind?: string | null; venue_name?: string | null;
+  dates?: { date: string; kind: string }[];
+};
+export type TaskTone = "good" | "waiting" | "bad" | "neutral";
+export type TaskSummary = { title: string; outcome: { label: string; tone: TaskTone }; got: string[]; missing: string[] };
+
+const day = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "UTC" });
+const when = (iso: string) => day.format(new Date(`${iso}T00:00:00Z`));
+const plural = (n: number, one: string, many = `${one}s`) => `${n.toLocaleString("en-GB")} ${n === 1 ? one : many}`;
+
+function slug(url: string) {
+  try { return new URL(url).pathname.split("/").filter(Boolean).pop() ?? url; } catch { return url; }
+}
+
+// One plain answer per page: did we get what we wanted, what is it, what is missing.
+// Fetch details (attempts, requests, parser) stay out of this; the page keeps them under "Details".
+export function summariseCrawlTask(row: Pick<CrawlPage, "stage" | "status" | "canonical_url">, result?: CrawlTaskResult, resultsKnown = true): TaskSummary {
+  const fallback = slug(row.canonical_url);
+  const title = (row.stage === "directory" ? "Theatre directory" : result?.name ?? result?.title) || fallback;
+  const waiting = { queued: ["Queued", "neutral"], leased: ["Reading now", "waiting"], retry_wait: ["Retrying", "waiting"], blocked: ["Blocked", "bad"], failed: ["Failed", "bad"] } as const;
+  if (row.status !== "succeeded") {
+    const [label, tone] = waiting[row.status === "pending" ? "queued" : row.status];
+    return { title, outcome: { label, tone }, got: [], missing: [] };
+  }
+  if (!resultsKnown) return { title, outcome: { label: "Succeeded", tone: "neutral" }, got: [], missing: [] };
+  if (!result) return { title, outcome: { label: "Read, nothing saved", tone: "bad" }, got: [], missing: ["No data was saved from this page"] };
+
+  const got: string[] = [];
+  const missing: string[] = [];
+  if (row.stage === "directory") {
+    const n = result.venues_listed ?? 0;
+    if (n) got.push(`${plural(n, "theatre")} listed`); else missing.push("No theatres found");
+    return { title, outcome: n ? { label: "Complete", tone: "good" } : { label: "Nothing found", tone: "bad" }, got, missing };
+  }
+  if (row.stage === "venue") {
+    const address = [result.street, result.city, result.postcode].filter(Boolean).join(", ");
+    if (address) got.push(address); else missing.push("No address");
+    if (result.located) {
+      const by = result.located_by?.includes("postcodes") ? " from its postcode" : result.located_by?.includes("nominatim") ? " from its address" : "";
+      got.push(`Located${by}`);
+    } else missing.push("No location found");
+    const total = result.shows_total ?? 0, read = result.shows_read ?? 0, stuck = result.shows_stuck ?? 0;
+    const pending = Math.max(total - read - stuck, 0);
+    if (total) got.push(`${read.toLocaleString("en-GB")} of ${plural(total, "show page")} read`); else missing.push("No show pages found");
+    if (stuck) return { title, outcome: { label: `${plural(stuck, "show page")} stuck`, tone: "bad" }, got, missing };
+    if (pending) return { title, outcome: { label: `Waiting on ${plural(pending, "show page")}`, tone: "waiting" }, got, missing };
+    if (missing.length) return { title, outcome: { label: missing[0], tone: "waiting" }, got, missing };
+    return { title, outcome: { label: "Complete", tone: "good" }, got, missing };
+  }
+  const dates = result.dates ?? [];
+  const first = (...kinds: string[]) => dates.filter(d => kinds.includes(d.kind)).sort((a, b) => a.date.localeCompare(b.date))[0];
+  const opens = first("opening", "start"), closes = first("closing"), end = first("end");
+  if (opens) got.push(`Opens ${when(opens.date)}`);
+  if (closes) got.push(`Closes ${when(closes.date)}`);
+  else if (end) got.push(`Scheduled until ${when(end.date)} (not a confirmed close)`);
+  if (result.venue_name) got.push(`At ${result.venue_name}`);
+  if (result.show_type) got.push(`Type: ${result.show_type}`); else missing.push("Show type not on the page");
+  if (result.event_kind && result.event_kind !== "show") got.push(`Not a show (${result.event_kind})`);
+  if (!opens && !closes && !end) return { title, outcome: { label: "No dates found", tone: "bad" }, got, missing: ["No dates", ...missing] };
+  return { title, outcome: { label: "Complete", tone: "good" }, got, missing };
+}

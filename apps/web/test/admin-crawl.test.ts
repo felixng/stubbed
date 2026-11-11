@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { crawlSourceFilters, crawlSourceHref, crawlStageProgress, rerunCommand, scoreLine, settingsLine, shareRight, sumScores, UUID } from "@/lib/admin-crawl";
+import { summariseCrawlTask, crawlSourceFilters, crawlSourceHref, crawlStageProgress, rerunCommand, scoreLine, settingsLine, shareRight, sumScores, UUID } from "@/lib/admin-crawl";
 
 const score = { right: 3, wrong: 1, unsure: 1, unreviewed: 2, findings: 7, missed: 2 };
 
@@ -41,4 +41,28 @@ test("source progress keeps the discovered denominator and paginated filters", (
   assert.deepEqual(crawlSourceFilters({ source: ["x"], scan: "bad", stage: "private", status: "weird", page: "-1" }), {
     source: "london_theatre", scan: undefined, stage: "venue", status: undefined, page: 1,
   });
+});
+
+test("a venue page says what we got and what it is waiting on", () => {
+  const row = { stage: "venue", status: "succeeded", canonical_url: "https://playbill.com/venue/adelphi-theatre-coms-1" } as const;
+  const base = { stage: "venue", name: "Adelphi Theatre", street: "The Strand", city: "London", postcode: "WC2E 7NA", located: true, located_by: "geocoded:postcodes.io" } as const;
+  const waiting = summariseCrawlTask(row, { ...base, shows_total: 4, shows_read: 1, shows_stuck: 0 });
+  assert.equal(waiting.title, "Adelphi Theatre");
+  assert.deepEqual(waiting.outcome, { label: "Waiting on 3 show pages", tone: "waiting" });
+  assert.ok(waiting.got.includes("1 of 4 show pages read") && waiting.got.includes("Located from its postcode"));
+  assert.deepEqual(summariseCrawlTask(row, { ...base, shows_total: 4, shows_read: 4, shows_stuck: 0 }).outcome, { label: "Complete", tone: "good" });
+  assert.deepEqual(summariseCrawlTask(row, { ...base, shows_total: 4, shows_read: 2, shows_stuck: 1 }).outcome, { label: "1 show page stuck", tone: "bad" });
+  assert.equal(summariseCrawlTask(row, { ...base, located: false, shows_total: 1, shows_read: 1, shows_stuck: 0 }).outcome.label, "No location found");
+});
+
+test("an event page separates a confirmed close from a booking horizon", () => {
+  const row = { stage: "event", status: "succeeded", canonical_url: "https://www.londontheatre.co.uk/show/1-matilda" } as const;
+  const horizon = summariseCrawlTask(row, { stage: "event", title: "Matilda", show_type: "musical", venue_name: "Cambridge Theatre", dates: [{ date: "2021-11-12", kind: "start" }, { date: "2027-09-05", kind: "end" }] });
+  assert.ok(horizon.got.includes("Scheduled until 5 Sept 2027 (not a confirmed close)") || horizon.got.some(g => g.startsWith("Scheduled until")));
+  assert.ok(!horizon.got.some(g => g.startsWith("Closes")));
+  const closed = summariseCrawlTask(row, { stage: "event", title: "Oliver Twist", show_type: null, dates: [{ date: "1912-02-26", kind: "opening" }, { date: "1912-05-01", kind: "closing" }] });
+  assert.ok(closed.got.includes("Closes 1 May 1912"));
+  assert.deepEqual(closed.missing, ["Show type not on the page"]);
+  assert.equal(summariseCrawlTask(row, { stage: "event", title: "X", dates: [] }).outcome.label, "No dates found");
+  assert.equal(summariseCrawlTask({ ...row, status: "failed" }).outcome.tone, "bad");
 });
