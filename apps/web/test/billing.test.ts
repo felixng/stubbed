@@ -80,8 +80,18 @@ const hook = (event: object, auth: string | null = "hook-secret") =>
 
 test("webhook: wrong or missing auth is 401 and applies nothing", async () => {
   const { state, deps } = setup();
-  for (const auth of ["nope", null]) assert.equal((await handleWebhook(hook({ id: "e", app_user_id: USER }, auth), deps)).status, 401);
+  for (const auth of ["nope", null, "Bearer nope", "Bearer ", "hook-secretX"]) {
+    assert.equal((await handleWebhook(hook({ id: "e", app_user_id: USER }, auth), deps)).status, 401);
+  }
   assert.equal(state.applied.length, 0);
+});
+
+test("webhook: a Bearer prefix or stray whitespace on either side still matches the secret", async () => {
+  for (const [header, stored] of [["Bearer hook-secret", "hook-secret"], ["hook-secret", "Bearer hook-secret"], ["bearer hook-secret", "hook-secret\n"], [" hook-secret ", " hook-secret"]]) {
+    const { deps } = setup();
+    deps.secrets.webhookAuth = stored;
+    assert.equal((await handleWebhook(hook({ id: `e-${header}`, app_user_id: USER }, header), deps)).status, 200, `${JSON.stringify(header)} vs ${JSON.stringify(stored)}`);
+  }
 });
 
 test("webhook: applies the fetched state once; a duplicate is not applied twice", async () => {

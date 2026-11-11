@@ -46,10 +46,14 @@ export async function syncUser(userId: string, deps: BillingDeps, eventId?: stri
   return deps.store!.applySnapshot(userId, rows, eventId);
 }
 
+// The webhook secret as typed into RevenueCat and Vercel: either side may carry a "Bearer " prefix
+// or a pasted newline, which shouldn't decide whether the secret matches.
+const webhookSecret = (value: string | null | undefined) => value?.trim().replace(/^bearer\s+/i, "").trim() || null;
+
 export async function handleWebhook(request: Request, deps: BillingDeps): Promise<Response> {
   const { secrets, store } = deps;
   if (!store || !secrets.revenuecatKey || !secrets.webhookAuth) return notConfigured();
-  if (!safeEqual(request.headers.get("authorization"), secrets.webhookAuth)) {
+  if (!safeEqual(webhookSecret(request.headers.get("authorization")), webhookSecret(secrets.webhookAuth) ?? undefined)) {
     return Response.json({ error: "unauthorized" }, { status: 401 });
   }
   const body = (await request.json().catch(() => null)) as { event?: Record<string, unknown> } | null;
