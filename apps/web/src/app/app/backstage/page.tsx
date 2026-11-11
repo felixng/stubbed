@@ -28,6 +28,11 @@ const PAGES = [
     text: "What the crawler read from theatre websites: check findings, mark them right or wrong, and compare runs.",
   },
   {
+    href: "/app/backstage/crawl/sources",
+    title: "Catalogue crawler",
+    text: "London Theatre and Playbill progress by step, plus the buttons for publishing to the catalogue and showing run chips.",
+  },
+  {
     href: "/app/backstage/membership",
     title: "Membership",
     text: "Look up someone’s Pro membership, re-sync it from RevenueCat, and check billing is set up.",
