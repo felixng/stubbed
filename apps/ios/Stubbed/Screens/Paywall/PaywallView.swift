@@ -65,6 +65,7 @@ struct PaywallView: View {
               .disabled(!flow.isAvailable || flow.isBusy)
               .accessibilityIdentifier("paywall-restore")
           }
+          legal
         }
       }
       .listStyle(.insetGrouped)
@@ -128,6 +129,21 @@ struct PaywallView: View {
       }
     case .failed(let message):
       Section { Text(message).foregroundStyle(.red).accessibilityIdentifier("paywall-error") }
+    }
+  }
+
+  /// What App Review expects beside an auto-renewing subscription: how renewal and cancelling
+  /// work, and links to the Terms and the Privacy Policy.
+  private var legal: some View {
+    Section {
+      Link("Terms of Use", destination: AppConfig.current.webURL.appending(path: "terms"))
+        .accessibilityIdentifier("paywall-terms")
+      Link("Privacy Policy", destination: AppConfig.current.webURL.appending(path: "privacy"))
+        .accessibilityIdentifier("paywall-privacy")
+    } footer: {
+      Text(
+        "Payment is charged to your Apple Account when you confirm. \(membership.name) renews automatically unless you cancel at least 24 hours before the end of the current period, and the renewal is charged in the 24 hours before it ends. Manage or cancel any time in Settings › Apple Account › Subscriptions."
+      )
     }
   }
 

@@ -85,6 +85,8 @@ export default async function PrivacyPage() {
           <li>
             <strong>{copy.tripsAndLabels}</strong> {copy.youCreateAndTheEntriesIn}</li>
           <li>
+            <strong>{copy.stubbedProSubscription}</strong>{copy.whichPlanYoureOn}</li>
+          <li>
             <strong>{copy.showsAndVenuesYouAdd}</strong> {copy.toTheSharedCatalogueTheseAre}</li>
         </List>
         <p>
@@ -147,6 +149,12 @@ export default async function PrivacyPage() {
           <li>
             <strong>{copy.supabase}</strong>{copy.databaseSigninAndPhotoStorage}</li>
           <li>
+            <strong>{copy.revenuecat}</strong>{copy.managesProSubscriptions}</li>
+          <li>
+            <strong>{copy.stripe}</strong>{copy.takesCardPaymentsOnTheWebsite}</li>
+          <li>
+            <strong>{copy.appleAppStore}</strong>{copy.takesPaymentInTheApp}</li>
+          <li>
             <strong>{copy.vercel}</strong>{copy.websiteHostingAndVisitStatistics}</li>
           <li>
             <strong>{copy.google}</strong>{copy.visitStatisticsForOurPublicPages}</li>
@@ -176,6 +184,8 @@ export default async function PrivacyPage() {
             <strong>{copy.waitlist2}</strong>{copy.untilWeInviteYouOrYou}</li>
           <li>
             <strong>{copy.accountAndDiary}</strong>{copy.forAsLongAsYouHave}</li>
+          <li>
+            <strong>{copy.subscriptionRecords}</strong>{copy.subscriptionRecordsKept}</li>
           <li>
             <strong>{copy.usageStatistics2}</strong> {copy.aboutYourAccountForAsLong}</li>
           <li>

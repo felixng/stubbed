@@ -13,8 +13,8 @@ import { LEGAL, operatorName } from "@/lib/legal";
 // Consumer terms written to hold up in the UK (Consumer Rights Act 2015,
 // Online Safety Act), the EU (consumer law, Digital Services Act notice and
 // action) and the US (DMCA notice procedure, warranty and liability limits
-// "to the extent permitted by law"). No payments or subscriptions: Stubbed
-// is free, so there are no cancellation or refund terms yet.
+// "to the extent permitted by law"). Stubbed Pro (epic #219) is the one paid
+// subscription; its renewal, cancellation and refund terms are in "Price".
 export async function generateMetadata(): Promise<Metadata> {
   const copy = await getCopy("termsMeta");
   return { title: copy.seoTitle, description: copy.description,
@@ -140,9 +140,12 @@ export default async function TermsPage() {
       </Section>
 
       <Section id="price" title={copy.price}>
-        <p>
-          {copy.stubbedIsFreeIfWeEver}
-        </p>
+        <p>{copy.proIsOptional}</p>
+        <p>{copy.proHowYouPay}</p>
+        <p>{copy.proRenewal}</p>
+        <p>{copy.proCancelling}</p>
+        <p>{copy.proRefunds}</p>
+        <p>{copy.proEnding}</p>
       </Section>
 
       <Section id="ending" title={copy.endingYourUseOfStubbed}>

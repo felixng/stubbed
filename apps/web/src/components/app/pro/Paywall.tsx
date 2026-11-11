@@ -149,6 +149,11 @@ export function Paywall({ source, next, preview = false, userId, checkout = null
           <span aria-hidden="true">⏳</span> Upgrades aren’t available yet
         </p>
       )}
+      <p className="text-footnote text-label-secondary">
+        {config.name} renews automatically until you cancel. Cancel any time in Settings › Membership and you keep {config.name} until the end of the period you’ve paid for. By upgrading you agree to the{" "}
+        <Link href="/terms" className="text-tint-text underline focus-visible:outline-2 focus-visible:outline-focus">Terms of Use</Link> and the{" "}
+        <Link href="/privacy" className="text-tint-text underline focus-visible:outline-2 focus-visible:outline-focus">Privacy Policy</Link>.
+      </p>
     </section>
   );
 }
