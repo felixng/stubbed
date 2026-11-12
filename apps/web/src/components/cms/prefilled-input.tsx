@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ChangeEvent } from "react";
 import { PatchEvent, set, type ArrayOfObjectsInputProps, type FormPatch, type StringInputProps } from "sanity";
 
 // A field's repository copy becomes its editable value the first time the
@@ -17,8 +17,17 @@ export function prefilledInput(defaultValue: string) {
         onChange(set(defaultValue));
       }
     }, [value, readOnly, onChange]);
+    // The default text box reports edits through `elementProps.onChange`, not
+    // `onChange`, and that handler removes the value when the box is emptied.
     return props.renderDefault({
       ...props,
+      elementProps: {
+        ...props.elementProps,
+        onChange: (event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+          prefilled.current = true;
+          onChange(set(event.currentTarget.value));
+        },
+      },
       onChange: (change: FormPatch | FormPatch[] | PatchEvent) => {
         prefilled.current = true;
         const patches = PatchEvent.from(change).patches.map((patch) => patch.type === "unset" && patch.path.length === 0 ? set("") : patch);

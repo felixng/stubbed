@@ -1,5 +1,7 @@
 // Image descriptions for the landing page. Kept in code rather than the CMS:
 // they describe the artwork, so they change when the artwork does.
+export const heroGroupLabel = "Theatre photo and stats sharing cards";
+
 export const cardAlt = {
   "stats-mincemeat": "Demo card for @sillyelphaba: Operation Mincemeat with a curtain-call photo, 57th show of 2026, 9th visit to Fortune Theatre and 7 times seen.",
   "name-mincemeat": "Demo card for @sillyelphaba: Operation Mincemeat with a programme photo and four and a half out of five stars.",
