@@ -2,6 +2,8 @@ import Link from "next/link";
 import { runPath } from "@/lib/admin-crawl";
 import { clock, dayOf, durationText, pagesText, publishedRunDates, stopReasonText, triggerLabel, type WorkerRun } from "@/lib/crawl-schedule";
 
+const viaShort = (via: WorkerRun["started_via"]) => (via === "supabase" ? "Supabase" : via === "github_schedule" ? "GitHub" : null);
+
 const th = "py-2 pr-3 text-footnote font-semibold text-label-secondary";
 
 // Every crawl worker run, newest first. Starting by schedule, by hand or with Start a crawl all leave a row.
@@ -23,7 +25,7 @@ export function RunHistoryTable({ runs }: { runs: WorkerRun[] }) {
             return (
               <tr key={run.id}>
                 <td className="py-2 pr-3 whitespace-nowrap">{dayOf(run.started_at)}, {clock(run.started_at)}</td>
-                <td className="py-2 pr-3 whitespace-nowrap">{triggerLabel(run.trigger)}</td>
+                <td className="py-2 pr-3 whitespace-nowrap">{triggerLabel(run.trigger)}{viaShort(run.started_via) && <span className="block text-footnote text-label-secondary">via {viaShort(run.started_via)}</span>}</td>
                 <td className="py-2 pr-3 whitespace-nowrap">{run.interrupted ? "Interrupted" : durationText(run.started_at, run.finished_at)}</td>
                 <td className="py-2 pr-3">{pagesText(run.per_source)}</td>
                 <td className="py-2 pr-3 whitespace-nowrap">{published > 0 ? `${published.toLocaleString("en-GB")} run dates` : "None"}</td>

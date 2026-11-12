@@ -15,20 +15,21 @@ test('a worker run is opened, finished, closed when interrupted, and counted for
   try {
     const before = (await usedLast24h()).pages.fixture_source ?? 0;
     const id = await startWorkerRun(
-      { trigger: 'manual', filters: { source: 'playbill', stage: 'all' }, limits: { page_allowance: 100, daily_spend_usd: 2 } },
+      { trigger: 'schedule', via: 'supabase', filters: { source: 'playbill', stage: 'all' }, limits: { source_run_pages: 150, daily_spend_usd: 2 } },
       { GITHUB_RUN_ID: '4242', GITHUB_REPOSITORY: 'owner/repo' },
     );
     ids.push(id);
     const open = await row(id);
-    assert.equal(open.trigger, 'manual');
+    assert.equal(open.trigger, 'schedule');
+    assert.equal(open.started_via, 'supabase', 'a start sent by Supabase says so');
     assert.equal(open.finished_at, null, 'a run is open while it is working');
     assert.equal(open.log_url, 'https://github.com/owner/repo/actions/runs/4242');
     assert.equal(open.source_filter, 'playbill');
     assert.equal(open.stage_filter, 'all');
     assert.equal(open.scope_filter, null, 'no scope means null, not an empty string');
-    assert.deepEqual(open.limits, { page_allowance: 100, daily_spend_usd: 2 });
+    assert.deepEqual(open.limits, { source_run_pages: 150, daily_spend_usd: 2 });
 
-    await finishWorkerRun(id, { perSource: { fixture_source: { pages: 12 } }, stopReason: 'page_allowance', modelSpendUsd: 0.3 });
+    await finishWorkerRun(id, { perSource: { fixture_source: { pages: 12, stop: 'page_allowance' } }, stopReason: 'page_allowance', modelSpendUsd: 0.3 });
     const done = await row(id);
     assert.ok(done.finished_at);
     assert.equal(done.stop_reason, 'page_allowance');
@@ -41,7 +42,8 @@ test('a worker run is opened, finished, closed when interrupted, and counted for
     await finishWorkerRun(id, { perSource: { fixture_source: { pages: 999 } }, stopReason: 'failed' });
     assert.equal((await row(id)).stop_reason, 'page_allowance', 'finishing twice keeps the first result');
 
-    const cancelled = await startWorkerRun({ trigger: 'schedule', limits: {} }, {});
+    const cancelled = await startWorkerRun({ trigger: 'schedule', via: 'github_schedule', limits: {} }, {});
+    assert.equal((await row(cancelled)).started_via, 'github_schedule');
     const failed = await startWorkerRun({ trigger: 'admin_start', limits: {} }, {});
     ids.push(cancelled, failed);
     await closeOpenWorkerRun(cancelled, 'cancelled');
@@ -50,6 +52,9 @@ test('a worker run is opened, finished, closed when interrupted, and counted for
     assert.equal((await row(failed)).stop_reason, 'failed');
     assert.ok((await row(failed)).finished_at);
     await closeOpenWorkerRun(undefined, 'failure');
+    const byHand = await startWorkerRun({ trigger: 'manual', limits: {} }, {});
+    ids.push(byHand);
+    assert.equal((await row(byHand)).started_via, null, 'a start by hand has no sender');
   } finally {
     if (ids.length) await runPsql(`delete from public.crawl_worker_runs where id in (${ids.map(id => `'${id}'`).join(',')})`);
     if (previous === undefined) delete process.env.SUPABASE_DB_URL; else process.env.SUPABASE_DB_URL = previous;

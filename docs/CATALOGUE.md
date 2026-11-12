@@ -321,22 +321,34 @@ Old addresses redirect: `/crawl/sources?source=X&stage=Y&status=Z&page=N` goes t
 
 ## Schedule, limits and run history (#505)
 
-The crawler runs **twice an hour**, at :17 and :47 UTC (`17,47 * * * *` in `.github/workflows/catalogue-crawl.yml`, off the hour because top-of-hour schedules start latest). GitHub can start a run late; `concurrency: catalogue-crawl` with `cancel-in-progress: false` means runs never overlap and a late run just waits. Each run reads at most **100 pages**, split evenly between the sources that are on, and stops after 20 minutes (the job is cut off at 30). Repository standard runners are free on a public repo, so this costs nothing in Actions minutes.
+The crawler runs **twice an hour**, at :17 and :47 UTC. **Supabase starts it** (#510): a `pg_cron` job (`catalogue-crawl-dispatch`, `17,47 * * * *`) calls GitHub's workflow-dispatch API through `pg_net` with `trigger=cron`. GitHub's own `schedule:` (the same cron in `.github/workflows/catalogue-crawl.yml`) stays as a backup, because GitHub scheduled events are best effort and were hours late or skipped. `concurrency: catalogue-crawl` with `cancel-in-progress: false` means runs never overlap, and a start that finds the previous run finished less than 10 minutes ago with nothing due for every source exits at once. Runs are recorded with who started them (`started_via`: Supabase on time, or GitHub's schedule).
+
+**Sources run at the same time**, each with its own allowance and the whole 20-minute window (the job is cut off at 30). They are different hosts, and per-host pacing (`crawl_hosts` leases, the 5 s gap, robots.txt, `Retry-After`, block pauses) is unchanged, so no single site sees more load. Stopping on time is a checkpoint for that source, not a failure. Standard runners are free on a public repo.
 
 | Limit | Default | Repository variable |
 |---|---|---|
+| Pages per source per run | 150 (at most 400) | `CRAWL_SOURCE_RUN_PAGES` |
+| Pages per run, official sites | 50 (they use the model) | `CRAWL_OFFICIAL_RUN_PAGES` |
+| One source only | the two above | `CRAWL_SOURCE_RUN_PAGES_PLAYBILL`, `_LONDON_THEATRE`, `_OFFICIAL` (empty or unset means the default; 0 pauses it) |
 | Pages per source, rolling 24 hours | 1,000 | `CRAWL_SOURCE_DAILY_PAGES` |
 | Model spend, rolling 24 hours | $2 | `CRAWL_DAILY_SPEND_USD` |
 | Model spend per run | $1 | `CRAWL_MAX_SPEND_USD` |
 
-- A source at its daily page cap gets no allowance and its share goes to the others; a source part way to its cap is held to what it has left. Host pacing and `Retry-After` handling are unchanged.
+**Starting on time: the owner step.** The dispatch reads a GitHub token from **Supabase Vault** at call time; the token is never in a migration, a repo file or a log. Without the secret the job does nothing but record that the token is missing (the hub says so and how to add it), and GitHub's schedule is the only trigger.
+1. GitHub > Settings > Developer settings > Fine-grained personal access tokens > Generate new token. Repository access: only `felixng/stubbed`. Permissions: **Actions: Read and write**. Expiry: 1 year.
+2. In the Supabase SQL editor: `select vault.create_secret('<token>', 'github_crawl_dispatch_token');`. To replace it later: `update vault.secrets set secret = '<new token>' where name = 'github_crawl_dispatch_token';`.
+3. The hub's "What runs when" card then shows the token as working once GitHub answers a start with 204. Two failed starts in a row (for example 401 for a bad or expired token) show under Needs attention.
+
+**Roll back the trigger:** `select cron.unschedule('catalogue-crawl-dispatch');` (GitHub's schedule keeps running). To go back to roughly the earlier pace set `CRAWL_SOURCE_RUN_PAGES=33`.
+
+- A source at its daily page cap gets no pages that run; a source part way to its cap is held to what it has left, and its part of the run records `daily_cap`. Each source's part of a run also records why it stopped: `page_allowance`, `time_limit`, `daily_cap` or `nothing_due`. Host pacing and `Retry-After` handling are unchanged.
 - Before a run, the model gets the smaller of its run cap and what is left of the daily cap (from `crawl_ai_reservations`). At zero the model is skipped (link finding, rule writing, repair) and page crawling continues; the run records `daily_spend_cap`. Only the official-sites route uses the model in this loop.
 - Page counts for the daily cap come from `crawl_worker_runs.per_source`.
 - **Retry ladder** (`RETRY_DELAYS_SECONDS`): 1 min, 5 min, 30 min, 2 h, 12 h, then Failed (an admin retries). A rate limit waits for `Retry-After` or an hour. A block pauses the whole source until an admin retries the blocked pages. Retries only happen while a run is active, so on this schedule they happen near their stated times.
 - **Re-read policy** (`crawl_refresh_policy`): directory 30 days; venue 1 day if it lists current shows, else 7; show pages 1 to 180 days by how close the dates are; shows closed more than two years ago last.
 - All of these values live in `supabase/scripts/crawl/schedule.mjs`. The admin's copies (`apps/web/src/lib/crawl-schedule.ts`, shown in the guide) are checked by `apps/web/test/crawl-schedule.test.ts`, which also fails if the workflow cron changes without them.
 
-**Run record.** Every execution (schedule, by hand, Start a crawl) writes one `crawl_worker_runs` row: trigger, GitHub run id and log, filters, limits in force, pages and results per source, stop reason (`page_allowance`, `time_limit`, `daily_spend_cap`, `nothing_due`, `failed`, `cancelled`) and model spend. The loop opens it at the start and closes it at the end; a final workflow step closes it as failed or cancelled if the job was interrupted. A row still open after 35 minutes reads as interrupted. Admins read it through RLS and `admin_crawl_schedule` (recent runs, what is running now, the last 24 hours, and a due-now forecast per source); only the worker's database role writes it.
+**Run record.** Every execution (schedule, by hand, Start a crawl) writes one `crawl_worker_runs` row: trigger, GitHub run id and log, filters, limits in force, pages and results per source, who sent the start (`started_via`), stop reason (`page_allowance`, `time_limit`, `daily_cap`, `daily_spend_cap`, `nothing_due`, `failed`, `cancelled`) and model spend. The loop opens it at the start and closes it at the end; a final workflow step closes it as failed or cancelled if the job was interrupted. A row still open after 35 minutes reads as interrupted. Admins read it through RLS and `admin_crawl_schedule` (recent runs, what is running now, the last 24 hours, and a due-now forecast per source); only the worker's database role writes it.
 
 **In the admin.** The hub has a "What runs when" card (schedule, now, last run, next run with pages due per source, today's limits and when a capped source resumes, and a warning if nothing has run for two hours) and the last five runs. `/app/backstage/crawl/runs` lists every run with a trigger filter. Every waiting page says who acts next. The guide's "How it runs" section shows the tables above.
 

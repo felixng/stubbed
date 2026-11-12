@@ -1594,3 +1594,13 @@ Owner: Studio's Publish was hidden behind "Exit content preview", clearing a fie
 - **Clearing stores `""`.** Sanity removes a cleared string, which the site reads as "never edited" and the Studio prefill refilled. The field input now turns that removal into `""`, the prefill runs once per field, `mergeCopy` accepts any string (empty included), and the `required` rule is dropped from copy fields (links and emails keep it).
 - **Exit button** is a client component, hidden inside Presentation's frame and at `/dressingroom`, and sits bottom-left elsewhere.
 - **About is a list of sections** with rich text and buttons, rendered by `SectionPage` with our own small renderer (no Portable Text dependency). CMS links are limited to site paths, https and mailto, checked again when rendering, with draft-preview markers stripped first. Privacy and Terms stay fixed-slot for now: their JSX mixes copy with operator details from `LEGAL`, so converting them is a separate change that needs a legal read-through.
+
+### Start crawls from Supabase, and read sources in parallel (2026-11-12, #510)
+
+The twice-hourly GitHub schedule from #505 never started: GitHub scheduled events are best effort (the old daily cron was already 7 to 9 hours late). A Supabase `pg_cron` job now calls the workflow-dispatch API through `pg_net` at :17 and :47, with the token read from Vault at call time and every send and GitHub's answer logged in `crawl_dispatch_log`. GitHub's schedule stays as a backup; `concurrency` and a fast exit for a start with nothing due mean a double start costs nothing.
+
+- **No token, no error.** Without the Vault secret the job records `token_missing` and the hub says how to add it; the token is an owner step and never enters the repo.
+- **Parallel sources with per-source allowances** replace the shared 100-page allowance. Sources are different hosts and per-host pacing is unchanged. Defaults: 150 pages per source per run, 50 for the official sites (they use the model, and the daily spend cap still applies), 400 at most, with `CRAWL_SOURCE_RUN_PAGES_<SOURCE>` to slow one source alone. Stopping on time is a per-source checkpoint.
+- **Why 150 and not more:** at about 6 s a page that is about 15 minutes inside the 20-minute window, so a run still finishes before the next slot.
+- Migration `20261112140000_crawl_dispatch_from_supabase.sql`. It also adds `started_via` to `crawl_worker_runs` and `daily_cap` as a run stop reason.
+

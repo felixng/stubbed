@@ -79,18 +79,21 @@ test('bad repairs keep existing links/rules, and limits clamp unsafe configurati
  const capped=loopLimits({CRAWL_LOOP_ENABLED:'false',CRAWL_MAX_SITES:'999',CRAWL_MAX_SPEND_USD:'999',CRAWL_MAX_MINUTES:'999'});assert.equal(capped.enabled,false);assert.equal(capped.maxSites,100);assert.equal(capped.budgetUsd,10);assert.equal(capped.maxMs,1200000);
 });
 
-test('scheduled dispatch shares the page and time caps and skips paused sources',async()=>{
+test('scheduled dispatch gives each source its own allowance, runs them together and skips paused sources',async()=>{
  const now=()=>0;
  const seen=[];
- const env={CRAWL_LOOP_ENABLED:'true',CRAWL_MAX_PAGES:'200'};
+ const env={CRAWL_LOOP_ENABLED:'true'};
  const frontier={source:async key=>({source_key:key,collection_enabled:true,operator_paused_at:key==='playbill'?'paused':null})};
+ // Each source waits for the other to start, so a sequential loop would never finish.
+ let started=0,release;const bothStarted=new Promise(resolve=>{release=resolve;});
+ const meet=async()=>{if(++started===2)release();await Promise.race([bothStarted,new Promise((_,reject)=>setTimeout(()=>reject(new Error('sources ran one after another')),1000))]);};
  const result=await runScheduled({
   env,now,frontier,
-  runSource:async(row,options)=>{seen.push([row.source_key,options.maxPages]);return {pages:12};},
-  runOfficial:async(_,options)=>{seen.push(['official',options.maxPages,options.deadline]);return {pages:options.maxPages};},
+  runSource:async(row,options)=>{await meet();seen.push([row.source_key,options.maxPages]);return {pages:12};},
+  runOfficial:async(_,options)=>{await meet();seen.push(['official',options.maxPages,options.deadline]);return {pages:options.maxPages};},
  });
- assert.deepEqual(seen,[['london_theatre',50],['official',88,1_200_000]]);
- assert.equal(result.reduce((sum,row)=>sum+row.pages,0),100);
+ assert.deepEqual(seen.sort(),[['london_theatre',150],['official',50,1_200_000]],'each source has its own allowance and the whole 20 minutes');
+ assert.equal(result.reduce((sum,row)=>sum+row.pages,0),62);
  assert.deepEqual(await runScheduled({env:{},frontier:{source:()=>assert.fail('Master switch must short circuit')}}),[]);
 });
 

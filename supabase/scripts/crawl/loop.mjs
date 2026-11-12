@@ -17,12 +17,12 @@ import {discoverLinks,searchCandidates} from './discover.mjs';
 import {writeRules} from './write-rules.mjs';
 import {checkFindings,rulesReader} from './rules.mjs';
 import {structuredReader} from './sources/theatre-site.mjs';
-import {dailyLimits,modelBudget,pageAllowance,stopReason,PAGE_ALLOWANCE,RUN_MINUTES} from './schedule.mjs';
+import {dailyLimits,modelBudget,runPagesFor,sourceAllowance,sourceStop,stopReason,FAST_EXIT_MINUTES,MAX_RUN_PAGES,RUN_MINUTES} from './schedule.mjs';
 import * as workerRunStore from './worker-runs.mjs';
 
 export function loopLimits(env=process.env){
  const number=(key,fallback,max)=>{const n=Number(env[key]??fallback);return Number.isFinite(n)&&n>=0?Math.min(n,max):fallback;};
- return {enabled:env.CRAWL_LOOP_ENABLED==='true',maxSites:Math.floor(number('CRAWL_MAX_SITES',25,100)),maxSearches:Math.floor(number('CRAWL_MAX_SEARCHES',20,100)),budgetUsd:number('CRAWL_MAX_SPEND_USD',1,10),siteBudgetUsd:number('CRAWL_SITE_SPEND_USD',0.20,1),maxPages:Math.floor(number('CRAWL_MAX_PAGES',PAGE_ALLOWANCE,200)),maxMs:number('CRAWL_MAX_MINUTES',RUN_MINUTES,20)*60000};
+ return {enabled:env.CRAWL_LOOP_ENABLED==='true',maxSites:Math.floor(number('CRAWL_MAX_SITES',25,100)),maxSearches:Math.floor(number('CRAWL_MAX_SEARCHES',20,100)),budgetUsd:number('CRAWL_MAX_SPEND_USD',1,10),siteBudgetUsd:number('CRAWL_SITE_SPEND_USD',0.20,1),maxPages:Math.floor(number('CRAWL_MAX_PAGES',100,MAX_RUN_PAGES)),maxMs:number('CRAWL_MAX_MINUTES',RUN_MINUTES,20)*60000};
 }
 export function executionLimits(env,run=null){
  const limits=loopLimits(env);
@@ -248,7 +248,6 @@ export async function runScheduled({
  // behind an older backlog; it needs a named source and must be one of that adapter's seed scopes.
  if(scope&&(!source||source==='official'||!adapterScopes(source).includes(scope)))throw new Error('Unknown crawl scope for that source');
  const deadline=now()+limits.maxMs;
- let remaining=Math.min(PAGE_ALLOWANCE,limits.maxPages);
  const keys=source?[source]:stage==='all'?[...scheduledSources,'official']:scheduledSources;
  const sources=await Promise.all(keys.map(key=>frontier.source(key)));
  if(sources.some(row=>!row))throw new Error('Scheduled crawl source missing in the database');
@@ -259,57 +258,69 @@ export async function runScheduled({
  const used=workerRuns?await workerRuns.usedLast24h().catch(()=>({pages:{},spendUsd:0})):{pages:{},spendUsd:0};
  const dailyLeft=key=>Math.max(0,daily.sourceDailyPages-(used.pages[key]??0));
  const model=modelBudget({runBudgetUsd:limits.budgetUsd,dailySpendUsd:daily.dailySpendUsd,spentLast24hUsd:used.spendUsd});
- const atCap=active.filter(row=>dailyLeft(row.source_key)===0);
+ // Each source has its own allowance for this run, trimmed to what is left of its daily cap.
+ const allowances=new Map(active.map(row=>[row.source_key,sourceAllowance({runPages:runPagesFor(row.source_key,env),dailyRemaining:dailyLeft(row.source_key)})]));
+ const atCap=active.filter(row=>allowances.get(row.source_key).pages===0);
  const eligible=active.filter(row=>!atCap.includes(row));
+ const trigger=workerRunStore.triggerFor(env);
+
+ // A scheduled start right behind a run that left nothing due (GitHub's backup schedule after Supabase's start)
+ // has nothing to do. It records itself and exits at once.
+ let fastExit=false;
+ if(workerRuns&&trigger==='schedule'&&eligible.length&&workerRuns.previousRun){
+  const previous=await workerRuns.previousRun().catch(()=>null);
+  fastExit=Boolean(previous&&previous.age_seconds<FAST_EXIT_MINUTES*60&&eligible.every(row=>previous.per_source?.[row.source_key]?.stop==='nothing_due'));
+ }
+
  const workerRunId=workerRuns?await workerRuns.startWorkerRun({
-  trigger:workerRunStore.triggerFor(env),filters:{source,stage,scope},
-  limits:{page_allowance:remaining,run_minutes:Math.round(limits.maxMs/60000),run_spend_usd:limits.budgetUsd,daily_spend_usd:daily.dailySpendUsd,source_daily_pages:daily.sourceDailyPages},
+  trigger,via:workerRunStore.startedVia(env),filters:{source,stage,scope},
+  limits:{source_run_pages:runPagesFor('london_theatre',env),official_run_pages:runPagesFor('official',env),
+   allowances:Object.fromEntries([...allowances].map(([key,value])=>[key,value.pages])),
+   run_minutes:Math.round(limits.maxMs/60000),run_spend_usd:limits.budgetUsd,daily_spend_usd:daily.dailySpendUsd,source_daily_pages:daily.sourceDailyPages},
  },env).catch(()=>null):null;
 
- const reports=[];
- for(const [index,row] of eligible.entries()){
-  if(!remaining||now()>=deadline-90_000)break;
-  const count=eligible.length-index;
-  const key=row.source_key;
-  const maxPages=pageAllowance({remaining,sourcesLeft:count,dailyRemaining:dailyLeft(key)});
-  if(!maxPages)continue;
-  const sourceDeadline=now()+Math.floor((deadline-now())/count);
+ // Sources are different hosts and per-host pacing is unchanged, so they run at the same time and each
+ // gets the whole window. Running out of time is a checkpoint for that source, not a failure.
+ const outcomes=fastExit?[]:await Promise.all(eligible.map(async row=>{
+  const key=row.source_key,mine=allowances.get(key);
   try{
    const result=key==='official'
-    ?await runOfficial(env,{scheduled:true,deadline:sourceDeadline,maxPages,dailyModelUsd:model.budgetUsd})
-    :await runSource(row,{stage,...(scope?{scope}:{}),maxPages,stopSignal:AbortSignal.timeout(Math.max(1,sourceDeadline-now()-90_000))},frontier);
-   remaining-=result.pages??0;
-   reports.push({...result,source:key,...(result.publishError?{error:`Publication failed (${result.publishError})`}:{})});
+    ?await runOfficial(env,{scheduled:true,deadline,maxPages:mine.pages,dailyModelUsd:model.budgetUsd})
+    :await runSource(row,{stage,...(scope?{scope}:{}),maxPages:mine.pages,stopSignal:AbortSignal.timeout(Math.max(1,deadline-now()-90_000))},frontier);
    if(env.GITHUB_STEP_SUMMARY&&key!=='official'){
     try{await appendFile(env.GITHUB_STEP_SUMMARY,await formatFrontierProgress(frontier,key));}
     catch{console.log(`Progress snapshot unavailable for ${key}; use the source progress view.`);}
    }
+   return {mine,endedAt:now(),report:{...result,source:key,...(result.publishError?{error:`Publication failed (${result.publishError})`}:{})}};
   }catch(error){
-   // A failed process may have issued any number of its allotted requests.
-   remaining-=maxPages;
    // Keep the error class and a URL- and secret-stripped message so the cause is visible; resume is unchanged.
-   reports.push({source:key,error:`Source operation failed (${safeError(error,300)}); saved leases and checkpoints will resume`.slice(0,400)});
+   return {mine,endedAt:now(),report:{source:key,error:`Source operation failed (${safeError(error,300)}); saved leases and checkpoints will resume`.slice(0,400)}};
   }
+ }));
+ const reports=outcomes.map(outcome=>outcome.report);
+ const perSource={};
+ for(const row of atCap)perSource[row.source_key]={pages:0,cap_hit:true,stop:'daily_cap'};
+ if(fastExit)for(const row of eligible)perSource[row.source_key]={pages:0,cap_hit:false,stop:'nothing_due'};
+ for(const {report,mine,endedAt} of outcomes){
+  const pages=report.pages??0;
+  perSource[report.source]={pages,requests:report.requests,statuses:report.statuses,identities:report.identities,runs:report.runs,
+   ...(report.error?{error:report.error}:{}),...(report.spendUsd?{model_spend_usd:report.spendUsd}:{}),...(report.runId?{run_id:report.runId}:{}),
+   stop:report.error?'failed':sourceStop({pages,allowance:mine,limitedBy:mine.limitedBy,timeLimited:endedAt>=deadline-90_000}),
+   cap_hit:dailyLeft(report.source)-pages<=0};
  }
+ const stops=Object.values(perSource).map(value=>value.stop);
  const failed=reports.some(report=>report.error||report.allFailed);
  const modelCapReached=model.capReached&&active.some(row=>row.source_key==='official');
- const reason=stopReason({failed,remaining,timeLimited:now()>=deadline-90_000,modelCapReached});
+ const reason=fastExit?'nothing_due':stopReason({failed,pageLimited:stops.includes('page_allowance'),timeLimited:stops.includes('time_limit'),dailyCapped:stops.includes('daily_cap'),modelCapReached});
 
  if(workerRunId){
-  const perSource={};
-  for(const row of atCap)perSource[row.source_key]={pages:0,cap_hit:true};
-  for(const report of reports){
-   const pages=report.pages??0;
-   perSource[report.source]={pages,requests:report.requests,statuses:report.statuses,identities:report.identities,runs:report.runs,
-    ...(report.error?{error:report.error}:{}),...(report.spendUsd?{model_spend_usd:report.spendUsd}:{}),...(report.runId?{run_id:report.runId}:{}),
-    cap_hit:dailyLeft(report.source)-pages<=0};
-  }
   await workerRuns.finishWorkerRun(workerRunId,{perSource,stopReason:reason,modelSpendUsd:reports.reduce((sum,report)=>sum+(report.spendUsd??0),0)}).catch(()=>{});
  }
 
+ const words=value=>String(value).split('_').join(' ');
  const summary=`## Scheduled crawl
 
-Page allowance remaining: ${remaining}. Stopped: ${reason.split('_').join(' ')}.
+${fastExit?'Nothing was due for any source a few minutes ago, so this start exited at once.':`Stopped: ${words(reason)}.`}
 
 `+
   sources.filter(row=>!active.includes(row)).map(row=>`- ${row.source_key}: collection disabled or paused
@@ -318,7 +329,7 @@ Page allowance remaining: ${remaining}. Stopped: ${reason.split('_').join(' ')}.
 `).join('')+
   (modelCapReached?`- model work skipped: today's $${daily.dailySpendUsd} model limit reached
 `:'')+
-  reports.map(report=>`- ${report.source}: ${report.error??JSON.stringify({pages:report.pages,requests:report.requests,statuses:report.statuses,identities:report.identities,runs:report.runs})}
+  reports.map(report=>`- ${report.source}: ${report.error??JSON.stringify({pages:report.pages,allowance:allowances.get(report.source).pages,stopped:words(perSource[report.source].stop),requests:report.requests,statuses:report.statuses,identities:report.identities,runs:report.runs})}
 `).join('');
  console.log(summary);
  if(env.GITHUB_STEP_SUMMARY)await appendFile(env.GITHUB_STEP_SUMMARY,summary);

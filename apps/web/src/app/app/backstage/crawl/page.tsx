@@ -12,7 +12,7 @@ import {
   CRAWL_HUB_PATH, CRAWL_STEPS, OFFICIAL_SITES_PATH, attentionItems, crawlBuckets, crawlSourceName, crawlingState, hubHeadline,
   shortDateTime, sourcePath, type CrawlOverview, type CrawlSourceProgress,
 } from "@/lib/admin-crawl";
-import type { CrawlSchedule } from "@/lib/crawl-schedule";
+import { dispatchFailing, type CrawlDispatch, type CrawlSchedule } from "@/lib/crawl-schedule";
 import { ownerContext } from "@/lib/supabase/data";
 
 export const metadata: Metadata = { title: "Catalogue crawler" };
@@ -30,19 +30,26 @@ async function progressFor(supabase: Supabase, key: string) {
 
 async function Hub() {
   const { supabase } = await ownerContext();
-  const [loaded, overviewRes, flagsRes, scheduleRes] = await Promise.all([
+  const [loaded, overviewRes, flagsRes, scheduleRes, dispatchRes] = await Promise.all([
     Promise.all(SOURCES.map(key => progressFor(supabase, key))),
     supabase.rpc("admin_crawl_overview"),
     supabase.rpc("admin_catalogue_flags"),
     supabase.rpc("admin_crawl_schedule", { page_size: 5, page_offset: 0 }),
+    supabase.rpc("admin_crawl_dispatch"),
   ]);
   const progress = loaded.filter((p): p is CrawlSourceProgress => p !== null);
   if (progress.length !== SOURCES.length || overviewRes.error || !overviewRes.data) return <p>Couldn’t load crawler status.</p>;
   const overview = overviewRes.data as unknown as CrawlOverview;
   const schedule = scheduleRes.error || !scheduleRes.data ? null : (scheduleRes.data as unknown as CrawlSchedule);
+  const dispatch = dispatchRes.error || !dispatchRes.data ? null : (dispatchRes.data as unknown as CrawlDispatch);
   const flags = new Map(((flagsRes.data ?? []) as { flag: string; enabled: boolean }[]).map(row => [row.flag, row.enabled]));
   const chips = flags.get("catalogue_run_chips_enabled");
   const allSources = progress[0].sources;
+  const failing = dispatch ? dispatchFailing(dispatch) : null;
+  const attention = [
+    ...(failing ? [{ source: "Supabase trigger", text: "The last 2 starts failed", reason: failing.detail, next: "Replace the GitHub token. GitHub’s own schedule is the only trigger until then, and it is often late.", href: "#schedule" }] : []),
+    ...attentionItems(overview, allSources),
+  ];
 
   const rows = SOURCES.map((key, index) => {
     const data = progress[index];
@@ -81,7 +88,7 @@ async function Hub() {
       </p>
 
       {schedule
-        ? <ScheduleCard schedule={schedule} sources={allSources} />
+        ? <ScheduleCard schedule={schedule} sources={allSources} dispatch={dispatch} />
         : <p className="text-subheadline text-label-secondary">Couldn’t load the schedule.</p>}
 
       <Section id="pipeline" title="How far the crawler has got" hint="Both sources combined. Each step reads the one before it; nothing reaches members until Publish.">
@@ -134,7 +141,7 @@ async function Hub() {
         </div>
       </Section>
 
-      <NeedsAttention items={attentionItems(overview, allSources)} />
+      <NeedsAttention items={attention} />
 
       <Section id="suggestions" title="Suggestions to members" hint="For everyone, on web and iOS. These switches stay as you leave them.">
         <div className="flex flex-col divide-y divide-separator">
