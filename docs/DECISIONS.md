@@ -1608,3 +1608,12 @@ The twice-hourly GitHub schedule from #505 never started: GitHub scheduled event
 
 The hub stopped loading while an on-time crawl run was active: it made six database calls at once and failed whole if any one hit the 8 second statement limit (`crawl_source_progress` took 20 s and `admin_crawl_overview` 8 s during a run, and a few hundred milliseconds when the database is quiet). Parallel sources made runs heavier on this small instance, and each run now takes about 14 of every 30 minutes. The hub now splits into three independent sections (headline, schedule, details), each with its own Suspense boundary, reads through `lib/crawl-hub-data.ts` (each call tried twice, shared per request with `cache()`), and shows "Couldn't load X. The database is probably busy while a crawl run is active" for the section that fails instead of blanking the page. The schedule card no longer needs the heavy progress call. No database change.
 
+### The hub counts every area and says one thing per source (2026-11-13, #516)
+
+The hub showed Playbill as 83% done because `crawl_source_progress` without a scan picked only the newest of its four current scans (London). Everything the hub and source page say now counts all current scans (called areas in the admin; `scan` and `generation` stay in code). `crawl_source_summary` gives totals, per-step counts and a per-area breakdown in one light read, and `crawl_source_progress` gained `for_all_areas` (default false, so existing calls are unchanged) and `generation_id` on page rows so a row's own area is known when it is retried.
+
+- **Hub rule:** it answers where are we, is anything stuck, and what needs me. Per source, two lines: percent and bar, then whether it is moving and when it finishes, with a "needs you" link only when pages are stuck. The six-step card, the schedule card and recent changes moved off the hub (to each source page and the run history page).
+- **Movement:** pages read in the last 3 hours divided by 3. No reads while work is due is Stalled; nothing waiting is Keeping up to date; work waiting only on retry timers is Waiting to retry. The estimate is waiting pages divided by the rate, as "about N hours" up to half a day and a date and time after that, and is left out when stalled or kept up.
+- **Retry acts on every area.** The existing RPC takes one scan, so the button calls it once per area and adds up the pages.
+- Migration `20261113120000_crawl_source_summary.sql`.
+

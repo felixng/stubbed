@@ -47,9 +47,12 @@ test("collection, pause and block read as one crawling state", () => {
 });
 
 test("page filters take steps, buckets and old names, and build links", () => {
-  const filters = crawlPagesFilters("london_theatre", { step: "event", status: "stuck", pass: scanId, page: "5" });
+  const filters = crawlPagesFilters("london_theatre", { step: "event", status: "stuck", area: scanId, page: "5" });
+  assert.equal(crawlPagesFilters("london_theatre", { pass: scanId }).scan, scanId, "old pass= links still work");
+  assert.equal(crawlPagesFilters("london_theatre", { scan: scanId }).scan, scanId, "old scan= links still work");
+  assert.equal(crawlPagesFilters("london_theatre", {}).scan, undefined, "no area means all areas");
   assert.deepEqual(filters, { source: "london_theatre", step: "event", status: "stuck", scan: scanId, page: 5 });
-  assert.equal(pagesHref(filters, { page: 6 }), `/app/backstage/crawl/sources/london-theatre/pages?step=event&status=stuck&pass=${scanId}&page=6`);
+  assert.equal(pagesHref(filters, { page: 6 }), `/app/backstage/crawl/sources/london-theatre/pages?step=event&status=stuck&area=${scanId}&page=6`);
   assert.deepEqual(crawlPagesFilters("playbill", { stage: "private", status: "weird", scan: "bad", page: "-1" }), { source: "playbill", step: "venue", status: undefined, scan: undefined, page: 1 });
   assert.equal(crawlPagesFilters("playbill", { stage: "event", status: "retry_wait" }).status, "retry_wait");
   assert.equal(sourceKeyFromPath("london-theatre"), "london_theatre");

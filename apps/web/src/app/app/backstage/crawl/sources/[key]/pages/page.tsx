@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { CrawlPageRow } from "@/components/app/admin/CrawlPageRow";
+import { getSummary } from "@/lib/crawl-hub-data";
+import { areaName } from "@/lib/crawl-summary";
 import { CrawlShell } from "@/components/app/admin/CrawlShell";
 import {
   CRAWL_BUCKETS, CRAWL_BUCKET_LABELS, CRAWL_PAGE_SIZE, CRAWL_STAGES, CRAWL_STEPS, crawlBuckets, crawlPagesFilters,
@@ -26,10 +28,13 @@ async function Pages({ params, searchParams }: Pick<PageProps<"/app/backstage/cr
   const { data: payload, error } = await supabase.rpc("crawl_source_progress", {
     for_source: source, for_generation: filters.scan, for_stage: filters.step,
     for_status: filters.status, page_size: CRAWL_PAGE_SIZE, page_offset: (filters.page - 1) * CRAWL_PAGE_SIZE,
+    // No area chosen means every current area of the source.
+    for_all_areas: !filters.scan,
   });
   if (error || !payload) return <p>Couldn’t load these pages.</p>;
   const data = payload as unknown as CrawlSourceProgress;
-  const scan = data.scan;
+  const canFix = filters.scan ? Boolean(data.scan?.is_current) : true;
+  const areas = (await getSummary())?.[source]?.areas ?? [];
   const { data: resultRows, error: resultsError } = data.rows.length
     ? await supabase.rpc("admin_crawl_task_results", { for_tasks: data.rows.map(row => row.id) })
     : { data: {}, error: null };
@@ -40,6 +45,18 @@ async function Pages({ params, searchParams }: Pick<PageProps<"/app/backstage/cr
 
   return (
     <>
+      {areas.length > 1 && (
+        <nav aria-label="Area" className="flex flex-wrap gap-2">
+          <Link href={pagesHref(filters, { scan: undefined, page: 1 })} aria-current={!filters.scan ? "page" : undefined} className={chip}>
+            All areas <span className="font-normal text-label-secondary tabular-nums">{number.format(areas.reduce((sum, area) => sum + area.known, 0))}</span>
+          </Link>
+          {areas.map(area => (
+            <Link key={area.id} href={pagesHref(filters, { scan: area.id, page: 1 })} aria-current={filters.scan === area.id ? "page" : undefined} className={chip}>
+              {areaName(area.scope_key)} <span className="font-normal text-label-secondary tabular-nums">{number.format(area.known)}</span>
+            </Link>
+          ))}
+        </nav>
+      )}
       <nav aria-label="Step" className="flex flex-wrap gap-2">
         {CRAWL_STAGES.map(stage => (
           <Link key={stage} href={pagesHref(filters, { step: stage as CrawlStage, status: undefined, page: 1 })}
@@ -59,9 +76,9 @@ async function Pages({ params, searchParams }: Pick<PageProps<"/app/backstage/cr
           </Link>
         ))}
       </nav>
-      {scan && data.rows.length > 0 ? (
+      {data.rows.length > 0 ? (
         <ul className="flex flex-col gap-2">
-          {data.rows.map(row => <CrawlPageRow key={row.id} row={row} result={results[row.id]} known={!resultsError} source={source} scan={scan} />)}
+          {data.rows.map(row => <CrawlPageRow key={row.id} row={row} result={results[row.id]} known={!resultsError} source={source} canFix={canFix} />)}
         </ul>
       ) : <p className="text-subheadline text-label-secondary">No pages match.</p>}
       <nav aria-label="Page results" className="flex flex-wrap items-center gap-4 text-subheadline">
@@ -76,7 +93,7 @@ async function Pages({ params, searchParams }: Pick<PageProps<"/app/backstage/cr
 export default function CrawlPagesPage(props: PageProps<"/app/backstage/crawl/sources/[key]/pages">) {
   return (
     <CrawlShell back={<Suspense fallback={null}><PagesBack params={props.params} /></Suspense>} title="Crawled pages"
-      intro="Every page the crawler found for this source. Pick a step, then a status.">
+      intro="Every page the crawler found for this source. Pick an area, a step, then a status.">
       <Pages params={props.params} searchParams={props.searchParams} />
     </CrawlShell>
   );

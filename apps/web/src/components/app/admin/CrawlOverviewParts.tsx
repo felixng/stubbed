@@ -3,7 +3,9 @@ import { Section } from "@/components/app/admin/CrawlShell";
 import { recentActionText, shortDateTime, type AttentionItem, type CrawlOverview } from "@/lib/admin-crawl";
 
 // "Nothing needs you." is a real answer, so the empty state says it.
-export function NeedsAttention({ items, children }: { items: AttentionItem[]; children?: React.ReactNode }) {
+export function NeedsAttention({ items, children, hideWhenEmpty = false }: { items: AttentionItem[]; children?: React.ReactNode; hideWhenEmpty?: boolean }) {
+  // On the hub, "nothing needs you" is said by the page being short, not by a card.
+  if (hideWhenEmpty && items.length === 0 && !children) return null;
   return (
     <Section id="needs-attention" title="Needs attention">
       {items.length === 0 ? <p className="text-subheadline text-label-secondary">Nothing needs you.</p> : (

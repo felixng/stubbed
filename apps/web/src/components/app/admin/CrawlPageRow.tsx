@@ -3,7 +3,7 @@ import { panel } from "@/components/app/admin/CrawlShell";
 import { nextActionText } from "@/lib/crawl-schedule";
 import {
   CRAWL_STATUS_LABELS, summariseCrawlShow, summariseCrawlTask,
-  type CrawlPage, type CrawlScan, type CrawlShowResult, type CrawlTaskResult, type TaskTone,
+  type CrawlPage, type CrawlShowResult, type CrawlTaskResult, type TaskTone,
 } from "@/lib/admin-crawl";
 
 const time = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" });
@@ -31,7 +31,7 @@ function ShowLine({ show }: { show: CrawlShowResult }) {
   );
 }
 
-export function CrawlPageRow({ row, result, known, source, scan }: { row: CrawlPage; result?: CrawlTaskResult; known: boolean; source: string; scan: CrawlScan }) {
+export function CrawlPageRow({ row, result, known, source, canFix }: { row: CrawlPage; result?: CrawlTaskResult; known: boolean; source: string; canFix: boolean }) {
   const summary = summariseCrawlTask(row, result, known);
   return (
     <li className={`flex flex-col gap-2 ${panel}`}>
@@ -72,13 +72,13 @@ export function CrawlPageRow({ row, result, known, source, scan }: { row: CrawlP
           <p>“Read again” fetches this page afresh. Use it after a parser fix to check the page.</p>
         </div>
       </details>
-      {scan.is_current && (
+      {canFix && row.generation_id && (
         <div className="flex flex-wrap gap-2">
-          {row.status === "blocked" ? <CrawlSourceControl source={source} operation="retry_blocked" scan={scan.id} task={row.id} />
+          {row.status === "blocked" ? <CrawlSourceControl source={source} operation="retry_blocked" scan={row.generation_id} task={row.id} />
             : (row.status === "failed" || row.status === "retry_wait") &&
-              <CrawlSourceControl source={source} operation="retry_failed" scan={scan.id} task={row.id} />}
+              <CrawlSourceControl source={source} operation="retry_failed" scan={row.generation_id} task={row.id} />}
           {row.status !== "blocked" && row.parser_version &&
-            <CrawlSourceControl source={source} operation="reparse" scan={scan.id} task={row.id} />}
+            <CrawlSourceControl source={source} operation="reparse" scan={row.generation_id} task={row.id} />}
         </div>
       )}
     </li>
