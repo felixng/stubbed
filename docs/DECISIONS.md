@@ -1567,3 +1567,12 @@ Owner: "Succeeded" next to "Reachable event work incomplete" didn't say whether 
 
 Owner: a venue row said Complete but not what we got from it. A venue row on Backstage > Catalogue crawler now lists the shows found on that page, each with its title, whether its page has been read, and the dates (opening, closing, or "scheduled until" when only a booking horizon exists). Migration `20261111150000_crawl_venue_shows.sql` extends `admin_crawl_task_results` with `shows` (up to 50 per venue; the page shows six and folds the rest).
 
+### Crawler admin redesign (2026-11-12, #504)
+
+Owner: "I can't get my head around it without sitting there for 20 minutes, even though I drove the design." Backstage has one Catalogue crawler entry that opens a hub; each source has its own page and a Pages list; the older official-sites crawler lives under the Official source. Map and vocabulary: `docs/CATALOGUE.md`, "Crawler admin map".
+
+- **Controls.** Settings that stay are switches (Crawling, Publication, Run chips); one-off jobs are fixes that appear only where something needs fixing, with a count and a reason. Autofill is a locked row, not a switch. Retry blocked pages, Start a fresh pass, Publish and Send to show review ask first. The legacy "compare page readers" run type and its rerun command are gone from the UI; the backend is untouched. The diary score, run comparison and crawl decisions are collapsed on the run page.
+- **Pages list by bucket.** `crawl_source_progress` accepts `done`, `todo`, `retrying` and `stuck` beside the six raw statuses, so the status chips filter on click without an Apply button.
+- **Read-only overview RPC.** `admin_crawl_overview` supplies what no existing read did (attention with a reason, pages waiting to be checked, next directory refresh, run dates, official-sites summary, recent admin actions). Migration `20261111160000_crawl_admin_overview.sql`; no change to crawl behaviour, flags or data.
+- **Source addresses use hyphens** (`london-theatre`); the database keys keep underscores.
+

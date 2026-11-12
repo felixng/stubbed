@@ -5,11 +5,12 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { createClient } from "@/lib/supabase/client";
 
 type Result = { considered: number; already_shows: number; new_candidates: number; seen_again: number };
 
-// On /app/backstage/crawl/[id]: send the findings marked right to show review
+// On /app/backstage/crawl/runs/[id]: send the findings marked right to show review
 // (admin_send_findings_to_review). Talks, concerts, wrong and unmarked
 // findings stay out, and so do titles that already read as a show.
 export function SendToReview({ runId, waiting }: { runId: string; waiting: number }) {
@@ -18,8 +19,14 @@ export function SendToReview({ runId, waiting }: { runId: string; waiting: numbe
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
   const [refreshing, startRefresh] = useTransition();
+  const [confirm, dialog] = useConfirm();
 
   async function send() {
+    if (!(await confirm({
+      title: `Send ${waiting} new show ${waiting === 1 ? "title" : "titles"}?`,
+      message: "They go to Show candidates for you to approve. Nothing reaches members’ show search until you add it there.",
+      action: "Send",
+    }))) return;
     setBusy(true);
     setError(null);
     const { data, error } = await createClient().rpc("admin_send_findings_to_review", { for_run: runId });
@@ -44,9 +51,11 @@ export function SendToReview({ runId, waiting }: { runId: string; waiting: numbe
           : "Completed crawls automatically send unmatched, page-checked show titles to Show candidates."}
       </p>
       <div className="flex flex-wrap items-center gap-2">
-        <Button size="sm" variant="secondary" disabled={busy || refreshing || waiting === 0} onClick={send}>
-          Send marked findings
-        </Button>
+        {waiting > 0 && (
+          <Button size="sm" variant="secondary" disabled={busy || refreshing} onClick={send}>
+            Send {waiting} new show {waiting === 1 ? "title" : "titles"} to Show candidates
+          </Button>
+        )}
         <Link href="/app/backstage/shows/candidates" className="inline-flex min-h-11 items-center text-subheadline font-semibold text-tint-text">
           Open show candidates
         </Link>
@@ -62,6 +71,7 @@ export function SendToReview({ runId, waiting }: { runId: string; waiting: numbe
           {error}
         </p>
       )}
+      {dialog}
     </section>
   );
 }

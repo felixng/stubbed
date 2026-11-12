@@ -13,7 +13,7 @@ const MARKS: { value: Mark; label: string }[] = [
   { value: "unsure", label: "Unsure" },
 ];
 
-// Mark a finding on /app/backstage/crawl/[id] through admin_review_finding. Tapping
+// Mark a finding on /app/backstage/crawl/runs/[id] through admin_review_finding. Tapping
 // the current mark clears it. The note is saved with the next mark.
 export function ReviewFinding({ id, review, note }: { id: string; review: Mark | null; note: string | null }) {
   const router = useRouter();

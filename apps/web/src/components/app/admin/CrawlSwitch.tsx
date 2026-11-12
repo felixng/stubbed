@@ -45,7 +45,7 @@ const questions: Record<"publication" | "run_chips", { on: Question; off: Questi
 // rediscover) are buttons in CrawlSourceControl instead. Without a `kind` the
 // switch is shown locked, so a setting that isn't ours to change here still reads as a switch.
 export function CrawlSwitch({
-  kind, label, description, checked, disabled, note,
+  kind, label, description, checked, disabled, note, stateText,
 }: {
   kind?: SwitchKind;
   label: string;
@@ -53,6 +53,7 @@ export function CrawlSwitch({
   checked: boolean;
   disabled?: boolean;
   note?: string;
+  stateText?: string;
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -101,7 +102,7 @@ export function CrawlSwitch({
         {message && <span className="text-footnote text-label-secondary" role={failed ? "alert" : "status"}>{message}</span>}
       </div>
       <div className="flex shrink-0 items-center gap-3">
-        <span className="w-8 text-right text-subheadline font-semibold">{checked ? "On" : "Off"}</span>
+        <span className="min-w-8 text-right text-subheadline font-semibold">{stateText ?? (checked ? "On" : "Off")}</span>
         <button
           type="button"
           role="switch"
