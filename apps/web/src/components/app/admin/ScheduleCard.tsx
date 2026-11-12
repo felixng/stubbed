@@ -3,7 +3,7 @@ import {
   CRON_MINUTES, clock, dispatchText, durationText, nextRunAfter, nextRunPlan, pagesText, runAllowance, scheduleAlert, stopReasonText, todaysLimits,
   triggerLabel, viaLabel, type CrawlDispatch, type CrawlSchedule,
 } from "@/lib/crawl-schedule";
-import { crawlSourceName, crawlingState, type CrawlSource } from "@/lib/admin-crawl";
+import { crawlSourceName } from "@/lib/admin-crawl";
 
 const SOURCES = ["london_theatre", "playbill"] as const;
 const number = new Intl.NumberFormat("en-GB");
@@ -17,7 +17,7 @@ const Log = ({ url }: { url: string | null }) => url
   ? <a href={url} target="_blank" rel="noopener noreferrer" className="text-tint-text">Log</a> : null;
 
 // What runs when: the schedule, what is running now, the last run, what the next one will do, and today's limits.
-export function ScheduleCard({ schedule, sources, dispatch }: { schedule: CrawlSchedule; sources: CrawlSource[]; dispatch: CrawlDispatch | null }) {
+export function ScheduleCard({ schedule, dispatch }: { schedule: CrawlSchedule; dispatch: CrawlDispatch | null }) {
   const now = new Date(schedule.server_time);
   const alert = scheduleAlert(schedule);
   const limits = todaysLimits(schedule, [...SOURCES, "official"]);
@@ -60,10 +60,9 @@ export function ScheduleCard({ schedule, sources, dispatch }: { schedule: CrawlS
           <ul className="mt-1 flex flex-col gap-0.5">
             {SOURCES.map(key => {
               const forecast = schedule.forecast[key];
-              const source = sources.find(item => item.source_key === key);
               const left = Math.max(0, limits.sources[key].cap - limits.sources[key].used);
-              if (!forecast || !source) return null;
-              if (!forecast.claimable) return <li key={key}>{crawlSourceName(key)}: {crawlingState(source).label.toLowerCase()}, so it will not run.</li>;
+              if (!forecast) return null;
+              if (!forecast.claimable) return <li key={key}>{crawlSourceName(key)}: paused or not enabled, so it will not run.</li>;
               const plan = nextRunPlan(forecast, runAllowance(schedule.limits, key), left);
               return (
                 <li key={key}>
