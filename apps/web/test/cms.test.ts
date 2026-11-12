@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { copyDefinitions } from "../src/lib/cms/definitions";
 import { defaultsFor, documents, mergeCopy, safeEmail, safeWebUrl, seedDocuments } from "../src/lib/cms/model";
+import { aboutDefaultSections, cleanSections, safeHref } from "../src/lib/cms/sections";
 import { FAQ_SECTIONS } from "../src/lib/faq";
 
 test("partial or malformed CMS content preserves repository copy and cannot introduce asset fields", () => {
@@ -11,12 +12,18 @@ test("partial or malformed CMS content preserves repository copy and cannot intr
   }
   assert.deepEqual(mergeCopy("sharingLanding", {
     headline: "A new headline",
-    signup: " ",
+    signup: "",
     placeholderImage: { _type: "image", asset: "untrusted" },
     intro: "x".repeat(20_001),
     src: "https://example.com/replacement.jpg",
     __proto__: { hacked: true },
-  }), { ...defaults, headline: "A new headline" });
+  }), { ...defaults, headline: "A new headline", signup: "" });
+});
+
+test("a cleared field stays cleared; a missing one falls back", () => {
+  const defaults = defaultsFor("sharingLanding");
+  assert.equal(mergeCopy("sharingLanding", { eyebrow: "" }).eyebrow, "");
+  assert.equal(mergeCopy("sharingLanding", {}).eyebrow, defaults.eyebrow);
 });
 
 test("copy is plain text; markup remains a string for React to escape", () => {
@@ -65,4 +72,40 @@ test("CMS contact links reject executable schemes, credentials and malformed ema
     assert.equal(safeEmail(value, "support@getstubbed.app"), "support@getstubbed.app");
   }
   assert.equal(safeEmail("felix@getstubbed.app", "fallback"), "felix@getstubbed.app");
+});
+
+test("page sections: defaults survive cleaning, and an empty list is a real choice", () => {
+  const defaults = aboutDefaultSections();
+  assert.deepEqual(cleanSections(JSON.parse(JSON.stringify(defaults))), defaults);
+  assert.deepEqual(cleanSections([]), []);
+  assert.equal(cleanSections(undefined), null);
+  assert.equal(cleanSections("nope"), null);
+});
+
+test("page sections drop unsafe links, unknown marks and malformed entries", () => {
+  for (const href of ["javascript:alert(1)", "//evil.example", "http://example.com", "mailto:a@b.co?subject=x", "https://u:p@example.com", "data:text/html,x"]) {
+    assert.equal(safeHref(href), null, href);
+  }
+  for (const href of ["/faq", "https://example.com/a", "mailto:felix@getstubbed.app"]) assert.ok(safeHref(href), href);
+  const [section] = cleanSections([{
+    _key: "a", heading: "Hi", divider: true,
+    body: [
+      { _type: "block", _key: "b1", style: "h1", markDefs: [{ _type: "link", _key: "l1", href: "javascript:alert(1)" }],
+        children: [{ _type: "span", _key: "c1", text: "x", marks: ["l1", "script", "strong"] }] },
+      { _type: "image", _key: "b2" },
+    ],
+    buttons: [{ _key: "x", label: "Bad", href: "javascript:1" }, { _key: "y", label: "Ok", href: "/signup", variant: "other" }],
+  }, null, "junk"])!;
+  assert.equal(section.body.length, 1);
+  assert.equal(section.body[0].style, "normal");
+  assert.deepEqual(section.body[0].markDefs, []);
+  assert.deepEqual(section.body[0].children[0].marks, ["strong"]);
+  assert.deepEqual(section.buttons.map((b) => [b.label, b.variant]), [["Ok", "primary"]]);
+});
+
+test("draft-preview markers are stripped before links are validated", () => {
+  const marker = "\u200b";
+  const [section] = cleanSections([{ _key: "a", heading: "", body: [], buttons: [{ _key: "b", label: "Go", href: `/faq${marker}`, variant: `ghost${marker}` }] }],
+    (value) => value.replaceAll(marker, ""))!;
+  assert.deepEqual(section.buttons.map((b) => [b.href, b.variant]), [["/faq", "ghost"]]);
 });

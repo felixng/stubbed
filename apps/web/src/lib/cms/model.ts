@@ -23,14 +23,15 @@ export function defaultsFor<S extends CopySection>(section: S): Copy<S> {
   ) as Copy<S>;
 }
 
-// CMS data is untrusted: only known, non-empty strings can override copy.
+// CMS data is untrusted: only known strings can override copy. An empty string
+// is a deliberate choice by the editor (a cleared field), not a missing value.
 // Object shape, image sources, routes and application rules never come from it.
 export function mergeCopy<S extends CopySection>(section: S, value: unknown): Copy<S> {
   const result = defaultsFor(section);
   if (!value || typeof value !== "object" || Array.isArray(value)) return result;
   for (const key of Object.keys(result) as (keyof Copy<S>)[]) {
     const candidate = (value as Record<string, unknown>)[key as string];
-    if (typeof candidate === "string" && candidate.trim() && candidate.length <= 20_000) {
+    if (typeof candidate === "string" && candidate.length <= 20_000) {
       result[key] = candidate;
     }
   }
