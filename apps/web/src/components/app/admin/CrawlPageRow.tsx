@@ -1,5 +1,6 @@
 import { CrawlSourceControl } from "@/components/app/admin/CrawlSourceControl";
 import { panel } from "@/components/app/admin/CrawlShell";
+import { nextActionText } from "@/lib/crawl-schedule";
 import {
   CRAWL_STATUS_LABELS, summariseCrawlShow, summariseCrawlTask,
   type CrawlPage, type CrawlScan, type CrawlShowResult, type CrawlTaskResult, type TaskTone,
@@ -59,7 +60,7 @@ export function CrawlPageRow({ row, result, known, source, scan }: { row: CrawlP
       )}
       {summary.missing.length > 0 && <p className="text-footnote text-destructive">Missing: {summary.missing.join(", ")}</p>}
       {row.status !== "succeeded" && row.last_error && <p className="break-words text-footnote">{row.last_error}</p>}
-      {row.status === "retry_wait" && <p className="text-footnote text-label-secondary">Next try {timestamp(row.available_at)}</p>}
+      <p className="text-footnote text-label-secondary">{nextActionText(row)}</p>
       <details className="text-footnote text-label-secondary">
         <summary className="min-h-6 cursor-pointer">Details</summary>
         <div className="mt-1 flex flex-col gap-1">

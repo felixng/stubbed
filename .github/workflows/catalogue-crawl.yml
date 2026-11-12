@@ -28,7 +28,9 @@ on:
         default: ''
         options: ['', benchmark, store, dry-run, load]
   schedule:
-    - cron: "23 4 * * *"
+    # Twice an hour, off the hour and half hour (top-of-hour schedules start latest). Keep in step with
+    # CRON in supabase/scripts/crawl/schedule.mjs; a test fails if they differ.
+    - cron: "17,47 * * * *"
 permissions:
   contents: read
 concurrency:
@@ -56,6 +58,11 @@ jobs:
       - name: Mark an interrupted run failed
         if: ${{ always() && (failure() || cancelled()) }}
         run: node supabase/scripts/crawl/fail-run.mjs
+      - name: Close the run record if the job was interrupted
+        if: ${{ always() }}
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: node supabase/scripts/crawl/close-worker-run.mjs
 
   loop:
     if: ${{ (github.event_name == 'schedule' || (inputs.run_id == '' && inputs.show_types == '')) && vars.CRAWL_LOOP_ENABLED == 'true' }}
@@ -72,6 +79,9 @@ jobs:
       CRAWL_MAX_SEARCHES: ${{ vars.CRAWL_MAX_SEARCHES || '20' }}
       CRAWL_MAX_SPEND_USD: ${{ vars.CRAWL_MAX_SPEND_USD || '1' }}
       CRAWL_SITE_SPEND_USD: ${{ vars.CRAWL_SITE_SPEND_USD || '0.20' }}
+      # Daily limits, so 48 runs a day stay polite to the sites and within the model budget.
+      CRAWL_DAILY_SPEND_USD: ${{ vars.CRAWL_DAILY_SPEND_USD || '2' }}
+      CRAWL_SOURCE_DAILY_PAGES: ${{ vars.CRAWL_SOURCE_DAILY_PAGES || '1000' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -93,6 +103,11 @@ jobs:
       - name: Mark an interrupted loop failed
         if: ${{ always() && (failure() || cancelled()) && env.CRAWL_RUN_ID != '' }}
         run: node supabase/scripts/crawl/fail-run.mjs
+      - name: Close the run record if the job was interrupted
+        if: ${{ always() }}
+        env:
+          JOB_STATUS: ${{ job.status }}
+        run: node supabase/scripts/crawl/close-worker-run.mjs
 
   show-types:
     if: ${{ github.event_name == 'workflow_dispatch' && inputs.show_types != '' }}

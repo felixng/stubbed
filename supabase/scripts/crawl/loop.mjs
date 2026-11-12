@@ -17,10 +17,12 @@ import {discoverLinks,searchCandidates} from './discover.mjs';
 import {writeRules} from './write-rules.mjs';
 import {checkFindings,rulesReader} from './rules.mjs';
 import {structuredReader} from './sources/theatre-site.mjs';
+import {dailyLimits,modelBudget,pageAllowance,stopReason,PAGE_ALLOWANCE,RUN_MINUTES} from './schedule.mjs';
+import * as workerRunStore from './worker-runs.mjs';
 
 export function loopLimits(env=process.env){
  const number=(key,fallback,max)=>{const n=Number(env[key]??fallback);return Number.isFinite(n)&&n>=0?Math.min(n,max):fallback;};
- return {enabled:env.CRAWL_LOOP_ENABLED==='true',maxSites:Math.floor(number('CRAWL_MAX_SITES',25,100)),maxSearches:Math.floor(number('CRAWL_MAX_SEARCHES',20,100)),budgetUsd:number('CRAWL_MAX_SPEND_USD',1,10),siteBudgetUsd:number('CRAWL_SITE_SPEND_USD',0.20,1),maxPages:Math.floor(number('CRAWL_MAX_PAGES',100,200)),maxMs:number('CRAWL_MAX_MINUTES',20,20)*60000};
+ return {enabled:env.CRAWL_LOOP_ENABLED==='true',maxSites:Math.floor(number('CRAWL_MAX_SITES',25,100)),maxSearches:Math.floor(number('CRAWL_MAX_SEARCHES',20,100)),budgetUsd:number('CRAWL_MAX_SPEND_USD',1,10),siteBudgetUsd:number('CRAWL_SITE_SPEND_USD',0.20,1),maxPages:Math.floor(number('CRAWL_MAX_PAGES',PAGE_ALLOWANCE,200)),maxMs:number('CRAWL_MAX_MINUTES',RUN_MINUTES,20)*60000};
 }
 export function executionLimits(env,run=null){
  const limits=loopLimits(env);
@@ -151,7 +153,7 @@ export function loopOutcome(sites){
   allFailed:sites.length>0&&sites.every(site=>['needs_attention','failed'].includes(site.status)),
  };
 }
-export async function main(env=process.env,{runId,scheduled,deadline,maxPages}={}) {
+export async function main(env=process.env,{runId,scheduled,deadline,maxPages,dailyModelUsd}={}) {
  let run=runId?await readRun(runId):null;
  if(runId && (!run || run.status!=='queued'))throw new Error('Run is missing or already started');
  const limits=executionLimits(env,run);
@@ -159,6 +161,8 @@ export async function main(env=process.env,{runId,scheduled,deadline,maxPages}={
  if(scheduled){
   limits.budgetUsd=Math.min(1,limits.budgetUsd);
   limits.siteBudgetUsd=Math.min(0.20,limits.siteBudgetUsd);
+  // What is left of the daily model cap; 0 means no model work this run, and non-model crawling continues.
+  if(Number.isFinite(dailyModelUsd))limits.budgetUsd=Math.min(limits.budgetUsd,Math.max(0,dailyModelUsd));
  }
  const spend={usd:0};
  const gate=createHostGate();
@@ -218,6 +222,8 @@ export async function main(env=process.env,{runId,scheduled,deadline,maxPages}={
    writeRules:async args=>writeRules({...args,fetchPage,proposed:await store.proposed(args.site),saveVersion:(rules,author,check)=>store.saveVersion(args.site,rules,author,check),activate:(id,check)=>store.activate(args.site,id,check)}),
    crawl:(site,options)=>{const cache=Object.fromEntries((site.pages??[]).filter(p=>p.status==='ok'&&p.rule_id===site.rule_id).map(p=>[p.url,{etag:p.etag,lastModified:p.last_modified}]));return crawlPersistentSite({site,venues:site.venues,run,spend,readers:[rulesReader,structuredReader],fetchPage:makeFetcher(cache),bounded:scheduled,store:{page:savePage,site:saveSite},load:(url,findings)=>loadSite(run.id,url,findings),publish:()=>publish(run.id),...options});},checkpoint}});
   if(scheduled) result.pages=pages;
+  result.spendUsd=spend.usd;
+  result.runId=run.id;
   const progress=await store.progress();
   const {findings,allFailed}=loopOutcome(result.sites);
   await finishRun(run.id,{status:allFailed?'failed':'done',summary:{...result,progress,findings},costUsd:spend.usd});
@@ -231,7 +237,7 @@ export async function main(env=process.env,{runId,scheduled,deadline,maxPages}={
 }
 export async function runScheduled({
  env=process.env,source,stage='all',scope,now=Date.now,frontier=createFrontierStore(),
- runSource=runScheduledSource,runOfficial=main,
+ runSource=runScheduledSource,runOfficial=main,workerRuns=null,
 }={}){
  const limits=loopLimits(env);
  if(!limits.enabled){console.log('Crawl loop disabled. Set CRAWL_LOOP_ENABLED=true to start.');return [];}
@@ -242,21 +248,35 @@ export async function runScheduled({
  // behind an older backlog; it needs a named source and must be one of that adapter's seed scopes.
  if(scope&&(!source||source==='official'||!adapterScopes(source).includes(scope)))throw new Error('Unknown crawl scope for that source');
  const deadline=now()+limits.maxMs;
- let remaining=Math.min(100,limits.maxPages);
+ let remaining=Math.min(PAGE_ALLOWANCE,limits.maxPages);
  const keys=source?[source]:stage==='all'?[...scheduledSources,'official']:scheduledSources;
  const sources=await Promise.all(keys.map(key=>frontier.source(key)));
  if(sources.some(row=>!row))throw new Error('Scheduled crawl source missing in the database');
  const active=sources.filter(row=>row.collection_enabled&&!row.paused_reason&&!row.operator_paused_at);
+
+ // Daily limits. Recording is best effort: a failure here must never stop the crawl itself.
+ const daily=dailyLimits(env);
+ const used=workerRuns?await workerRuns.usedLast24h().catch(()=>({pages:{},spendUsd:0})):{pages:{},spendUsd:0};
+ const dailyLeft=key=>Math.max(0,daily.sourceDailyPages-(used.pages[key]??0));
+ const model=modelBudget({runBudgetUsd:limits.budgetUsd,dailySpendUsd:daily.dailySpendUsd,spentLast24hUsd:used.spendUsd});
+ const atCap=active.filter(row=>dailyLeft(row.source_key)===0);
+ const eligible=active.filter(row=>!atCap.includes(row));
+ const workerRunId=workerRuns?await workerRuns.startWorkerRun({
+  trigger:workerRunStore.triggerFor(env),filters:{source,stage,scope},
+  limits:{page_allowance:remaining,run_minutes:Math.round(limits.maxMs/60000),run_spend_usd:limits.budgetUsd,daily_spend_usd:daily.dailySpendUsd,source_daily_pages:daily.sourceDailyPages},
+ },env).catch(()=>null):null;
+
  const reports=[];
- for(const [index,row] of active.entries()){
+ for(const [index,row] of eligible.entries()){
   if(!remaining||now()>=deadline-90_000)break;
-  const count=active.length-index;
-  const maxPages=Math.ceil(remaining/count);
-  const sourceDeadline=now()+Math.floor((deadline-now())/count);
+  const count=eligible.length-index;
   const key=row.source_key;
+  const maxPages=pageAllowance({remaining,sourcesLeft:count,dailyRemaining:dailyLeft(key)});
+  if(!maxPages)continue;
+  const sourceDeadline=now()+Math.floor((deadline-now())/count);
   try{
    const result=key==='official'
-    ?await runOfficial(env,{scheduled:true,deadline:sourceDeadline,maxPages})
+    ?await runOfficial(env,{scheduled:true,deadline:sourceDeadline,maxPages,dailyModelUsd:model.budgetUsd})
     :await runSource(row,{stage,...(scope?{scope}:{}),maxPages,stopSignal:AbortSignal.timeout(Math.max(1,sourceDeadline-now()-90_000))},frontier);
    remaining-=result.pages??0;
    reports.push({...result,source:key,...(result.publishError?{error:`Publication failed (${result.publishError})`}:{})});
@@ -271,18 +291,38 @@ export async function runScheduled({
    reports.push({source:key,error:`Source operation failed (${safeError(error,300)}); saved leases and checkpoints will resume`.slice(0,400)});
   }
  }
+ const failed=reports.some(report=>report.error||report.allFailed);
+ const modelCapReached=model.capReached&&active.some(row=>row.source_key==='official');
+ const reason=stopReason({failed,remaining,timeLimited:now()>=deadline-90_000,modelCapReached});
+
+ if(workerRunId){
+  const perSource={};
+  for(const row of atCap)perSource[row.source_key]={pages:0,cap_hit:true};
+  for(const report of reports){
+   const pages=report.pages??0;
+   perSource[report.source]={pages,requests:report.requests,statuses:report.statuses,identities:report.identities,runs:report.runs,
+    ...(report.error?{error:report.error}:{}),...(report.spendUsd?{model_spend_usd:report.spendUsd}:{}),...(report.runId?{run_id:report.runId}:{}),
+    cap_hit:dailyLeft(report.source)-pages<=0};
+  }
+  await workerRuns.finishWorkerRun(workerRunId,{perSource,stopReason:reason,modelSpendUsd:reports.reduce((sum,report)=>sum+(report.spendUsd??0),0)}).catch(()=>{});
+ }
+
  const summary=`## Scheduled crawl
 
-Page allowance remaining: ${remaining}.
+Page allowance remaining: ${remaining}. Stopped: ${reason.split('_').join(' ')}.
 
 `+
   sources.filter(row=>!active.includes(row)).map(row=>`- ${row.source_key}: collection disabled or paused
 `).join('')+
+  atCap.map(row=>`- ${row.source_key}: today's limit of ${daily.sourceDailyPages} pages reached; resumes as earlier runs age out of the last 24 hours
+`).join('')+
+  (modelCapReached?`- model work skipped: today's $${daily.dailySpendUsd} model limit reached
+`:'')+
   reports.map(report=>`- ${report.source}: ${report.error??JSON.stringify({pages:report.pages,requests:report.requests,statuses:report.statuses,identities:report.identities,runs:report.runs})}
 `).join('');
  console.log(summary);
  if(env.GITHUB_STEP_SUMMARY)await appendFile(env.GITHUB_STEP_SUMMARY,summary);
- if(reports.some(report=>report.error||report.allFailed))throw new Error('One or more crawl sources failed; see run summary');
+ if(failed)throw new Error('One or more crawl sources failed; see run summary');
  return reports;
 }
 
@@ -290,7 +330,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   if (process.argv[2] === '--scheduled') {
     Promise.resolve().then(()=>{
       const {values}=parseArgs({args:process.argv.slice(3),options:{source:{type:'string'},stage:{type:'string'},scope:{type:'string'}}});
-      return runScheduled(values);
+      return runScheduled({...values,workerRuns:workerRunStore});
     }).catch(error=>{console.error(error.message);process.exitCode=1;});
   } else if (process.argv.length > 2) {
     runFrontierCli().catch(error => { console.error(error.message); process.exitCode = 1; });

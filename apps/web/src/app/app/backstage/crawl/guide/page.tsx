@@ -3,6 +3,10 @@ import Link from "next/link";
 
 import { CrawlShell, Section } from "@/components/app/admin/CrawlShell";
 import { CRAWL_BUCKETS, CRAWL_BUCKET_LABELS, CRAWL_HUB_PATH, CRAWL_STEPS } from "@/lib/admin-crawl";
+import {
+  CRON_MINUTES, DEFAULT_DAILY_SPEND_USD, DEFAULT_RUN_SPEND_USD, DEFAULT_SOURCE_DAILY_PAGES, JOB_TIMEOUT_MINUTES, PAGE_ALLOWANCE,
+  REREAD_DAYS, RETRY_DELAYS_SECONDS, RUN_MINUTES,
+} from "@/lib/crawl-schedule";
 
 export const metadata: Metadata = { title: "How the crawler works" };
 
@@ -13,6 +17,17 @@ const bucketMeaning: Record<(typeof CRAWL_BUCKETS)[number], string> = {
   done: "Read successfully.", todo: "Queued, or being read right now.", retrying: "Failed once and will try again on its own.", stuck: "Failed or blocked. Needs a look.",
 };
 const th = "py-2 pr-3 text-footnote font-semibold text-label-secondary";
+const waitText = (seconds: number) => (seconds < 3600 ? `${seconds / 60} min` : `${seconds / 3600} ${seconds === 3600 ? "hour" : "hours"}`);
+const days = (n: number) => `${n} ${n === 1 ? "day" : "days"}`;
+const rereads: [string, number][] = [
+  ["Directory page", REREAD_DAYS.directory],
+  ["Venue page that lists current or upcoming shows", REREAD_DAYS.venueListingCurrentShows],
+  ["Any other venue page", REREAD_DAYS.venueOther],
+  ["Show page starting within 30 days, or running now", REREAD_DAYS.eventStartingSoonOrRunning],
+  ["Show page further out, or with no date", REREAD_DAYS.eventFurtherOutOrUndated],
+  ["Show page in between", REREAD_DAYS.eventOtherwise],
+  ["Show page that has closed", REREAD_DAYS.eventClosed],
+];
 
 export default function CrawlGuidePage() {
   return (
@@ -34,6 +49,61 @@ export default function CrawlGuidePage() {
           </table>
         </div>
         <p className="text-subheadline">Steps 1 to 3 are the crawl. Everything up to and including Check is private; members see nothing until Publish. Suggest is what members see.</p>
+      </Section>
+
+      <Section id="how-it-runs" title="How it runs" hint="These numbers come from the values the crawler itself uses.">
+        <p className="text-subheadline">
+          A run starts every 30 minutes, at :{CRON_MINUTES[0]} and :{CRON_MINUTES[1]}. GitHub sometimes starts it late; a late run just waits its turn, so runs never overlap.
+          Each run reads up to {PAGE_ALLOWANCE} pages, shared evenly between the sources that are on, and stops after {RUN_MINUTES} minutes (the job is cut off at {JOB_TIMEOUT_MINUTES}).
+          Starting a run by hand uses the same queue.
+        </p>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[30rem] border-collapse text-left text-subheadline">
+            <thead><tr><th className={th}>Limit</th><th className={th}>Default</th><th className={th}>Change it with</th></tr></thead>
+            <tbody className="divide-y divide-separator align-top">
+              <tr><td className="py-2 pr-3">Pages per source per day</td><td className="py-2 pr-3">{DEFAULT_SOURCE_DAILY_PAGES.toLocaleString("en-GB")}, over a rolling 24 hours</td><td className="py-2"><code>CRAWL_SOURCE_DAILY_PAGES</code></td></tr>
+              <tr><td className="py-2 pr-3">Model spend per day</td><td className="py-2 pr-3">${DEFAULT_DAILY_SPEND_USD}</td><td className="py-2"><code>CRAWL_DAILY_SPEND_USD</code></td></tr>
+              <tr><td className="py-2 pr-3">Model spend per run</td><td className="py-2 pr-3">${DEFAULT_RUN_SPEND_USD}</td><td className="py-2"><code>CRAWL_MAX_SPEND_USD</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="text-subheadline">
+          A source that reaches its daily page limit gets no pages until earlier runs age out of the last 24 hours, and its share goes to the other sources.
+          When the daily model limit is reached the crawler skips model work and keeps reading pages.
+        </p>
+
+        <h3 className="text-subheadline font-semibold">When a page fails</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[26rem] border-collapse text-left text-subheadline">
+            <thead><tr><th className={th}>Retry</th><th className={th}>Waits</th><th className={th}>Then</th></tr></thead>
+            <tbody className="divide-y divide-separator">
+              {RETRY_DELAYS_SECONDS.map((seconds, index) => (
+                <tr key={seconds}><td className="py-2 pr-3">{index + 1} of {RETRY_DELAYS_SECONDS.length}</td><td className="py-2 pr-3">{waitText(seconds)}</td><td className="py-2 text-label-secondary">Tries again automatically, in the next run after that</td></tr>
+              ))}
+              <tr><td className="py-2 pr-3 font-semibold">After the last</td><td className="py-2 pr-3">—</td><td className="py-2 font-semibold">Failed. Won’t retry by itself; an admin retries it.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p className="text-subheadline">
+          If a site says we are going too fast, the page waits for the time the site asks, or an hour, and tries again by itself.
+          If a site blocks us, the whole source pauses until an admin retries the blocked pages. Retries only happen while a run is active.
+        </p>
+
+        <h3 className="text-subheadline font-semibold">When a page is read again</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[26rem] border-collapse text-left text-subheadline">
+            <thead><tr><th className={th}>Page</th><th className={th}>Read again after</th></tr></thead>
+            <tbody className="divide-y divide-separator">
+              {rereads.map(([label, count]) => <tr key={label}><td className="py-2 pr-3">{label}</td><td className="py-2">{days(count)}</td></tr>)}
+            </tbody>
+          </table>
+        </div>
+        <p className="text-subheadline">Shows that closed more than two years ago are read last.</p>
+
+        <h3 className="text-subheadline font-semibold">To pause</h3>
+        <p className="text-subheadline">
+          Pause one source with its Crawling switch. To stop everything, set the repository variable <code>CRAWL_LOOP_ENABLED</code> to false; the hub then warns that no run has happened in two hours.
+        </p>
       </Section>
 
       <Section id="statuses" title="Page statuses" hint="Six statuses are grouped into four for summaries. Each page row still shows its exact status under Details.">

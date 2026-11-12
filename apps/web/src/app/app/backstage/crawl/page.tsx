@@ -6,10 +6,13 @@ import { CrawlSwitch } from "@/components/app/admin/CrawlSwitch";
 import { NeedsAttention, RecentChanges } from "@/components/app/admin/CrawlOverviewParts";
 import { CrawlShell, Section } from "@/components/app/admin/CrawlShell";
 import { PipelineDiagram, type PipelineStep } from "@/components/app/admin/PipelineDiagram";
+import { RunHistoryTable } from "@/components/app/admin/RunHistoryTable";
+import { ScheduleCard } from "@/components/app/admin/ScheduleCard";
 import {
-  CRAWL_STEPS, OFFICIAL_SITES_PATH, attentionItems, crawlBuckets, crawlSourceName, crawlingState, hubHeadline,
+  CRAWL_HUB_PATH, CRAWL_STEPS, OFFICIAL_SITES_PATH, attentionItems, crawlBuckets, crawlSourceName, crawlingState, hubHeadline,
   shortDateTime, sourcePath, type CrawlOverview, type CrawlSourceProgress,
 } from "@/lib/admin-crawl";
+import type { CrawlSchedule } from "@/lib/crawl-schedule";
 import { ownerContext } from "@/lib/supabase/data";
 
 export const metadata: Metadata = { title: "Catalogue crawler" };
@@ -27,14 +30,16 @@ async function progressFor(supabase: Supabase, key: string) {
 
 async function Hub() {
   const { supabase } = await ownerContext();
-  const [loaded, overviewRes, flagsRes] = await Promise.all([
+  const [loaded, overviewRes, flagsRes, scheduleRes] = await Promise.all([
     Promise.all(SOURCES.map(key => progressFor(supabase, key))),
     supabase.rpc("admin_crawl_overview"),
     supabase.rpc("admin_catalogue_flags"),
+    supabase.rpc("admin_crawl_schedule", { page_size: 5, page_offset: 0 }),
   ]);
   const progress = loaded.filter((p): p is CrawlSourceProgress => p !== null);
   if (progress.length !== SOURCES.length || overviewRes.error || !overviewRes.data) return <p>Couldn’t load crawler status.</p>;
   const overview = overviewRes.data as unknown as CrawlOverview;
+  const schedule = scheduleRes.error || !scheduleRes.data ? null : (scheduleRes.data as unknown as CrawlSchedule);
   const flags = new Map(((flagsRes.data ?? []) as { flag: string; enabled: boolean }[]).map(row => [row.flag, row.enabled]));
   const chips = flags.get("catalogue_run_chips_enabled");
   const allSources = progress[0].sources;
@@ -74,6 +79,10 @@ async function Hub() {
       <p className="font-display text-title-2">
         {hubHeadline(rows.map(row => ({ key: row.key, state: row.state, publishing: row.source.publication_enabled })), stuck, retrying, overview.run_dates.from_sources)}
       </p>
+
+      {schedule
+        ? <ScheduleCard schedule={schedule} sources={allSources} />
+        : <p className="text-subheadline text-label-secondary">Couldn’t load the schedule.</p>}
 
       <Section id="pipeline" title="How far the crawler has got" hint="Both sources combined. Each step reads the one before it; nothing reaches members until Publish.">
         <PipelineDiagram steps={steps} label="Crawler steps" />
@@ -141,6 +150,13 @@ async function Hub() {
       </Section>
 
       <RecentChanges actions={overview.recent_actions} />
+
+      {schedule && (
+        <Section id="recent-runs" title="Recent runs">
+          <RunHistoryTable runs={schedule.runs} />
+          <Link href={`${CRAWL_HUB_PATH}/runs`} className="inline-flex min-h-11 items-center text-subheadline text-tint-text">All runs</Link>
+        </Section>
+      )}
     </>
   );
 }

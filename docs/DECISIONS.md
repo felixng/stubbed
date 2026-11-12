@@ -1576,3 +1576,13 @@ Owner: "I can't get my head around it without sitting there for 20 minutes, even
 - **Read-only overview RPC.** `admin_crawl_overview` supplies what no existing read did (attention with a reason, pages waiting to be checked, next directory refresh, run dates, official-sites summary, recent admin actions). Migration `20261111160000_crawl_admin_overview.sql`; no change to crawl behaviour, flags or data.
 - **Source addresses use hyphens** (`london-theatre`); the database keys keep underscores.
 
+### Crawl twice an hour, and show what runs when (2026-11-12, #505)
+
+Owner: "I don't know what is going to be run when, whether something is automatically being retried, or what schedule things run on." The workflow cron is now `17,47 * * * *` (was daily). To keep 48 runs a day polite and cheap, two limits were added as repository variables: 1,000 pages per source and $2 of model spend, both over a rolling 24 hours. Both are enforced by the worker from `crawl_worker_runs` and `crawl_ai_reservations`, so they need no change to the database functions that reserve spend.
+
+- **One row per execution.** `crawl_worker_runs` is written by the worker (schedule, by hand and Start a crawl), closed by a final workflow step if the job is interrupted, and read by admins. Recording is best effort: a failure to write the row never stops the crawl, it only means that run is missing from the history and the daily page count.
+- **Stop reason precedence:** failed, then page allowance, then time limit, then daily model cap, then nothing due.
+- **Retry wording uses real counts.** The ladder has five retries after the first attempt, so a page reads "Retry 2 of 5" and "Gave up after 5 retries".
+- **Guide and drift.** The guide's tables use `apps/web/src/lib/crawl-schedule.ts`; a test compares it with `supabase/scripts/crawl/schedule.mjs`, the workflow cron and the refresh intervals in the migration, so they cannot silently differ.
+- Migration `20261112120000_crawl_worker_runs.sql`. It also replaces `crawl_source_progress` to add `consecutive_failures` and `refresh_at` to page rows.
+
