@@ -112,6 +112,21 @@ export default function CrawlGuidePage() {
         </p>
       </Section>
 
+      <Section id="areas" title="Areas and progress" hint="What the hub's percentage, rate and finish time mean.">
+        <p className="text-subheadline">
+          A source can have several areas: the separate parts of a site the crawler reads, such as Broadway and London for Playbill, or a single theatre.
+          Everything on the hub counts <span className="font-semibold">every area together</span>, so a source is never shown as nearly done because one small area is.
+        </p>
+        <ul className="flex flex-col gap-1 text-subheadline">
+          <li><span className="font-semibold">Percentage.</span> Pages read out of pages found so far, across all areas and all steps. It is never 100% until every known page is read.</li>
+          <li><span className="font-semibold">Reading ~300 pages/hour.</span> Pages read in the last 3 hours, divided by 3.</li>
+          <li><span className="font-semibold">Done in about 2 hours, or around 13 Nov 12:00 UTC.</span> Pages still waiting divided by that rate. It grows whenever new pages are found, and it is left out when nothing is being read.</li>
+          <li><span className="font-semibold">Keeping up to date.</span> Nothing is waiting. Pages are only being read again on their usual schedule.</li>
+          <li><span className="font-semibold">Stalled.</span> Pages are due but none was read for hours. Look at Needs attention and the run history.</li>
+          <li><span className="font-semibold">Waiting its turn.</span> An area has work due but nothing was read in 3 hours, while another area of the same source is being read. The oldest pages go first.</li>
+        </ul>
+      </Section>
+
       <Section id="statuses" title="Page statuses" hint="Six statuses are grouped into four for summaries. Each page row still shows its exact status under Details.">
         <ul className="flex flex-col gap-1 text-subheadline">
           {CRAWL_BUCKETS.map(bucket => <li key={bucket}><span className="font-semibold">{CRAWL_BUCKET_LABELS[bucket]}.</span> {bucketMeaning[bucket]}</li>)}

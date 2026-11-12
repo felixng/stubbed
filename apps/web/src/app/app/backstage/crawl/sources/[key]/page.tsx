@@ -7,9 +7,13 @@ import { CrawlSwitch } from "@/components/app/admin/CrawlSwitch";
 import { NeedsAttention, RecentChanges } from "@/components/app/admin/CrawlOverviewParts";
 import { CrawlShell, Section } from "@/components/app/admin/CrawlShell";
 import { OfficialSource } from "@/components/app/admin/OfficialSource";
+import { CrawlBar } from "@/components/app/admin/CrawlBar";
+import { PipelineDiagram, type PipelineStep } from "@/components/app/admin/PipelineDiagram";
+import { getSummary } from "@/lib/crawl-hub-data";
+import { areaLines, areaName, sourceLine, stepsLine, type SourceSummary } from "@/lib/crawl-summary";
 import {
   CRAWL_BUCKETS, CRAWL_BUCKET_LABELS, CRAWL_STAGES, CRAWL_STEPS, attentionItems, crawlBuckets, crawlSourceName, crawlingState,
-  isCrawlSource, pagesHref, shortDate, shortDateTime, sourceKeyFromPath, sourcePath, sourceStatusSentence, stepName,
+  isCrawlSource, pagesHref, shortDate, shortDateTime, sourceKeyFromPath, sourcePath, stepName,
   type CrawlOverview, type CrawlSourceProgress,
 } from "@/lib/admin-crawl";
 import { ownerContext } from "@/lib/supabase/data";
@@ -20,18 +24,35 @@ const number = new Intl.NumberFormat("en-GB");
 const n = (value: number) => number.format(value);
 const th = "py-2 pr-3 text-footnote font-semibold text-label-secondary";
 
+// The first five steps for one source, with this source's own numbers. Suggest is for everyone, so it lives on the hub.
+function stepsFor(publishing: boolean, summary: SourceSummary | undefined, waiting: number, published: number): PipelineStep[] {
+  const stage = (key: string) => summary?.stages[key] ?? { known: 0, read: 0, stuck: 0 };
+  const crawl = (index: number, key: string, noun: string): PipelineStep => {
+    const counts = stage(key);
+    return { ...CRAWL_STEPS[index], summary: `${n(counts.read)} of ${n(counts.known)} ${noun} read`, progress: { done: counts.read, total: counts.known, stuck: counts.stuck ?? 0 },
+      tone: (counts.stuck ?? 0) > 0 ? "bad" : counts.read < counts.known ? "waiting" : "good" };
+  };
+  return [
+    crawl(0, "directory", "directory pages"), crawl(1, "venue", "venue pages"), crawl(2, "event", "show pages"),
+    { ...CRAWL_STEPS[3], summary: `${n(waiting)} ${waiting === 1 ? "page is" : "pages are"} waiting to be checked.`, tone: waiting ? "waiting" : "neutral" },
+    { ...CRAWL_STEPS[4], summary: `${publishing ? "On." : "Off, so nothing from this source reaches the catalogue."} ${n(published)} run dates published.`, tone: published ? "good" : "neutral" },
+  ];
+}
+
 async function Source({ params, searchParams }: Pick<PageProps<"/app/backstage/crawl/sources/[key]">, "params" | "searchParams">) {
   const key = sourceKeyFromPath((await params).key);
   if (!isCrawlSource(key)) notFound();
   if (key === "official") return <OfficialSource />;
-  const pass = (await searchParams).pass;
+  const input = await searchParams;
+  // ?area= (older links used ?pass=) shows one earlier reading; without it the page covers every current area.
+  const chosen = [input.area, input.pass].find(value => typeof value === "string" && /^[0-9a-f-]{36}$/i.test(value)) as string | undefined;
   const { supabase } = await ownerContext();
-  const [progressRes, overviewRes] = await Promise.all([
+  const [progressRes, overviewRes, summaryAll] = await Promise.all([
     supabase.rpc("crawl_source_progress", {
-      for_source: key, for_generation: typeof pass === "string" && /^[0-9a-f-]{36}$/i.test(pass) ? pass : undefined,
-      for_stage: "venue", page_size: 1, page_offset: 0,
+      for_source: key, for_generation: chosen, for_stage: "venue", page_size: 1, page_offset: 0, for_all_areas: !chosen,
     }),
     supabase.rpc("admin_crawl_overview", { for_source: key }),
+    getSummary(),
   ]);
   if (progressRes.error || !progressRes.data || overviewRes.error || !overviewRes.data) return <p>Couldn’t load this source.</p>;
   const data = progressRes.data as unknown as CrawlSourceProgress;
@@ -41,24 +62,36 @@ async function Source({ params, searchParams }: Pick<PageProps<"/app/backstage/c
   const extras = overview.sources[key];
   const scan = data.scan;
   const state = crawlingState(source);
-  const filters = { source: key, step: "venue" as const, scan: scan && !scan.is_current ? scan.id : undefined, page: 1 };
+  const summary = summaryAll?.[key];
+  const areas = summary?.areas ?? [];
+  const line = summary ? sourceLine(key, summary, state, new Date()) : null;
+  const filters = { source: key, step: "venue" as const, scan: chosen, page: 1 };
 
   const totals = CRAWL_STAGES.map(stage => crawlBuckets(data.stages[stage]));
   const failed = totals.reduce((sum, b) => sum + b.retrying, 0) + data.stages.directory.failed + data.stages.venue.failed + data.stages.event.failed;
   const blocked = CRAWL_STAGES.reduce((sum, stage) => sum + data.stages[stage].blocked, 0);
-  const needAttention = failed + blocked;
-  const canFix = Boolean(scan?.is_current);
+  const canFix = chosen ? Boolean(scan?.is_current) : true;
+  const areaIds = areas.map(area => area.id);
   const items = attentionItems(overview, [source]);
   const waiting = extras?.unchecked_pages ?? 0;
   const id = data.identities, ev = data.evidence;
 
   return (
     <>
-      <p className="font-display text-title-2">
-        {sourceStatusSentence({ state, publishing: source.publication_enabled, scan, needAttention })}
-      </p>
-      {scan && !scan.is_current && (
-        <p className="text-subheadline">You are looking at an earlier pass. <Link href={sourcePath(key)} className="text-tint-text">Back to the current pass</Link></p>
+      {line && (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <span className="font-display text-title tabular-nums">{line.percent === null ? "—" : `${line.percent}%`}</span>
+            <div className="min-w-0 flex-1"><CrawlBar done={line.read} stuck={line.stuck} total={line.known} label={`${n(line.read)} of ${n(line.known)} pages read`} /></div>
+          </div>
+          <p className={`text-headline ${line.state === "stalled" ? "text-destructive" : ""}`}>
+            {line.movement}{line.finish ? ` · ${line.finish}` : ""}
+          </p>
+          <p className="text-footnote text-label-secondary">{n(line.read)} of {n(line.known)} pages read across {areas.length === 1 ? "its area" : `its ${areas.length} areas`}. Estimates grow when new pages are found.</p>
+        </div>
+      )}
+      {chosen && (
+        <p className="text-subheadline">You are looking at one earlier reading of an area. <Link href={sourcePath(key)} className="text-tint-text">Back to the current areas</Link></p>
       )}
 
       <Section id="switches" title="Switches" hint="These stay as you leave them.">
@@ -75,22 +108,44 @@ async function Source({ params, searchParams }: Pick<PageProps<"/app/backstage/c
         </div>
       </Section>
 
-      <NeedsAttention items={items}>
+      <NeedsAttention hideWhenEmpty items={items}>
         {canFix && failed > 0 && (
           <div className="flex flex-col gap-1 border-t border-separator pt-3">
             <p className="text-subheadline">Pages that failed retry on their own at the time shown on each page. Retry now only to hurry them.</p>
-            <CrawlSourceControl source={key} operation="retry_failed" scan={scan!.id} label={`Retry ${n(failed)} ${failed === 1 ? "page" : "pages"}`} />
+            <CrawlSourceControl source={key} operation="retry_failed" scans={areaIds.length ? areaIds : undefined} scan={scan?.id} label={`Retry ${n(failed)} ${failed === 1 ? "page" : "pages"}`} />
           </div>
         )}
         {canFix && blocked > 0 && (
           <div className="flex flex-col gap-1 border-t border-separator pt-3">
             <p className="text-subheadline">The site blocked {n(blocked)} {blocked === 1 ? "page" : "pages"}{source.paused_reason ? ` (${source.paused_reason})` : ""}. When you think the block has lifted, retry them. Retrying too soon may get us blocked again.</p>
-            <CrawlSourceControl source={key} operation="retry_blocked" scan={scan!.id} label={`Retry ${n(blocked)} blocked ${blocked === 1 ? "page" : "pages"}`} />
+            <CrawlSourceControl source={key} operation="retry_blocked" scans={areaIds.length ? areaIds : undefined} scan={scan?.id} label={`Retry ${n(blocked)} blocked ${blocked === 1 ? "page" : "pages"}`} />
           </div>
         )}
       </NeedsAttention>
 
-      <Section id="funnel" title="Steps" hint="Each count opens those pages. Totals are pages found so far, not everything on the site.">
+      {areas.length > 0 && !chosen && (
+        <Section id="areas" title="Areas" hint="Each part of the site the crawler reads, largest first. Each line opens its pages.">
+          <ul className="flex flex-col divide-y divide-separator">
+            {areaLines(summary!).map((item, index) => (
+              <li key={areas[index].id}>
+                <Link href={pagesHref(filters, { scan: areas[index].id })} className="flex min-h-11 flex-wrap items-baseline justify-between gap-x-4 py-2 text-subheadline">
+                  <span className="font-semibold text-label">{item.name}</span>
+                  <span className={item.state === "waiting_turn" ? "text-label-secondary" : item.state === "done" ? "text-label-secondary" : "text-label"}>{item.text}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+
+      <details className="min-w-0 rounded-md border border-separator bg-surface p-4">
+        <summary className="min-h-11 cursor-pointer text-headline">
+          Steps
+          {summary && <span className="block text-subheadline font-normal text-label-secondary">{stepsLine(summary.stages)}</span>}
+        </summary>
+        <div className="mt-2 flex flex-col gap-3">
+          <PipelineDiagram label="Steps for this source" steps={stepsFor(source.publication_enabled, summary, waiting, ev.published_runs)} />
+          <p className="text-footnote text-label-secondary">Each count opens those pages. Totals are pages found so far, not everything on the site.</p>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[32rem] border-collapse text-left text-subheadline">
             <thead>
@@ -123,7 +178,8 @@ async function Source({ params, searchParams }: Pick<PageProps<"/app/backstage/c
           <li><span className="font-semibold">{CRAWL_STEPS[4].name}:</span> {source.publication_enabled ? "On." : "Off, so nothing from this source reaches the catalogue."} {n(ev.published_runs)} run dates published.</li>
         </ul>
         <Link href={pagesHref(filters)} className="inline-flex min-h-11 items-center text-subheadline text-tint-text">See all crawled pages</Link>
-      </Section>
+        </div>
+      </details>
 
       <Section id="results" title="What this source added to the catalogue">
         <div className="overflow-x-auto">
@@ -144,14 +200,14 @@ async function Source({ params, searchParams }: Pick<PageProps<"/app/backstage/c
 
       <RecentChanges actions={overview.recent_actions} />
 
-      {data.scans.length > 1 && (
+      {data.scans.some(item => !item.is_current) && (
         <details className="min-w-0 rounded-md border border-separator bg-surface p-4">
-          <summary className="min-h-11 cursor-pointer text-headline">Earlier passes</summary>
+          <summary className="min-h-11 cursor-pointer text-headline">Earlier readings</summary>
           <ul className="mt-2 flex flex-col divide-y divide-separator">
-            {data.scans.map(item => (
+            {data.scans.filter(item => !item.is_current).map(item => (
               <li key={item.id} className="flex flex-wrap justify-between gap-x-4 py-2 text-subheadline">
-                <span>Pass started {shortDate(item.started_at)} {item.is_current ? "(current)" : ""}</span>
-                <Link href={item.is_current ? sourcePath(key) : `${sourcePath(key)}?pass=${item.id}`} className="inline-flex min-h-11 items-center text-tint-text">{item.is_current ? "Current" : "View"}</Link>
+                <span>{areaName(item.scope_key)}, started {shortDate(item.started_at)}</span>
+                <Link href={`${sourcePath(key)}?area=${item.id}`} className="inline-flex min-h-11 items-center text-tint-text">View</Link>
               </li>
             ))}
           </ul>
@@ -170,17 +226,21 @@ async function Source({ params, searchParams }: Pick<PageProps<"/app/backstage/c
         </dl>
       </details>
 
-      {canFix && (
+      {canFix && areas.length > 0 && (
         <details className="min-w-0 rounded-md border border-separator bg-surface p-4">
           <summary className="min-h-11 cursor-pointer text-headline">Advanced</summary>
           <div className="mt-2 flex flex-col gap-2">
             <p className="text-subheadline">
-              Start a fresh pass only if the site was reorganised or a new parser needs to see every page.
+              Start a fresh pass of an area only if the site was reorganised or a new parser needs to see every page.
               {extras?.next_refresh_at ? ` Otherwise the directory refreshes itself (next: ${shortDate(extras.next_refresh_at)}).` : ""}
-              {" "}The current pass becomes an earlier pass.
+              {" "}The area’s current reading becomes an earlier reading.
             </p>
-            <CrawlSourceControl source={key} operation="rediscover" scan={scan!.id}
-              disabled={!source.collection_enabled || Boolean(source.operator_paused_at || source.paused_reason)} />
+            <div className="flex flex-wrap gap-2">
+              {areas.map(area => (
+                <CrawlSourceControl key={area.id} source={key} operation="rediscover" scan={area.id} label={areas.length > 1 ? `Start a fresh pass: ${areaName(area.scope_key)}` : undefined}
+                  disabled={!source.collection_enabled || Boolean(source.operator_paused_at || source.paused_reason)} />
+              ))}
+            </div>
           </div>
         </details>
       )}

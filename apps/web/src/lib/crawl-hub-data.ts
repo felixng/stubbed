@@ -1,6 +1,7 @@
 import { cache } from "react";
 
 import type { CrawlOverview, CrawlSourceProgress } from "@/lib/admin-crawl";
+import type { CrawlSummary } from "@/lib/crawl-summary";
 import type { CrawlDispatch, CrawlSchedule } from "@/lib/crawl-schedule";
 import { ownerContext } from "@/lib/supabase/data";
 
@@ -26,6 +27,11 @@ export const getProgress = cache(async (key: string) => {
   const { supabase } = await ownerContext();
   return twice<CrawlSourceProgress>(async () =>
     (await supabase.rpc("crawl_source_progress", { for_source: key, for_stage: "venue", page_size: 1, page_offset: 0 })) as unknown as Result<CrawlSourceProgress>);
+});
+// One light read of every source's totals and areas: pages known, read, waiting and stuck across all current areas.
+export const getSummary = cache(async () => {
+  const { supabase } = await ownerContext();
+  return twice<CrawlSummary>(async () => (await supabase.rpc("crawl_source_summary")) as unknown as Result<CrawlSummary>);
 });
 export const getOverview = cache(async () => {
   const { supabase } = await ownerContext();

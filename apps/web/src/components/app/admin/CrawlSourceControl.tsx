@@ -31,11 +31,13 @@ const confirmations: Partial<Record<Operation, { title: string; message: string;
 };
 
 export function CrawlSourceControl({
-  source, operation, scan, task, disabled, label,
+  source, operation, scan, scans, task, disabled, label,
 }: {
   source: string;
   operation: Operation;
   scan?: string;
+  // Several areas at once (Retry pages covers every area of the source).
+  scans?: string[];
   task?: string;
   disabled?: boolean;
   label?: string;
@@ -55,9 +57,14 @@ export function CrawlSourceControl({
     setFailed(false);
     setMessage("");
     try {
-      const { data, error } = await createClient().rpc("admin_crawl_source_action", {
-        for_source: source, operation, for_generation: scan, for_task: task,
-      });
+      const targets = scans && scans.length ? scans : [scan];
+      let data: number | boolean | null = 0;
+      let error: { code?: string; message: string } | null = null;
+      for (const target of targets) {
+        const result = await createClient().rpc("admin_crawl_source_action", { for_source: source, operation, for_generation: target, for_task: task });
+        if (result.error) { error = result.error; break; }
+        data = (Number(data) || 0) + (Number(result.data) || 0);
+      }
       if (error) {
         setFailed(true);
         setMessage(error.code === "22023" ? error.message : "Couldn’t update crawl work.");
@@ -68,6 +75,8 @@ export function CrawlSourceControl({
       if (operation === "rediscover") {
         const url = new URL(window.location.href);
         url.searchParams.delete("scan");
+        url.searchParams.delete("pass");
+        url.searchParams.delete("area");
         url.searchParams.delete("page");
         router.replace(url.pathname + url.search);
       }

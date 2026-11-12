@@ -124,6 +124,7 @@ export type CrawlPage = {
   enriched: boolean | null;
   consecutive_failures?: number | null;
   refresh_at?: string | null;
+  generation_id?: string;
 };
 export type CrawlSourceProgress = {
   sources: CrawlSource[];
@@ -201,7 +202,8 @@ export function crawlPagesFilters(source: string, input: Record<string, string |
   const raw = one(input.status);
   const status = (CRAWL_BUCKETS as readonly string[]).includes(raw ?? "") || Object.keys(CRAWL_STATUS_LABELS).includes(raw ?? "")
     ? (raw as CrawlBucket | CrawlStatus) : undefined;
-  const scanValue = one(input.pass) ?? one(input.scan);
+  // An area is a scan: old links used pass= or scan=, new ones area=.
+  const scanValue = one(input.area) ?? one(input.pass) ?? one(input.scan);
   const scan = scanValue && UUID.test(scanValue) ? scanValue : undefined;
   const pageValue = one(input.page);
   const page = pageValue && /^[1-9]\d{0,5}$/.test(pageValue) ? Number(pageValue) : 1;
@@ -211,7 +213,7 @@ export function pagesHref(filters: CrawlPagesFilters, change: Partial<CrawlPages
   const next = { ...filters, ...change };
   const params = new URLSearchParams({ step: next.step });
   if (next.status) params.set("status", next.status);
-  if (next.scan) params.set("pass", next.scan);
+  if (next.scan) params.set("area", next.scan);
   if (next.page > 1) params.set("page", String(next.page));
   return `${sourcePath(next.source)}/pages?${params}`;
 }
@@ -220,7 +222,7 @@ export function pagesHref(filters: CrawlPagesFilters, change: Partial<CrawlPages
 export function legacySourcesRedirect(input: Record<string, string | string[] | undefined>): string {
   const source = typeof input.source === "string" && isCrawlSource(input.source) ? input.source : null;
   if (!source) return CRAWL_HUB_PATH;
-  const wantsPages = ["stage", "status", "page", "scan"].some(key => typeof input[key] === "string");
+  const wantsPages = ["stage", "step", "status", "page", "scan", "pass", "area"].some(key => typeof input[key] === "string");
   if (!wantsPages) return sourcePath(source);
   return pagesHref(crawlPagesFilters(source, input));
 }

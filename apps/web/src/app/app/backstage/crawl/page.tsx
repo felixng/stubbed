@@ -1,47 +1,26 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Suspense, cache } from "react";
+import { Suspense } from "react";
 
 import { CrawlBar } from "@/components/app/admin/CrawlBar";
 import { CrawlSwitch } from "@/components/app/admin/CrawlSwitch";
-import { NeedsAttention, RecentChanges } from "@/components/app/admin/CrawlOverviewParts";
+import { NeedsAttention } from "@/components/app/admin/CrawlOverviewParts";
 import { CrawlShell, Section } from "@/components/app/admin/CrawlShell";
-import { PipelineDiagram, type PipelineStep } from "@/components/app/admin/PipelineDiagram";
-import { RunHistoryTable } from "@/components/app/admin/RunHistoryTable";
-import { ScheduleCard } from "@/components/app/admin/ScheduleCard";
 import {
-  CRAWL_HUB_PATH, CRAWL_STEPS, OFFICIAL_SITES_PATH, attentionItems, crawlBuckets, crawlSourceName, crawlingState, hubHeadline,
-  shortDateTime, sourcePath,
+  CRAWL_HUB_PATH, OFFICIAL_SITES_PATH, attentionItems, crawlSourceName, crawlingState, hubHeadline, pagesHref, sourcePath, type AttentionItem,
 } from "@/lib/admin-crawl";
-import { HUB_SOURCES, getDispatch, getFlags, getOverview, getProgress, getSchedule } from "@/lib/crawl-hub-data";
-import { dispatchFailing } from "@/lib/crawl-schedule";
+import { getDispatch, getFlags, getOverview, getSchedule, getSummary } from "@/lib/crawl-hub-data";
+import { clock, dispatchFailing, durationText, nextRunAfter, scheduleAlert, todaysLimits } from "@/lib/crawl-schedule";
+import { sourceLine, type SourceSummary } from "@/lib/crawl-summary";
 
 export const metadata: Metadata = { title: "Catalogue crawler" };
 
-// The two venue-first sources. The older official-sites crawler has its own shape and its own row.
-const SOURCES = HUB_SOURCES;
+const SOURCES = ["playbill", "london_theatre"] as const;
 const number = new Intl.NumberFormat("en-GB");
 const n = (value: number) => number.format(value);
+const RUNS_PATH = `${CRAWL_HUB_PATH}/runs`;
+const loading = <p className="text-subheadline text-label-secondary">Loading…</p>;
 
-// Everything the headline and the details share, computed once per request from cached reads.
-const getModel = cache(async () => {
-  const [london, playbill, overview, flags] = await Promise.all([getProgress("london_theatre"), getProgress("playbill"), getOverview(), getFlags()]);
-  if (!london || !playbill || !overview) return null;
-  const progress = [london, playbill];
-  const allSources = london.sources;
-  const rows = SOURCES.map((key, index) => {
-    const data = progress[index];
-    const source = allSources.find(item => item.source_key === key)!;
-    return { key, data, source, state: crawlingState(source) };
-  });
-  const total = (stage: "directory" | "venue" | "event") => rows.reduce((sum, row) => {
-    const counts = row.data.stages[stage], buckets = crawlBuckets(counts);
-    return { discovered: sum.discovered + counts.discovered, done: sum.done + buckets.done, stuck: sum.stuck + buckets.stuck, retrying: sum.retrying + buckets.retrying };
-  }, { discovered: 0, done: 0, stuck: 0, retrying: 0 });
-  return { overview, flags, allSources, rows, find: total("directory"), venues: total("venue"), shows: total("event") };
-});
-
-// Shown when the database is too busy to answer (for example while a crawl run is active).
 function Busy({ what }: { what: string }) {
   return (
     <p className="text-subheadline text-label-secondary">
@@ -50,141 +29,124 @@ function Busy({ what }: { what: string }) {
   );
 }
 
+const stateOf = (source: SourceSummary) => crawlingState(source);
+
+// The hub answers three questions and nothing else: where are we, is anything stuck, what needs me.
 async function Headline() {
-  const model = await getModel();
-  if (!model) return null;
-  const { rows, find, venues, shows, overview } = model;
+  const [summary, overview] = await Promise.all([getSummary(), getOverview()]);
+  if (!summary || !overview) return null;
+  const sources = SOURCES.filter(key => summary[key]);
+  const stuck = sources.reduce((sum, key) => sum + summary[key].totals.stuck, 0);
+  const retrying = sources.reduce((sum, key) => sum + summary[key].totals.retrying, 0);
   return (
     <p className="font-display text-title-2">
-      {hubHeadline(rows.map(row => ({ key: row.key, state: row.state, publishing: row.source.publication_enabled })),
-        find.stuck + venues.stuck + shows.stuck, find.retrying + venues.retrying + shows.retrying, overview.run_dates.from_sources)}
+      {hubHeadline(sources.map(key => ({ key, state: stateOf(summary[key]), publishing: summary[key].publication_enabled })), stuck, retrying, overview.run_dates.from_sources)}
     </p>
   );
 }
 
-async function ScheduleBlock() {
-  const [schedule, dispatch] = await Promise.all([getSchedule(), getDispatch()]);
-  if (!schedule) return <Busy what="the schedule" />;
+// One row per source, two lines: how far, then is it moving and when it finishes.
+async function SourcesBlock() {
+  const [summary, overview, schedule] = await Promise.all([getSummary(), getOverview(), getSchedule()]);
+  if (!summary) return <Busy what="the sources" />;
+  const now = schedule ? new Date(schedule.server_time) : new Date();
+  const official = overview?.official;
+  const model = schedule ? todaysLimits(schedule, []).model : null;
   return (
-    <>
-      <ScheduleCard schedule={schedule} dispatch={dispatch} />
-      <Section id="recent-runs" title="Recent runs">
-        <RunHistoryTable runs={schedule.runs} />
-        <Link href={`${CRAWL_HUB_PATH}/runs`} className="inline-flex min-h-11 items-center text-subheadline text-tint-text">All runs</Link>
-      </Section>
-    </>
+    <section aria-label="Sources" className="flex flex-col divide-y divide-separator rounded-md border border-separator bg-surface">
+      {SOURCES.filter(key => summary[key]).map(key => {
+        const line = sourceLine(key, summary[key], stateOf(summary[key]), now);
+        return (
+          <div key={key} className="relative flex flex-col gap-1 p-4">
+            <div className="flex items-center gap-3">
+              <Link href={sourcePath(key)} className="min-w-0 flex-1 text-headline text-label after:absolute after:inset-0">{line.name}</Link>
+              <span className="font-display text-title-3 tabular-nums">{line.percent === null ? "—" : `${line.percent}%`}</span>
+              <div className="w-20 shrink-0 sm:w-32">
+                <CrawlBar done={line.read} stuck={line.stuck} total={line.known} label={`${n(line.read)} of ${n(line.known)} pages read`} />
+              </div>
+            </div>
+            <p className={`text-subheadline ${line.state === "stalled" ? "font-semibold text-destructive" : ""}`}>
+              {line.movement}{line.finish ? ` · ${line.finish}` : ""}
+              {line.needs > 0 && (
+                <>{" · "}<Link href={pagesHref({ source: key, step: "event", status: "stuck", page: 1 })} className="relative z-10 font-semibold text-destructive">{n(line.needs)} {line.needs === 1 ? "page needs" : "pages need"} you →</Link></>
+              )}
+            </p>
+          </div>
+        );
+      })}
+      {official && (
+        <div className="relative flex flex-col gap-1 p-4">
+          <div className="flex items-center gap-3">
+            <Link href={sourcePath("official")} className="min-w-0 flex-1 text-headline text-label after:absolute after:inset-0">{crawlSourceName("official")}</Link>
+            <span className="text-subheadline tabular-nums text-label-secondary">{n(official.sites)} sites</span>
+          </div>
+          <p className="text-subheadline">
+            {official.sites_needing_attention > 0
+              ? <Link href={`${OFFICIAL_SITES_PATH}?attention=1`} className="relative z-10 font-semibold text-destructive">{n(official.sites_needing_attention)} need you →</Link>
+              : "Nothing needs you"}
+            {model ? ` · model spend today $${model.used.toFixed(2)} of $${model.cap.toFixed(2)}` : ""}
+          </p>
+        </div>
+      )}
+    </section>
   );
 }
 
-async function Details() {
-  const [model, dispatch] = await Promise.all([getModel(), getDispatch()]);
-  if (!model) return <Busy what="the crawl progress" />;
-  const { overview, flags, allSources, rows, find, venues, shows } = model;
-  const chips = flags?.get("catalogue_run_chips_enabled");
+// Only rendered when something needs the owner.
+async function AttentionBlock() {
+  const [summary, overview, schedule, dispatch] = await Promise.all([getSummary(), getOverview(), getSchedule(), getDispatch()]);
+  if (!summary || !overview) return null;
+  const extra: AttentionItem[] = [];
   const failing = dispatch ? dispatchFailing(dispatch) : null;
-  const attention = [
-    ...(failing ? [{ source: "Supabase trigger", text: "The last 2 starts failed", reason: failing.detail, next: "Replace the GitHub token. GitHub’s own schedule is the only trigger until then, and it is often late.", href: "#schedule" }] : []),
-    ...attentionItems(overview, allSources),
-  ];
-  const identities = rows.reduce((sum, row) => ({
-    matched: sum.matched + row.data.identities.matched_venues, created: sum.created + row.data.identities.crawler_venues,
-    unresolved: sum.unresolved + row.data.identities.unresolved_venues,
-  }), { matched: 0, created: 0, unresolved: 0 });
-  const unchecked = SOURCES.reduce((sum, key) => sum + (overview.sources[key]?.unchecked_pages ?? 0), 0);
-  const publishing = rows.filter(row => row.source.publication_enabled).map(row => crawlSourceName(row.key));
-  const stillFinding = rows.some(row => row.data.scan?.enumeration_status === "enumerating");
-  const official = allSources.find(item => item.source_key === "official");
+  if (failing) extra.push({ source: "Supabase trigger", text: "The last 2 starts failed", reason: failing.detail, next: "Replace the GitHub token. GitHub’s own schedule is the only trigger until then, and it is often late.", href: RUNS_PATH });
+  else if (dispatch?.token === "missing") extra.push({ source: "Supabase trigger", text: "The GitHub token is missing", reason: "Runs only start from GitHub’s own schedule, which is often late.", next: "The steps to add it are on the run history page.", href: RUNS_PATH });
+  const alert = schedule ? scheduleAlert(schedule) : null;
+  if (alert) extra.push({ source: "Crawl runs", text: alert, href: RUNS_PATH });
+  const sources = [...Object.entries(summary).map(([key, value]) => ({ source_key: key, paused_reason: value.paused_reason })), { source_key: "official", paused_reason: null }];
+  return <NeedsAttention hideWhenEmpty items={[...extra, ...attentionItems(overview, sources)]} />;
+}
 
-  const steps: PipelineStep[] = [
-    { ...CRAWL_STEPS[0], summary: `${n(find.done)} of ${n(find.discovered)} directory pages read`, progress: { done: find.done, total: find.discovered, stuck: find.stuck }, tone: find.stuck ? "bad" : "good" },
-    { ...CRAWL_STEPS[1], summary: `${n(venues.done)} of ${n(venues.discovered)} venue pages read`, progress: { done: venues.done, total: venues.discovered, stuck: venues.stuck }, tone: venues.stuck ? "bad" : venues.done < venues.discovered ? "waiting" : "good" },
-    { ...CRAWL_STEPS[2], summary: `${n(shows.done)} of ${n(shows.discovered)} show pages read`, progress: { done: shows.done, total: shows.discovered, stuck: shows.stuck }, tone: shows.stuck ? "bad" : shows.done < shows.discovered ? "waiting" : "good" },
-    { ...CRAWL_STEPS[3], summary: `${n(identities.matched)} venues matched, ${n(identities.created)} new, ${n(identities.unresolved)} unresolved. ${n(unchecked)} pages waiting to be checked.`, tone: unchecked ? "waiting" : "neutral" },
-    { ...CRAWL_STEPS[4], summary: `${n(overview.run_dates.from_sources)} run dates published. ${publishing.length ? `Publishing is on for ${publishing.join(" and ")}.` : "Publishing is off for every source."}`, tone: overview.run_dates.from_sources ? "good" : "neutral" },
-    { ...CRAWL_STEPS[5], summary: `Run chips are ${chips ? "on" : "off"}. Autofill is locked.`, tone: chips ? "good" : "neutral" },
-  ];
-
+async function Suggestions() {
+  const [flags, overview] = await Promise.all([getFlags(), getOverview()]);
+  const chips = flags?.get("catalogue_run_chips_enabled");
+  if (chips === undefined || !overview) return null;
   return (
-    <>
-      <Section id="pipeline" title="How far the crawler has got" hint="Both sources combined. Each step reads the one before it; nothing reaches members until Publish.">
-        <PipelineDiagram steps={steps} label="Crawler steps" />
-        {stillFinding && <p className="text-footnote text-label-secondary">Totals grow while a source is still finding venues. They are pages found so far, not everything on the site.</p>}
-      </Section>
-
-      <Section id="sources" title="Sources">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[40rem] border-collapse text-left text-subheadline">
-            <thead>
-              <tr className="text-footnote text-label-secondary">
-                <th className="py-2 pr-3 font-semibold">Source</th>
-                <th className="py-2 pr-3 font-semibold">Crawling</th>
-                <th className="py-2 pr-3 font-semibold">Publishing</th>
-                {CRAWL_STEPS.slice(0, 3).map(step => <th key={step.key} className="py-2 pr-3 font-semibold">{step.name}</th>)}
-                <th className="py-2 font-semibold">Last activity</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-separator align-top">
-              {rows.map(row => (
-                <tr key={row.key}>
-                  <td className="py-3 pr-3"><Link href={sourcePath(row.key)} className="inline-flex min-h-11 items-center font-semibold text-tint-text">{crawlSourceName(row.key)}</Link></td>
-                  <td className="py-3 pr-3">{row.state.label}</td>
-                  <td className="py-3 pr-3">{row.source.publication_enabled ? "On" : "Off"}</td>
-                  {(["directory", "venue", "event"] as const).map(stage => {
-                    const counts = row.data.stages[stage], buckets = crawlBuckets(counts);
-                    return (
-                      <td key={stage} className="py-3 pr-3">
-                        <span className="tabular-nums">{n(buckets.done)} / {n(counts.discovered)}</span>
-                        <CrawlBar done={buckets.done} stuck={buckets.stuck} total={counts.discovered} label={`${n(buckets.done)} of ${n(counts.discovered)} done`} />
-                        {buckets.stuck > 0 && <span className="text-footnote font-semibold text-destructive">{n(buckets.stuck)} stuck</span>}
-                      </td>
-                    );
-                  })}
-                  <td className="py-3 text-label-secondary">{row.data.last_activity_at ? shortDateTime(row.data.last_activity_at) : "None yet"}</td>
-                </tr>
-              ))}
-              <tr>
-                <td className="py-3 pr-3"><Link href={sourcePath("official")} className="inline-flex min-h-11 items-center font-semibold text-tint-text">{crawlSourceName("official")}</Link></td>
-                <td className="py-3 pr-3">{official ? crawlingState(official).label : "Unknown"}</td>
-                <td className="py-3 pr-3">{official?.publication_enabled ? "On" : "Off"}</td>
-                <td colSpan={4} className="py-3 text-label-secondary">
-                  Older, AI-assisted crawler with its own steps. {n(overview.official.sites)} sites, <Link href={`${OFFICIAL_SITES_PATH}?attention=1`} className="text-tint-text">{n(overview.official.sites_needing_attention)} need attention</Link>.
-                  {overview.official.last_run_at ? ` Last run ${shortDateTime(overview.official.last_run_at)}.` : " No runs yet."}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </Section>
-
-      <NeedsAttention items={attention} />
-
-      <Section id="suggestions" title="Suggestions to members" hint="For everyone, on web and iOS. These switches stay as you leave them.">
-        <div className="flex flex-col divide-y divide-separator">
-          {chips !== undefined && (
-            <CrawlSwitch kind={{ type: "run_chips" }} label="Run chips" checked={chips}
-              description={`“On at this venue” suggestions from published run dates. Uses ${n(overview.run_dates.total)} published run dates (${n(overview.run_dates.from_sources)} from London Theatre and Playbill).`}
-              note={chips && overview.run_dates.total === 0 ? "On, but has nothing to suggest yet." : undefined} />
-          )}
-        </div>
-        <p className="text-subheadline">
-          <span className="font-semibold">Autofill:</span> locked until it scores 99% on 100 labelled cases. Not yet measured.
-        </p>
-      </Section>
-
-      <RecentChanges actions={overview.recent_actions} />
-    </>
+    <Section id="suggestions" title="Suggestions to members" hint="For everyone, on web and iOS.">
+      <div className="flex flex-col divide-y divide-separator">
+        <CrawlSwitch kind={{ type: "run_chips" }} label="Run chips" checked={chips}
+          description={`“On at this venue” suggestions from published run dates. Uses ${n(overview.run_dates.total)} published run dates (${n(overview.run_dates.from_sources)} from London Theatre and Playbill).`}
+          note={chips && overview.run_dates.total === 0 ? "On, but has nothing to suggest yet." : undefined} />
+      </div>
+      <p className="text-subheadline"><span className="font-semibold">Autofill:</span> locked until it scores 99% on 100 labelled cases.</p>
+    </Section>
   );
 }
 
-const loading = <p className="text-subheadline text-label-secondary">Loading…</p>;
+// The schedule, limits and run history live one tap away.
+async function RunsLine() {
+  const schedule = await getSchedule();
+  if (!schedule) return null;
+  const last = schedule.last_run;
+  const pages = last ? Object.values(last.per_source ?? {}).reduce((sum, value) => sum + (value.pages ?? 0), 0) : 0;
+  return (
+    <Link href={RUNS_PATH} className="flex min-h-11 flex-wrap items-center justify-between gap-x-3 text-subheadline text-label-secondary">
+      <span>
+        Next run {clock(nextRunAfter(new Date(schedule.server_time))).replace(" UTC", "")}
+        {last ? ` · last run ${clock(last.started_at).replace(" UTC", "")}, ${n(pages)} pages, ${durationText(last.started_at, last.finished_at)}` : " · no run recorded yet"}
+      </span>
+      <span className="text-tint-text">Runs →</span>
+    </Link>
+  );
+}
 
 export default function CrawlHubPage() {
   return (
-    <CrawlShell back={{ href: "/app/backstage", label: "Backstage" }} title="Catalogue crawler"
-      intro="Where the crawler is, and what needs you. Nothing here reaches members until you publish.">
+    <CrawlShell back={{ href: "/app/backstage", label: "Backstage" }} title="Catalogue crawler">
       <Suspense fallback={loading}><Headline /></Suspense>
-      <Suspense fallback={loading}><ScheduleBlock /></Suspense>
-      <Suspense fallback={loading}><Details /></Suspense>
+      <Suspense fallback={loading}><SourcesBlock /></Suspense>
+      <Suspense fallback={null}><AttentionBlock /></Suspense>
+      <Suspense fallback={null}><Suggestions /></Suspense>
+      <Suspense fallback={null}><RunsLine /></Suspense>
     </CrawlShell>
   );
 }

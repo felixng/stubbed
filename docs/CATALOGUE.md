@@ -303,13 +303,14 @@ One entry in Backstage, **Catalogue crawler**, then a tree. Every page has one b
 
 | Page | Address | What it answers |
 |---|---|---|
-| Hub | `/app/backstage/crawl` | Where are we, and what needs me? Headline sentence, the six-step diagram, a source by step table, needs attention, the member suggestion switches, recent changes |
-| Source | `/app/backstage/crawl/sources/london-theatre`, `.../playbill` | Status sentence, Crawling and Publication switches, fixes for what is stuck, steps funnel, what it added to the catalogue, cost, a fresh pass under Advanced |
-| Pages | `.../sources/<source>/pages?step=&status=` | Every page found, by step tab and status chip (done, to do, retrying, stuck), with what each page produced |
+| Hub | `/app/backstage/crawl` | Where are we, and what needs me? A headline sentence, one two-line row per source (percent and bar, whether it is moving, when it finishes, pages that need you), Needs attention only when something does, the member suggestion switches, and one line for the next and last run |
+| Source | `/app/backstage/crawl/sources/london-theatre`, `.../playbill` | The same summary line, bigger; fixes for what is stuck (Retry covers every area); an Areas list; the steps collapsed behind a one-line summary; switches; what it added to the catalogue; recent changes; cost; a fresh pass per area under Advanced |
+| Pages | `.../sources/<source>/pages?area=&step=&status=` | Every page found, by area (default All areas), step tab and status chip (done, to do, retrying, stuck), with what each page produced |
 | Official source | `/app/backstage/crawl/sources/official` | The older AI-assisted crawler: start a crawl, runs list, progress, link to sites |
 | Official sites | `.../sources/official/sites` | Sites that need attention, reading rules |
 | Run review | `/app/backstage/crawl/runs/[id]` | Mark findings right or wrong, add missed titles, then publish and send to show review |
-| Guide | `/app/backstage/crawl/guide` | The vocabulary, what each switch and fix does, what complete means |
+| Run history | `/app/backstage/crawl/runs` | When the crawler runs and what limits it (the schedule card, the trigger and token state, today's limits), every run so far, and recent changes |
+| Guide | `/app/backstage/crawl/guide` | The vocabulary, what areas and the estimates mean, what each switch and fix does, what complete means |
 
 Old addresses redirect: `/crawl/sources?source=X&stage=Y&status=Z&page=N` goes to the source or its pages list, `/crawl/sites` to the official sites, `/crawl/<run id>` to `/crawl/runs/<run id>`.
 
@@ -353,4 +354,6 @@ The crawler runs **twice an hour**, at :17 and :47 UTC. **Supabase starts it** (
 **In the admin.** The hub has a "What runs when" card (schedule, now, last run, next run with pages due per source, today's limits and when a capped source resumes, and a warning if nothing has run for two hours) and the last five runs. `/app/backstage/crawl/runs` lists every run with a trigger filter. Every waiting page says who acts next. The guide's "How it runs" section shows the tables above.
 
 **To pause.** Pause one source with its Crawling switch. To stop everything, set the repository variable `CRAWL_LOOP_ENABLED` to false. **To roll back**, set the cron back to daily in the workflow or turn the loop off; the table and pages are harmless with any schedule.
+
+**Areas (#516).** A source can have several current scans, which the admin calls areas: Playbill has Broadway, London, and a page for each single theatre. The hub and source page count **every current area together** (`crawl_source_summary`, one light read; `crawl_source_progress` takes `for_all_areas`, and the Pages view defaults to All areas), so a source is never shown as nearly done because its newest area is. The hub row says how far (pages read out of pages known, across all areas and steps, never 100% until done), whether it is moving (pages read in the last 3 hours, divided by 3, or Stalled when work is due but nothing was read, or Keeping up to date when nothing is waiting) and when it finishes (waiting pages divided by that rate; it grows as new pages are found). Names for areas come from `areaName()` in `apps/web/src/lib/crawl-summary.ts`; a test checks that the hub total, the source rows and every source's areas add up.
 
