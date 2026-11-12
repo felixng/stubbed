@@ -469,6 +469,54 @@ internal enum PublicSchema {
       case siteKey = "site_key"
     }
   }
+  internal struct CrawlDispatchLogSelect: Codable, Hashable, Sendable {
+    internal let error: String?
+    internal let id: UUID
+    internal let outcome: String
+    internal let requestId: Int64?
+    internal let sentAt: String
+    internal let statusCode: Int32?
+    internal enum CodingKeys: String, CodingKey {
+      case error = "error"
+      case id = "id"
+      case outcome = "outcome"
+      case requestId = "request_id"
+      case sentAt = "sent_at"
+      case statusCode = "status_code"
+    }
+  }
+  internal struct CrawlDispatchLogInsert: Codable, Hashable, Sendable {
+    internal let error: String?
+    internal let id: UUID?
+    internal let outcome: String
+    internal let requestId: Int64?
+    internal let sentAt: String?
+    internal let statusCode: Int32?
+    internal enum CodingKeys: String, CodingKey {
+      case error = "error"
+      case id = "id"
+      case outcome = "outcome"
+      case requestId = "request_id"
+      case sentAt = "sent_at"
+      case statusCode = "status_code"
+    }
+  }
+  internal struct CrawlDispatchLogUpdate: Codable, Hashable, Sendable {
+    internal let error: String?
+    internal let id: UUID?
+    internal let outcome: String?
+    internal let requestId: Int64?
+    internal let sentAt: String?
+    internal let statusCode: Int32?
+    internal enum CodingKeys: String, CodingKey {
+      case error = "error"
+      case id = "id"
+      case outcome = "outcome"
+      case requestId = "request_id"
+      case sentAt = "sent_at"
+      case statusCode = "status_code"
+    }
+  }
   internal struct CrawlExtractionsSelect: Codable, Hashable, Sendable {
     internal let contentHash: String
     internal let extractedAt: String
@@ -1993,6 +2041,7 @@ internal enum PublicSchema {
     internal let sourceFilter: String?
     internal let stageFilter: String?
     internal let startedAt: String
+    internal let startedVia: String?
     internal let stopReason: String?
     internal let trigger: String
     internal enum CodingKeys: String, CodingKey {
@@ -2007,6 +2056,7 @@ internal enum PublicSchema {
       case sourceFilter = "source_filter"
       case stageFilter = "stage_filter"
       case startedAt = "started_at"
+      case startedVia = "started_via"
       case stopReason = "stop_reason"
       case trigger = "trigger"
     }
@@ -2023,6 +2073,7 @@ internal enum PublicSchema {
     internal let sourceFilter: String?
     internal let stageFilter: String?
     internal let startedAt: String?
+    internal let startedVia: String?
     internal let stopReason: String?
     internal let trigger: String
     internal enum CodingKeys: String, CodingKey {
@@ -2037,6 +2088,7 @@ internal enum PublicSchema {
       case sourceFilter = "source_filter"
       case stageFilter = "stage_filter"
       case startedAt = "started_at"
+      case startedVia = "started_via"
       case stopReason = "stop_reason"
       case trigger = "trigger"
     }
@@ -2053,6 +2105,7 @@ internal enum PublicSchema {
     internal let sourceFilter: String?
     internal let stageFilter: String?
     internal let startedAt: String?
+    internal let startedVia: String?
     internal let stopReason: String?
     internal let trigger: String?
     internal enum CodingKeys: String, CodingKey {
@@ -2067,6 +2120,7 @@ internal enum PublicSchema {
       case sourceFilter = "source_filter"
       case stageFilter = "stage_filter"
       case startedAt = "started_at"
+      case startedVia = "started_via"
       case stopReason = "stop_reason"
       case trigger = "trigger"
     }
