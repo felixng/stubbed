@@ -1,4 +1,4 @@
-import type { Copy } from "@/lib/cms/model";
+import { defaultsFor, type Copy } from "@/lib/cms/model";
 import { getCopy } from "@/lib/cms/content";
 import Image from "next/image";
 
@@ -6,6 +6,13 @@ import Image from "next/image";
 // the real app: screenshots in public/landing/ (landing-shots.sh), the stats
 // screenshot from `apps/ios/scripts/dev marketing`, and the iOS app icons.
 // Rerun it after new screenshots; every file here is a download.
+
+// Image descriptions come from the repository's own captions, never from the
+// editable ones, so editing a caption can't change what an image is described as.
+const altName = {
+  screens: defaultsFor("pressScreenshots") as Record<string, string>,
+  media: defaultsFor("pressMedia") as Record<string, string>,
+};
 
 const SHOT = { width: 1206, height: 2622 };
 
@@ -18,31 +25,31 @@ export const pressHeading = "font-display text-[clamp(32px,5vw,48px)] leading-[1
 // page's caption. Order matches the doc's groups: Home/Log, Share cards,
 // Trip view, Stats.
 const screens = (copy: Copy<"pressScreenshots">) => [
-  { name: copy.screens1Name, raw: "/landing/hero.jpg", framed: "/press/hero-framed.png" },
-  { name: copy.screens2Name, raw: "/landing/log.jpg", framed: "/press/log-framed.png" },
-  { name: copy.screens3Name, raw: "/landing/share.jpg", framed: "/press/share-framed.png" },
-  { name: copy.screens4Name, raw: "/landing/plan.jpg", framed: "/press/plan-framed.png" },
-  { name: copy.screens5Name, raw: "/landing/history.jpg", framed: "/press/history-framed.png" },
-  { name: copy.screens6Name, raw: "/press/stats.jpg", framed: "/press/stats-framed.png" },
+  { name: copy.screens1Name, alt: altName.screens.screens1Name.toLowerCase(), raw: "/landing/hero.jpg", framed: "/press/hero-framed.png" },
+  { name: copy.screens2Name, alt: altName.screens.screens2Name.toLowerCase(), raw: "/landing/log.jpg", framed: "/press/log-framed.png" },
+  { name: copy.screens3Name, alt: altName.screens.screens3Name.toLowerCase(), raw: "/landing/share.jpg", framed: "/press/share-framed.png" },
+  { name: copy.screens4Name, alt: altName.screens.screens4Name.toLowerCase(), raw: "/landing/plan.jpg", framed: "/press/plan-framed.png" },
+  { name: copy.screens5Name, alt: altName.screens.screens5Name.toLowerCase(), raw: "/landing/history.jpg", framed: "/press/history-framed.png" },
+  { name: copy.screens6Name, alt: altName.screens.screens6Name.toLowerCase(), raw: "/press/stats.jpg", framed: "/press/stats-framed.png" },
 ];
 
 const landscapes = (copy: Copy<"pressMedia">) => [
-  { name: copy.landscapes1Name, src: "/press/home-log-landscape.jpg" },
-  { name: copy.landscapes2Name, src: "/press/share-cards-landscape.jpg" },
-  { name: copy.landscapes3Name, src: "/press/trip-view-landscape.jpg" },
-  { name: copy.landscapes4Name, src: "/press/stats-landscape.jpg" },
+  { name: copy.landscapes1Name, alt: altName.media.landscapes1Name.toLowerCase(), src: "/press/home-log-landscape.jpg" },
+  { name: copy.landscapes2Name, alt: altName.media.landscapes2Name.toLowerCase(), src: "/press/share-cards-landscape.jpg" },
+  { name: copy.landscapes3Name, alt: altName.media.landscapes3Name.toLowerCase(), src: "/press/trip-view-landscape.jpg" },
+  { name: copy.landscapes4Name, alt: altName.media.landscapes4Name.toLowerCase(), src: "/press/stats-landscape.jpg" },
 ];
 
 // The logo variants from public/brand/ (the design system page shows the same).
 const marks = (copy: Copy<"pressMedia">) => [
-  { name: copy.marks1Name, use: copy.marks1Use, svg: "/brand/stubbed-mark.svg", png: "/brand/stubbed-mark.png" },
-  { name: copy.marks2Name, use: copy.marks2Use, svg: "/brand/stubbed-mark-outline.svg", png: "/brand/stubbed-mark-outline.png" },
+  { name: copy.marks1Name, alt: altName.media.marks1Name.toLowerCase(), use: copy.marks1Use, svg: "/brand/stubbed-mark.svg", png: "/brand/stubbed-mark.png" },
+  { name: copy.marks2Name, alt: altName.media.marks2Name.toLowerCase(), use: copy.marks2Use, svg: "/brand/stubbed-mark-outline.svg", png: "/brand/stubbed-mark-outline.png" },
 ];
 
 const icons = (copy: Copy<"pressMedia">) => [
-  { name: copy.icons1Name, src: "/press/app-icon.png" },
-  { name: copy.icons2Name, src: "/press/app-icon-dark.png" },
-  { name: copy.icons3Name, src: "/press/app-icon-tinted.png" },
+  { name: copy.icons1Name, alt: altName.media.icons1Name.toLowerCase(), src: "/press/app-icon.png" },
+  { name: copy.icons2Name, alt: altName.media.icons2Name.toLowerCase(), src: "/press/app-icon-dark.png" },
+  { name: copy.icons3Name, alt: altName.media.icons3Name.toLowerCase(), src: "/press/app-icon-tinted.png" },
 ];
 
 const download = "inline-flex min-h-11 items-center gap-1.5 rounded-sm text-footnote font-semibold text-tint-text hover:text-label focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus";
@@ -74,7 +81,7 @@ export async function PressScreenshots() {
         {screens(copy).map((screen) => (
           <li key={screen.name} className="min-w-0">
             <div className="rounded-[18%/8.3%] bg-[#1c1c1e] p-[2.6%] shadow-lg ring-1 ring-black/10">
-              <Image src={screen.raw} alt={`Stubbed on iPhone: ${screen.name.toLowerCase()}`} width={SHOT.width} height={SHOT.height} sizes="(min-width: 640px) 232px, 45vw" className="h-auto w-full rounded-[15.5%/7.1%] bg-background" />
+              <Image src={screen.raw} alt={`Stubbed on iPhone: ${screen.alt}`} width={SHOT.width} height={SHOT.height} sizes="(min-width: 640px) 232px, 45vw" className="h-auto w-full rounded-[15.5%/7.1%] bg-background" />
             </div>
             <p className="mt-4 text-headline text-label">{screen.name}</p>
             <div className="flex flex-wrap gap-x-4">
@@ -130,7 +137,7 @@ export async function PressMedia() {
               <h4 className="text-headline text-label">{mark.name}</h4>
               <p className="mt-1 text-subheadline text-label-secondary">{mark.use}</p>
               <div className="mt-4 flex aspect-[2/1] items-center justify-center rounded-xl bg-surface p-8 ring-1 ring-separator">
-                <Image src={mark.png} alt={`The Stubbed ${mark.name.toLowerCase()}: two admission tickets`} width={1024} height={834} sizes="200px" className="h-full w-auto" />
+                <Image src={mark.png} alt={`The Stubbed ${mark.alt}: two admission tickets`} width={1024} height={834} sizes="200px" className="h-full w-auto" />
               </div>
               <div className="flex flex-wrap gap-x-4">
                 <Download href={mark.svg}>{copy.svg}</Download>
@@ -146,7 +153,7 @@ export async function PressMedia() {
           <ul className="mt-4 flex flex-wrap gap-8">
             {icons(copy).map((icon) => (
               <li key={icon.name}>
-                <Image src={icon.src} alt={`Stubbed app icon, ${icon.name.toLowerCase()} appearance`} width={1024} height={1024} sizes="128px" className="h-28 w-28 rounded-[22%] shadow-sm ring-1 ring-black/5 sm:h-32 sm:w-32" />
+                <Image src={icon.src} alt={`Stubbed app icon, ${icon.alt} appearance`} width={1024} height={1024} sizes="128px" className="h-28 w-28 rounded-[22%] shadow-sm ring-1 ring-black/5 sm:h-32 sm:w-32" />
                 <p className="mt-3 text-subheadline text-label">{icon.name}</p>
                 <Download href={icon.src}>{copy.text1024PxPNG}</Download>
               </li>
@@ -161,7 +168,7 @@ export async function PressMedia() {
         <ul className="mt-5 grid gap-x-6 gap-y-8 sm:grid-cols-2">
           {landscapes(copy).map((image) => (
             <li key={image.name} className="min-w-0">
-              <Image src={image.src} alt={`Stubbed: ${image.name.toLowerCase()}, landscape image`} width={1920} height={1080} sizes="(min-width: 640px) 354px, 100vw" className="h-auto w-full rounded-xl ring-1 ring-separator" />
+              <Image src={image.src} alt={`Stubbed: ${image.alt}, landscape image`} width={1920} height={1080} sizes="(min-width: 640px) 354px, 100vw" className="h-auto w-full rounded-xl ring-1 ring-separator" />
               <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4">
                 <p className="text-subheadline text-label">{image.name}</p>
                 <Download href={image.src}>{copy.jpg}</Download>

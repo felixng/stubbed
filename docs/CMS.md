@@ -10,7 +10,7 @@ The Next.js site keeps its design and assets. Sanity provides an authenticated b
 | About and founder story | Application behaviour and user data |
 | FAQ questions, answers, existing steps and link labels | FAQ anchor IDs, number/order of questions and steps, destinations of application links |
 | Press contact and social URL | App route destinations and download URLs |
-| Captions, image descriptions and media usage guidance | Screenshots, logos, app icons, illustrations, promotional artwork and ZIPs |
+| Captions and media usage guidance | Screenshots, logos, app icons, illustrations, promotional artwork and ZIPs, and every image's alt text (`components/landing/alt-text.ts`; Press alts come from the default captions) |
 | Page titles, search descriptions, beta label, text-only product summary | Site origin, product name, sitemap routes, generated social artwork |
 | Legal page text and each page's last-updated date | Legal operator details, minimum age, jurisdiction and support address (`src/lib/legal.ts`) |
 
@@ -53,6 +53,8 @@ If Studio is disabled, check the public project ID and redeploy: `NEXT_PUBLIC_` 
 Site settings includes the shared beta badge, default search description, press email, social URL and `llms.txt` introduction/status. These are separate editorial fields: when launch status changes, update the relevant descriptions and FAQ answer too. The FAQ HTML, FAQ structured data and `llms.txt` answers use the same source. Legal dates are per document; bump the relevant date when policy text changes, following the existing notification commitments.
 
 Sanity retains document history according to the selected plan. Use Studio history to restore an earlier version. Do not rerun the seed expecting it to reset copy; it deliberately preserves existing edits.
+
+Studio shows "Unknown fields found" when a document holds fields the schema no longer defines (for example after a field is removed from `definitions.ts`). Run `pnpm --filter web cms:prune` with `SANITY_API_WRITE_TOKEN` set to list them, and add `--apply` to remove them, drafts included. Revoke the token afterwards.
 
 ## Development and verification
 

@@ -3,7 +3,7 @@ import { getCopy } from "@/lib/cms/content";
 import { Container } from "./Container";
 import Image from "next/image";
 import { LandingAction } from "./LandingAction";
-import { cardAlt } from "./alt-text";
+import { cardAlt, heroGroupLabel } from "./alt-text";
 
 export async function Hero() {
   const copy = await getCopy("sharingLanding");
@@ -19,7 +19,7 @@ export async function Hero() {
             <Link href="#diary" className="inline-flex min-h-11 items-center gap-2 text-subheadline font-semibold text-label underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus">{copy.sampleLink}<span aria-hidden="true">↗</span></Link>
           </div>
         </div>
-        <div className="landing-hero-fan" role="group" aria-label={copy.heroAsset}>
+        <div className="landing-hero-fan" role="group" aria-label={heroGroupLabel}>
           {[
             { id: "name-lost-boys", alt: cardAlt["name-lost-boys"], position: "landing-fan-left" },
             { id: "activity", alt: cardAlt.activity, position: "landing-fan-right" },

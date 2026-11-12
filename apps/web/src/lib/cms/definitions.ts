@@ -30,16 +30,6 @@ export const copyDefinitions = {
       "value": "Explore the diary",
       "multiline": false
     },
-    "placeholder": {
-      "title": "placeholder",
-      "value": "Screenshot placeholder",
-      "multiline": false
-    },
-    "heroAsset": {
-      "title": "heroAsset",
-      "value": "Theatre photo and stats sharing cards",
-      "multiline": false
-    },
     "shareEyebrow": {
       "title": "shareEyebrow",
       "value": "01 / Share",
@@ -85,11 +75,6 @@ export const copyDefinitions = {
       "value": "Your photos, ratings and notes, together in your diary. Gather shows into trips and revisit the nights you still talk about.",
       "multiline": false
     },
-    "diaryAsset": {
-      "title": "diaryAsset",
-      "value": "Your diary and trips",
-      "multiline": false
-    },
     "diaryCaption": {
       "title": "diaryCaption",
       "value": "A home for the shows you have seen. Demo diary: @sillyelphaba.",
@@ -108,16 +93,6 @@ export const copyDefinitions = {
     "yearBody": {
       "title": "yearBody",
       "value": "See your visits, streaks and show mix. Look back through the years, then share your Year in theatre.",
-      "multiline": false
-    },
-    "yearAsset": {
-      "title": "yearAsset",
-      "value": "Your theatre stats",
-      "multiline": false
-    },
-    "yearCard": {
-      "title": "yearCard",
-      "value": "Year in theatre card",
       "multiline": false
     },
     "closingHeading": {
