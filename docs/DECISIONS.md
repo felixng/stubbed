@@ -1586,3 +1586,11 @@ Owner: "I don't know what is going to be run when, whether something is automati
 - **Guide and drift.** The guide's tables use `apps/web/src/lib/crawl-schedule.ts`; a test compares it with `supabase/scripts/crawl/schedule.mjs`, the workflow cron and the refresh intervals in the migration, so they cannot silently differ.
 - Migration `20261112120000_crawl_worker_runs.sql`. It also replaces `crawl_source_progress` to add `consecutive_failures` and `refresh_at` to page rows.
 
+
+### CMS: cleared fields, preview button, About as sections (2026-11-12)
+
+Owner: Studio's Publish was hidden behind "Exit content preview", clearing a field put the original back, and About should be a page the owner controls rather than fixed slots.
+
+- **Clearing stores `""`.** Sanity removes a cleared string, which the site reads as "never edited" and the Studio prefill refilled. The field input now turns that removal into `""`, the prefill runs once per field, `mergeCopy` accepts any string (empty included), and the `required` rule is dropped from copy fields (links and emails keep it).
+- **Exit button** is a client component, hidden inside Presentation's frame and at `/dressingroom`, and sits bottom-left elsewhere.
+- **About is a list of sections** with rich text and buttons, rendered by `SectionPage` with our own small renderer (no Portable Text dependency). CMS links are limited to site paths, https and mailto, checked again when rendering, with draft-preview markers stripped first. Privacy and Terms stay fixed-slot for now: their JSX mixes copy with operator details from `LEGAL`, so converting them is a separate change that needs a legal read-through.

@@ -9,6 +9,8 @@ import { stegaClean } from "next-sanity";
 import { copyDefinitions } from "./definitions";
 import { cmsClient } from "./client";
 import { mergeCopy, defaultsFor, safeEmail, safeWebUrl, type CopySection, type ContentDocument } from "./model";
+import { aboutDefaultSections, cleanSections, type PageSection } from "./sections";
+import { LEGAL } from "../legal";
 
 async function readPublishedDocument(id: ContentDocument): Promise<Record<string, unknown> | null> {
   "use cache";
@@ -32,16 +34,13 @@ async function readPublishedDocument(id: ContentDocument): Promise<Record<string
   }
 }
 
-export const getCopy = cache(async function getCopy<S extends CopySection>(section: S) {
-  if (!cmsClient) return defaultsFor(section);
-  const id = copyDefinitions[section].document;
+// The document a page reads from: published for visitors, drafts only inside an
+// authenticated preview, never cached for drafts.
+const getDocument = cache(async function getDocument(id: ContentDocument): Promise<{ document: Record<string, unknown> | null; preview: boolean }> {
+  if (!cmsClient) return { document: null, preview: false };
   const preview = (await draftMode()).isEnabled && Boolean(process.env.SANITY_API_READ_TOKEN);
   const perspective = preview ? await resolvePerspectiveFromCookies({ cookies: await cookies() }) ?? "drafts" : "published";
-  if (perspective === "published") {
-    const document = await readPublishedDocument(id);
-    return mergeCopy(section, document?.[section]);
-  }
-  // Drafts bypass every persistent cache and never reach public visitors.
+  if (perspective === "published") return { document: await readPublishedDocument(id), preview: false };
   try {
     const document = await cmsClient.fetch<Record<string, unknown> | null>(
       '*[_id == $id && _type == $id][0]', { id }, {
@@ -52,12 +51,26 @@ export const getCopy = cache(async function getCopy<S extends CopySection>(secti
         cache: "no-store",
       },
     );
-    return mergeCopy(section, document?.[section]);
+    return { document, preview: true };
   } catch (error) {
     console.error("Sanity draft content unavailable", error instanceof Error ? error.message : "Unknown error");
-    return defaultsFor(section);
+    return { document: null, preview: true };
   }
 });
+
+export const getCopy = cache(async function getCopy<S extends CopySection>(section: S) {
+  const { document } = await getDocument(copyDefinitions[section].document);
+  return mergeCopy(section, document?.[section]);
+});
+
+// Sections of /about. Falls back to repository copy (including edits made to the
+// older fixed fields) until the page has been edited as sections.
+export async function getAboutSections(): Promise<PageSection[]> {
+  const { document } = await getDocument("aboutPage");
+  const sections = cleanSections(document?.sections, stegaClean);
+  if (sections) return sections;
+  return aboutDefaultSections(mergeCopy("about", document?.about), LEGAL.email);
+}
 
 export async function getSiteCopy() {
   const copy = await getCopy("site");

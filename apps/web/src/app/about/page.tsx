@@ -1,7 +1,7 @@
-import { getCopy } from "@/lib/cms/content";
+import { getAboutSections, getCopy } from "@/lib/cms/content";
 import type { Metadata, Viewport } from "next";
 
-import { About } from "@/components/landing/About";
+import { SectionPage } from "@/components/cms/SectionPage";
 import { ContentPage } from "@/components/landing/ContentPage";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -15,10 +15,10 @@ export async function generateMetadata(): Promise<Metadata> {
 export const viewport: Viewport = { themeColor: "#f2f2f7" };
 
 export default async function AboutPage() {
-  const pageCopy = await getCopy("aboutMeta");
+  const [pageCopy, sections] = await Promise.all([getCopy("aboutMeta"), getAboutSections()]);
   return (
     <ContentPage title={pageCopy.title}>
-      <About />
+      <SectionPage sections={sections} />
     </ContentPage>
   );
 }

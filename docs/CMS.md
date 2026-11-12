@@ -16,7 +16,11 @@ The Next.js site keeps its design and assets. Sanity provides an authenticated b
 
 There are no image/file upload fields or editable asset paths in the schema. Screenshots and downloads remain in `apps/web/public/landing`, `public/press`, and `public/brand`. Regenerate promotional artwork/ZIPs with the existing scripts when their baked-in words or screenshots change. Updating a caption does not regenerate those files. Fields containing fragments around existing links or emphasis retain that formatting; edit the surrounding words without removing the spaces that join them.
 
-This first version edits existing content slots. Adding a new layout, FAQ item, instruction step or feature requires a schema/code change. Fixed slots protect screenshot associations, existing links and page structure.
+Most pages edit existing content slots: adding a new layout, FAQ item, instruction step or feature requires a schema/code change, because fixed slots protect screenshot associations, existing links and page structure.
+
+**About is edited as a page of sections** (`aboutPage.sections`, `src/lib/cms/sections.ts`). Each section has an optional heading, rich text (paragraphs, subheadings, bullet and numbered lists, bold, italic, links) and optional buttons; editors add, remove and drag sections freely. Links and buttons accept a site path, `https://` or `mailto:` only; everything else is dropped when the page renders. The repository copy is the fallback until the page is edited, and the old fixed `about` fields stay in the dataset (hidden in Studio) so earlier edits show until then. Privacy and Terms still use fixed slots: their text is interleaved with operator details from `src/lib/legal.ts`.
+
+A cleared field stays empty on the site. A field that was never edited falls back to repository copy.
 
 ## One-time setup
 
@@ -36,7 +40,7 @@ This first version edits existing content slots. Adding a new layout, FAQ item, 
    - Projection: `{_id, _type}`.
    - Signing secret: the same `SANITY_REVALIDATE_SECRET`.
    - Keep draft events disabled.
-7. Open Studio's **Presentation** tab. Edit a headline and check the unpublished draft in the embedded preview. Confirm a signed-out browser still sees the published version. Publish, then confirm the signed-out page updates without deploying. Click **Exit content preview** to return to published content.
+7. Open Studio's **Presentation** tab. Edit a headline and check the unpublished draft in the embedded preview. Confirm a signed-out browser still sees the published version. Publish, then confirm the signed-out page updates without deploying. Close the preview with the **Exit content preview** button (bottom-left, only on a directly opened preview; Presentation and Studio manage draft mode themselves).
 
 If Studio is disabled, check the public project ID and redeploy: `NEXT_PUBLIC_` variables are embedded at build time. An empty or unavailable CMS falls back to repository copy. Missing/blank/malformed fields fall back individually. Publishing does not need a Git commit or a Vercel deployment. Published copy uses one tagged application cache. The signed webhook immediately expires it and invalidates the root layout’s prerendered route output; the next visit regenerates the page and the next read fetches published content directly from the Sanity API, bypassing the CDN and the Next.js fetch cache. A short server cache also bounds ordinary reads. Sanity Live remains mounted for preview refreshes, but published copy invalidation relies on the webhook or the cache lifetime. The webhook is recommended for reliable updates even when no browser is subscribed to live events.
 
