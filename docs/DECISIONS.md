@@ -1604,3 +1604,7 @@ The twice-hourly GitHub schedule from #505 never started: GitHub scheduled event
 - **Why 150 and not more:** at about 6 s a page that is about 15 minutes inside the 20-minute window, so a run still finishes before the next slot.
 - Migration `20261112140000_crawl_dispatch_from_supabase.sql`. It also adds `started_via` to `crawl_worker_runs` and `daily_cap` as a run stop reason.
 
+### The crawler hub survives a busy database (2026-11-12)
+
+The hub stopped loading while an on-time crawl run was active: it made six database calls at once and failed whole if any one hit the 8 second statement limit (`crawl_source_progress` took 20 s and `admin_crawl_overview` 8 s during a run, and a few hundred milliseconds when the database is quiet). Parallel sources made runs heavier on this small instance, and each run now takes about 14 of every 30 minutes. The hub now splits into three independent sections (headline, schedule, details), each with its own Suspense boundary, reads through `lib/crawl-hub-data.ts` (each call tried twice, shared per request with `cache()`), and shows "Couldn't load X. The database is probably busy while a crawl run is active" for the section that fails instead of blanking the page. The schedule card no longer needs the heavy progress call. No database change.
+

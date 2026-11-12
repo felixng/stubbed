@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Suspense, cache } from "react";
 
 import { CrawlBar } from "@/components/app/admin/CrawlBar";
 import { CrawlSwitch } from "@/components/app/admin/CrawlSwitch";
@@ -10,47 +11,24 @@ import { RunHistoryTable } from "@/components/app/admin/RunHistoryTable";
 import { ScheduleCard } from "@/components/app/admin/ScheduleCard";
 import {
   CRAWL_HUB_PATH, CRAWL_STEPS, OFFICIAL_SITES_PATH, attentionItems, crawlBuckets, crawlSourceName, crawlingState, hubHeadline,
-  shortDateTime, sourcePath, type CrawlOverview, type CrawlSourceProgress,
+  shortDateTime, sourcePath,
 } from "@/lib/admin-crawl";
-import { dispatchFailing, type CrawlDispatch, type CrawlSchedule } from "@/lib/crawl-schedule";
-import { ownerContext } from "@/lib/supabase/data";
+import { HUB_SOURCES, getDispatch, getFlags, getOverview, getProgress, getSchedule } from "@/lib/crawl-hub-data";
+import { dispatchFailing } from "@/lib/crawl-schedule";
 
 export const metadata: Metadata = { title: "Catalogue crawler" };
 
 // The two venue-first sources. The older official-sites crawler has its own shape and its own row.
-const SOURCES = ["london_theatre", "playbill"] as const;
+const SOURCES = HUB_SOURCES;
 const number = new Intl.NumberFormat("en-GB");
 const n = (value: number) => number.format(value);
 
-type Supabase = Awaited<ReturnType<typeof ownerContext>>["supabase"];
-async function progressFor(supabase: Supabase, key: string) {
-  const { data, error } = await supabase.rpc("crawl_source_progress", { for_source: key, for_stage: "venue", page_size: 1, page_offset: 0 });
-  return error || !data ? null : (data as unknown as CrawlSourceProgress);
-}
-
-async function Hub() {
-  const { supabase } = await ownerContext();
-  const [loaded, overviewRes, flagsRes, scheduleRes, dispatchRes] = await Promise.all([
-    Promise.all(SOURCES.map(key => progressFor(supabase, key))),
-    supabase.rpc("admin_crawl_overview"),
-    supabase.rpc("admin_catalogue_flags"),
-    supabase.rpc("admin_crawl_schedule", { page_size: 5, page_offset: 0 }),
-    supabase.rpc("admin_crawl_dispatch"),
-  ]);
-  const progress = loaded.filter((p): p is CrawlSourceProgress => p !== null);
-  if (progress.length !== SOURCES.length || overviewRes.error || !overviewRes.data) return <p>Couldn’t load crawler status.</p>;
-  const overview = overviewRes.data as unknown as CrawlOverview;
-  const schedule = scheduleRes.error || !scheduleRes.data ? null : (scheduleRes.data as unknown as CrawlSchedule);
-  const dispatch = dispatchRes.error || !dispatchRes.data ? null : (dispatchRes.data as unknown as CrawlDispatch);
-  const flags = new Map(((flagsRes.data ?? []) as { flag: string; enabled: boolean }[]).map(row => [row.flag, row.enabled]));
-  const chips = flags.get("catalogue_run_chips_enabled");
-  const allSources = progress[0].sources;
-  const failing = dispatch ? dispatchFailing(dispatch) : null;
-  const attention = [
-    ...(failing ? [{ source: "Supabase trigger", text: "The last 2 starts failed", reason: failing.detail, next: "Replace the GitHub token. GitHub’s own schedule is the only trigger until then, and it is often late.", href: "#schedule" }] : []),
-    ...attentionItems(overview, allSources),
-  ];
-
+// Everything the headline and the details share, computed once per request from cached reads.
+const getModel = cache(async () => {
+  const [london, playbill, overview, flags] = await Promise.all([getProgress("london_theatre"), getProgress("playbill"), getOverview(), getFlags()]);
+  if (!london || !playbill || !overview) return null;
+  const progress = [london, playbill];
+  const allSources = london.sources;
   const rows = SOURCES.map((key, index) => {
     const data = progress[index];
     const source = allSources.find(item => item.source_key === key)!;
@@ -60,9 +38,54 @@ async function Hub() {
     const counts = row.data.stages[stage], buckets = crawlBuckets(counts);
     return { discovered: sum.discovered + counts.discovered, done: sum.done + buckets.done, stuck: sum.stuck + buckets.stuck, retrying: sum.retrying + buckets.retrying };
   }, { discovered: 0, done: 0, stuck: 0, retrying: 0 });
-  const find = total("directory"), venues = total("venue"), shows = total("event");
-  const stuck = find.stuck + venues.stuck + shows.stuck;
-  const retrying = find.retrying + venues.retrying + shows.retrying;
+  return { overview, flags, allSources, rows, find: total("directory"), venues: total("venue"), shows: total("event") };
+});
+
+// Shown when the database is too busy to answer (for example while a crawl run is active).
+function Busy({ what }: { what: string }) {
+  return (
+    <p className="text-subheadline text-label-secondary">
+      Couldn’t load {what}. The database is probably busy while a crawl run is active. <Link href={CRAWL_HUB_PATH} className="text-tint-text">Try again</Link> in a minute.
+    </p>
+  );
+}
+
+async function Headline() {
+  const model = await getModel();
+  if (!model) return null;
+  const { rows, find, venues, shows, overview } = model;
+  return (
+    <p className="font-display text-title-2">
+      {hubHeadline(rows.map(row => ({ key: row.key, state: row.state, publishing: row.source.publication_enabled })),
+        find.stuck + venues.stuck + shows.stuck, find.retrying + venues.retrying + shows.retrying, overview.run_dates.from_sources)}
+    </p>
+  );
+}
+
+async function ScheduleBlock() {
+  const [schedule, dispatch] = await Promise.all([getSchedule(), getDispatch()]);
+  if (!schedule) return <Busy what="the schedule" />;
+  return (
+    <>
+      <ScheduleCard schedule={schedule} dispatch={dispatch} />
+      <Section id="recent-runs" title="Recent runs">
+        <RunHistoryTable runs={schedule.runs} />
+        <Link href={`${CRAWL_HUB_PATH}/runs`} className="inline-flex min-h-11 items-center text-subheadline text-tint-text">All runs</Link>
+      </Section>
+    </>
+  );
+}
+
+async function Details() {
+  const [model, dispatch] = await Promise.all([getModel(), getDispatch()]);
+  if (!model) return <Busy what="the crawl progress" />;
+  const { overview, flags, allSources, rows, find, venues, shows } = model;
+  const chips = flags?.get("catalogue_run_chips_enabled");
+  const failing = dispatch ? dispatchFailing(dispatch) : null;
+  const attention = [
+    ...(failing ? [{ source: "Supabase trigger", text: "The last 2 starts failed", reason: failing.detail, next: "Replace the GitHub token. GitHub’s own schedule is the only trigger until then, and it is often late.", href: "#schedule" }] : []),
+    ...attentionItems(overview, allSources),
+  ];
   const identities = rows.reduce((sum, row) => ({
     matched: sum.matched + row.data.identities.matched_venues, created: sum.created + row.data.identities.crawler_venues,
     unresolved: sum.unresolved + row.data.identities.unresolved_venues,
@@ -83,14 +106,6 @@ async function Hub() {
 
   return (
     <>
-      <p className="font-display text-title-2">
-        {hubHeadline(rows.map(row => ({ key: row.key, state: row.state, publishing: row.source.publication_enabled })), stuck, retrying, overview.run_dates.from_sources)}
-      </p>
-
-      {schedule
-        ? <ScheduleCard schedule={schedule} sources={allSources} dispatch={dispatch} />
-        : <p className="text-subheadline text-label-secondary">Couldn’t load the schedule.</p>}
-
       <Section id="pipeline" title="How far the crawler has got" hint="Both sources combined. Each step reads the one before it; nothing reaches members until Publish.">
         <PipelineDiagram steps={steps} label="Crawler steps" />
         {stillFinding && <p className="text-footnote text-label-secondary">Totals grow while a source is still finding venues. They are pages found so far, not everything on the site.</p>}
@@ -157,22 +172,19 @@ async function Hub() {
       </Section>
 
       <RecentChanges actions={overview.recent_actions} />
-
-      {schedule && (
-        <Section id="recent-runs" title="Recent runs">
-          <RunHistoryTable runs={schedule.runs} />
-          <Link href={`${CRAWL_HUB_PATH}/runs`} className="inline-flex min-h-11 items-center text-subheadline text-tint-text">All runs</Link>
-        </Section>
-      )}
     </>
   );
 }
+
+const loading = <p className="text-subheadline text-label-secondary">Loading…</p>;
 
 export default function CrawlHubPage() {
   return (
     <CrawlShell back={{ href: "/app/backstage", label: "Backstage" }} title="Catalogue crawler"
       intro="Where the crawler is, and what needs you. Nothing here reaches members until you publish.">
-      <Hub />
+      <Suspense fallback={loading}><Headline /></Suspense>
+      <Suspense fallback={loading}><ScheduleBlock /></Suspense>
+      <Suspense fallback={loading}><Details /></Suspense>
     </CrawlShell>
   );
 }
