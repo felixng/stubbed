@@ -1981,6 +1981,96 @@ internal enum PublicSchema {
       case status = "status"
     }
   }
+  internal struct CrawlWorkerRunsSelect: Codable, Hashable, Sendable {
+    internal let finishedAt: String?
+    internal let githubRunId: String?
+    internal let id: UUID
+    internal let limits: AnyJSON
+    internal let logUrl: String?
+    internal let modelSpendUsd: Decimal
+    internal let perSource: AnyJSON
+    internal let scopeFilter: String?
+    internal let sourceFilter: String?
+    internal let stageFilter: String?
+    internal let startedAt: String
+    internal let stopReason: String?
+    internal let trigger: String
+    internal enum CodingKeys: String, CodingKey {
+      case finishedAt = "finished_at"
+      case githubRunId = "github_run_id"
+      case id = "id"
+      case limits = "limits"
+      case logUrl = "log_url"
+      case modelSpendUsd = "model_spend_usd"
+      case perSource = "per_source"
+      case scopeFilter = "scope_filter"
+      case sourceFilter = "source_filter"
+      case stageFilter = "stage_filter"
+      case startedAt = "started_at"
+      case stopReason = "stop_reason"
+      case trigger = "trigger"
+    }
+  }
+  internal struct CrawlWorkerRunsInsert: Codable, Hashable, Sendable {
+    internal let finishedAt: String?
+    internal let githubRunId: String?
+    internal let id: UUID?
+    internal let limits: AnyJSON?
+    internal let logUrl: String?
+    internal let modelSpendUsd: Decimal?
+    internal let perSource: AnyJSON?
+    internal let scopeFilter: String?
+    internal let sourceFilter: String?
+    internal let stageFilter: String?
+    internal let startedAt: String?
+    internal let stopReason: String?
+    internal let trigger: String
+    internal enum CodingKeys: String, CodingKey {
+      case finishedAt = "finished_at"
+      case githubRunId = "github_run_id"
+      case id = "id"
+      case limits = "limits"
+      case logUrl = "log_url"
+      case modelSpendUsd = "model_spend_usd"
+      case perSource = "per_source"
+      case scopeFilter = "scope_filter"
+      case sourceFilter = "source_filter"
+      case stageFilter = "stage_filter"
+      case startedAt = "started_at"
+      case stopReason = "stop_reason"
+      case trigger = "trigger"
+    }
+  }
+  internal struct CrawlWorkerRunsUpdate: Codable, Hashable, Sendable {
+    internal let finishedAt: String?
+    internal let githubRunId: String?
+    internal let id: UUID?
+    internal let limits: AnyJSON?
+    internal let logUrl: String?
+    internal let modelSpendUsd: Decimal?
+    internal let perSource: AnyJSON?
+    internal let scopeFilter: String?
+    internal let sourceFilter: String?
+    internal let stageFilter: String?
+    internal let startedAt: String?
+    internal let stopReason: String?
+    internal let trigger: String?
+    internal enum CodingKeys: String, CodingKey {
+      case finishedAt = "finished_at"
+      case githubRunId = "github_run_id"
+      case id = "id"
+      case limits = "limits"
+      case logUrl = "log_url"
+      case modelSpendUsd = "model_spend_usd"
+      case perSource = "per_source"
+      case scopeFilter = "scope_filter"
+      case sourceFilter = "source_filter"
+      case stageFilter = "stage_filter"
+      case startedAt = "started_at"
+      case stopReason = "stop_reason"
+      case trigger = "trigger"
+    }
+  }
   internal struct EntriesSelect: Codable, Hashable, Sendable {
     internal let createdAt: String
     internal let date: String
