@@ -319,3 +319,26 @@ Old addresses redirect: `/crawl/sources?source=X&stage=Y&status=Z&page=N` goes t
 
 **Data.** Existing reads (`crawl_source_progress`, `admin_crawl_task_results`, `admin_catalogue_flags`) plus `admin_crawl_overview` (read-only, admin-only): where attention is needed with a reason, pages waiting to be checked, the next directory refresh, published run dates, the official-sites summary and recent changes. `crawl_source_progress` also accepts the four buckets as a status filter.
 
+## Schedule, limits and run history (#505)
+
+The crawler runs **twice an hour**, at :17 and :47 UTC (`17,47 * * * *` in `.github/workflows/catalogue-crawl.yml`, off the hour because top-of-hour schedules start latest). GitHub can start a run late; `concurrency: catalogue-crawl` with `cancel-in-progress: false` means runs never overlap and a late run just waits. Each run reads at most **100 pages**, split evenly between the sources that are on, and stops after 20 minutes (the job is cut off at 30). Repository standard runners are free on a public repo, so this costs nothing in Actions minutes.
+
+| Limit | Default | Repository variable |
+|---|---|---|
+| Pages per source, rolling 24 hours | 1,000 | `CRAWL_SOURCE_DAILY_PAGES` |
+| Model spend, rolling 24 hours | $2 | `CRAWL_DAILY_SPEND_USD` |
+| Model spend per run | $1 | `CRAWL_MAX_SPEND_USD` |
+
+- A source at its daily page cap gets no allowance and its share goes to the others; a source part way to its cap is held to what it has left. Host pacing and `Retry-After` handling are unchanged.
+- Before a run, the model gets the smaller of its run cap and what is left of the daily cap (from `crawl_ai_reservations`). At zero the model is skipped (link finding, rule writing, repair) and page crawling continues; the run records `daily_spend_cap`. Only the official-sites route uses the model in this loop.
+- Page counts for the daily cap come from `crawl_worker_runs.per_source`.
+- **Retry ladder** (`RETRY_DELAYS_SECONDS`): 1 min, 5 min, 30 min, 2 h, 12 h, then Failed (an admin retries). A rate limit waits for `Retry-After` or an hour. A block pauses the whole source until an admin retries the blocked pages. Retries only happen while a run is active, so on this schedule they happen near their stated times.
+- **Re-read policy** (`crawl_refresh_policy`): directory 30 days; venue 1 day if it lists current shows, else 7; show pages 1 to 180 days by how close the dates are; shows closed more than two years ago last.
+- All of these values live in `supabase/scripts/crawl/schedule.mjs`. The admin's copies (`apps/web/src/lib/crawl-schedule.ts`, shown in the guide) are checked by `apps/web/test/crawl-schedule.test.ts`, which also fails if the workflow cron changes without them.
+
+**Run record.** Every execution (schedule, by hand, Start a crawl) writes one `crawl_worker_runs` row: trigger, GitHub run id and log, filters, limits in force, pages and results per source, stop reason (`page_allowance`, `time_limit`, `daily_spend_cap`, `nothing_due`, `failed`, `cancelled`) and model spend. The loop opens it at the start and closes it at the end; a final workflow step closes it as failed or cancelled if the job was interrupted. A row still open after 35 minutes reads as interrupted. Admins read it through RLS and `admin_crawl_schedule` (recent runs, what is running now, the last 24 hours, and a due-now forecast per source); only the worker's database role writes it.
+
+**In the admin.** The hub has a "What runs when" card (schedule, now, last run, next run with pages due per source, today's limits and when a capped source resumes, and a warning if nothing has run for two hours) and the last five runs. `/app/backstage/crawl/runs` lists every run with a trigger filter. Every waiting page says who acts next. The guide's "How it runs" section shows the tables above.
+
+**To pause.** Pause one source with its Crawling switch. To stop everything, set the repository variable `CRAWL_LOOP_ENABLED` to false. **To roll back**, set the cron back to daily in the workflow or turn the loop off; the table and pages are harmless with any schedule.
+

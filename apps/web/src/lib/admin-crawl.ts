@@ -122,6 +122,8 @@ export type CrawlPage = {
   available_at: string;
   parser_version: string | null;
   enriched: boolean | null;
+  consecutive_failures?: number | null;
+  refresh_at?: string | null;
 };
 export type CrawlSourceProgress = {
   sources: CrawlSource[];
@@ -246,7 +248,14 @@ function attentionText(item: CrawlOverviewAttention) {
   return `${noun} ${verb}`;
 }
 
-export type AttentionItem = { source: string; text: string; reason?: string | null; href: string };
+export type AttentionItem = { source: string; text: string; reason?: string | null; next?: string; href: string };
+
+// Who acts next for a group of waiting pages.
+const attentionNext = {
+  retry_wait: "Automatic: these try again by themselves.",
+  failed: "Gave up. They won’t retry by themselves.",
+  blocked: "The whole source is paused. It won’t resume by itself.",
+} as const;
 // One short list of what needs an admin, each with a place to go.
 export function attentionItems(
   overview: CrawlOverview, sources: Pick<CrawlSource, "source_key" | "paused_reason">[],
@@ -255,11 +264,11 @@ export function attentionItems(
   for (const source of sources) {
     if (source.source_key === "official") continue;
     const name = crawlSourceName(source.source_key);
-    if (source.paused_reason) items.push({ source: name, text: "Blocked by the site", reason: source.paused_reason, href: sourcePath(source.source_key) });
+    if (source.paused_reason) items.push({ source: name, text: "Blocked by the site", reason: source.paused_reason, next: attentionNext.blocked, href: sourcePath(source.source_key) });
     for (const item of overview.sources[source.source_key]?.attention ?? []) {
       const bucket = item.status === "retry_wait" ? "retrying" : "stuck";
       items.push({
-        source: name, text: attentionText(item), reason: item.reason,
+        source: name, text: attentionText(item), reason: item.reason, next: attentionNext[item.status],
         href: pagesHref({ source: source.source_key, step: item.stage, status: bucket, page: 1 }),
       });
     }

@@ -11,9 +11,10 @@ import { canonicalTaskUrl } from './frontier-url.mjs';
 import { structuredReader } from './sources/theatre-site.mjs';
 import { londonTheatre } from './sources/london-theatre.mjs';
 import { playbill } from './sources/playbill.mjs';
+import { RETRY_DELAYS_SECONDS } from './schedule.mjs';
 
 const STAGES = ['directory', 'venue', 'event'];
-const RETRIES = [60, 300, 1800, 7200, 43200];
+const RETRIES = RETRY_DELAYS_SECONDS;
 const CLEANUP_MS = 90_000;
 const HEARTBEAT_MS = 60_000;
 

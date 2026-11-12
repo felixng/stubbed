@@ -13,6 +13,7 @@ export function NeedsAttention({ items, children }: { items: AttentionItem[]; ch
               <div className="min-w-0">
                 <p className="text-subheadline"><span className="font-semibold">{item.source}:</span> {item.text}</p>
                 {item.reason && <p className="break-words text-footnote text-label-secondary">{item.reason}</p>}
+                {item.next && <p className="text-footnote text-label-secondary">{item.next}</p>}
               </div>
               <Link href={item.href} className="inline-flex min-h-11 items-center text-subheadline text-tint-text">View</Link>
             </li>
