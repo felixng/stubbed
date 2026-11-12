@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { summariseCrawlShow, summariseCrawlTask, crawlSourceFilters, crawlSourceHref, crawlStageProgress, rerunCommand, scoreLine, settingsLine, shareRight, sumScores, UUID } from "@/lib/admin-crawl";
+import { attentionItems, crawlBuckets, crawlingState, crawlPagesFilters, hubHeadline, legacySourcesRedirect, pagesHref, recentActionText, sourceKeyFromPath, sourcePath, sourceStatusSentence, summariseCrawlShow, summariseCrawlTask, rerunCommand, scoreLine, settingsLine, shareRight, sumScores, UUID } from "@/lib/admin-crawl";
 
 const score = { right: 3, wrong: 1, unsure: 1, unreviewed: 2, findings: 7, missed: 2 };
 
@@ -32,15 +32,78 @@ test("UUID", () => {
   assert.ok(!UUID.test("nope"));
 });
 
-test("source progress keeps the discovered denominator and paginated filters", () => {
-  const counts = { discovered: 1000, processed: 3, pending: 994, leased: 1, succeeded: 3, retry_wait: 0, blocked: 2, failed: 0 };
-  assert.equal(crawlStageProgress("venue", counts), "3 of 1,000 discovered venue pages processed");
-  const scan = "1a1a1a1a-0000-0000-0000-000000000001";
-  const filters = crawlSourceFilters({ source: "london_theatre", scan, stage: "event", status: "retry_wait", page: "5" });
-  assert.equal(crawlSourceHref(filters, 6), `/app/backstage/crawl/sources?source=london_theatre&stage=event&scan=${scan}&status=retry_wait&page=6`);
-  assert.deepEqual(crawlSourceFilters({ source: ["x"], scan: "bad", stage: "private", status: "weird", page: "-1" }), {
-    source: "london_theatre", scan: undefined, stage: "venue", status: undefined, page: 1,
-  });
+const counts = { discovered: 1085, processed: 979, pending: 80, leased: 2, succeeded: 979, retry_wait: 26, blocked: 3, failed: 1 };
+const scanId = "1a1a1a1a-0000-0000-0000-000000000001";
+
+test("six statuses group into four buckets", () => {
+  assert.deepEqual(crawlBuckets(counts), { done: 979, todo: 82, retrying: 26, stuck: 4 });
+});
+
+test("collection, pause and block read as one crawling state", () => {
+  assert.deepEqual(crawlingState({ collection_enabled: true, operator_paused_at: null, paused_reason: null }), { key: "on", label: "Crawling" });
+  assert.equal(crawlingState({ collection_enabled: true, operator_paused_at: "2026-11-01", paused_reason: null }).label, "Paused by you");
+  assert.equal(crawlingState({ collection_enabled: true, operator_paused_at: "2026-11-01", paused_reason: "HTTP 403" }).key, "blocked");
+  assert.equal(crawlingState({ collection_enabled: false, operator_paused_at: null, paused_reason: null }).label, "Not enabled");
+});
+
+test("page filters take steps, buckets and old names, and build links", () => {
+  const filters = crawlPagesFilters("london_theatre", { step: "event", status: "stuck", pass: scanId, page: "5" });
+  assert.deepEqual(filters, { source: "london_theatre", step: "event", status: "stuck", scan: scanId, page: 5 });
+  assert.equal(pagesHref(filters, { page: 6 }), `/app/backstage/crawl/sources/london-theatre/pages?step=event&status=stuck&pass=${scanId}&page=6`);
+  assert.deepEqual(crawlPagesFilters("playbill", { stage: "private", status: "weird", scan: "bad", page: "-1" }), { source: "playbill", step: "venue", status: undefined, scan: undefined, page: 1 });
+  assert.equal(crawlPagesFilters("playbill", { stage: "event", status: "retry_wait" }).status, "retry_wait");
+  assert.equal(sourceKeyFromPath("london-theatre"), "london_theatre");
+  assert.equal(sourcePath("official"), "/app/backstage/crawl/sources/official");
+});
+
+test("old crawl addresses land somewhere sensible", () => {
+  assert.equal(legacySourcesRedirect({}), "/app/backstage/crawl");
+  assert.equal(legacySourcesRedirect({ source: "nope" }), "/app/backstage/crawl");
+  assert.equal(legacySourcesRedirect({ source: "playbill" }), "/app/backstage/crawl/sources/playbill");
+  assert.equal(legacySourcesRedirect({ source: "london_theatre", stage: "event", status: "retry_wait", page: "2" }),
+    "/app/backstage/crawl/sources/london-theatre/pages?step=event&status=retry_wait&page=2");
+});
+
+test("the hub headline answers where we are in a sentence", () => {
+  const on = { key: "london_theatre", state: { key: "on", label: "Crawling" } as const, publishing: true };
+  const paused = { key: "playbill", state: { key: "paused", label: "Paused by you" } as const, publishing: false };
+  assert.equal(hubHeadline([on, paused], 27, 26, 0),
+    "London Theatre is crawling and publishing. Playbill is paused by you. 27 pages are stuck. 26 pages are retrying. No run dates published yet.");
+  assert.equal(hubHeadline([{ ...on, publishing: false }], 0, 0, 12), "London Theatre is crawling but not publishing. 12 run dates published.");
+});
+
+test("a source status sentence says what is running and what needs you", () => {
+  const scan = { started_at: "2026-11-08T10:00:00Z", completed_at: "2026-11-08T11:10:00Z", enumeration_status: "enumerated", is_current: true } as const;
+  assert.equal(sourceStatusSentence({ state: { key: "on", label: "Crawling" }, publishing: true, scan, needAttention: 27 }),
+    "Crawling and publishing. Current pass started 8 Nov; finding venues finished 8 Nov. 27 pages need attention.");
+  assert.equal(sourceStatusSentence({ state: { key: "paused", label: "Paused by you" }, publishing: false, scan: null, needAttention: 0 }),
+    "Paused by you. No pass recorded yet. Nothing needs you.");
+});
+
+test("needs attention lists each problem with a reason and a place to go", () => {
+  const overview = {
+    run_dates: { total: 0, from_sources: 0 },
+    sources: {
+      london_theatre: { next_refresh_at: null, unchecked_pages: 0, attention: [
+        { stage: "event", status: "retry_wait", n: 26, reason: "Page redirect limit exceeded" },
+        { stage: "event", status: "failed", n: 1, reason: "HTTP 404" },
+      ] },
+      playbill: { next_refresh_at: null, unchecked_pages: 0, attention: [] },
+    },
+    official: { sites: 9, sites_needing_attention: 3, last_run_at: null, last_run_status: null, findings_to_review: 0 },
+    recent_actions: [],
+  } as const;
+  const items = attentionItems(overview as never, [{ source_key: "london_theatre", paused_reason: null }, { source_key: "playbill", paused_reason: "HTTP 403" }, { source_key: "official", paused_reason: null }]);
+  assert.deepEqual(items.map(i => i.text), ["26 show pages retrying", "1 show page failed", "Blocked by the site", "3 sites need attention"]);
+  assert.equal(items[0].href, "/app/backstage/crawl/sources/london-theatre/pages?step=event&status=retrying");
+  assert.equal(items[1].reason, "HTTP 404");
+  assert.equal(items[2].reason, "HTTP 403");
+  assert.equal(attentionItems({ ...overview, official: { ...overview.official, sites_needing_attention: 0 } } as never, [{ source_key: "playbill", paused_reason: null }]).length, 0);
+});
+
+test("recent changes read as sentences", () => {
+  assert.equal(recentActionText({ at: "x", source: "playbill", operation: "pause", affected: 1, who: "Felix" }), "Felix paused crawling for Playbill");
+  assert.equal(recentActionText({ at: "x", source: "london_theatre", operation: "retry_failed", affected: 27, who: "Felix" }), "Felix retried failed pages for London Theatre (27 pages)");
 });
 
 test("a venue page says what we got and what it is waiting on", () => {

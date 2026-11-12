@@ -60,8 +60,8 @@ Launch is Journey 2: the user types the show (#353). Journey 1 pre-fills the sho
 **#358 is implemented**; the owner configures the Actions secrets and Vercel dispatch token before a live run. Pilot results stay in admin-only tables; automatic publishing into runs is planned in #387 below.
 - **#277 core.** `crawl_runs` and `crawl_findings` (admin read, service-role write). `supabase/scripts/crawl/` with `index.mjs`, `fetch.mjs` (robots.txt, per-host rate limit, User-Agent, conditional requests), `load.mjs` (one transaction per theatre), `report.mjs`. Facts and short evidence only, never copies of pages. Parsers are pure functions tested with `node --test` on saved fixtures.
 - **#291 theatre sites.** Structured data (schema.org `Event`) by code first, then a model when the run allows it, with model and prompt taken from the `crawl_runs` row. Findings keep the raw title; no show matching here.
-- **#358 start from admin.** `/app/backstage/crawl` creates a `crawl_runs` row and dispatches `.github/workflows/catalogue-crawl.yml` with a run id and branch. The crawl runs on GitHub Actions, so the model key stays out of Vercel and the app. The owner adds `SUPABASE_DB_URL` and `ANTHROPIC_API_KEY` as Actions secrets and a repository-scoped Actions token in Vercel.
-- **#359 review.** `/app/backstage/crawl/[id]`: mark findings right or wrong, add missed titles, score per run and theatre, compare two runs and their settings.
+- **#358 start from admin.** `/app/backstage/crawl/sources/official` ("Crawl chosen theatres") creates a `crawl_runs` row and dispatches `.github/workflows/catalogue-crawl.yml` with a run id and branch. The crawl runs on GitHub Actions, so the model key stays out of Vercel and the app. The owner adds `SUPABASE_DB_URL` and `ANTHROPIC_API_KEY` as Actions secrets and a repository-scoped Actions token in Vercel.
+- **#359 review.** `/app/backstage/crawl/runs/[id]`: mark findings right or wrong, add missed titles, score per run and theatre, compare two runs and their settings.
 - **#367 titles to show review.** Findings marked right with no `similar_shows` same-match become `show_candidates` (#366). Adds a show-name pull as a job on the crawl form.
 
 ### #387 Journey 1, step 2: read theatre sites with rules, into runs
@@ -296,3 +296,26 @@ Follow `supabase/scripts/sync-wikidata.mjs`: Node 24+, **no npm packages** (the 
 - A `docs/DECISIONS.md` entry for any choice the issue left open, and the PR body says it needs `supabase db push`. Migrations reach the hosted database only when the owner applies them or says to.
 
 Rollout state, validation results and the operations runbook: [`CATALOGUE_ROLLOUT.md`](CATALOGUE_ROLLOUT.md).
+
+## Crawler admin map (#504)
+
+One entry in Backstage, **Catalogue crawler**, then a tree. Every page has one back link to its parent.
+
+| Page | Address | What it answers |
+|---|---|---|
+| Hub | `/app/backstage/crawl` | Where are we, and what needs me? Headline sentence, the six-step diagram, a source by step table, needs attention, the member suggestion switches, recent changes |
+| Source | `/app/backstage/crawl/sources/london-theatre`, `.../playbill` | Status sentence, Crawling and Publication switches, fixes for what is stuck, steps funnel, what it added to the catalogue, cost, a fresh pass under Advanced |
+| Pages | `.../sources/<source>/pages?step=&status=` | Every page found, by step tab and status chip (done, to do, retrying, stuck), with what each page produced |
+| Official source | `/app/backstage/crawl/sources/official` | The older AI-assisted crawler: start a crawl, runs list, progress, link to sites |
+| Official sites | `.../sources/official/sites` | Sites that need attention, reading rules |
+| Run review | `/app/backstage/crawl/runs/[id]` | Mark findings right or wrong, add missed titles, then publish and send to show review |
+| Guide | `/app/backstage/crawl/guide` | The vocabulary, what each switch and fix does, what complete means |
+
+Old addresses redirect: `/crawl/sources?source=X&stage=Y&status=Z&page=N` goes to the source or its pages list, `/crawl/sites` to the official sites, `/crawl/<run id>` to `/crawl/runs/<run id>`.
+
+**Words.** Find venues, Read venues, Read shows, Check, Publish, Suggest (steps 1 to 3 are the crawl stages `directory`, `venue`, `event`). Page statuses are grouped into Done, To do, Retrying and Stuck for summaries; the six raw statuses stay under Details. A source shows one state: Crawling, Paused by you, Blocked by the site, or Not enabled.
+
+**Switches stay; fixes run once.** Switches: Crawling and Publication per source, Run chips for everyone (Autofill is a locked row). Fixes appear only where there is something to fix, with a count: Retry pages, Retry blocked pages (asks first), Read again (per page), Start a fresh pass (under Advanced, asks first).
+
+**Data.** Existing reads (`crawl_source_progress`, `admin_crawl_task_results`, `admin_catalogue_flags`) plus `admin_crawl_overview` (read-only, admin-only): where attention is needed with a reason, pages waiting to be checked, the next directory refresh, published run dates, the official-sites summary and recent changes. `crawl_source_progress` also accepts the four buckets as a status filter.
+

@@ -24,13 +24,8 @@ const PAGES = [
   },
   {
     href: "/app/backstage/crawl",
-    title: "Crawl runs",
-    text: "What the crawler read from theatre websites: check findings, mark them right or wrong, and compare runs.",
-  },
-  {
-    href: "/app/backstage/crawl/sources",
     title: "Catalogue crawler",
-    text: "London Theatre and Playbill progress by step, plus the buttons for publishing to the catalogue and showing run chips.",
+    text: "Where the crawler is and what needs you: sources, progress, publishing, suggestions to members, and the older official-sites runs and review.",
   },
   {
     href: "/app/backstage/membership",

@@ -78,7 +78,6 @@ export const COMPARE_ORDER = ["added", "lost", "changed", "same"] as const;
 
 export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export const CRAWL_SOURCES_PATH = "/app/backstage/crawl/sources";
 export const CRAWL_PAGE_SIZE = 25;
 export const CRAWL_STAGES = ["directory", "venue", "event"] as const;
 export const CRAWL_STATUS_LABELS = {
@@ -150,33 +149,169 @@ const sourceNames: Record<string, string> = {
   playbill: "Playbill",
   official: "Official theatre sites",
 };
+export const CRAWL_SOURCE_KEYS = ["london_theatre", "playbill", "official"] as const;
+export const CRAWL_HUB_PATH = "/app/backstage/crawl";
+export const CRAWL_GUIDE_PATH = `${CRAWL_HUB_PATH}/guide`;
+export const OFFICIAL_SITES_PATH = `${CRAWL_HUB_PATH}/sources/official/sites`;
 
 export function crawlSourceName(key: string) {
   return sourceNames[key] ?? key;
 }
+export const isCrawlSource = (key: string) => (CRAWL_SOURCE_KEYS as readonly string[]).includes(key);
+// Source keys use underscores in the database and hyphens in addresses.
+export const sourcePath = (key: string) => `${CRAWL_HUB_PATH}/sources/${key.replaceAll("_", "-")}`;
+export const sourceKeyFromPath = (segment: string) => segment.replaceAll("-", "_");
+export const runPath = (id: string) => `${CRAWL_HUB_PATH}/runs/${id}`;
 
-export function crawlSourceFilters(input: Record<string, string | string[] | undefined>) {
-  const source = typeof input.source === "string" && /^[a-z][a-z0-9_]{0,63}$/.test(input.source)
-    ? input.source : "london_theatre";
-  const scan = typeof input.scan === "string" && UUID.test(input.scan) ? input.scan : undefined;
-  const stage = CRAWL_STAGES.find(stage => stage === input.stage) ?? "venue";
-  const status = Object.keys(CRAWL_STATUS_LABELS).find(status => status === input.status) as CrawlStatus | undefined;
-  const page = typeof input.page === "string" && /^[1-9]\d{0,5}$/.test(input.page) ? Number(input.page) : 1;
-  return { source, scan, stage, status, page };
+// The six steps, named once. Steps 1 to 3 are crawl stages in the database.
+export const CRAWL_STEPS = [
+  { key: "directory", name: "Find venues", what: "Walk the source's theatre directory to list venue pages." },
+  { key: "venue", name: "Read venues", what: "Read each venue page to list its shows." },
+  { key: "event", name: "Read shows", what: "Read each show page for its title, dates and venue." },
+  { key: "check", name: "Check", what: "Check dates and match venues and shows to the ones we already have." },
+  { key: "publish", name: "Publish", what: "Put trusted shows, venues and run dates into the catalogue." },
+  { key: "suggest", name: "Suggest", what: "Offer run chips to members when they log a show." },
+] as const;
+export const stepName = (stage: CrawlStage) => CRAWL_STEPS.find(step => step.key === stage)?.name ?? stage;
+const stepNoun: Record<CrawlStage, string> = { directory: "directory page", venue: "venue page", event: "show page" };
+
+// Six statuses grouped into four buckets for summaries. The six stay in drill-downs.
+export const CRAWL_BUCKETS = ["done", "todo", "retrying", "stuck"] as const;
+export type CrawlBucket = (typeof CRAWL_BUCKETS)[number];
+export const CRAWL_BUCKET_LABELS: Record<CrawlBucket, string> = { done: "Done", todo: "To do", retrying: "Retrying", stuck: "Stuck" };
+export function crawlBuckets(c: CrawlStageCounts): Record<CrawlBucket, number> {
+  return { done: c.succeeded, todo: c.pending + c.leased, retrying: c.retry_wait, stuck: c.blocked + c.failed };
 }
 
-export function crawlSourceHref(filters: ReturnType<typeof crawlSourceFilters>, page = filters.page) {
-  const params = new URLSearchParams({ source: filters.source, stage: filters.stage });
-  if (filters.scan) params.set("scan", filters.scan);
-  if (filters.status) params.set("status", filters.status);
-  if (page > 1) params.set("page", String(page));
-  return `${CRAWL_SOURCES_PATH}?${params}`;
+export type CrawlingState = { key: "on" | "paused" | "blocked" | "off"; label: string };
+// Collection (database) and the Crawling switch read as one state.
+export function crawlingState(source: Pick<CrawlSource, "collection_enabled" | "operator_paused_at" | "paused_reason">): CrawlingState {
+  if (!source.collection_enabled) return { key: "off", label: "Not enabled" };
+  if (source.paused_reason) return { key: "blocked", label: "Blocked by the site" };
+  if (source.operator_paused_at) return { key: "paused", label: "Paused by you" };
+  return { key: "on", label: "Crawling" };
+}
+
+export type CrawlPagesFilters = { source: string; step: CrawlStage; status?: CrawlBucket | CrawlStatus; scan?: string; page: number };
+export function crawlPagesFilters(source: string, input: Record<string, string | string[] | undefined>): CrawlPagesFilters {
+  const one = (value: string | string[] | undefined) => (typeof value === "string" ? value : undefined);
+  const step = CRAWL_STAGES.find(stage => stage === one(input.step) || stage === one(input.stage)) ?? "venue";
+  const raw = one(input.status);
+  const status = (CRAWL_BUCKETS as readonly string[]).includes(raw ?? "") || Object.keys(CRAWL_STATUS_LABELS).includes(raw ?? "")
+    ? (raw as CrawlBucket | CrawlStatus) : undefined;
+  const scanValue = one(input.pass) ?? one(input.scan);
+  const scan = scanValue && UUID.test(scanValue) ? scanValue : undefined;
+  const pageValue = one(input.page);
+  const page = pageValue && /^[1-9]\d{0,5}$/.test(pageValue) ? Number(pageValue) : 1;
+  return { source, step, status, scan, page };
+}
+export function pagesHref(filters: CrawlPagesFilters, change: Partial<CrawlPagesFilters> = {}) {
+  const next = { ...filters, ...change };
+  const params = new URLSearchParams({ step: next.step });
+  if (next.status) params.set("status", next.status);
+  if (next.scan) params.set("pass", next.scan);
+  if (next.page > 1) params.set("page", String(next.page));
+  return `${sourcePath(next.source)}/pages?${params}`;
+}
+
+// Where an old bookmark should land. Old pages used underscores in the source and "stage" for the step.
+export function legacySourcesRedirect(input: Record<string, string | string[] | undefined>): string {
+  const source = typeof input.source === "string" && isCrawlSource(input.source) ? input.source : null;
+  if (!source) return CRAWL_HUB_PATH;
+  const wantsPages = ["stage", "status", "page", "scan"].some(key => typeof input[key] === "string");
+  if (!wantsPages) return sourcePath(source);
+  return pagesHref(crawlPagesFilters(source, input));
 }
 
 const countFormat = new Intl.NumberFormat("en-GB");
-export function crawlStageProgress(stage: CrawlStage, counts: CrawlStageCounts) {
-  const label = stage === "event" ? "event detail pages" : `${stage} pages`;
-  return `${countFormat.format(counts.processed)} of ${countFormat.format(counts.discovered)} discovered ${label} processed`;
+const n = (value: number) => countFormat.format(value);
+const dayMonth = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+const dayMonthTime = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit", timeZone: "UTC", hour12: false });
+export const shortDate = (iso: string) => dayMonth.format(new Date(iso));
+export const shortDateTime = (iso: string) => `${dayMonthTime.format(new Date(iso))} UTC`;
+const lower = (text: string) => text.charAt(0).toLowerCase() + text.slice(1);
+
+export type CrawlOverviewAttention = { stage: CrawlStage; status: "failed" | "blocked" | "retry_wait"; n: number; reason: string | null };
+export type CrawlOverview = {
+  run_dates: { total: number; from_sources: number };
+  sources: Record<string, { next_refresh_at: string | null; unchecked_pages: number; attention: CrawlOverviewAttention[] }>;
+  official: { sites: number; sites_needing_attention: number; last_run_at: string | null; last_run_status: string | null; findings_to_review: number };
+  recent_actions: { at: string; source: string; operation: string; affected: number; who: string }[];
+};
+
+// "1 show page is retrying", "26 show pages are retrying".
+function attentionText(item: CrawlOverviewAttention) {
+  const noun = `${n(item.n)} ${stepNoun[item.stage]}${item.n === 1 ? "" : "s"}`;
+  const verb = item.status === "retry_wait" ? "retrying" : item.status === "blocked" ? "blocked" : "failed";
+  return `${noun} ${verb}`;
+}
+
+export type AttentionItem = { source: string; text: string; reason?: string | null; href: string };
+// One short list of what needs an admin, each with a place to go.
+export function attentionItems(
+  overview: CrawlOverview, sources: Pick<CrawlSource, "source_key" | "paused_reason">[],
+): AttentionItem[] {
+  const items: AttentionItem[] = [];
+  for (const source of sources) {
+    if (source.source_key === "official") continue;
+    const name = crawlSourceName(source.source_key);
+    if (source.paused_reason) items.push({ source: name, text: "Blocked by the site", reason: source.paused_reason, href: sourcePath(source.source_key) });
+    for (const item of overview.sources[source.source_key]?.attention ?? []) {
+      const bucket = item.status === "retry_wait" ? "retrying" : "stuck";
+      items.push({
+        source: name, text: attentionText(item), reason: item.reason,
+        href: pagesHref({ source: source.source_key, step: item.stage, status: bucket, page: 1 }),
+      });
+    }
+  }
+  const official = overview.official;
+  if (official.sites_needing_attention > 0) {
+    items.push({ source: crawlSourceName("official"), text: `${n(official.sites_needing_attention)} ${official.sites_needing_attention === 1 ? "site needs" : "sites need"} attention`, href: `${OFFICIAL_SITES_PATH}?attention=1` });
+  }
+  if (official.findings_to_review > 0) {
+    items.push({ source: crawlSourceName("official"), text: `${n(official.findings_to_review)} ${official.findings_to_review === 1 ? "finding" : "findings"} to review`, href: sourcePath("official") });
+  }
+  return items;
+}
+
+type HeadlineSource = { key: string; state: CrawlingState; publishing: boolean };
+// The one-sentence answer to "where are we?".
+export function hubHeadline(sources: HeadlineSource[], stuck: number, retrying: number, runDatesFromSources: number): string {
+  const parts = sources.filter(s => s.key !== "official").map(s => {
+    const name = crawlSourceName(s.key);
+    if (s.state.key === "on") return `${name} is crawling${s.publishing ? " and publishing" : " but not publishing"}.`;
+    return `${name} is ${lower(s.state.label)}.`;
+  });
+  if (stuck > 0) parts.push(`${n(stuck)} ${stuck === 1 ? "page is" : "pages are"} stuck.`);
+  if (retrying > 0) parts.push(`${n(retrying)} ${retrying === 1 ? "page is" : "pages are"} retrying.`);
+  parts.push(runDatesFromSources === 0 ? "No run dates published yet." : `${n(runDatesFromSources)} run ${runDatesFromSources === 1 ? "date" : "dates"} published.`);
+  return parts.join(" ");
+}
+
+// "Crawling and publishing. Current pass started 8 Nov; finding venues finished 8 Nov. 27 pages need attention."
+export function sourceStatusSentence(input: {
+  state: CrawlingState; publishing: boolean; scan: Pick<CrawlScan, "started_at" | "completed_at" | "enumeration_status" | "is_current"> | null; needAttention: number;
+}): string {
+  const { state, publishing, scan, needAttention } = input;
+  const parts = [state.key === "on" ? `Crawling${publishing ? " and publishing" : ", not publishing"}.` : `${state.label}${publishing ? ", publishing is on" : ""}.`];
+  if (scan) {
+    const started = `${scan.is_current ? "Current" : "Earlier"} pass started ${shortDate(scan.started_at)}`;
+    if (scan.enumeration_status === "enumerated" && scan.completed_at) parts.push(`${started}; finding venues finished ${shortDate(scan.completed_at)}.`);
+    else if (scan.enumeration_status === "enumerating") parts.push(`${started}; still finding venues.`);
+    else parts.push(`${started}.`);
+  } else parts.push("No pass recorded yet.");
+  parts.push(needAttention > 0 ? `${n(needAttention)} ${needAttention === 1 ? "page needs" : "pages need"} attention.` : "Nothing needs you.");
+  return parts.join(" ");
+}
+
+const actionVerbs: Record<string, string> = {
+  pause: "paused crawling", resume: "resumed crawling", publish_on: "turned publication on", publish_off: "turned publication off",
+  retry_failed: "retried failed pages", retry_blocked: "retried blocked pages", reparse: "read a page again", rediscover: "started a fresh pass",
+};
+export function recentActionText(action: CrawlOverview["recent_actions"][number]) {
+  const verb = actionVerbs[action.operation] ?? action.operation.replaceAll("_", " ");
+  const touched = action.operation.startsWith("retry") || action.operation === "reparse" ? ` (${n(action.affected)} ${action.affected === 1 ? "page" : "pages"})` : "";
+  return `${action.who} ${verb} for ${crawlSourceName(action.source)}${touched}`;
 }
 
 // What a crawled page produced (admin_crawl_task_results). Absent for pages not read yet.
