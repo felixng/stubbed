@@ -30,7 +30,6 @@ export function DiaryAndStats({ copy }: { copy: Copy<"sharingLanding"> }) {
             <Image src="/landing/insights-screen.webp" alt={statsImageAlt} width={1206} height={2622} sizes="(min-width: 640px) 480px, 100vw" className="absolute top-0 left-0 h-auto w-full -translate-y-[28%]" />
             <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-[12%] bg-gradient-to-b from-transparent to-surface" />
           </div>
-          <figcaption className="text-center text-footnote text-label-secondary">{copy.screenshotDemoCaption}</figcaption>
         </figure>
       </Container>
     </section>

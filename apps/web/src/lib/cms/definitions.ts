@@ -40,19 +40,9 @@ export const copyDefinitions = {
       "value": "A night out. A card worth keeping.",
       "multiline": false
     },
-    "shareBody": {
-      "title": "shareBody",
-      "value": "Start with a photo and a show. Pick a card that tells your story, then share it wherever your friends are.",
-      "multiline": false
-    },
     "galleryLabel": {
       "title": "galleryLabel",
       "value": "Share card designs",
-      "multiline": false
-    },
-    "galleryHelp": {
-      "title": "galleryHelp",
-      "value": "Scroll to explore the cards. Demo diary: @sillyelphaba. Images and figures are illustrative.",
       "multiline": false
     },
     "cardCta": {
@@ -105,7 +95,6 @@ export const copyDefinitions = {
       "value": "A diary to return to. A story to share.",
       "multiline": false
     },
-    "screenshotDemoCaption": {"title": "screenshotDemoCaption", "value": "Demo diary: @sillyelphaba.", "multiline": true}
   }
 },
   "footer": {
