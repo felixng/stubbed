@@ -21,6 +21,12 @@ on:
         description: Optional seed scope for the selected aggregate source (for example london-listing)
         required: false
         type: string
+      trigger:
+        description: "Set to cron by the Supabase pg_cron job that starts the crawl on time (a start by hand leaves it empty)"
+        required: false
+        type: choice
+        default: ''
+        options: ['', cron]
       show_types:
         description: "Show-type suggestions (#450): benchmark = answer docs/catalogue-benchmark/london-held-titles.json without writing the database; store = answer held London titles and store them; dry-run = load the stored benchmark answers and re-run London identity publication in a rolled-back transaction; load = store the answers in docs/catalogue-benchmark/london-show-type-answers.json (no model calls)"
         required: false
@@ -28,7 +34,9 @@ on:
         default: ''
         options: ['', benchmark, store, dry-run, load]
   schedule:
-    # Twice an hour, off the hour and half hour (top-of-hour schedules start latest). Keep in step with
+    # Backup only. Supabase pg_cron starts the crawl on time (migration crawl_dispatch_from_supabase);
+    # GitHub's own schedule is best effort and often late or skipped. A start right behind a run that left
+    # nothing due exits at once, and concurrency below stops two runs overlapping. Keep in step with
     # CRON in supabase/scripts/crawl/schedule.mjs; a test fails if they differ.
     - cron: "17,47 * * * *"
 permissions:
@@ -82,6 +90,14 @@ jobs:
       # Daily limits, so 48 runs a day stay polite to the sites and within the model budget.
       CRAWL_DAILY_SPEND_USD: ${{ vars.CRAWL_DAILY_SPEND_USD || '2' }}
       CRAWL_SOURCE_DAILY_PAGES: ${{ vars.CRAWL_SOURCE_DAILY_PAGES || '1000' }}
+      # Pages each source may read per run. Sources run at the same time. Override one with
+      # CRAWL_SOURCE_RUN_PAGES_PLAYBILL, _LONDON_THEATRE or _OFFICIAL (empty means use the default).
+      CRAWL_SOURCE_RUN_PAGES: ${{ vars.CRAWL_SOURCE_RUN_PAGES || '150' }}
+      CRAWL_OFFICIAL_RUN_PAGES: ${{ vars.CRAWL_OFFICIAL_RUN_PAGES || '50' }}
+      CRAWL_SOURCE_RUN_PAGES_PLAYBILL: ${{ vars.CRAWL_SOURCE_RUN_PAGES_PLAYBILL }}
+      CRAWL_SOURCE_RUN_PAGES_LONDON_THEATRE: ${{ vars.CRAWL_SOURCE_RUN_PAGES_LONDON_THEATRE }}
+      CRAWL_SOURCE_RUN_PAGES_OFFICIAL: ${{ vars.CRAWL_SOURCE_RUN_PAGES_OFFICIAL }}
+      CRAWL_TRIGGER: ${{ inputs.trigger }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

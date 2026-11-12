@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { test } from "node:test";
 
 import {
-  CRON, CRON_MINUTES, DEFAULT_DAILY_SPEND_USD, DEFAULT_SOURCE_DAILY_PAGES, INTERRUPTED_AFTER_MINUTES, JOB_TIMEOUT_MINUTES, PAGE_ALLOWANCE,
-  REREAD_DAYS, RETRY_DELAYS_SECONDS, RUN_MINUTES, allowanceShare, durationText, nextActionText, nextRunAfter, nextRunPlan, pagesText,
-  publishedRunDates, resumesAt, scheduleAlert, stopReasonText, todaysLimits, type CrawlSchedule,
+  CRON, CRON_MINUTES, DEFAULT_DAILY_SPEND_USD, DEFAULT_SOURCE_DAILY_PAGES, FAST_EXIT_MINUTES, INTERRUPTED_AFTER_MINUTES, JOB_TIMEOUT_MINUTES, MAX_RUN_PAGES, OFFICIAL_RUN_PAGES, SOURCE_RUN_PAGES,
+  REREAD_DAYS, RETRY_DELAYS_SECONDS, RUN_MINUTES, dispatchFailing, dispatchText, durationText, nextActionText, nextRunAfter, nextRunPlan, pagesText, runAllowance, viaLabel,
+  publishedRunDates, resumesAt, scheduleAlert, stopReasonText, todaysLimits, type CrawlDispatch, type CrawlSchedule,
 } from "@/lib/crawl-schedule";
 
 const repo = new URL("../../../", import.meta.url);
@@ -19,7 +19,15 @@ test("the schedule the admin shows is the schedule the workflow and the crawler 
   assert.equal(CRON, scripts.CRON);
   assert.deepEqual(RETRY_DELAYS_SECONDS, scripts.RETRY_DELAYS_SECONDS);
   assert.deepEqual(REREAD_DAYS, scripts.REREAD_DAYS);
-  assert.equal(PAGE_ALLOWANCE, scripts.PAGE_ALLOWANCE);
+  assert.equal(SOURCE_RUN_PAGES, scripts.SOURCE_RUN_PAGES);
+  assert.equal(OFFICIAL_RUN_PAGES, scripts.OFFICIAL_RUN_PAGES);
+  assert.equal(MAX_RUN_PAGES, scripts.MAX_RUN_PAGES);
+  assert.equal(FAST_EXIT_MINUTES, scripts.FAST_EXIT_MINUTES);
+  assert.match(workflow, new RegExp(`vars.CRAWL_SOURCE_RUN_PAGES \\|\\| '${SOURCE_RUN_PAGES}'`));
+  assert.match(workflow, new RegExp(`vars.CRAWL_OFFICIAL_RUN_PAGES \\|\\| '${OFFICIAL_RUN_PAGES}'`));
+  const dispatch = readdirSync(new URL("supabase/migrations/", repo)).find(name => name.endsWith("_crawl_dispatch_from_supabase.sql"));
+  assert.ok(dispatch, "the dispatch migration exists");
+  assert.match(readFileSync(new URL(`supabase/migrations/${dispatch}`, repo), "utf8"), new RegExp(`cron\\.schedule\\(\\s*'catalogue-crawl-dispatch',\\s*'${CRON.replaceAll("*", "\\*")}'`), "the pg_cron schedule differs from what the admin shows");
   assert.equal(RUN_MINUTES, scripts.RUN_MINUTES);
   assert.equal(JOB_TIMEOUT_MINUTES, scripts.JOB_TIMEOUT_MINUTES);
   assert.equal(INTERRUPTED_AFTER_MINUTES, scripts.INTERRUPTED_AFTER_MINUTES);
@@ -85,9 +93,12 @@ test("the schedule warns when nothing has run for two hours", () => {
 });
 
 test("the next run plan says how many pages are due and about how many it will read", () => {
-  assert.deepEqual(nextRunPlan({ claimable: true, new: 80, retry: 26, reread: 0 }, allowanceShare(3), 1000), { due: 106, thisRun: 34 });
-  assert.deepEqual(nextRunPlan({ claimable: true, new: 5, retry: 0, reread: 0 }, 34, 1000), { due: 5, thisRun: 5 });
-  assert.deepEqual(nextRunPlan({ claimable: true, new: 6212, retry: 0, reread: 0 }, 34, 20), { due: 6212, thisRun: 20 }, "a source near its daily cap reads only what it has left");
+  assert.deepEqual(nextRunPlan({ claimable: true, new: 80, retry: 26, reread: 0 }, runAllowance(null, "london_theatre"), 1000), { due: 106, thisRun: 106 });
+  assert.deepEqual(nextRunPlan({ claimable: true, new: 6212, retry: 0, reread: 0 }, runAllowance({ allowances: { playbill: 30 } }, "playbill"), 1000), { due: 6212, thisRun: 30 }, "a slowed source reads only its own allowance");
+  assert.equal(runAllowance(null, "official"), 50);
+  assert.equal(runAllowance({ source_run_pages: 200 }, "playbill"), 200);
+  assert.deepEqual(nextRunPlan({ claimable: true, new: 5, retry: 0, reread: 0 }, 150, 1000), { due: 5, thisRun: 5 });
+  assert.deepEqual(nextRunPlan({ claimable: true, new: 6212, retry: 0, reread: 0 }, 150, 20), { due: 6212, thisRun: 20 }, "a source near its daily cap reads only what it has left");
 });
 
 test("every waiting page says who acts next", () => {
@@ -104,4 +115,31 @@ test("every waiting page says who acts next", () => {
   assert.match(nextActionText({ ...base, status: "succeeded", refresh_at: "2026-11-10T09:00:00Z" }, now), /Due to be re-read automatically in the next run \(about 14:17 UTC\)/);
   assert.equal(nextActionText({ ...base, status: "pending" }, now), "Queued. Read in an upcoming run (next run about 14:17 UTC).");
   assert.equal(nextActionText({ ...base, status: "leased" }, now), "Being read right now.");
+});
+
+const ok = (sentAt: string) => ({ sent_at: sentAt, outcome: "sent" as const, status_code: 204, error: null });
+const refused = (sentAt: string) => ({ sent_at: sentAt, outcome: "sent" as const, status_code: 401, error: '{"message":"Bad credentials"}' });
+const dispatch = (token: CrawlDispatch["token"], recent: CrawlDispatch["recent"]): CrawlDispatch => ({ job: { schedule: CRON, active: true }, token, recent });
+
+test("the trigger from Supabase is described by what it is doing", () => {
+  assert.match(dispatchText(dispatch("missing", [])), /Not set up: the GitHub token is missing.*often late/);
+  assert.match(dispatchText(dispatch("untested", [])), /token is set\. No start has been sent/);
+  assert.equal(dispatchText(dispatch("working", [ok("2026-11-12T10:47:00Z")])), "Supabase starts the crawl at :17 and :47. The token works. Last start sent 10:47 UTC: GitHub accepted it (204).");
+  assert.match(dispatchText(dispatch("failing", [refused("2026-11-12T10:47:00Z")])), /GitHub refused\. Last start sent 10:47 UTC: failed \(401: .*Bad credentials/);
+  assert.match(dispatchText(dispatch("working", [{ sent_at: "2026-11-12T10:47:00Z", outcome: "sent", status_code: null, error: null }])), /waiting for GitHub’s answer/);
+});
+
+test("two failed starts in a row need an admin; one failure or a missing token does not", () => {
+  assert.equal(dispatchFailing(dispatch("failing", [refused("2026-11-12T10:47:00Z")])), null, "one failure is not yet a pattern");
+  assert.match(dispatchFailing(dispatch("failing", [refused("2026-11-12T10:47:00Z"), refused("2026-11-12T10:17:00Z")]))?.detail ?? "", /GitHub answered 401: .*Bad credentials/);
+  assert.equal(dispatchFailing(dispatch("failing", [refused("2026-11-12T10:47:00Z"), ok("2026-11-12T10:17:00Z")])), null, "a start that worked in between breaks the run");
+  const missing = { sent_at: "2026-11-12T10:47:00Z", outcome: "token_missing" as const, status_code: null, error: null };
+  assert.equal(dispatchFailing(dispatch("missing", [missing, { ...missing, sent_at: "2026-11-12T10:17:00Z" }])), null, "a missing token is shown in the card, not as failures");
+});
+
+test("a scheduled run says who sent its start", () => {
+  assert.equal(viaLabel("supabase"), "Started by Supabase on time");
+  assert.equal(viaLabel("github_schedule"), "Started by GitHub’s schedule");
+  assert.equal(viaLabel(null), null);
+  assert.equal(stopReasonText("daily_cap"), "Reached a daily page limit");
 });

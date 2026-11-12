@@ -4,8 +4,8 @@ import Link from "next/link";
 import { CrawlShell, Section } from "@/components/app/admin/CrawlShell";
 import { CRAWL_BUCKETS, CRAWL_BUCKET_LABELS, CRAWL_HUB_PATH, CRAWL_STEPS } from "@/lib/admin-crawl";
 import {
-  CRON_MINUTES, DEFAULT_DAILY_SPEND_USD, DEFAULT_RUN_SPEND_USD, DEFAULT_SOURCE_DAILY_PAGES, JOB_TIMEOUT_MINUTES, PAGE_ALLOWANCE,
-  REREAD_DAYS, RETRY_DELAYS_SECONDS, RUN_MINUTES,
+  CRON_MINUTES, DEFAULT_DAILY_SPEND_USD, DEFAULT_RUN_SPEND_USD, DEFAULT_SOURCE_DAILY_PAGES, FAST_EXIT_MINUTES, JOB_TIMEOUT_MINUTES,
+  MAX_RUN_PAGES, OFFICIAL_RUN_PAGES, REREAD_DAYS, RETRY_DELAYS_SECONDS, RUN_MINUTES, SOURCE_RUN_PAGES,
 } from "@/lib/crawl-schedule";
 
 export const metadata: Metadata = { title: "How the crawler works" };
@@ -53,14 +53,20 @@ export default function CrawlGuidePage() {
 
       <Section id="how-it-runs" title="How it runs" hint="These numbers come from the values the crawler itself uses.">
         <p className="text-subheadline">
-          A run starts every 30 minutes, at :{CRON_MINUTES[0]} and :{CRON_MINUTES[1]}. GitHub sometimes starts it late; a late run just waits its turn, so runs never overlap.
-          Each run reads up to {PAGE_ALLOWANCE} pages, shared evenly between the sources that are on, and stops after {RUN_MINUTES} minutes (the job is cut off at {JOB_TIMEOUT_MINUTES}).
+          A run starts every 30 minutes, at :{CRON_MINUTES[0]} and :{CRON_MINUTES[1]}. Supabase sends the start on time. GitHub’s own schedule is only a backup, because GitHub often starts scheduled runs late or not at all.
+          If both start a run, they never overlap: the second waits, and if the first left nothing due it exits at once (within {FAST_EXIT_MINUTES} minutes of the last run).
           Starting a run by hand uses the same queue.
+        </p>
+        <p className="text-subheadline">
+          Sources are read at the same time, each with its own allowance, because they are different sites and each site is still paced on its own.
+          A source reads up to {SOURCE_RUN_PAGES} pages a run ({OFFICIAL_RUN_PAGES} for the official sites), and the whole run stops after {RUN_MINUTES} minutes (the job is cut off at {JOB_TIMEOUT_MINUTES}).
+          Stopping on time is a checkpoint: the source carries on in the next run.
         </p>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[30rem] border-collapse text-left text-subheadline">
             <thead><tr><th className={th}>Limit</th><th className={th}>Default</th><th className={th}>Change it with</th></tr></thead>
             <tbody className="divide-y divide-separator align-top">
+              <tr><td className="py-2 pr-3">Pages per source per run</td><td className="py-2 pr-3">{SOURCE_RUN_PAGES} (official sites {OFFICIAL_RUN_PAGES}), at most {MAX_RUN_PAGES}</td><td className="py-2"><code>CRAWL_SOURCE_RUN_PAGES</code>, <code>CRAWL_OFFICIAL_RUN_PAGES</code>, or one source with <code>CRAWL_SOURCE_RUN_PAGES_PLAYBILL</code></td></tr>
               <tr><td className="py-2 pr-3">Pages per source per day</td><td className="py-2 pr-3">{DEFAULT_SOURCE_DAILY_PAGES.toLocaleString("en-GB")}, over a rolling 24 hours</td><td className="py-2"><code>CRAWL_SOURCE_DAILY_PAGES</code></td></tr>
               <tr><td className="py-2 pr-3">Model spend per day</td><td className="py-2 pr-3">${DEFAULT_DAILY_SPEND_USD}</td><td className="py-2"><code>CRAWL_DAILY_SPEND_USD</code></td></tr>
               <tr><td className="py-2 pr-3">Model spend per run</td><td className="py-2 pr-3">${DEFAULT_RUN_SPEND_USD}</td><td className="py-2"><code>CRAWL_MAX_SPEND_USD</code></td></tr>

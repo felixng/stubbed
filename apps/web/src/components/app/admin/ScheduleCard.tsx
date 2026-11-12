@@ -1,7 +1,7 @@
 import { Section } from "@/components/app/admin/CrawlShell";
 import {
-  CRON_MINUTES, allowanceShare, clock, durationText, nextRunAfter, nextRunPlan, pagesText, scheduleAlert, stopReasonText, todaysLimits,
-  triggerLabel, type CrawlSchedule,
+  CRON_MINUTES, clock, dispatchText, durationText, nextRunAfter, nextRunPlan, pagesText, runAllowance, scheduleAlert, stopReasonText, todaysLimits,
+  triggerLabel, viaLabel, type CrawlDispatch, type CrawlSchedule,
 } from "@/lib/crawl-schedule";
 import { crawlSourceName, crawlingState, type CrawlSource } from "@/lib/admin-crawl";
 
@@ -17,11 +17,9 @@ const Log = ({ url }: { url: string | null }) => url
   ? <a href={url} target="_blank" rel="noopener noreferrer" className="text-tint-text">Log</a> : null;
 
 // What runs when: the schedule, what is running now, the last run, what the next one will do, and today's limits.
-export function ScheduleCard({ schedule, sources }: { schedule: CrawlSchedule; sources: CrawlSource[] }) {
+export function ScheduleCard({ schedule, sources, dispatch }: { schedule: CrawlSchedule; sources: CrawlSource[]; dispatch: CrawlDispatch | null }) {
   const now = new Date(schedule.server_time);
   const alert = scheduleAlert(schedule);
-  const active = sources.filter(source => crawlingState(source).key === "on");
-  const share = allowanceShare(active.length);
   const limits = todaysLimits(schedule, [...SOURCES, "official"]);
   const last = schedule.last_run;
   const capNotes = SOURCES.flatMap(key => {
@@ -35,16 +33,26 @@ export function ScheduleCard({ schedule, sources }: { schedule: CrawlSchedule; s
       {alert && <p role="alert" className="text-subheadline font-semibold text-destructive">{alert}</p>}
       <dl className="flex flex-col gap-3">
         <Row label="Schedule">
-          Runs every 30 minutes (at :{CRON_MINUTES[0]} and :{CRON_MINUTES[1]}). GitHub sometimes starts runs late.
+          Runs every 30 minutes, at :{CRON_MINUTES[0]} and :{CRON_MINUTES[1]}. Supabase sends the start on time; GitHub’s own schedule is the backup and is often late.
+        </Row>
+        <Row label="Trigger">
+          {dispatch ? <>
+            {dispatchText(dispatch)}
+            {dispatch.token === "missing" && (
+              <span className="mt-1 block text-footnote text-label-secondary">
+                To set it up: create a fine-grained GitHub token for felixng/stubbed only with Actions: Read and write (1 year), then run <code>select vault.create_secret(&apos;&lt;token&gt;&apos;, &apos;github_crawl_dispatch_token&apos;);</code> in the Supabase SQL editor.
+              </span>
+            )}
+          </> : "Couldn’t read the trigger state."}
         </Row>
         <Row label="Now">
           {schedule.running
-            ? <>Running since {clock(schedule.running.started_at)} (started by {triggerLabel(schedule.running.trigger).toLowerCase()}). <Log url={schedule.running.log_url} /></>
+            ? <>Running since {clock(schedule.running.started_at)} ({viaLabel(schedule.running.started_via)?.toLowerCase() ?? `started by ${triggerLabel(schedule.running.trigger).toLowerCase()}`}). <Log url={schedule.running.log_url} /></>
             : "Idle. Nothing is running, by schedule or by hand."}
         </Row>
         <Row label="Last run">
           {last
-            ? <>{clock(last.started_at)} · {durationText(last.started_at, last.finished_at)} · {pagesText(last.per_source)} · {stopReasonText(last.stop_reason, !last.finished_at)}. <Log url={last.log_url} /></>
+            ? <>{clock(last.started_at)} · {durationText(last.started_at, last.finished_at)} · {pagesText(last.per_source)} · {stopReasonText(last.stop_reason, !last.finished_at)}.{viaLabel(last.started_via) ? ` ${viaLabel(last.started_via)}.` : ""} <Log url={last.log_url} /></>
             : "No run recorded yet."}
         </Row>
         <Row label="Next run">
@@ -56,7 +64,7 @@ export function ScheduleCard({ schedule, sources }: { schedule: CrawlSchedule; s
               const left = Math.max(0, limits.sources[key].cap - limits.sources[key].used);
               if (!forecast || !source) return null;
               if (!forecast.claimable) return <li key={key}>{crawlSourceName(key)}: {crawlingState(source).label.toLowerCase()}, so it will not run.</li>;
-              const plan = nextRunPlan(forecast, share, left);
+              const plan = nextRunPlan(forecast, runAllowance(schedule.limits, key), left);
               return (
                 <li key={key}>
                   {crawlSourceName(key)}: {number.format(plan.due)} due → about {number.format(plan.thisRun)} this run

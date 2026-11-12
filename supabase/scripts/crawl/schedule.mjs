@@ -10,8 +10,15 @@ export const CRON_MINUTES = [17, 47];
 // and waits for an admin. (Rate limits wait for Retry-After or an hour and do not use this ladder.)
 export const RETRY_DELAYS_SECONDS = [60, 300, 1800, 7200, 43200];
 
-// One run reads at most this many pages across all sources, split evenly between active sources.
-export const PAGE_ALLOWANCE = 100;
+// Each source gets its own allowance per run, and sources are read at the same time (they are
+// different hosts, and per-host pacing is unchanged). Stopping on time is a checkpoint, not a failure.
+export const SOURCE_RUN_PAGES = 150;
+export const OFFICIAL_RUN_PAGES = 50;
+export const MAX_RUN_PAGES = 400;
+// A start that finds the previous run finished this recently with nothing due for every source exits at once.
+export const FAST_EXIT_MINUTES = 10;
+// The Supabase pg_cron job that starts the workflow on time (see the dispatch migration).
+export const DISPATCH_JOB = 'catalogue-crawl-dispatch';
 // A run stops by itself after this many minutes.
 export const RUN_MINUTES = 20;
 // The Actions job is killed after this many minutes. A run left open longer reads as interrupted.
@@ -34,7 +41,9 @@ export const REREAD_DAYS = {
   eventClosed: 180,
 };
 
-export const STOP_REASONS = ['page_allowance', 'time_limit', 'daily_spend_cap', 'nothing_due', 'failed', 'cancelled'];
+export const STOP_REASONS = ['page_allowance', 'time_limit', 'daily_cap', 'daily_spend_cap', 'nothing_due', 'failed', 'cancelled'];
+// How one source's part of a run ended.
+export const SOURCE_STOPS = ['page_allowance', 'time_limit', 'daily_cap', 'nothing_due'];
 
 // Daily limits from repository variables. A bad value falls back to the default.
 export function dailyLimits(env = process.env) {
@@ -54,18 +63,38 @@ export function modelBudget({ runBudgetUsd, dailySpendUsd, spentLast24hUsd }) {
   return { budgetUsd: Math.min(runBudgetUsd, left), capReached: left <= 0 };
 }
 
-// Pages one source may read this run: an even share of what is left, never more than the source
-// has left of its rolling daily cap. A source at its cap gets 0 and its share goes to the others.
-export function pageAllowance({ remaining, sourcesLeft, dailyRemaining }) {
-  if (remaining <= 0 || sourcesLeft <= 0) return 0;
-  return Math.max(0, Math.min(Math.ceil(remaining / sourcesLeft), dailyRemaining));
+// Pages one source may read in a run: CRAWL_SOURCE_RUN_PAGES (default 150, official 50 from
+// CRAWL_OFFICIAL_RUN_PAGES), with CRAWL_SOURCE_RUN_PAGES_<SOURCE> (for example _PLAYBILL) to slow one
+// source without the others. Empty or invalid values fall back; nothing goes above MAX_RUN_PAGES.
+export function runPagesFor(key, env = process.env) {
+  const read = (value, fallback) => {
+    if (value === undefined || value === null || String(value).trim() === '') return fallback;
+    const number = Number(value);
+    return Number.isFinite(number) && number >= 0 ? Math.min(Math.floor(number), MAX_RUN_PAGES) : fallback;
+  };
+  const base = key === 'official' ? read(env.CRAWL_OFFICIAL_RUN_PAGES, OFFICIAL_RUN_PAGES) : read(env.CRAWL_SOURCE_RUN_PAGES, SOURCE_RUN_PAGES);
+  return read(env[`CRAWL_SOURCE_RUN_PAGES_${String(key).toUpperCase()}`], base);
+}
+
+// A source's allowance this run: its own run allowance, trimmed to what is left of its rolling daily cap.
+export function sourceAllowance({ runPages, dailyRemaining }) {
+  const pages = Math.max(0, Math.min(runPages, dailyRemaining));
+  return { pages, limitedBy: dailyRemaining < runPages ? 'daily_cap' : 'page_allowance' };
+}
+
+// Why one source stopped: it used its allowance (or its daily cap), it ran out of time, or nothing was due.
+export function sourceStop({ pages, allowance, limitedBy, timeLimited }) {
+  if (allowance.pages === 0) return 'daily_cap';
+  if (pages >= allowance.pages) return limitedBy;
+  return timeLimited ? 'time_limit' : 'nothing_due';
 }
 
 // Why a run ended, most important first.
-export function stopReason({ failed, remaining, timeLimited, modelCapReached }) {
+export function stopReason({ failed, pageLimited, timeLimited, dailyCapped, modelCapReached }) {
   if (failed) return 'failed';
-  if (remaining <= 0) return 'page_allowance';
+  if (pageLimited) return 'page_allowance';
   if (timeLimited) return 'time_limit';
+  if (dailyCapped) return 'daily_cap';
   if (modelCapReached) return 'daily_spend_cap';
   return 'nothing_due';
 }

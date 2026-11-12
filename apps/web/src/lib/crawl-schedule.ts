@@ -6,7 +6,11 @@ import { crawlSourceName } from "@/lib/admin-crawl";
 export const CRON = "17,47 * * * *";
 export const CRON_MINUTES = [17, 47] as const;
 export const RETRY_DELAYS_SECONDS = [60, 300, 1800, 7200, 43200] as const;
-export const PAGE_ALLOWANCE = 100;
+// Each source has its own allowance per run, and sources are read at the same time.
+export const SOURCE_RUN_PAGES = 150;
+export const OFFICIAL_RUN_PAGES = 50;
+export const MAX_RUN_PAGES = 400;
+export const FAST_EXIT_MINUTES = 10;
 export const RUN_MINUTES = 20;
 export const JOB_TIMEOUT_MINUTES = 30;
 export const INTERRUPTED_AFTER_MINUTES = 35;
@@ -21,19 +25,21 @@ export const REREAD_DAYS = {
 const HOUR = 3_600_000;
 
 export type WorkerTrigger = "schedule" | "manual" | "admin_start";
-export type StopReason = "page_allowance" | "time_limit" | "daily_spend_cap" | "nothing_due" | "failed" | "cancelled";
-export type SourcePages = { pages?: number; cap_hit?: boolean; error?: string; model_spend_usd?: number; runs?: { observed_segments?: number; inactive?: boolean } };
+export type StopReason = "page_allowance" | "time_limit" | "daily_cap" | "daily_spend_cap" | "nothing_due" | "failed" | "cancelled";
+export type SourceStop = "page_allowance" | "time_limit" | "daily_cap" | "nothing_due" | "failed";
+export type StartedVia = "supabase" | "github_schedule" | null;
+export type SourcePages = { pages?: number; cap_hit?: boolean; stop?: SourceStop; error?: string; model_spend_usd?: number; runs?: { observed_segments?: number; inactive?: boolean } };
 export type WorkerRun = {
-  id: string; started_at: string; finished_at: string | null; trigger: WorkerTrigger; github_run_id?: string | null; log_url: string | null;
+  id: string; started_at: string; finished_at: string | null; trigger: WorkerTrigger; started_via?: StartedVia; github_run_id?: string | null; log_url: string | null;
   source_filter?: string | null; stage_filter?: string | null; scope_filter?: string | null;
   per_source: Record<string, SourcePages>; stop_reason: StopReason | null; model_spend_usd: number | string;
-  limits?: { page_allowance?: number; daily_spend_usd?: number; source_daily_pages?: number; run_spend_usd?: number };
+  limits?: { source_run_pages?: number; official_run_pages?: number; allowances?: Record<string, number>; daily_spend_usd?: number; source_daily_pages?: number; run_spend_usd?: number };
   interrupted?: boolean;
 };
 export type SourceForecast = { claimable: boolean; new: number; retry: number; reread: number };
 export type CrawlSchedule = {
   server_time: string;
-  running: { id: string; started_at: string; trigger: WorkerTrigger; log_url: string | null } | null;
+  running: { id: string; started_at: string; trigger: WorkerTrigger; started_via?: StartedVia; log_url: string | null } | null;
   last_run: WorkerRun | null;
   limits: WorkerRun["limits"] | null;
   total: number;
@@ -61,6 +67,8 @@ export function nextRunAfter(after: Date | number): Date {
 }
 
 export const triggerLabel = (trigger: WorkerTrigger) => ({ schedule: "Schedule", manual: "By hand", admin_start: "Start a crawl" })[trigger];
+// Where a scheduled start came from, when it matters.
+export const viaLabel = (via: StartedVia | undefined) => via === "supabase" ? "Started by Supabase on time" : via === "github_schedule" ? "Started by GitHub’s schedule" : null;
 export const TRIGGERS = ["schedule", "manual", "admin_start"] as const;
 
 export function stopReasonText(reason: StopReason | null, interrupted = false): string {
@@ -68,6 +76,7 @@ export function stopReasonText(reason: StopReason | null, interrupted = false): 
   switch (reason) {
     case "page_allowance": return "Used its page allowance";
     case "time_limit": return "Ran out of time";
+    case "daily_cap": return "Reached a daily page limit";
     case "daily_spend_cap": return "Daily model limit reached";
     case "nothing_due": return "Nothing more was due";
     case "failed": return "Failed";
@@ -132,7 +141,9 @@ export function nextRunPlan(forecast: SourceForecast | undefined, allowance: num
   const due = (forecast?.new ?? 0) + (forecast?.retry ?? 0) + (forecast?.reread ?? 0);
   return { due, thisRun: Math.min(due, allowance, dailyRemaining) };
 }
-export const allowanceShare = (activeSources: number) => Math.ceil(PAGE_ALLOWANCE / Math.max(1, activeSources));
+// The pages a source may read in one run, from the limits the last run recorded (or the defaults).
+export const runAllowance = (limits: CrawlSchedule["limits"], source: string) =>
+  limits?.allowances?.[source] ?? (source === "official" ? limits?.official_run_pages ?? OFFICIAL_RUN_PAGES : limits?.source_run_pages ?? SOURCE_RUN_PAGES);
 
 export type NextRow = {
   status: "pending" | "leased" | "retry_wait" | "blocked" | "failed" | "succeeded";
@@ -159,4 +170,31 @@ export function nextActionText(row: NextRow, now: Date = new Date()): string {
       return new Date(base).getTime() <= now.getTime() ? `Due to be re-read automatically in the next run (about ${nextRun}).` : `Re-read automatically on ${dayOf(base)}.`;
     }
   }
+}
+
+export type DispatchRow = { sent_at: string; outcome: "sent" | "token_missing" | "send_failed"; status_code: number | null; error: string | null };
+export type CrawlDispatch = {
+  job: { schedule: string; active: boolean } | null;
+  token: "missing" | "untested" | "working" | "failing";
+  recent: DispatchRow[];
+};
+const failed = (row: DispatchRow) => row.outcome === "send_failed" || Boolean(row.error) || (row.status_code ?? 0) >= 300;
+
+// What the trigger from Supabase is doing, in words.
+export function dispatchText(dispatch: CrawlDispatch): string {
+  const sent = dispatch.recent.find(row => row.outcome !== "token_missing");
+  const last = sent ? `Last start sent ${clock(sent.sent_at)}: ${sent.status_code === 204 ? "GitHub accepted it (204)" : sent.error ? `failed (${sent.status_code ?? "no answer"}: ${sent.error})` : sent.status_code ? `GitHub answered ${sent.status_code}` : "waiting for GitHub’s answer"}.` : "";
+  switch (dispatch.token) {
+    case "missing": return "Not set up: the GitHub token is missing, so Supabase isn’t starting runs. GitHub’s own schedule is the only trigger, and it is often late.";
+    case "untested": return "The GitHub token is set. No start has been sent with it yet.";
+    case "working": return `Supabase starts the crawl at :${CRON_MINUTES[0]} and :${CRON_MINUTES[1]}. The token works. ${last}`;
+    case "failing": return `Supabase tried to start the crawl but GitHub refused. ${last}`;
+  }
+}
+// Two failed starts in a row is something an admin must fix.
+export function dispatchFailing(dispatch: CrawlDispatch): { detail: string } | null {
+  const sent = dispatch.recent.filter(row => row.outcome !== "token_missing").slice(0, 2);
+  if (sent.length < 2 || !sent.every(failed)) return null;
+  const row = sent[0];
+  return { detail: `${row.status_code ? `GitHub answered ${row.status_code}` : "No answer from GitHub"}${row.error ? `: ${row.error}` : ""}` };
 }
