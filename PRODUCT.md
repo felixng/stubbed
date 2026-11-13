@@ -40,7 +40,7 @@ A purpose-built home for a behaviour theatregoers already have, with structure I
 - One simple data model: an entry has an optional half-star rating (0.5–5) and an optional note. A review is just an edited entry; a plan is an entry with status planned.
 - Covers any theatre, anywhere. Public copy never mentions launch cities or regions, or asks users where they go to the theatre.
 - Entries default to public; users can change their default, make any entry private, or make their whole profile private. Every surface respects this.
-- Photos are re-encoded on the device; no EXIF or GPS in any stored or served image. One photo per entry for now.
+- Photos are re-encoded on the device; no EXIF or GPS in any stored or served image. The current logger supports one photo per entry. The staged [media upgrade](docs/MEDIA.md) adds free square cropping and Pro galleries.
 - The show catalogue is optional: everything works for shows that aren't in it, and with no catalogue at all.
 - Official show artwork (from the show catalogue) appears only inside the app, never on share cards, public pages or link previews.
 - Sign-ups are closed; the landing page collects a waitlist.

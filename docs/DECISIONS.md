@@ -1617,3 +1617,7 @@ The hub showed Playbill as 83% done because `crawl_source_progress` without a sc
 - **Retry acts on every area.** The existing RPC takes one scan, so the button calls it once per area and adds up the pages.
 - Migration `20261113120000_crawl_source_summary.sql`.
 
+
+## Entry media schema (#141)
+
+Gallery order and the ready cover are derived from one media collection. Private source references live in an owner-only relation, and native revision files live in a private bucket outside the legacy photo write policies. See [the media contract](MEDIA.md) for crop geometry, compatibility and the upload interface.
