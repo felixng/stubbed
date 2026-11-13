@@ -6,17 +6,21 @@
 <button id="run" type="button">Run trim tests</button>
 <pre id="results" aria-live="polite"></pre>
 <video controls muted playsinline id="playback"></video>
+<script type="importmap">
+{"imports":{"mediabunny":"./node_modules/mediabunny/dist/bundles/mediabunny.mjs"}}
+</script>
 <script type="module">
 import {
   ALL_FORMATS, BlobSource, BufferTarget, Conversion, Input, Mp4OutputFormat, Output,
   canEncodeAudio, canEncodeVideo,
-} from "./node_modules/mediabunny/dist/bundles/mediabunny.mjs";
+} from "mediabunny";
 
 const source = document.querySelector("#source");
 const run = document.querySelector("#run");
 const results = document.querySelector("#results");
 const playback = document.querySelector("#playback");
 let playbackUrl;
+let registeredAacEncoder = false;
 
 run.addEventListener("click", async () => {
   const file = source.files[0];
@@ -28,6 +32,20 @@ run.addEventListener("click", async () => {
     canEncodeAudio("aac", { numberOfChannels: 1, sampleRate: 48000, bitrate: 96_000 }),
   ]);
   results.textContent += JSON.stringify({ avc, aac }) + "\n";
+  if (!aac && !registeredAacEncoder) {
+    try {
+      const { registerAacEncoder } = await import(
+        "./node_modules/@mediabunny/aac-encoder/dist/bundles/mediabunny-aac-encoder.mjs"
+      );
+      registerAacEncoder();
+      registeredAacEncoder = true;
+      results.textContent += "Using the WebAssembly AAC encoder.\n";
+    } catch (error) {
+      results.textContent += error.message + "\n";
+      run.disabled = false;
+      return;
+    }
+  }
   const durations = [29.9, 30, 30.1];
   for (const duration of durations) {
     const input = new Input({ source: new BlobSource(file), formats: ALL_FORMATS });
@@ -38,7 +56,7 @@ run.addEventListener("click", async () => {
       const conversion = await Conversion.init({
         input, output, trim: { start: 1, end: 1 + duration }, tags: {},
         video: { codec: "avc", bitrate: 3_000_000 },
-        audio: aac ? { codec: "aac", bitrate: 96_000 } : { codec: "aac" },
+        audio: { codec: "aac", bitrate: 96_000 },
       });
       if (!conversion.isValid || conversion.discardedTracks.length) {
         throw new Error(JSON.stringify(conversion.discardedTracks.map(({ reason }) => reason)));

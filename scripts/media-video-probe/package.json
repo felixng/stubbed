@@ -2,6 +2,7 @@
   "name": "stubbed-media-video-probe",
   "private": true,
   "dependencies": {
+    "@mediabunny/aac-encoder": "1.65.2",
     "mediabunny": "1.65.2"
   }
 }

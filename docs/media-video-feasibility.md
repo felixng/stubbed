@@ -64,7 +64,7 @@ Safari 26.6.2 on macOS reported H.264 and AAC encoding support. On the same audi
 | 30.1 s | 30.132 s | 3285529 | 2563 ms |
 | 29.914 s (retry) | 29.940 s | 3265895 | 2556 ms |
 
-Firefox 146.0 on macOS in headless mode reported H.264 encoding support and no AAC encoding support. All three timed trims failed when the probe required AAC re-encoding. Removing the audio bitrate override let the probe copy the existing AAC packets while re-encoding the picture. This fixture demonstrates a fallback for AAC input. Sources containing other audio codecs still require a way to encode AAC.
+Firefox 146.0 on macOS in headless mode reported H.264 encoding support and no AAC encoding support. All three timed trims failed when the probe required AAC re-encoding. Removing the audio bitrate override let the probe copy the existing AAC packets while re-encoding the picture. This fixture demonstrates a fallback for AAC input. Sources containing other audio codecs require AAC encoding.
 
 | Browser | Requested | Parsed output duration | Bytes | Export |
 | --- | --- | --- | --- | --- |
@@ -79,6 +79,19 @@ Firefox 146.0 on macOS in headless mode reported H.264 encoding support and no A
 
 The simulator measurements establish export and parsing on that runtime. Physical-device playback, memory, and export performance still need measurement.
 
+## Firefox AAC encoding fallback
+
+The probe lazy-loads `@mediabunny/aac-encoder` 1.65.2 when WebCodecs cannot encode AAC. It uses an MPL-2.0 wrapper and an LGPL-2.1-or-later FFmpeg encoder. The minified published module is 1,129,457 bytes and gzip reduces it to 293,320 bytes. Before distribution, preserve both license notices and provide the corresponding FFmpeg source and build instructions for the shipped binary. Production bundling must also verify its worker and WebAssembly policy.
+
+| Firefox 146.0, WebAssembly AAC | Parsed output duration | Bytes | Export |
+| --- | --- | --- | --- |
+| 29.9 s | 29.920 s | 569300 | 2821 ms |
+| 30.0 s | 30.016 s | 571165 | 2665 ms |
+| 30.1 s | 30.112 s | 573159 | 2666 ms |
+| 29.934 s (retry) | 29.952 s | 570225 | 2766 ms |
+
+This run re-encoded the synthetic AAC source. It exercised AAC encoding, but source decode from Opus and PCM still needs coverage. See the [Mediabunny AAC extension guide](https://mediabunny.dev/guide/extensions/aac-encoder).
+
 ## Local Supabase Edge Runtime
 
 The disposable Supabase Edge Runtime 1.77.4 (Deno 2.1.4) ran the shared parser against actual request bytes. Its response for the synthetic boundary fixture matched the Node result.
@@ -89,5 +102,9 @@ The disposable Supabase Edge Runtime 1.77.4 (Deno 2.1.4) ran the shared parser a
 | 30.1 s native trim | 422 | 11 ms | 30.1667 s |
 | 11 bytes of invalid data | 422 | 6 ms | Unrecognized format |
 | Native trim with last 1024 bytes removed | 422 | 8 ms | Invalid track metadata |
+| Native trim padded with an MP4 free box to exactly 15 MiB | 200 | 380 ms | 29.9667 s, 1280 × 720 |
+| Native trim padded to 15 MiB plus one byte | 413 | 344 ms | Exceeds byte cap |
+
+The padded clips exercise request and byte limits. They retain the original low-complexity sample payloads. The [hosted Edge limits](https://supabase.com/docs/guides/functions/limits) are 256 MB memory and 2 s CPU per request.
 
 The parser reads indexed packet payloads and rejects empty tracks, empty payloads, more than 12,000 packets, and payload totals larger than the file. These runs measure request wall time and exercise one form of truncation. CPU and peak memory at the maximum input size, payload corruption with intact indexes, and forged sample timestamps still need evidence.
