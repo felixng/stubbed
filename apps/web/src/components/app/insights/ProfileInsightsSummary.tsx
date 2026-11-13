@@ -42,12 +42,8 @@ export function ProfileInsightsSummary({ thisYear, preview = false }: { thisYear
         Insights
       </Link>
     </section>
-    {/* Free with sales on: the upgrade banner. Pro: a member row. Gates and sales off: nothing. */}
-    {membership && isPro(membership) ? (
-      <Link href="/app/settings/membership" className="flex min-h-11 items-center justify-between rounded-md bg-surface px-4 py-3 text-headline text-label focus-visible:outline-2 focus-visible:outline-focus">
-        {config.name} member <span aria-hidden="true" className="text-label-secondary">›</span>
-      </Link>
-    ) : membership && config.salesEnabled ? (
+    {/* Free with sales on: the upgrade banner. Members manage Pro in Settings › Membership. */}
+    {membership && !isPro(membership) && config.salesEnabled ? (
       <UpgradeBanner source="profile" next={withPreview("/app/profile", preview)} name={config.name} preview={preview} onLeave={leave} />
     ) : null}
     </>
