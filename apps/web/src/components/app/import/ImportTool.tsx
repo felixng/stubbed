@@ -20,6 +20,8 @@ import { lookupNearby, preparePhoto, type PreparedPhoto } from "@/lib/import/pho
 import { resolveShow, resolveVenue, runPool, saveDraft, SaveError } from "@/lib/import/resolve";
 import { createClient } from "@/lib/supabase/client";
 import { useFreshOnReturn } from "@/lib/use-fresh-on-return";
+import { PhotoCropDialog } from "../log/PhotoCropDialog";
+import { renderPhotoCrop, squareCrop } from "@/lib/photo-crop";
 import { DraftCard, draftCardId, type Draft } from "./DraftCard";
 
 // One thing being read: a group of photos from one visit.
@@ -289,6 +291,11 @@ export function ImportTool() {
   const blocked = toSave.filter((d) => d.flagged && missingFields(d).length);
   const busy = jobs.some((j) => j.state !== "done" && j.state !== "failed");
 
+  const [cropKey, setCropKey] = useState<string | null>(null);
+  const cropDraft = drafts.find((draft) => draft.key === cropKey);
+  const cropIndex = cropDraft?.photoIndex ?? null;
+  const cropSource = cropIndex == null ? null : cropDraft?.photos[cropIndex]?.stored;
+
   async function saveAll() {
     if (!userId) return setNotice("You’re signed out. Sign in again to save.");
     // Each card marks what it still needs; the list above Save links to them.
@@ -307,9 +314,19 @@ export function ImportTool() {
     // One at a time, so two drafts for the same new show or venue reuse the
     // row the first one created instead of adding a duplicate.
     for (const d of toSave) {
-      updateDraft(d.key, { status: "saving", error: undefined });
+      const retryId = d.retryId ?? crypto.randomUUID();
+      updateDraft(d.key, { status: "saving", retryId, error: undefined });
       try {
-        const photo = d.photoIndex != null ? (d.photos[d.photoIndex]?.stored ?? null) : null;
+        const source = d.photoIndex != null ? (d.photos[d.photoIndex]?.stored ?? null) : null;
+        let cropped = d.crop?.index === d.photoIndex ? d.crop?.photo : undefined;
+        if (source && !cropped) {
+          const bitmap = await createImageBitmap(source);
+          const crop = squareCrop(bitmap.width, bitmap.height);
+          bitmap.close();
+          cropped = { ...await renderPhotoCrop(source, crop), requestId: crypto.randomUUID(), replacing: null };
+        }
+        const photo = cropped?.display ?? null;
+        if (cropped && d.photoIndex != null) updateDraft(d.key, { crop: { index: d.photoIndex, photo: cropped } });
         const result = await saveDraft(supabase, userId, {
           show: d.show!,
           venue: d.venue!,
@@ -322,8 +339,9 @@ export function ImportTool() {
             return trip ? tripCovers(trip, d.date) : false;
           }),
           photo,
+          croppedPhoto: cropped,
           alias: d.reading.sources.some((src) => src.kind === "email") ? d.reading.extracted.show_title : null,
-        });
+        }, retryId);
         saved++;
         if (result.photoFailed) photoFailures++;
         updateDraft(d.key, { status: "saved", entryId: result.id });
@@ -370,6 +388,14 @@ export function ImportTool() {
 
   return (
     <div className="flex flex-col gap-6">
+      {cropSource && cropDraft && cropIndex != null && (
+        <PhotoCropDialog source={cropSource} onCancel={() => setCropKey(null)}
+          onConfirm={(photo) => {
+            updateDraft(cropDraft.key, { crop: { index: cropIndex,
+              photo: { ...photo, requestId: crypto.randomUUID(), replacing: null } } });
+            setCropKey(null);
+          }} />
+      )}
       {/* Sources */}
       <section aria-labelledby={`${id}-add`} className="flex flex-col gap-3">
         <h2 id={`${id}-add`} className="text-title-2 font-display text-label">
@@ -495,6 +521,11 @@ export function ImportTool() {
             Ticked shows are saved; nothing is saved until you press Save. Guesses aren’t filled in: tap “Maybe…” to use one. Anything we couldn’t read is here too, to fill in yourself.
           </p>
           {drafts.map((d) => (
+            <div key={d.key}>
+            {d.photoIndex != null && d.status !== "saved" && (
+              <button type="button" className="mb-2 min-h-11 px-3 text-tint-text"
+                onClick={() => setCropKey(d.key)}>Crop photo</button>
+            )}
             <DraftCard
               key={d.key}
               draft={d}
@@ -502,6 +533,7 @@ export function ImportTool() {
               emailText={() => undefined}
               onChange={(patch) => updateDraft(d.key, { ...patch, ...(d.error ? { error: undefined } : {}) })}
             />
+            </div>
           ))}
 
           {collections.length > 0 && (

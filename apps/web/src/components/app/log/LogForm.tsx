@@ -22,6 +22,9 @@ import {
   type Venue,
   type Visibility,
 } from "@/lib/entries";
+import { ENTRY_MEDIA_BUCKET, entryMediaCover, saveEntryPhoto, type EntryPhotoDraft } from "@/lib/entry-media";
+import { squareCrop, type SquareCrop } from "@/lib/photo-crop";
+import { PhotoCropDialog, type CroppedPhoto } from "./PhotoCropDialog";
 import { lookupNearby, preparePhoto, type Place, type PreparedPhoto } from "@/lib/import/photo-pipeline";
 import { rpcFetcher, SuggestionSession, type ShowSource, type ShowSuggestion } from "@/lib/show-suggestions";
 import { createClient } from "@/lib/supabase/client";
@@ -42,9 +45,10 @@ export type EntryDraft = {
   collectionIds: string[];
   photoUrl: string | null;
   photoPath: string | null;
+  nativeMediaId?: string | null;
 };
 
-type Photo = { stored: Blob; previewUrl: string };
+type Photo = Omit<EntryPhotoDraft, "replacing"> & { previewUrl: string };
 
 // What the photo tells us, step by step. Each step fills only fields the
 // user hasn't set, and only when it's confident; otherwise it offers a chip.
@@ -84,6 +88,10 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
 
   // Photo first for new entries; "fill in by hand" skips straight to the form.
   const [started, setStarted] = useState(editing);
+  const draftId = useRef<string | null>(null);
+  const replacement = useRef<{ mediaId: string | null } | null>(null);
+  const [recropCandidate, setRecropCandidate] = useState<{ source: Blob; initial: SquareCrop; saved: boolean } | null>(null);
+  const [cropCandidate, setCropCandidate] = useState<PreparedPhoto | null>(null);
   const [photo, setPhoto] = useState<Photo | null>(null);
   const [existingPhoto, setExistingPhoto] = useState<string | null>(initial?.photoUrl ?? null);
   const [photoError, setPhotoError] = useState<string | null>(null);
@@ -249,8 +257,7 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
   }
 
   async function onPhoto(file: File) {
-    clearPhotoResults();
-    const token = run.current;
+    const token = ++run.current;
     const current = () => token === run.current;
     setStarted(true);
     setDetect({ step: "reading" });
@@ -265,8 +272,52 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
       return;
     }
     if (!current()) return;
-    const { meta, stored } = prepared;
-    replacePhoto({ stored, previewUrl: URL.createObjectURL(stored) });
+    setDetect({ step: "idle" });
+    setCropCandidate(prepared);
+  }
+
+  async function reopenCrop() {
+    try {
+      const supabase = createClient();
+      let source: Blob;
+      let rectangle: readonly number[];
+      if (photo) {
+        ({ source, rectangle } = photo);
+      } else if (initial?.nativeMediaId) {
+        const mediaId = initial.nativeMediaId;
+        const [retained, geometry] = await Promise.all([
+          supabase.from("entry_media_sources").select("source_revision").eq("media_id", mediaId).single(),
+          supabase.from("entry_media").select("crop_x,crop_y,crop_width,crop_height").eq("id", mediaId).single(),
+        ]);
+        if (retained.error || geometry.error) throw retained.error ?? geometry.error;
+        const file = await supabase.storage.from(ENTRY_MEDIA_BUCKET)
+          .download(`${initial.id}/${mediaId}/${retained.data.source_revision}/source.jpg`);
+        if (file.error) throw file.error;
+        source = file.data;
+        const g = geometry.data;
+        rectangle = [g.crop_x, g.crop_y, g.crop_width, g.crop_height];
+      } else return;
+
+      const bitmap = await createImageBitmap(source);
+      try {
+        const [x, y, w, h] = rectangle;
+        setRecropCandidate({ source, saved: photo?.recrop ?? !photo,
+          initial: squareCrop(bitmap.width, bitmap.height, (x + w / 2) * bitmap.width,
+            (y + h / 2) * bitmap.height, w * bitmap.width) });
+      } finally { bitmap.close(); }
+    } catch {
+      setPhotoError("Couldn’t load the original photo.");
+    }
+  }
+
+  async function confirmCrop(prepared: PreparedPhoto, cropped: CroppedPhoto) {
+    setCropCandidate(null);
+    clearPhotoResults();
+    const token = run.current;
+    const current = () => token === run.current;
+    const { meta } = prepared;
+    replacement.current = null;
+    replacePhoto({ ...cropped, requestId: crypto.randomUUID(), previewUrl: URL.createObjectURL(cropped.display) });
     setExistingPhoto(null);
     if (meta.date && !touched.current.date) {
       fromPhoto.current.date = true;
@@ -318,7 +369,7 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
     session.current?.cancel();
     setSaving(true);
     const supabase = createClient();
-    const entryId = initial?.id ?? crypto.randomUUID();
+    const entryId = initial?.id ?? (draftId.current ??= crypto.randomUUID());
     // Which step failed, so the message can say (owner-only app, so the
     // raw error is useful rather than alarming).
     let step = "show";
@@ -347,7 +398,14 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
       // The entry first, so a failed photo upload never loses it. Upsert, so
       // retrying after a later step failed doesn't trip over the same id.
       step = "entry";
-      const keptPath = existingPhoto ? (initial?.photoPath ?? null) : null;
+      const { data: uploadFlag } = photo ? await supabase.from("app_config").select("value")
+        .eq("key", "media_photo_uploads_enabled").maybeSingle() : { data: null };
+      const nativePhoto = photo && (uploadFlag?.value === "true" || photo.recrop) ? photo : null;
+      if (nativePhoto && !replacement.current) {
+        const cover = initial ? await entryMediaCover(supabase, entryId) : null;
+        replacement.current = { mediaId: cover?.media_id ?? null };
+      }
+      const keptPath = existingPhoto || nativePhoto ? (initial?.photoPath ?? null) : null;
       const fields = {
         show_id: showId,
         venue_id: venueId,
@@ -376,13 +434,23 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
         if (link) throw link;
       }
 
+      if (initial?.nativeMediaId && !existingPhoto && !photo) {
+        const { error: remove } = await supabase.rpc("delete_entry_media", {
+          p_entry_id: entryId, p_media_id: initial.nativeMediaId,
+        });
+        if (remove) throw remove;
+      }
+
       // The photo last: if it fails, the entry is still saved without it.
       let photoFailed = false;
-      if (photo) {
+      if (nativePhoto) {
+        step = "photo (the entry was saved; retry to finish the upload)";
+        await saveEntryPhoto(supabase, entryId, { ...nativePhoto, replacing: replacement.current?.mediaId ?? null });
+      } else if (photo) {
         const path = photoPath(userId, entryId);
         const { error: upload } = await supabase.storage
           .from(PHOTO_BUCKET)
-          .upload(path, photo.stored, { contentType: "image/jpeg", upsert: true, cacheControl: "3600" });
+          .upload(path, photo.display, { contentType: "image/jpeg", upsert: true, cacheControl: "3600" });
         const { error: link } = upload
           ? { error: upload }
           : await supabase.from("entries").update({ photo_path: path }).eq("id", entryId);
@@ -410,6 +478,7 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
       if (!editing) params.set("new", "1");
       if (photoFailed) params.set("photo", "failed");
       if (from) params.set("from", from);
+      replacePhoto(null);
       onSaved();
       router.push(`/app/entries/${entryId}${params.size ? `?${params}` : ""}`);
       router.refresh();
@@ -512,6 +581,20 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
         : null;
   return (
     <form onSubmit={save} className="flex flex-col gap-6" noValidate>
+      {recropCandidate && (
+        <PhotoCropDialog source={recropCandidate.source} initial={recropCandidate.initial}
+          onCancel={() => setRecropCandidate(null)}
+          onConfirm={(cropped) => {
+            replacement.current = null;
+            replacePhoto({ ...cropped, recrop: recropCandidate.saved, requestId: crypto.randomUUID(),
+              previewUrl: URL.createObjectURL(cropped.display) });
+            setRecropCandidate(null);
+          }} />
+      )}
+      {cropCandidate && (
+        <PhotoCropDialog source={cropCandidate.stored} onCancel={() => setCropCandidate(null)}
+          onConfirm={(cropped) => void confirmCrop(cropCandidate, cropped)} />
+      )}
       {/* Photo (drop another here to replace it) */}
       <div
         {...dropProps}
@@ -537,6 +620,10 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
             >
               {previewUrl ? "Change photo" : "Add photo"}
             </label>
+            {(photo || (existingPhoto && initial?.nativeMediaId)) && (
+              <button type="button" className="min-h-11 px-3 text-subheadline text-tint-text"
+                onClick={() => void reopenCrop()}>Edit crop</button>
+            )}
             {previewUrl && (
               <button
                 type="button"

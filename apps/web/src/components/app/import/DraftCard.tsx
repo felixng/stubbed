@@ -32,12 +32,14 @@ export type Draft = {
   // attach (null: none).
   photos: { stored: Blob; previewUrl: string }[];
   photoIndex: number | null;
+  crop?: { index: number; photo: import("@/lib/entry-media").EntryPhotoDraft };
   // Nothing could be read from the source: a blank draft to fill in by hand.
   unread?: boolean;
   // Save was pressed while it was ticked: show what it still needs.
   flagged?: boolean;
   status: "resolving" | "ready" | "saving" | "saved" | "failed";
   entryId?: string;
+  retryId?: string;
   error?: string;
 };
 
