@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { attentionItems, crawlBuckets, crawlingState, crawlPagesFilters, hubHeadline, legacySourcesRedirect, pagesHref, recentActionText, sourceKeyFromPath, sourcePath, sourceStatusSentence, summariseCrawlShow, summariseCrawlTask, rerunCommand, scoreLine, settingsLine, shareRight, sumScores, UUID } from "@/lib/admin-crawl";
+import { attentionItems, crawlBuckets, crawlingState, crawlPagesFilters, hubHeadline, legacySourcesRedirect, pagesHref, publicationParkedReason, recentActionText, sourceKeyFromPath, sourcePath, sourceStatusSentence, summariseCrawlShow, summariseCrawlTask, rerunCommand, scoreLine, settingsLine, shareRight, sumScores, UUID } from "@/lib/admin-crawl";
 
 const score = { right: 3, wrong: 1, unsure: 1, unreviewed: 2, findings: 7, missed: 2 };
 
@@ -140,4 +140,27 @@ test("a listed show says what we have or why we have nothing yet", () => {
   assert.equal(summariseCrawlShow({ title: "https://playbill.com/production/tina-1", status: "pending", opens: null, closes: null, ends: null }).title, "tina-1");
   assert.equal(summariseCrawlShow({ title: "X", status: "pending", opens: null, closes: null, ends: null }).detail, "not read yet");
   assert.equal(summariseCrawlShow({ title: "X", status: "failed", opens: null, closes: null, ends: null }).mark, "✕");
+});
+
+test("parked publication items get one plain sentence", () => {
+  assert.match(publicationParkedReason("venue_never_resolved"), /never read, so we don.t know where they played/);
+  assert.equal(publicationParkedReason("identity_transaction:42P01"), "A database error stopped them (code 42P01). This needs a code fix before trying again.");
+  assert.match(publicationParkedReason("run_transaction:P0001"), /code P0001/);
+  assert.match(publicationParkedReason("official_transaction:23505"), /code 23505/);
+  assert.match(publicationParkedReason("something_else"), /no words for yet \(something_else\)/);
+});
+
+test("a parked source shows one entry with a retry and no raw code in the headline", () => {
+  const overview = {
+    run_dates: { total: 0, from_sources: 0 },
+    sources: { london_theatre: { next_refresh_at: null, unchecked_pages: 0, attention: [
+      { kind: "publication_parked" as const, source_key: "london_theatre", count: 15, reason: "identity_transaction:42P01" },
+    ] } },
+    official: { sites: 0, sites_needing_attention: 0, last_run_at: null, last_run_status: null, findings_to_review: 0 },
+    recent_actions: [],
+  };
+  const [item] = attentionItems(overview, [{ source_key: "london_theatre", paused_reason: null }]);
+  assert.equal(item.text, "15 pages were read but could not be added to the catalogue");
+  assert.equal(item.retryPublication, "london_theatre");
+  assert.doesNotMatch(item.text, /42P01/);
 });

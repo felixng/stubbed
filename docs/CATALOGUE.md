@@ -328,6 +328,8 @@ The crawler runs **twice an hour**, at :17 and :47 UTC. **Supabase starts it** (
 
 **Publishing** (adding what was read to the catalogue) is separate from reading (#538). A `pg_cron` job (`catalogue-publication`, every minute) calls `run_crawl_publication()`, which makes up to 3 passes over the publication-enabled sources, 100 items per call, and stops starting calls after 20 seconds. The crawl run no longer publishes. Each tick that did something or failed is logged in `crawl_publication_ticks` (kept 3 days; admins can read it). To pause one source, turn off its Publication switch. To stop the job: `select cron.unschedule('catalogue-publication')`. The publishers take items in order of when they are next available, so an item waiting for its venue page goes to the back instead of blocking the queue.
 
+**Failing and parked items** (#539). An item that fails waits 5, 10, 20, 40, then 60 minutes between tries; the tenth failure in a row parks it (`parked_at`, `parked_reason` = the error text, e.g. `identity_transaction:42P01`). An item still waiting for a venue page 14 days after it was queued is parked as `venue_never_resolved`; waiting is not counted as an attempt. Parked items are skipped and show in Backstage as one "pages were read but could not be added to the catalogue" row per source with a **Try again** button (`admin_retry_crawl_publication(source)`), which resets them and logs a `retry_publication` action. Dropping parked items is #509's.
+
 | Limit | Default | Repository variable |
 |---|---|---|
 | Pages per source per run | 150 (at most 400) | `CRAWL_SOURCE_RUN_PAGES` |

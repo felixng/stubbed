@@ -1630,6 +1630,11 @@ Publishing was the tail of a crawl run: 100 identities and 100 runs per source p
 Numbers: hosted unpublished items 3509 before the push; 2609 three ticks (3 minutes) later and falling by about 300 a tick.
 
 
+### Back off, then park, publication items that keep failing (2026-11-13, #539, epic #536)
+
+A failing item was retried every five minutes for ever and nothing showed it (15 items failed about 800 times each over three days). Failures now back off 5, 10, 20, 40, then 60 minutes and park on the tenth in a row (about seven hours, enough for a short outage; after that a person should look). Venue waits are not failures but cannot last for ever: 14 days after queueing (venue pages are re-read at least weekly, so two misses mean the page is not coming) the item parks as `venue_never_resolved`. Parked items are one attention row per source with one "Try again" button, because the fix is almost always a code or data fix followed by a retry of everything. No per-item screen, and no Drop (#509). Migration `20261113221542_crawl_publication_parking.sql`. The attention list entries gained a `kind` field (`publication_parked`); existing page entries have none.
+
+
 ## Entry media schema (#141)
 
 Gallery order and the ready cover are derived from one media collection. Private source references live in an owner-only relation, and native revision files live in a private bucket outside the legacy photo write policies. See [the media contract](MEDIA.md) for crop geometry, compatibility and the upload interface.

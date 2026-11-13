@@ -1005,61 +1005,85 @@ internal enum PublicSchema {
   }
   internal struct CrawlPublicationQueueSelect: Codable, Hashable, Sendable {
     internal let extractionId: UUID
+    internal let identityAttempts: Int32
     internal let identityAvailableAt: String
     internal let identityError: String?
     internal let identityProcessedAt: String?
     internal let lastError: String?
+    internal let parkedAt: String?
+    internal let parkedReason: String?
     internal let processedAt: String?
     internal let queuedAt: String
+    internal let runAttempts: Int32
     internal let runAvailableAt: String
     internal enum CodingKeys: String, CodingKey {
       case extractionId = "extraction_id"
+      case identityAttempts = "identity_attempts"
       case identityAvailableAt = "identity_available_at"
       case identityError = "identity_error"
       case identityProcessedAt = "identity_processed_at"
       case lastError = "last_error"
+      case parkedAt = "parked_at"
+      case parkedReason = "parked_reason"
       case processedAt = "processed_at"
       case queuedAt = "queued_at"
+      case runAttempts = "run_attempts"
       case runAvailableAt = "run_available_at"
     }
   }
   internal struct CrawlPublicationQueueInsert: Codable, Hashable, Sendable {
     internal let extractionId: UUID
+    internal let identityAttempts: Int32?
     internal let identityAvailableAt: String?
     internal let identityError: String?
     internal let identityProcessedAt: String?
     internal let lastError: String?
+    internal let parkedAt: String?
+    internal let parkedReason: String?
     internal let processedAt: String?
     internal let queuedAt: String?
+    internal let runAttempts: Int32?
     internal let runAvailableAt: String?
     internal enum CodingKeys: String, CodingKey {
       case extractionId = "extraction_id"
+      case identityAttempts = "identity_attempts"
       case identityAvailableAt = "identity_available_at"
       case identityError = "identity_error"
       case identityProcessedAt = "identity_processed_at"
       case lastError = "last_error"
+      case parkedAt = "parked_at"
+      case parkedReason = "parked_reason"
       case processedAt = "processed_at"
       case queuedAt = "queued_at"
+      case runAttempts = "run_attempts"
       case runAvailableAt = "run_available_at"
     }
   }
   internal struct CrawlPublicationQueueUpdate: Codable, Hashable, Sendable {
     internal let extractionId: UUID?
+    internal let identityAttempts: Int32?
     internal let identityAvailableAt: String?
     internal let identityError: String?
     internal let identityProcessedAt: String?
     internal let lastError: String?
+    internal let parkedAt: String?
+    internal let parkedReason: String?
     internal let processedAt: String?
     internal let queuedAt: String?
+    internal let runAttempts: Int32?
     internal let runAvailableAt: String?
     internal enum CodingKeys: String, CodingKey {
       case extractionId = "extraction_id"
+      case identityAttempts = "identity_attempts"
       case identityAvailableAt = "identity_available_at"
       case identityError = "identity_error"
       case identityProcessedAt = "identity_processed_at"
       case lastError = "last_error"
+      case parkedAt = "parked_at"
+      case parkedReason = "parked_reason"
       case processedAt = "processed_at"
       case queuedAt = "queued_at"
+      case runAttempts = "run_attempts"
       case runAvailableAt = "run_available_at"
     }
   }
