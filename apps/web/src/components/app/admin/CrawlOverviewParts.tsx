@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { RetryPublication } from "@/components/app/admin/RetryPublication";
 import { Section } from "@/components/app/admin/CrawlShell";
 import { recentActionText, shortDateTime, type AttentionItem, type CrawlOverview } from "@/lib/admin-crawl";
 
@@ -17,7 +18,9 @@ export function NeedsAttention({ items, children, hideWhenEmpty = false }: { ite
                 {item.reason && <p className="break-words text-footnote text-label-secondary">{item.reason}</p>}
                 {item.next && <p className="text-footnote text-label-secondary">{item.next}</p>}
               </div>
-              <Link href={item.href} className="inline-flex min-h-11 items-center text-subheadline text-tint-text">View</Link>
+              {item.retryPublication
+                ? <RetryPublication source={item.retryPublication} />
+                : <Link href={item.href} className="inline-flex min-h-11 items-center text-subheadline text-tint-text">View</Link>}
             </li>
           ))}
         </ul>

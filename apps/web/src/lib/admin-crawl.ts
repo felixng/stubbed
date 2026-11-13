@@ -235,10 +235,11 @@ export const shortDate = (iso: string) => dayMonth.format(new Date(iso));
 export const shortDateTime = (iso: string) => `${dayMonthTime.format(new Date(iso))} UTC`;
 const lower = (text: string) => text.charAt(0).toLowerCase() + text.slice(1);
 
-export type CrawlOverviewAttention = { stage: CrawlStage; status: "failed" | "blocked" | "retry_wait"; n: number; reason: string | null };
+export type CrawlOverviewParked = { kind: "publication_parked"; source_key: string; count: number; reason: string | null };
+export type CrawlOverviewAttention = { kind?: undefined; stage: CrawlStage; status: "failed" | "blocked" | "retry_wait"; n: number; reason: string | null };
 export type CrawlOverview = {
   run_dates: { total: number; from_sources: number };
-  sources: Record<string, { next_refresh_at: string | null; unchecked_pages: number; attention: CrawlOverviewAttention[] }>;
+  sources: Record<string, { next_refresh_at: string | null; unchecked_pages: number; attention: (CrawlOverviewAttention | CrawlOverviewParked)[] }>;
   publication?: Record<string, { last_published_at: string | null }>;
   official: { sites: number; sites_needing_attention: number; last_run_at: string | null; last_run_status: string | null; findings_to_review: number };
   recent_actions: { at: string; source: string; operation: string; affected: number; who: string }[];
@@ -251,7 +252,15 @@ function attentionText(item: CrawlOverviewAttention) {
   return `${noun} ${verb}`;
 }
 
-export type AttentionItem = { source: string; text: string; reason?: string | null; next?: string; href: string };
+export type AttentionItem = { source: string; text: string; reason?: string | null; next?: string; href: string; retryPublication?: string };
+
+// One sentence for why publication items were parked (crawl_publication_queue.parked_reason).
+export function publicationParkedReason(reason: string | null): string {
+  if (reason === "venue_never_resolved") return "Their theatre’s page was never read, so we don’t know where they played.";
+  const code = reason?.match(/^(?:identity|run|official)_transaction:(.+)$/)?.[1];
+  if (code) return `A database error stopped them (code ${code}). This needs a code fix before trying again.`;
+  return `They failed for a reason we have no words for yet (${reason ?? "unknown"}).`;
+}
 
 // Who acts next for a group of waiting pages.
 const attentionNext = {
@@ -269,6 +278,13 @@ export function attentionItems(
     const name = crawlSourceName(source.source_key);
     if (source.paused_reason) items.push({ source: name, text: "Blocked by the site", reason: source.paused_reason, next: attentionNext.blocked, href: sourcePath(source.source_key) });
     for (const item of overview.sources[source.source_key]?.attention ?? []) {
+      if (item.kind === "publication_parked") {
+        items.push({
+          source: name, text: `${n(item.count)} ${item.count === 1 ? "page was" : "pages were"} read but could not be added to the catalogue`,
+          reason: publicationParkedReason(item.reason), href: sourcePath(source.source_key), retryPublication: source.source_key,
+        });
+        continue;
+      }
       const bucket = item.status === "retry_wait" ? "retrying" : "stuck";
       items.push({
         source: name, text: attentionText(item), reason: item.reason, next: attentionNext[item.status],
@@ -318,7 +334,7 @@ export function sourceStatusSentence(input: {
 
 const actionVerbs: Record<string, string> = {
   pause: "paused crawling", resume: "resumed crawling", publish_on: "turned publication on", publish_off: "turned publication off",
-  retry_failed: "retried failed pages", retry_blocked: "retried blocked pages", reparse: "read a page again", rediscover: "started a fresh pass",
+  retry_failed: "retried failed pages", retry_publication: "retried publication", retry_blocked: "retried blocked pages", reparse: "read a page again", rediscover: "started a fresh pass",
 };
 export function recentActionText(action: CrawlOverview["recent_actions"][number]) {
   const verb = actionVerbs[action.operation] ?? action.operation.replaceAll("_", " ");
