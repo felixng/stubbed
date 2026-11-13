@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PAYWALL_BENEFITS, buttonLabel, parseSource, paywallHref, previewFree, safePaywallNext, sourceForFeature, unavailableOfferProvider, withPreview } from "../src/lib/paywall";
+import { availablePaywallBenefits, PAYWALL_BENEFITS, buttonLabel, parseSource, paywallHref, previewFree, safePaywallNext, sourceForFeature, unavailableOfferProvider, withPreview } from "../src/lib/paywall";
 import { DEFAULT_CONFIG, FREE, PREVIEW_STATE, loadMembership, parseConfig } from "../src/lib/membership";
 import { CARD_NEEDS, isCardLocked, periodChoices, periodNext, previewStats, type OwnInsights } from "../src/lib/insights";
 import { sampleInsightData } from "../src/lib/share-card-insights";
@@ -138,4 +138,15 @@ test("the development preview builds what a Free caller would get", () => {
   assert.equal(past.streaks.current_weekly, 3);
   assert.equal(past.streaks.longest_weekly, 0);
   assert.equal(previewStats(stats, null, 2026).access?.period, "all");
+});
+
+test("paywall media benefits follow rollout capabilities", () => {
+  const titles = (config: typeof DEFAULT_CONFIG) => availablePaywallBenefits(config).map((item) => item.title);
+  assert.deepEqual(titles(DEFAULT_CONFIG), ["Show mix", "Earlier years", "All time"]);
+  assert.deepEqual(titles({ ...DEFAULT_CONFIG, mediaGalleries: true }), [
+    "Show mix", "Earlier years", "All time", "Up to 10 photos per entry",
+  ]);
+  assert.deepEqual(titles({ ...DEFAULT_CONFIG, mediaGalleries: true, mediaVideo: true }), [
+    "Show mix", "Earlier years", "All time", "Up to 10 photos and videos per entry", "Videos up to 30 seconds",
+  ]);
 });

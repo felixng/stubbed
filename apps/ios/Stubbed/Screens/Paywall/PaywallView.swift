@@ -90,7 +90,7 @@ struct PaywallView: View {
           benefit("Earlier years", "Insights for any year you’ve logged, not just this one.", "calendar")
           benefit("All time", "Every show you’ve logged, together.", "infinity")
           if membership.config.mediaGalleriesEnabled {
-            benefit("Up to 10 photos and videos per entry", "Keep more of the night in one memory.", "photo.on.rectangle")
+            benefit(membership.config.mediaVideoEnabled ? "Up to 10 photos and videos per entry" : "Up to 10 photos per entry", "Keep more of the night in one memory.", "photo.on.rectangle")
           }
           if membership.config.mediaVideoEnabled {
             benefit("Videos up to 30 seconds", "Save a short clip alongside your photos.", "video")
