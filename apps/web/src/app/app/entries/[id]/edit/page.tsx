@@ -15,7 +15,7 @@ async function Edit({ params, searchParams }: PageProps<"/app/entries/[id]/edit"
   const from = readFrom(query.from);
   const found = await getOwnEntry(id);
   if (!found) notFound();
-  const { entry, photoUrl } = found;
+  const { entry, photoUrl, nativeMediaId } = found;
   return (
     <>
       <div className="flex flex-col gap-1">
@@ -35,6 +35,7 @@ async function Edit({ params, searchParams }: PageProps<"/app/entries/[id]/edit"
           collectionIds: entry.collections.map((c) => c.id),
           photoUrl,
           photoPath: entry.photo_path,
+          nativeMediaId,
         }}
       />
     </>

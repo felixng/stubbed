@@ -32,12 +32,14 @@ export type Draft = {
   // attach (null: none).
   photos: { stored: Blob; previewUrl: string }[];
   photoIndex: number | null;
+  crop?: { index: number; previewUrl: string; photo: import("@/lib/entry-media").EntryPhotoDraft };
   // Nothing could be read from the source: a blank draft to fill in by hand.
   unread?: boolean;
   // Save was pressed while it was ticked: show what it still needs.
   flagged?: boolean;
   status: "resolving" | "ready" | "saving" | "saved" | "failed";
   entryId?: string;
+  retryId?: string;
   error?: string;
 };
 
@@ -153,7 +155,7 @@ export function DraftCard({
                 }`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element -- a local blob */}
-                <img src={p.previewUrl} alt="" className="size-14 object-cover" />
+                <img src={draft.crop?.index === i ? draft.crop.previewUrl : p.previewUrl} alt="" className="size-14 object-cover" />
               </button>
             ))}
           </div>

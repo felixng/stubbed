@@ -1,3 +1,4 @@
+import { saveEntryPhoto, type EntryPhotoDraft } from "@/lib/entry-media";
 // From "what a source said" to form values, and from confirmed drafts to
 // entries (#17, #18). Works with the browser Supabase client; every rule is
 // still enforced by RLS and constraints.
@@ -64,6 +65,7 @@ export type ConfirmedDraft = {
   collectionIds: string[];
   // The clean 1600px copy to attach, if any.
   photo: Blob | null;
+  croppedPhoto?: EntryPhotoDraft;
   // The title an email used, kept as a nickname when it was mapped to an
   // existing show (#35). The database skips titles search already finds.
   alias?: string | null;
@@ -112,7 +114,7 @@ export async function saveDraft(
     if (draft.collectionIds.length) {
       const { error: link } = await supabase
         .from("entry_collections")
-        .insert(draft.collectionIds.map((collection_id) => ({ entry_id: id, collection_id })));
+        .upsert(draft.collectionIds.map((collection_id) => ({ entry_id: id, collection_id })), { ignoreDuplicates: true });
       if (link) throw link;
     }
   } catch (err) {
@@ -125,7 +127,17 @@ export async function saveDraft(
   }
 
   let photoFailed = false;
-  if (draft.photo) {
+  const flag = draft.croppedPhoto
+    ? await supabase.from("app_config").select("value").eq("key", "media_photo_uploads_enabled").maybeSingle()
+    : null;
+  if (draft.croppedPhoto && flag?.data?.value === "true") {
+    try {
+      await saveEntryPhoto(supabase, id, draft.croppedPhoto);
+    } catch (error) {
+      const detail = error && typeof error === "object" && "message" in error ? String(error.message) : String(error);
+      throw new SaveError("photo (the entry was saved; retry to finish the upload)", detail);
+    }
+  } else if (draft.photo) {
     const path = photoPath(userId, id);
     const { error: upload } = await supabase.storage
       .from(PHOTO_BUCKET)

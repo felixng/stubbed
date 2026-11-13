@@ -2,6 +2,7 @@ import { connection } from "next/server";
 
 import type { CardSocial } from "@/components/profile/PublicEntryCard";
 import { ENTRY_SELECT, signPhotos, toEntryRow, TRIP_SELECT, type Collection, type EntryRow } from "@/lib/entries";
+import { ENTRY_MEDIA_BUCKET, entryMediaCover } from "@/lib/entry-media";
 import { getReactions, listCommentPreviews, NO_REACTIONS } from "@/lib/reactions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -25,8 +26,13 @@ export async function getOwnEntry(id: string) {
   const { data } = await supabase.from("entries").select(ENTRY_SELECT).eq("id", id).eq("user_id", userId).maybeSingle();
   if (!data) return null;
   const entry = toEntryRow(data as never);
+  const cover = await entryMediaCover(supabase, id).catch(() => null);
+  if (cover && !cover.legacy) {
+    const { data: signed } = await supabase.storage.from(ENTRY_MEDIA_BUCKET).createSignedUrl(cover.photo_path, 3600);
+    if (signed) return { entry, photoUrl: signed.signedUrl, nativeMediaId: cover.media_id };
+  }
   const urls = await signPhotos(supabase, [entry.photo_path]);
-  return { entry, photoUrl: entry.photo_path ? (urls.get(entry.photo_path) ?? null) : null };
+  return { entry, photoUrl: entry.photo_path ? (urls.get(entry.photo_path) ?? null) : null, nativeMediaId: null };
 }
 
 // Newest first. Owner-scale (tens to hundreds of entries), so no paging yet.
