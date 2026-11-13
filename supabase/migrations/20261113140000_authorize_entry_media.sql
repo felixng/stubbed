@@ -153,13 +153,17 @@ as $$
       and r.state = 'pending' and r.expires_at > statement_timestamp()
       and e.id::text = split_part(object_name, '/', 1)
       and object_name = r.entry_id || '/' || r.media_id || '/' || r.revision || '/' || (asset->>'role') || '.jpg'
-      and object_metadata->>'mimetype' = asset->>'content_type'
-      and object_metadata->>'size' = asset->>'bytes'
+
   );
 $$;
 
 revoke execute on function public.can_upload_entry_media(text, jsonb) from public, anon;
 grant execute on function public.can_upload_entry_media(text, jsonb) to authenticated;
+
+-- Storage checks INSERT permission before it has populated object metadata.
+-- The bucket caps incoming photos and finalize verifies the persisted metadata.
+update storage.buckets set file_size_limit = 5242880, allowed_mime_types = array['image/jpeg']
+where id = 'entry-media';
 
 create policy "Upload reserved media files" on storage.objects for insert
 to authenticated with check (
@@ -421,3 +425,10 @@ as $$
 $$;
 revoke execute on function public.record_entry_media_verification(uuid, jsonb) from public, anon, authenticated;
 grant execute on function public.record_entry_media_verification(uuid, jsonb) to service_role;
+
+-- Storage returns the inserted object through SELECT. Keep leased objects
+-- visible only to the owner during the active reservation.
+create policy "Owners read reserved media files" on storage.objects for select
+to authenticated using (
+  bucket_id = 'entry-media' and public.can_upload_entry_media(name, null)
+);

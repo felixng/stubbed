@@ -27,8 +27,8 @@ select is(pg_temp.reserve('a0000000-0000-0000-0000-000000000518'), (select data 
 select throws_ok($$select pg_temp.reserve(gen_random_uuid())$$, '42501', 'MEDIA_GALLERIES_DISABLED', 'pending item consumes the free slot');
 select ok(public.can_upload_entry_media((select data #>> '{paths,source}' from reservation),
   '{"mimetype":"image/jpeg","size":100}'), 'owner may upload declared object');
-select ok(not public.can_upload_entry_media((select data #>> '{paths,source}' from reservation),
-  '{"mimetype":"image/jpeg","size":101}'), 'undeclared size is denied');
+select ok(not public.can_upload_entry_media((select replace(data #>> '{paths,source}', 'source.jpg', 'other.jpg') from reservation),
+  null), 'unreserved path is denied');
 select throws_ok($$select public.finalize_entry_media((select (data->>'reservation_id')::uuid from reservation))$$,
   '22023', 'MEDIA_ASSETS_UNVERIFIED', 'cannot finalize missing or unverified objects');
 
