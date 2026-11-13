@@ -38,7 +38,7 @@ run.addEventListener("click", async () => {
       const conversion = await Conversion.init({
         input, output, trim: { start: 1, end: 1 + duration }, tags: {},
         video: { codec: "avc", bitrate: 3_000_000 },
-        audio: { codec: "aac", bitrate: 96_000 },
+        audio: aac ? { codec: "aac", bitrate: 96_000 } : { codec: "aac" },
       });
       if (!conversion.isValid || conversion.discardedTracks.length) {
         throw new Error(JSON.stringify(conversion.discardedTracks.map(({ reason }) => reason)));
