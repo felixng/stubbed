@@ -16,6 +16,7 @@ final class EntryPhotoUITests: XCTestCase {
     XCTAssertTrue(app.navigationBars["Edit"].waitForExistence(timeout: 5))
     scrollAndTap(app.buttons["Add photo"], in: app)
     pickPhoto(app, takenInNewYork: "2026-10-03 19:58")
+    confirmPhotoCrop(app)
     XCTAssertTrue(app.buttons["Change photo"].waitForExistence(timeout: 15))
     app.navigationBars["Edit"].buttons["Save"].tap()
     let photo = app.otherElements["entry-photo"]

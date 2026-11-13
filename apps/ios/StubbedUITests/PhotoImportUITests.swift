@@ -35,6 +35,7 @@ final class PhotoImportUITests: XCTestCase {
 
     // Oldest first, each form pre-filled from its photo.
     XCTAssertTrue(app.navigationBars["Show 1 of 3"].waitForExistence(timeout: 10))
+    confirmPhotoCrop(app)
     let filled = button(app, startingWith: "Change Richard Rodgers Theatre")
     let chip = button(app, startingWith: "Richard Rodgers Theatre ·")
     XCTAssertTrue(filled.waitForExistence(timeout: 20) || chip.exists)
@@ -50,6 +51,7 @@ final class PhotoImportUITests: XCTestCase {
         tries += 1
       } while !app.navigationBars[next].waitForExistence(timeout: 5) && tries < 3
       XCTAssertTrue(app.navigationBars[next].exists, app.debugDescription)
+      confirmPhotoCrop(app)
       let gone = expectation(for: NSPredicate(format: "exists == false"), evaluatedWith: app.navigationBars[current])
       wait(for: [gone], timeout: 5)
     }

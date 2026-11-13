@@ -13,6 +13,7 @@ final class SharePhotoUITests: XCTestCase {
     app.buttons["Edit"].firstMatch.tap()
     scrollAndTap(app.buttons["Add photo"], in: app)
     pickPhoto(app, takenInNewYork: "2026-10-03 19:58")
+    confirmPhotoCrop(app)
     XCTAssertTrue(app.buttons["Change photo"].waitForExistence(timeout: 15))
     app.navigationBars["Edit"].buttons["Save"].tap()
     scrollAndTap(app.buttons["Share this show"], in: app)
