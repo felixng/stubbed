@@ -16,24 +16,36 @@ Deno.serve(async (request) => {
   };
 
   try {
-    const list = await fetch(`${url}/rest/v1/rpc/list_orphan_entry_media`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ p_limit: 100 }),
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!list.ok) return new Response(null, { status: 502 });
-    const rows: { object_name: string }[] = await list.json();
-    if (!rows.length) return Response.json({ processed: 0 });
+    let processed = 0;
+    for (const [bucket, rpc] of [
+      ["entry-media", "list_orphan_entry_media"],
+      ["entry-video", "list_orphan_entry_video"],
+    ]) {
+      const list = await fetch(`${url}/rest/v1/rpc/${rpc}`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ p_limit: 100 }),
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!list.ok) {
+        // A newly deployed worker can run before the video migration lands.
+        if (bucket === "entry-video" && list.status === 404 &&
+            (await list.json().catch(() => null))?.code === "PGRST202") continue;
+        return new Response(null, { status: 502 });
+      }
+      const rows: { object_name: string }[] = await list.json();
+      if (!rows.length) continue;
 
-    const removal = await fetch(`${url}/storage/v1/object/entry-media`, {
-      method: "DELETE",
-      headers,
-      body: JSON.stringify({ prefixes: rows.map(({ object_name }) => object_name) }),
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!removal.ok) return new Response(null, { status: 502 });
-    return Response.json({ processed: rows.length });
+      const removal = await fetch(`${url}/storage/v1/object/${bucket}`, {
+        method: "DELETE",
+        headers,
+        body: JSON.stringify({ prefixes: rows.map(({ object_name }) => object_name) }),
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!removal.ok) return new Response(null, { status: 502 });
+      processed += rows.length;
+    }
+    return Response.json({ processed });
   } catch {
     return new Response(null, { status: 502 });
   }

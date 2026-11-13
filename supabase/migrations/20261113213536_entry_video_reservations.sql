@@ -362,3 +362,27 @@ begin
     'position', reservation.position);
 end;
 $$;
+
+create function public.list_orphan_entry_video(p_limit integer default 100)
+returns table (object_name text)
+language sql stable security invoker set search_path = ''
+as $$
+  select o.name from storage.objects o
+  where o.bucket_id = 'entry-video'
+    and o.created_at < statement_timestamp() - interval '1 hour'
+    and not exists (
+      select 1 from public.entry_media m
+      where m.entry_id::text = split_part(o.name, '/', 1)
+        and m.kind = 'video' and m.display_path = o.name
+    )
+    and not exists (
+      select 1 from public.entry_media_reservations r
+      where r.entry_id::text = split_part(o.name, '/', 1)
+        and r.kind = 'video' and r.state = 'pending' and r.expires_at > statement_timestamp()
+        and o.name = r.entry_id || '/' || r.media_id || '/' || r.revision || '/display.mp4'
+    )
+  order by o.created_at, o.name
+  limit least(greatest(p_limit, 1), 1000);
+$$;
+revoke execute on function public.list_orphan_entry_video(integer) from public, anon, authenticated;
+grant execute on function public.list_orphan_entry_video(integer) to service_role;
