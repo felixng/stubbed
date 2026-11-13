@@ -36,22 +36,43 @@ func fixture(_ url: URL) async throws {
   if let error = writer.error { throw error }
 }
 
-// This probe measures bitrate control for a silent, upright SDR source.
+// The prototype uses an SDR video composition when the source needs rotation or scaling.
 func exportControlledVideo(_ asset: AVURLAsset, to output: URL, range: CMTimeRange) async throws {
-  guard let track = try await asset.loadTracks(withMediaType: .video).first,
-        try await asset.loadTracks(withMediaType: .audio).isEmpty,
-        try await track.load(.preferredTransform).isIdentity else {
+  guard let track = try await asset.loadTracks(withMediaType: .video).first else {
     throw CocoaError(.featureUnsupported)
   }
   let size = try await track.load(.naturalSize)
-  let scale = min(1, 1280 / max(size.width, size.height), 720 / min(size.width, size.height))
-  let width = Int(size.width * scale / 2) * 2
-  let height = Int(size.height * scale / 2) * 2
+  let transform = try await track.load(.preferredTransform)
+  let bounds = CGRect(origin: .zero, size: size).applying(transform)
+  let scale = min(1, 1280 / max(bounds.width, bounds.height), 720 / min(bounds.width, bounds.height))
+  let width = Int(bounds.width * scale / 2) * 2
+  let height = Int(bounds.height * scale / 2) * 2
+  guard width > 0, height > 0 else { throw CocoaError(.featureUnsupported) }
   let reader = try AVAssetReader(asset: asset)
   reader.timeRange = range
-  let readerOutput = AVAssetReaderTrackOutput(track: track, outputSettings: [
+  let pixelSettings = [
     kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
-  ])
+  ]
+  let readerOutput: AVAssetReaderOutput
+  if transform.isIdentity, size.width == CGFloat(width), size.height == CGFloat(height) {
+    readerOutput = AVAssetReaderTrackOutput(track: track, outputSettings: pixelSettings)
+  } else {
+    let composition = AVMutableVideoComposition()
+    composition.renderSize = CGSize(width: width, height: height)
+    composition.frameDuration = CMTime(value: 1, timescale: 30)
+    let layer = AVMutableVideoCompositionLayerInstruction(assetTrack: track)
+    let fit = transform
+      .concatenating(CGAffineTransform(translationX: -bounds.minX, y: -bounds.minY))
+      .concatenating(CGAffineTransform(scaleX: scale, y: scale))
+    layer.setTransform(fit, at: .zero)
+    let instruction = AVMutableVideoCompositionInstruction()
+    instruction.timeRange = CMTimeRange(start: .zero, duration: try await asset.load(.duration))
+    instruction.layerInstructions = [layer]
+    composition.instructions = [instruction]
+    let composed = AVAssetReaderVideoCompositionOutput(videoTracks: [track], videoSettings: pixelSettings)
+    composed.videoComposition = composition
+    readerOutput = composed
+  }
   readerOutput.alwaysCopiesSampleData = false
   let writer = try AVAssetWriter(outputURL: output, fileType: .mp4)
   let writerInput = AVAssetWriterInput(mediaType: .video, outputSettings: [
@@ -68,6 +89,26 @@ func exportControlledVideo(_ asset: AVURLAsset, to output: URL, range: CMTimeRan
   }
   reader.add(readerOutput)
   writer.add(writerInput)
+  var audioOutput: AVAssetReaderTrackOutput?
+  var audioInput: AVAssetWriterInput?
+  if let audioTrack = try await asset.loadTracks(withMediaType: .audio).first {
+    let pcm = AVAssetReaderTrackOutput(track: audioTrack, outputSettings: [
+      AVFormatIDKey: kAudioFormatLinearPCM,
+      AVLinearPCMBitDepthKey: 16,
+      AVLinearPCMIsFloatKey: false,
+    ])
+    let aac = AVAssetWriterInput(mediaType: .audio, outputSettings: [
+      AVFormatIDKey: kAudioFormatMPEG4AAC,
+      AVNumberOfChannelsKey: 2,
+      AVSampleRateKey: 48_000,
+      AVEncoderBitRateKey: 96_000,
+    ])
+    guard reader.canAdd(pcm), writer.canAdd(aac) else { throw CocoaError(.featureUnsupported) }
+    reader.add(pcm)
+    writer.add(aac)
+    audioOutput = pcm
+    audioInput = aac
+  }
   defer {
     if reader.status == .reading { reader.cancelReading() }
     if writer.status == .writing { writer.cancelWriting() }
@@ -75,16 +116,32 @@ func exportControlledVideo(_ asset: AVURLAsset, to output: URL, range: CMTimeRan
   guard reader.startReading() else { throw reader.error ?? CocoaError(.fileReadCorruptFile) }
   guard writer.startWriting() else { throw writer.error ?? CocoaError(.fileWriteUnknown) }
   writer.startSession(atSourceTime: range.start)
-  while let sample = readerOutput.copyNextSampleBuffer() {
-    while !writerInput.isReadyForMoreMediaData {
+  var videoSample = readerOutput.copyNextSampleBuffer()
+  var audioSample = audioOutput?.copyNextSampleBuffer()
+  if videoSample == nil { writerInput.markAsFinished() }
+  if audioSample == nil { audioInput?.markAsFinished() }
+  while videoSample != nil || audioSample != nil {
+    try Task.checkCancellation()
+    var progressed = false
+    if let sample = videoSample, writerInput.isReadyForMoreMediaData {
+      guard writerInput.append(sample) else { throw writer.error ?? CocoaError(.fileWriteUnknown) }
+      videoSample = readerOutput.copyNextSampleBuffer()
+      if videoSample == nil { writerInput.markAsFinished() }
+      progressed = true
+    }
+    if let sample = audioSample, let audioInput, audioInput.isReadyForMoreMediaData {
+      guard audioInput.append(sample) else { throw writer.error ?? CocoaError(.fileWriteUnknown) }
+      audioSample = audioOutput?.copyNextSampleBuffer()
+      if audioSample == nil { audioInput.markAsFinished() }
+      progressed = true
+    }
+    if !progressed {
       if writer.status != .writing { throw writer.error ?? CocoaError(.fileWriteUnknown) }
       try await Task.sleep(for: .milliseconds(2))
     }
-    guard writerInput.append(sample) else { throw writer.error ?? CocoaError(.fileWriteUnknown) }
   }
   guard reader.status == .completed else { throw reader.error ?? CocoaError(.fileReadCorruptFile) }
   writer.endSession(atSourceTime: range.end)
-  writerInput.markAsFinished()
   await writer.finishWriting()
   guard writer.status == .completed else { throw writer.error ?? CocoaError(.fileWriteUnknown) }
 }

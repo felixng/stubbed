@@ -151,3 +151,7 @@ For the silent upright SDR portrait fixture, the Swift 6 `--controlled` path str
 ```sh
 swift -swift-version 6 scripts/media-video-prototype.swift /path/to/output --source /path/to/portrait-vfr.mp4 --controlled
 ```
+
+### Native audio and rotation
+
+The controlled path now renders source rotation into the output pixels, encodes AAC at 48 kHz, and drains each writer input independently so audio and video can each make progress under backpressure. On macOS, a synthetic H.264/AAC input with a 90° track transform produced upright 720 × 1280 H.264 with AAC-LC stereo and no output rotation metadata. FFmpeg decoded both tracks without errors. The 29.9-second request produced 29.908 seconds and 482,247 bytes in 2.50 seconds. The 29.95-second request produced 29.9667 seconds. The 30-second request was rejected by the strict validator because the audio extended the output past the cap. The iOS producer needs a measured shorten-and-retry step when audio padding crosses the boundary. Physical-device performance and controlled HDR conversion remain to be verified.
