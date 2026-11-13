@@ -1,4 +1,5 @@
 import jpeg from "npm:jpeg-js@0.4.4";
+import { readAsset } from "./read-asset.ts";
 
 const cors = {
   "access-control-allow-origin": "*",
@@ -52,9 +53,7 @@ Deno.serve(async (request) => {
         const file = await fetch(`${url}/storage/v1/object/entry-media/${prefix}${role}.jpg`, {
           headers: adminHeaders, signal: AbortSignal.timeout(10000),
         });
-        if (!file.ok) throw new Error("Missing asset");
-        const bytes = new Uint8Array(await file.arrayBuffer());
-        if (bytes.length > 5242880) throw new Error("Oversized JPEG");
+        const bytes = await readAsset(file, 5242880);
         const decoded = jpeg.decode(bytes, {
           useTArray: true, tolerantDecoding: false, maxResolutionInMP: 2.56, maxMemoryUsageInMB: 48,
         });
