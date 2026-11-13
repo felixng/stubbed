@@ -361,3 +361,15 @@ The crawler runs **twice an hour**, at :17 and :47 UTC. **Supabase starts it** (
 
 **Areas (#516).** A source can have several current scans, which the admin calls areas: Playbill has Broadway, London, and a page for each single theatre. The hub and source page count **every current area together** (`crawl_source_summary`, one light read; `crawl_source_progress` takes `for_all_areas`, and the Pages view defaults to All areas), so a source is never shown as nearly done because its newest area is. The hub row says how far (pages read out of pages known, across all areas and steps, never 100% until done), whether it is moving (pages read in the last 3 hours, divided by 3, or Stalled when work is due but nothing was read, or Keeping up to date when nothing is waiting) and when it finishes (waiting pages divided by that rate; it grows as new pages are found). Names for areas come from `areaName()` in `apps/web/src/lib/crawl-summary.ts`; a test checks that the hub total, the source rows and every source's areas add up.
 
+## Adding a source (#540)
+
+The adapter file is the registry of a source's static facts; the database holds only switches and state. To add a source:
+
+1. Write `supabase/scripts/crawl/sources/<name>.mjs`, exporting an adapter with `key` (`^[a-z][a-z0-9_]{0,63}$`), `displayName`, `kind: 'aggregate'`, `hosts` (lower case), `minIntervalMs` (at least 1000), `authority` (1 to 3: official 3, aggregators 2, anything weaker 1), `scheduled: true`, `fixtures` (a folder name), `fixtureUrls` (one URL per stage for the contract test), `version` (`<name>-v1`), `seeds` and `parsers` (`directory`, `venue`, `event`). Optional `runPages` sets its default per-run page allowance. Emit already-clean `raw_title`s and put the source's own spelling in the observation's `aliases`; do not add source-specific branches to SQL.
+2. Add saved pages as `fixtures/<folder>/directory.html`, `venue.html` and `event.html`.
+3. Add one import and one entry to `sources/index.mjs`.
+4. Run `node --test supabase/scripts/crawl/adapter-contract.test.mjs`, then a dry run: `node supabase/scripts/crawl/loop.mjs --source <key> --dry-run`.
+5. Open the pull request. No migration is needed.
+
+At the start of every run the worker copies the adapter's name, kind, hosts, pacing, authority and version into `crawl_sources` (`sync_crawl_source`). It never writes a switch, so **a new source arrives with Crawling and Publication off**; the owner turns it on in Backstage. A parser version bump is only a change to the adapter's `version`: do not write `update crawl_sources set adapter_version` migrations any more. The web app reads source names and kinds from `admin_crawl_sources()`; no source key is written into `apps/web/src` (a test checks).
+

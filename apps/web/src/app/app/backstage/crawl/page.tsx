@@ -7,15 +7,14 @@ import { CrawlSwitch } from "@/components/app/admin/CrawlSwitch";
 import { NeedsAttention } from "@/components/app/admin/CrawlOverviewParts";
 import { CrawlShell, Section } from "@/components/app/admin/CrawlShell";
 import {
-  CRAWL_HUB_PATH, OFFICIAL_SITES_PATH, attentionItems, crawlSourceName, crawlingState, hubHeadline, pagesHref, sourcePath, type AttentionItem,
+  CRAWL_HUB_PATH, OFFICIAL_SITES_PATH, attentionItems, crawlSourceName, crawlingState, hubHeadline, pagesHref, sourceNamesOf, sourcePath, type AttentionItem,
 } from "@/lib/admin-crawl";
-import { getDispatch, getFlags, getOverview, getSchedule, getSummary } from "@/lib/crawl-hub-data";
+import { getDispatch, getFlags, getOverview, getSchedule, getSources, getSummary } from "@/lib/crawl-hub-data";
 import { clock, dispatchFailing, durationText, nextRunAfter, scheduleAlert, todaysLimits } from "@/lib/crawl-schedule";
 import { sourceLine, type SourceSummary } from "@/lib/crawl-summary";
 
 export const metadata: Metadata = { title: "Catalogue crawler" };
 
-const SOURCES = ["playbill", "london_theatre"] as const;
 const number = new Intl.NumberFormat("en-GB");
 const n = (value: number) => number.format(value);
 const RUNS_PATH = `${CRAWL_HUB_PATH}/runs`;
@@ -33,29 +32,30 @@ const stateOf = (source: SourceSummary) => crawlingState(source);
 
 // The hub answers three questions and nothing else: where are we, is anything stuck, what needs me.
 async function Headline() {
-  const [summary, overview] = await Promise.all([getSummary(), getOverview()]);
-  if (!summary || !overview) return null;
-  const sources = SOURCES.filter(key => summary[key]);
-  const stuck = sources.reduce((sum, key) => sum + summary[key].totals.stuck, 0);
-  const retrying = sources.reduce((sum, key) => sum + summary[key].totals.retrying, 0);
+  const [summary, overview, list] = await Promise.all([getSummary(), getOverview(), getSources()]);
+  if (!summary || !overview || !list) return null;
+  const sources = list.filter(source => source.kind !== "official" && summary[source.source_key]);
+  const stuck = sources.reduce((sum, source) => sum + summary[source.source_key].totals.stuck, 0);
+  const retrying = sources.reduce((sum, source) => sum + summary[source.source_key].totals.retrying, 0);
   return (
     <p className="font-display text-title-2">
-      {hubHeadline(sources.map(key => ({ key, state: stateOf(summary[key]), publishing: summary[key].publication_enabled })), stuck, retrying, overview.run_dates.from_sources)}
+      {hubHeadline(sources.map(source => ({ key: source.source_key, name: source.display_name, state: stateOf(summary[source.source_key]), publishing: summary[source.source_key].publication_enabled })), stuck, retrying, overview.run_dates.from_sources)}
     </p>
   );
 }
 
 // One row per source, two lines: how far, then is it moving and when it finishes.
 async function SourcesBlock() {
-  const [summary, overview, schedule] = await Promise.all([getSummary(), getOverview(), getSchedule()]);
-  if (!summary) return <Busy what="the sources" />;
+  const [summary, overview, schedule, list] = await Promise.all([getSummary(), getOverview(), getSchedule(), getSources()]);
+  if (!summary || !list) return <Busy what="the sources" />;
+  const names = sourceNamesOf(list);
   const now = schedule ? new Date(schedule.server_time) : new Date();
   const official = overview?.official;
   const model = schedule ? todaysLimits(schedule, []).model : null;
   return (
     <section aria-label="Sources" className="flex flex-col divide-y divide-separator rounded-md border border-separator bg-surface">
-      {SOURCES.filter(key => summary[key]).map(key => {
-        const line = sourceLine(key, summary[key], stateOf(summary[key]), now);
+      {list.filter(source => source.kind !== "official" && summary[source.source_key]).map(({ source_key: key, display_name }) => {
+        const line = sourceLine(display_name, summary[key], stateOf(summary[key]), now);
         return (
           <div key={key} className="relative flex flex-col gap-1 p-4">
             <div className="flex items-center gap-3">
@@ -77,7 +77,7 @@ async function SourcesBlock() {
       {official && (
         <div className="relative flex flex-col gap-1 p-4">
           <div className="flex items-center gap-3">
-            <Link href={sourcePath("official")} className="min-w-0 flex-1 text-headline text-label after:absolute after:inset-0">{crawlSourceName("official")}</Link>
+            <Link href={sourcePath("official")} className="min-w-0 flex-1 text-headline text-label after:absolute after:inset-0">{crawlSourceName("official", names)}</Link>
             <span className="text-subheadline tabular-nums text-label-secondary">{n(official.sites)} sites</span>
           </div>
           <p className="text-subheadline">
@@ -94,8 +94,8 @@ async function SourcesBlock() {
 
 // Only rendered when something needs the owner.
 async function AttentionBlock() {
-  const [summary, overview, schedule, dispatch] = await Promise.all([getSummary(), getOverview(), getSchedule(), getDispatch()]);
-  if (!summary || !overview) return null;
+  const [summary, overview, schedule, dispatch, list] = await Promise.all([getSummary(), getOverview(), getSchedule(), getDispatch(), getSources()]);
+  if (!summary || !overview || !list) return null;
   const extra: AttentionItem[] = [];
   const failing = dispatch ? dispatchFailing(dispatch) : null;
   if (failing) extra.push({ source: "Supabase trigger", text: "The last 2 starts failed", reason: failing.detail, next: "Replace the GitHub token. GitHub’s own schedule is the only trigger until then, and it is often late.", href: RUNS_PATH });
@@ -103,7 +103,7 @@ async function AttentionBlock() {
   const alert = schedule ? scheduleAlert(schedule) : null;
   if (alert) extra.push({ source: "Crawl runs", text: alert, href: RUNS_PATH });
   const sources = [...Object.entries(summary).map(([key, value]) => ({ source_key: key, paused_reason: value.paused_reason })), { source_key: "official", paused_reason: null }];
-  return <NeedsAttention hideWhenEmpty items={[...extra, ...attentionItems(overview, sources)]} />;
+  return <NeedsAttention hideWhenEmpty items={[...extra, ...attentionItems(overview, sources, sourceNamesOf(list))]} />;
 }
 
 async function Suggestions() {
@@ -114,7 +114,7 @@ async function Suggestions() {
     <Section id="suggestions" title="Suggestions to members" hint="For everyone, on web and iOS.">
       <div className="flex flex-col divide-y divide-separator">
         <CrawlSwitch kind={{ type: "run_chips" }} label="Run chips" checked={chips}
-          description={`“On at this venue” suggestions from published run dates. Uses ${n(overview.run_dates.total)} published run dates (${n(overview.run_dates.from_sources)} from London Theatre and Playbill).`}
+          description={`“On at this venue” suggestions from published run dates. Uses ${n(overview.run_dates.total)} published run dates (${n(overview.run_dates.from_sources)} from crawl sources).`}
           note={chips && overview.run_dates.total === 0 ? "On, but has nothing to suggest yet." : undefined} />
       </div>
       <p className="text-subheadline"><span className="font-semibold">Autofill:</span> locked until it scores 99% on 100 labelled cases.</p>

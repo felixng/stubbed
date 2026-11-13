@@ -8,9 +8,7 @@ import { requestPublicPage } from './frontier-network.mjs';
 import { createGeocodeCache, createGeocoder, geocodeVenueObservations, backfillVenueGeocodes } from './geocode.mjs';
 import { createFrontierStore } from './frontier-store.mjs';
 import { canonicalTaskUrl } from './frontier-url.mjs';
-import { structuredReader } from './sources/theatre-site.mjs';
-import { londonTheatre } from './sources/london-theatre.mjs';
-import { playbill } from './sources/playbill.mjs';
+import { adapters, adapterScopes, scheduledSources } from './sources/index.mjs';
 import { RETRY_DELAYS_SECONDS } from './schedule.mjs';
 
 const STAGES = ['directory', 'venue', 'event'];
@@ -251,24 +249,7 @@ export async function runFrontier({
   return { ...result, checkpoint: stopSignal.aborted || result.pages === maxPages };
 }
 
-const official = {
-  version: 'official-structured-v1',
-  parsers: {
-    venue({ url, html }) {
-      const observations = structuredReader({ url, html }, { venues: [] });
-      if (!observations) return { status: 'invalid', reason: 'No recognised structured events' };
-      return { children: [], observations: observations.map(finding => ({ ...finding, observation_kind: 'official_finding' })) };
-    },
-  },
-};
-
-const adapters = { official, london_theatre: londonTheatre, playbill };
-
-// The seed scopes a scheduled run may be limited to, per aggregate source (for example playbill: london-listing).
-export function adapterScopes(key) {
-  return key === 'official' || !Object.hasOwn(adapters, key) ? [] : adapters[key].seeds.map(seed => seed.scope);
-}
-export const scheduledSources = ['london_theatre', 'playbill'];
+export { adapterScopes, scheduledSources };
 
 const defaultGeocoder = () => createGeocoder({ cache: createGeocodeCache() });
 
@@ -330,6 +311,7 @@ export async function runFrontierCli(args = process.argv.slice(2), store = creat
     return;
   }
   if (!Object.hasOwn(adapters, key)) throw new Error('No installed frontier adapter for that source');
+  if (!values['dry-run']) await store.syncSources?.(Object.values(adapters));
   if (values['backfill-geocodes']) {
     console.log(JSON.stringify(await backfillVenueGeocodes(defaultGeocoder())));
     return;

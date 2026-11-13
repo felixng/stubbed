@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { adapters } from './sources/index.mjs';
 import { adapterScopes, formatFrontierProgress, HostDeferred, hostGate, runFrontierCli, safeError, runScheduledSource, scheduledSources } from './frontier.mjs';
 import { createFrontierStore } from './frontier-store.mjs';
 import { canonicalTaskUrl } from './frontier-url.mjs';
@@ -241,6 +242,8 @@ export async function runScheduled({
 }={}){
  const limits=loopLimits(env);
  if(!limits.enabled){console.log('Crawl loop disabled. Set CRAWL_LOOP_ENABLED=true to start.');return [];}
+ // The adapter files are the source of truth for static facts; a run with unknown source facts must not proceed.
+ await frontier.syncSources?.(Object.values(adapters));
  if(!['all','directory','venue','event'].includes(stage))throw new Error('Unknown crawl stage');
  if(source && ![...scheduledSources,'official'].includes(source))throw new Error('Unknown crawl source');
  if(source==='official'&&stage!=='all')throw new Error('The official-site loop uses the complete site workflow');
@@ -259,7 +262,7 @@ export async function runScheduled({
  const dailyLeft=key=>Math.max(0,daily.sourceDailyPages-(used.pages[key]??0));
  const model=modelBudget({runBudgetUsd:limits.budgetUsd,dailySpendUsd:daily.dailySpendUsd,spentLast24hUsd:used.spendUsd});
  // Each source has its own allowance for this run, trimmed to what is left of its daily cap.
- const allowances=new Map(active.map(row=>[row.source_key,sourceAllowance({runPages:runPagesFor(row.source_key,env),dailyRemaining:dailyLeft(row.source_key)})]));
+ const allowances=new Map(active.map(row=>[row.source_key,sourceAllowance({runPages:runPagesFor(row.source_key,env,adapters[row.source_key]),dailyRemaining:dailyLeft(row.source_key)})]));
  const atCap=active.filter(row=>allowances.get(row.source_key).pages===0);
  const eligible=active.filter(row=>!atCap.includes(row));
  const trigger=workerRunStore.triggerFor(env);
@@ -274,7 +277,7 @@ export async function runScheduled({
 
  const workerRunId=workerRuns?await workerRuns.startWorkerRun({
   trigger,via:workerRunStore.startedVia(env),filters:{source,stage,scope},
-  limits:{source_run_pages:runPagesFor('london_theatre',env),official_run_pages:runPagesFor('official',env),
+  limits:{source_run_pages:runPagesFor('',env),official_run_pages:runPagesFor('official',env),
    allowances:Object.fromEntries([...allowances].map(([key,value])=>[key,value.pages])),
    run_minutes:Math.round(limits.maxMs/60000),run_spend_usd:limits.budgetUsd,daily_spend_usd:daily.dailySpendUsd,source_daily_pages:daily.sourceDailyPages},
  },env).catch(()=>null):null;

@@ -4,12 +4,12 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 import { CrawlPageRow } from "@/components/app/admin/CrawlPageRow";
-import { getSummary } from "@/lib/crawl-hub-data";
+import { getSources, getSummary } from "@/lib/crawl-hub-data";
 import { areaName } from "@/lib/crawl-summary";
 import { CrawlShell } from "@/components/app/admin/CrawlShell";
 import {
   CRAWL_BUCKETS, CRAWL_BUCKET_LABELS, CRAWL_PAGE_SIZE, CRAWL_STAGES, CRAWL_STEPS, crawlBuckets, crawlPagesFilters,
-  crawlSourceName, isCrawlSource, pagesHref, sourceKeyFromPath, sourcePath,
+  crawlSourceName, isCrawlSource, pagesHref, sourceKeyFromPath, sourceNamesOf, sourcePath,
   type CrawlSourceProgress, type CrawlStage, type CrawlTaskResult,
 } from "@/lib/admin-crawl";
 import { BackLink } from "@/components/ui/BackLink";
@@ -22,7 +22,8 @@ const chip = "inline-flex min-h-11 items-center gap-1.5 rounded-pill bg-fill px-
 
 async function Pages({ params, searchParams }: Pick<PageProps<"/app/backstage/crawl/sources/[key]/pages">, "params" | "searchParams">) {
   const source = sourceKeyFromPath((await params).key);
-  if (!isCrawlSource(source) || source === "official") notFound();
+  const names = sourceNamesOf((await getSources()) ?? []);
+  if (!isCrawlSource(source, names) || source === "official") notFound();
   const filters = crawlPagesFilters(source, await searchParams);
   const { supabase } = await ownerContext();
   const { data: payload, error } = await supabase.rpc("crawl_source_progress", {
@@ -102,6 +103,7 @@ export default function CrawlPagesPage(props: PageProps<"/app/backstage/crawl/so
 // The back link goes to the source this list belongs to, so it needs the route's key.
 async function PagesBack({ params }: { params: PageProps<"/app/backstage/crawl/sources/[key]/pages">["params"] }) {
   const source = sourceKeyFromPath((await params).key);
-  if (!isCrawlSource(source) || source === "official") return null;
-  return <BackLink href={sourcePath(source)}>{crawlSourceName(source)}</BackLink>;
+  const names = sourceNamesOf((await getSources()) ?? []);
+  if (!isCrawlSource(source, names) || source === "official") return null;
+  return <BackLink href={sourcePath(source)}>{crawlSourceName(source, names)}</BackLink>;
 }

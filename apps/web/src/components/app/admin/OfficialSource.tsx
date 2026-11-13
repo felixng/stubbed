@@ -4,7 +4,8 @@ import { CrawlProgress } from "@/components/app/admin/CrawlProgress";
 import { NeedsAttention } from "@/components/app/admin/CrawlOverviewParts";
 import { Section } from "@/components/app/admin/CrawlShell";
 import { RefreshCrawl, StartCrawl } from "@/components/app/admin/StartCrawl";
-import { OFFICIAL_SITES_PATH, attentionItems, runPath, settingsLine, shortDateTime, type CrawlOverview, type RunSettings } from "@/lib/admin-crawl";
+import { OFFICIAL_SITES_PATH, attentionItems, runPath, settingsLine, shortDateTime, sourceNamesOf, type CrawlOverview, type RunSettings } from "@/lib/admin-crawl";
+import { getSources } from "@/lib/crawl-hub-data";
 import { ownerContext } from "@/lib/supabase/data";
 
 type Run = RunSettings & { status: string; kind: string; created_at: string; summary: { findings?: number } | null; log_url: string | null };
@@ -13,12 +14,13 @@ type Run = RunSettings & { status: string; kind: string; created_at: string; sum
 // Its runs, sites and review all live under this source.
 export async function OfficialSource() {
   const { supabase } = await ownerContext();
-  const [runsRes, overviewRes, theatres] = await Promise.all([
+  const [runsRes, overviewRes, theatres, sourceList] = await Promise.all([
     supabase.from("crawl_runs")
       .select("id, pipeline, kind, status, method, model, prompt, branch, commit_sha, budget_usd, cost_usd, venue_ids, summary, created_at, log_url")
       .order("created_at", { ascending: false }).limit(50),
     supabase.rpc("admin_crawl_overview", { for_source: "official" }),
     supabase.rpc("admin_list_crawl_venues", { page_size: 50, page_offset: 0 }),
+    getSources(),
   ]);
   if (runsRes.error || overviewRes.error || !overviewRes.data) return <p className="text-subheadline text-label-secondary">Couldn’t load the official-sites crawler.</p>;
   const overview = overviewRes.data as unknown as CrawlOverview;
@@ -36,7 +38,7 @@ export async function OfficialSource() {
         {o.sites_needing_attention > 0 ? `${o.sites_needing_attention} of ${o.sites} sites need attention.` : "Nothing needs you."}
       </p>
 
-      <NeedsAttention items={attentionItems(overview, [{ source_key: "official", paused_reason: null }])} />
+      <NeedsAttention items={attentionItems(overview, [{ source_key: "official", paused_reason: null }], sourceNamesOf(sourceList ?? []))} />
 
       <CrawlProgress />
 

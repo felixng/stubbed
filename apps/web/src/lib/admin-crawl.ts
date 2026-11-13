@@ -147,20 +147,19 @@ export type CrawlSourceProgress = {
   evidence: { published_runs: number; conflicting_runs: number; stale_runs: number; unsupported_closing: number };
 };
 
-const sourceNames: Record<string, string> = {
-  london_theatre: "London Theatre",
-  playbill: "Playbill",
-  official: "Official theatre sites",
-};
-export const CRAWL_SOURCE_KEYS = ["london_theatre", "playbill", "official"] as const;
+// One row of admin_crawl_sources(): the registered sources, aggregate sources first. Names come from the database.
+export type CrawlSourceInfo = { source_key: string; display_name: string; kind: "aggregate" | "official"; collection_enabled: boolean; publication_enabled: boolean };
+export type SourceNames = Readonly<Record<string, string>>;
+export const sourceNamesOf = (sources: readonly Pick<CrawlSourceInfo, "source_key" | "display_name">[]): SourceNames =>
+  Object.fromEntries(sources.map(source => [source.source_key, source.display_name]));
 export const CRAWL_HUB_PATH = "/app/backstage/crawl";
 export const CRAWL_GUIDE_PATH = `${CRAWL_HUB_PATH}/guide`;
 export const OFFICIAL_SITES_PATH = `${CRAWL_HUB_PATH}/sources/official/sites`;
 
-export function crawlSourceName(key: string) {
-  return sourceNames[key] ?? key;
+export function crawlSourceName(key: string, names: SourceNames) {
+  return names[key] ?? key;
 }
-export const isCrawlSource = (key: string) => (CRAWL_SOURCE_KEYS as readonly string[]).includes(key);
+export const isCrawlSource = (key: string, names: SourceNames) => Object.hasOwn(names, key);
 // Source keys use underscores in the database and hyphens in addresses.
 export const sourcePath = (key: string) => `${CRAWL_HUB_PATH}/sources/${key.replaceAll("_", "-")}`;
 export const sourceKeyFromPath = (segment: string) => segment.replaceAll("-", "_");
@@ -219,8 +218,8 @@ export function pagesHref(filters: CrawlPagesFilters, change: Partial<CrawlPages
 }
 
 // Where an old bookmark should land. Old pages used underscores in the source and "stage" for the step.
-export function legacySourcesRedirect(input: Record<string, string | string[] | undefined>): string {
-  const source = typeof input.source === "string" && isCrawlSource(input.source) ? input.source : null;
+export function legacySourcesRedirect(input: Record<string, string | string[] | undefined>, names: SourceNames): string {
+  const source = typeof input.source === "string" && isCrawlSource(input.source, names) ? input.source : null;
   if (!source) return CRAWL_HUB_PATH;
   const wantsPages = ["stage", "step", "status", "page", "scan", "pass", "area"].some(key => typeof input[key] === "string");
   if (!wantsPages) return sourcePath(source);
@@ -270,12 +269,12 @@ const attentionNext = {
 } as const;
 // One short list of what needs an admin, each with a place to go.
 export function attentionItems(
-  overview: CrawlOverview, sources: Pick<CrawlSource, "source_key" | "paused_reason">[],
+  overview: CrawlOverview, sources: Pick<CrawlSource, "source_key" | "paused_reason">[], names: SourceNames,
 ): AttentionItem[] {
   const items: AttentionItem[] = [];
   for (const source of sources) {
     if (source.source_key === "official") continue;
-    const name = crawlSourceName(source.source_key);
+    const name = crawlSourceName(source.source_key, names);
     if (source.paused_reason) items.push({ source: name, text: "Blocked by the site", reason: source.paused_reason, next: attentionNext.blocked, href: sourcePath(source.source_key) });
     for (const item of overview.sources[source.source_key]?.attention ?? []) {
       if (item.kind === "publication_parked") {
@@ -294,19 +293,19 @@ export function attentionItems(
   }
   const official = overview.official;
   if (official.sites_needing_attention > 0) {
-    items.push({ source: crawlSourceName("official"), text: `${n(official.sites_needing_attention)} ${official.sites_needing_attention === 1 ? "site needs" : "sites need"} attention`, href: `${OFFICIAL_SITES_PATH}?attention=1` });
+    items.push({ source: crawlSourceName("official", names), text: `${n(official.sites_needing_attention)} ${official.sites_needing_attention === 1 ? "site needs" : "sites need"} attention`, href: `${OFFICIAL_SITES_PATH}?attention=1` });
   }
   if (official.findings_to_review > 0) {
-    items.push({ source: crawlSourceName("official"), text: `${n(official.findings_to_review)} ${official.findings_to_review === 1 ? "finding" : "findings"} to review`, href: sourcePath("official") });
+    items.push({ source: crawlSourceName("official", names), text: `${n(official.findings_to_review)} ${official.findings_to_review === 1 ? "finding" : "findings"} to review`, href: sourcePath("official") });
   }
   return items;
 }
 
-type HeadlineSource = { key: string; state: CrawlingState; publishing: boolean };
+type HeadlineSource = { key: string; name: string; state: CrawlingState; publishing: boolean };
 // The one-sentence answer to "where are we?".
 export function hubHeadline(sources: HeadlineSource[], stuck: number, retrying: number, runDatesFromSources: number): string {
   const parts = sources.filter(s => s.key !== "official").map(s => {
-    const name = crawlSourceName(s.key);
+    const name = s.name;
     if (s.state.key === "on") return `${name} is crawling${s.publishing ? " and publishing" : " but not publishing"}.`;
     return `${name} is ${lower(s.state.label)}.`;
   });
@@ -336,10 +335,10 @@ const actionVerbs: Record<string, string> = {
   pause: "paused crawling", resume: "resumed crawling", publish_on: "turned publication on", publish_off: "turned publication off",
   retry_failed: "retried failed pages", retry_publication: "retried publication", retry_blocked: "retried blocked pages", reparse: "read a page again", rediscover: "started a fresh pass",
 };
-export function recentActionText(action: CrawlOverview["recent_actions"][number]) {
+export function recentActionText(action: CrawlOverview["recent_actions"][number], names: SourceNames) {
   const verb = actionVerbs[action.operation] ?? action.operation.replaceAll("_", " ");
   const touched = action.operation.startsWith("retry") || action.operation === "reparse" ? ` (${n(action.affected)} ${action.affected === 1 ? "page" : "pages"})` : "";
-  return `${action.who} ${verb} for ${crawlSourceName(action.source)}${touched}`;
+  return `${action.who} ${verb} for ${crawlSourceName(action.source, names)}${touched}`;
 }
 
 // What a crawled page produced (admin_crawl_task_results). Absent for pages not read yet.

@@ -1,6 +1,6 @@
 // One line per source: how far, is it moving, when will it finish. Built from crawl_source_summary,
 // which counts every current area of a source. The hub, the source page and the guide all read this.
-import { crawlSourceName, type CrawlingState } from "@/lib/admin-crawl";
+import { type CrawlingState } from "@/lib/admin-crawl";
 
 export type StageCounts = { known: number; read: number; waiting?: number; stuck?: number; retrying?: number };
 export type AreaSummary = {
@@ -58,12 +58,12 @@ export type SourceLine = {
 };
 
 // Everything the hub row says about one source.
-export function sourceLine(key: string, summary: SourceSummary, crawling: CrawlingState, now: Date = new Date()): SourceLine {
+export function sourceLine(name: string, summary: SourceSummary, crawling: CrawlingState, now: Date = new Date()): SourceLine {
   const { totals } = summary;
   // Rounded, but never 100% until every known page is read.
   const percent = totals.known > 0 ? (totals.read >= totals.known ? 100 : Math.min(99, Math.round((totals.read / totals.known) * 100))) : null;
   const rate = readingRate(totals.read_3h);
-  const base = { name: crawlSourceName(key), percent, read: totals.read, known: totals.known, stuck: totals.stuck, needs: totals.stuck };
+  const base = { name, percent, read: totals.read, known: totals.known, stuck: totals.stuck, needs: totals.stuck };
   if (crawling.key !== "on") {
     return { ...base, state: "not_running", movement: `${crawling.label}${totals.waiting > 0 ? ` · ${n(totals.waiting)} pages waiting` : ""}`, finish: null };
   }
