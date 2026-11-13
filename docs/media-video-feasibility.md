@@ -107,4 +107,22 @@ The disposable Supabase Edge Runtime 1.77.4 (Deno 2.1.4) ran the shared parser a
 
 The padded clips exercise request and byte limits. They retain the original low-complexity sample payloads. The [hosted Edge limits](https://supabase.com/docs/guides/functions/limits) are 256 MB memory and 2 s CPU per request.
 
-The parser reads indexed packet payloads and rejects empty tracks, empty payloads, more than 12,000 packets, and payload totals larger than the file. These runs measure request wall time and exercise one form of truncation. CPU and peak memory at the maximum input size, payload corruption with intact indexes, and forged sample timestamps still need evidence.
+The parser reads indexed packet payloads and rejects empty tracks, empty payloads, more than 12,000 packets, and payload totals larger than the file. These runs measure request wall time and exercise one form of truncation. See the near-limit measurements below. Elementary-stream corruption and forged sample timestamps still need evidence.
+
+### Near-limit payload and exact duration
+
+FFmpeg 7.1.1 generated a 29.9-second noisy test pattern at 1280 × 720 and 60 fps with AAC audio. It contained 15,221,408 bytes. The updated Edge probe accepted it in 356 ms and accepted a synthetic 720 × 1280 clip at exactly 30.000 seconds. It rejected the over-limit native fixture when it encountered the first packet extending beyond 30 seconds.
+
+Removing the last 4096 bytes of the near-limit fixture left the fast-start sample index intact. The original parser accepted this file because the packet reader returned the indexed sample size even at EOF. The probe now checks that all top-level MP4 boxes fit within the actual file and rejects the truncated fixture with HTTP 422. It also checks each packet endpoint at the track's time resolution and enforces both coded and display dimensions. This validates MP4 structure and indexed sample bounds, with elementary-stream decode and corruption still to verify.
+
+For the three-request sequence (near-limit, truncated, exact duration), the disposable container used 0.518 s aggregate cgroup CPU and reached 183,246,848 bytes of cgroup memory, including runtime and request overhead. This is a local measurement across the three requests. Hosted worker CPU, per-isolate memory, and concurrent upload capacity remain unverified.
+
+Reproduce the high-bitrate fixture with FFmpeg using the following command.
+
+```sh
+ffmpeg -f lavfi -i 'testsrc2=size=1280x720:rate=60,noise=alls=25:allf=t+u' \
+  -f lavfi -i 'sine=frequency=440:sample_rate=48000' -t 29.9 \
+  -c:v libx264 -threads 4 -pix_fmt yuv420p -preset veryfast \
+  -b:v 3890k -minrate 3890k -maxrate 3890k -bufsize 7780k -x264-params nal-hrd=cbr \
+  -c:a aac -b:a 96k -movflags +faststart 720p60-high.mp4
+```
