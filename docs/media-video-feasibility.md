@@ -90,7 +90,7 @@ The probe lazy-loads `@mediabunny/aac-encoder` 1.65.2 when WebCodecs cannot enco
 | 30.1 s | 30.112 s | 573159 | 2666 ms |
 | 29.934 s (retry) | 29.952 s | 570225 | 2766 ms |
 
-This run re-encoded the synthetic AAC source. It exercised AAC encoding, but source decode from Opus and PCM still needs coverage. See the [Mediabunny AAC extension guide](https://mediabunny.dev/guide/extensions/aac-encoder).
+A separate Firefox 146 run decoded an Opus track in the same H.264 MP4 fixture and encoded AAC through the WebAssembly extension. The 30-second request produced 30.016 seconds. A 29.934-second retry produced a playable 29.952-second sample timeline (572,308 bytes, 2,798 ms). PCM source decode still needs direct coverage. See the [Mediabunny AAC extension guide](https://mediabunny.dev/guide/extensions/aac-encoder).
 
 ## Local Supabase Edge Runtime
 
