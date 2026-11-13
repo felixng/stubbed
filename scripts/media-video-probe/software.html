@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Software trim probe</title>
+<label>Source video <input type="file" accept="video/*"></label>
+<label><input id="hdr" type="checkbox"> Convert BT.2020 PQ to BT.709</label>
+<button id="run">Export 29.9 seconds</button>
+<button id="cancel" disabled>Cancel</button>
+<pre id="result" aria-live="polite"></pre>
+<video controls muted playsinline></video>
+<a download="software-trim.mp4" hidden>Download trim</a>
+<script type="importmap">
+{"imports":{"mediabunny":"./node_modules/mediabunny/dist/bundles/mediabunny.mjs"}}
+</script>
+<script type="module">
+import { FFmpeg } from "./node_modules/@ffmpeg/ffmpeg/dist/esm/index.js";
+
+import { inspectVideo } from "./inspect-video.mjs";
+
+const source = document.querySelector('input[type="file"]');
+const run = document.querySelector("#run");
+const cancel = document.querySelector("#cancel");
+const result = document.querySelector("#result");
+const video = document.querySelector("video");
+const download = document.querySelector("a");
+let previewURL;
+
+run.onclick = async () => {
+  const file = source.files[0];
+  if (!file) return;
+  if (previewURL) URL.revokeObjectURL(previewURL);
+  video.removeAttribute("src");
+  video.load();
+  download.hidden = true;
+  run.disabled = true;
+  cancel.disabled = false;
+  const ffmpeg = new FFmpeg();
+  cancel.onclick = () => ffmpeg.terminate();
+  const start = performance.now();
+  try {
+    result.textContent = "Loading software encoder";
+    const core = new URL("./node_modules/@ffmpeg/core/dist/esm/ffmpeg-core.js", location.href);
+    await ffmpeg.load({ coreURL: core.href, wasmURL: core.href.replace(/\.js$/, ".wasm") });
+    const loadMs = Math.round(performance.now() - start);
+    await ffmpeg.createDir("/input");
+    await ffmpeg.mount("WORKERFS", { blobs: [{ name: "source", data: file }] }, "/input");
+    const scale = "scale=w='if(gte(iw,ih),min(iw,1280),min(iw,720))':h='if(gte(iw,ih),min(ih,720),min(ih,1280))':force_original_aspect_ratio=decrease:force_divisible_by=2";
+    const hdr = "zscale=transfer=linear:npl=100,format=gbrpf32le,zscale=primaries=bt709,tonemap=tonemap=hable,zscale=transfer=bt709:matrix=bt709:range=limited";
+    const filter = document.querySelector("#hdr").checked ? hdr + "," + scale : scale;
+    result.textContent = "Encoding selected range";
+    const code = await ffmpeg.exec([
+      "-ss", "1", "-i", "/input/source", "-t", "29.9", "-map", "0:v:0", "-map", "0:a:0?",
+      "-vf", filter, "-c:v", "libx264", "-preset", "ultrafast", "-b:v", "3M",
+      "-maxrate", "3M", "-bufsize", "6M", "-pix_fmt", "yuv420p", "-c:a", "aac",
+      "-b:a", "96k", "-map_metadata", "-1", "-map_chapters", "-1", "-movflags", "+faststart", "/trim.mp4",
+    ], 180000);
+    if (code !== 0) throw new Error("FFmpeg exited with code " + code);
+    const bytes = await ffmpeg.readFile("/trim.mp4");
+    const facts = await inspectVideo(bytes);
+    previewURL = URL.createObjectURL(new Blob([bytes], { type: "video/mp4" }));
+    video.src = download.href = previewURL;
+    download.hidden = false;
+    result.textContent = JSON.stringify({ ...facts, loadMs, totalMs: Math.round(performance.now() - start) });
+  } catch (error) {
+    result.textContent = String(error);
+  } finally {
+    ffmpeg.terminate();
+    run.disabled = false;
+    cancel.disabled = true;
+  }
+};
+</script>
+</html>
