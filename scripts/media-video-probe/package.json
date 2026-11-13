@@ -1,0 +1,7 @@
+{
+  "name": "stubbed-media-video-probe",
+  "private": true,
+  "dependencies": {
+    "mediabunny": "1.65.2"
+  }
+}

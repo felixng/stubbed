@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Stubbed video export probe</title>
+<label>Source video <input id="source" type="file" accept="video/*"></label>
+<button id="run" type="button">Run trim tests</button>
+<pre id="results" aria-live="polite"></pre>
+<video controls muted playsinline id="playback"></video>
+<script type="module">
+import {
+  ALL_FORMATS, BlobSource, BufferTarget, Conversion, Input, Mp4OutputFormat, Output,
+} from "./node_modules/mediabunny/dist/bundles/mediabunny.mjs";
+
+const source = document.querySelector("#source");
+const run = document.querySelector("#run");
+const results = document.querySelector("#results");
+const playback = document.querySelector("#playback");
+let playbackUrl;
+
+run.addEventListener("click", async () => {
+  const file = source.files[0];
+  if (!file) return;
+  run.disabled = true;
+  results.textContent = navigator.userAgent + "\n";
+  for (const duration of [29.9, 30, 30.1]) {
+    const input = new Input({ source: new BlobSource(file), formats: ALL_FORMATS });
+    try {
+      const target = new BufferTarget();
+      const output = new Output({ format: new Mp4OutputFormat(), target });
+      const start = performance.now();
+      const conversion = await Conversion.init({
+        input, output, trim: { start: 1, end: 1 + duration }, tags: {},
+        video: { codec: "avc", bitrate: 3_000_000 },
+        audio: { codec: "aac", bitrate: 96_000 },
+      });
+      if (!conversion.isValid || conversion.discardedTracks.length) {
+        throw new Error(JSON.stringify(conversion.discardedTracks.map(({ reason }) => reason)));
+      }
+      await conversion.execute();
+      const elapsedMs = Math.round(performance.now() - start);
+      const clip = new Blob([target.buffer], { type: "video/mp4" });
+      const inspection = new Input({ source: new BlobSource(clip), formats: ALL_FORMATS });
+      try {
+        results.textContent += JSON.stringify({
+          requested: duration, duration: await inspection.computeDuration(), bytes: clip.size, elapsedMs,
+        }) + "\n";
+      } finally {
+        inspection.dispose();
+      }
+      if (duration === 30) {
+        if (playbackUrl) URL.revokeObjectURL(playbackUrl);
+        playback.src = playbackUrl = URL.createObjectURL(clip);
+      }
+    } catch (error) {
+      results.textContent += `${duration}: ${error.message}\n`;
+    } finally {
+      input.dispose();
+    }
+  }
+  run.disabled = false;
+});
+</script>
+</html>
