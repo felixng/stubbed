@@ -58,6 +58,9 @@ func exportControlledVideo(_ asset: AVURLAsset, to output: URL, range: CMTimeRan
     readerOutput = AVAssetReaderTrackOutput(track: track, outputSettings: pixelSettings)
   } else {
     let composition = AVMutableVideoComposition()
+    composition.colorPrimaries = AVVideoColorPrimaries_ITU_R_709_2
+    composition.colorTransferFunction = AVVideoTransferFunction_ITU_R_709_2
+    composition.colorYCbCrMatrix = AVVideoYCbCrMatrix_ITU_R_709_2
     composition.renderSize = CGSize(width: width, height: height)
     composition.frameDuration = CMTime(value: 1, timescale: 30)
     let layer = AVMutableVideoCompositionLayerInstruction(assetTrack: track)
@@ -161,7 +164,7 @@ if let sourceIndex {
   try? FileManager.default.removeItem(at: original)
   try await fixture(original)
 }
-if sourceIndex == nil, arguments.count > 1, arguments[1] != "--controlled" {
+if sourceIndex == nil, arguments.count > 1, !arguments[1].hasPrefix("--") {
   let audio = AVURLAsset(url: URL(filePath: arguments[1]))
   let video = AVURLAsset(url: original)
   let composition = AVMutableComposition()
@@ -180,7 +183,17 @@ if sourceIndex == nil, arguments.count > 1, arguments[1] != "--controlled" {
   export.metadata = []
   try await export.export(to: output, as: .mp4)
 }
-for length in [29.95, 29.9, 30.0, 30.1] {
+let lengths: [Double]
+if let lengthIndex = arguments.firstIndex(of: "--length") {
+  guard arguments.indices.contains(lengthIndex + 1),
+        let length = Double(arguments[lengthIndex + 1]), length.isFinite, length > 0 else {
+    throw CocoaError(.fileReadUnknown)
+  }
+  lengths = [length]
+} else {
+  lengths = [29.95, 29.9, 30.0, 30.1]
+}
+for length in lengths {
   let input = AVURLAsset(url: original)
   let output = directory.appending(path: "trim-\(length).mp4")
   try? FileManager.default.removeItem(at: output)
