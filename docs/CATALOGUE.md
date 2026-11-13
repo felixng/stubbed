@@ -326,6 +326,8 @@ The crawler runs **twice an hour**, at :17 and :47 UTC. **Supabase starts it** (
 
 **Sources run at the same time**, each with its own allowance and the whole 20-minute window (the job is cut off at 30). They are different hosts, and per-host pacing (`crawl_hosts` leases, the 5 s gap, robots.txt, `Retry-After`, block pauses) is unchanged, so no single site sees more load. Stopping on time is a checkpoint for that source, not a failure. Standard runners are free on a public repo.
 
+**Publishing** (adding what was read to the catalogue) is separate from reading (#538). A `pg_cron` job (`catalogue-publication`, every minute) calls `run_crawl_publication()`, which makes up to 3 passes over the publication-enabled sources, 100 items per call, and stops starting calls after 20 seconds. The crawl run no longer publishes. Each tick that did something or failed is logged in `crawl_publication_ticks` (kept 3 days; admins can read it). To pause one source, turn off its Publication switch. To stop the job: `select cron.unschedule('catalogue-publication')`. The publishers take items in order of when they are next available, so an item waiting for its venue page goes to the back instead of blocking the queue.
+
 | Limit | Default | Repository variable |
 |---|---|---|
 | Pages per source per run | 150 (at most 400) | `CRAWL_SOURCE_RUN_PAGES` |

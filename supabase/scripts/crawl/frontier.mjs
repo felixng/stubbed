@@ -288,13 +288,6 @@ export async function runScheduledSource(source, options, store = createFrontier
   const adapter = adapters[key];
   const geocoder = options.geocoder === undefined ? defaultGeocoder() : options.geocoder;
   const result = await runFrontier({ ...options, source, adapter, seeds: adapter.seeds, store, geocoder });
-  if (source.publication_enabled && options.stage === 'all') {
-    // Publication errors must not hide the fetch results already saved; report the cause and fail the run visibly.
-    try { result.identities = await store.publishIdentities(key, 100); }
-    catch (error) { result.publishError = `identities: ${safeError(error, 140)}`; }
-    try { result.runs = await store.publishRuns(key, 100); }
-    catch (error) { result.publishError = `${result.publishError ? result.publishError + '; ' : ''}runs: ${safeError(error, 140)}`.slice(0, 300); }
-  }
   return result;
 }
 
