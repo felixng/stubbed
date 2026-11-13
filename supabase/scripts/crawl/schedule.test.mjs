@@ -43,6 +43,9 @@ test('each source has its own run allowance, with overrides and clamping',()=>{
  assert.equal(runPagesFor('playbill',{CRAWL_SOURCE_RUN_PAGES:'',CRAWL_SOURCE_RUN_PAGES_PLAYBILL:''}),150,'empty repository variables fall back');
  assert.equal(runPagesFor('playbill',{CRAWL_SOURCE_RUN_PAGES:'lots'}),150);
  assert.equal(runPagesFor('playbill',{CRAWL_SOURCE_RUN_PAGES:'0'}),0,'zero pauses a source');
+ assert.equal(runPagesFor('slow',{},{runPages:40}),40,"an adapter's own allowance replaces the default");
+ assert.equal(runPagesFor('slow',{CRAWL_SOURCE_RUN_PAGES:'90'},{runPages:40}),90,'a repository variable still wins');
+ assert.equal(runPagesFor('slow',{},{}),SOURCE_RUN_PAGES);
 });
 
 test('the daily cap trims a source allowance and says so',()=>{

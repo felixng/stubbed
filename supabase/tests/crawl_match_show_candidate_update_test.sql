@@ -32,10 +32,10 @@ returns jsonb language sql as $$
     'date_status', 'supported', 'dates', '[{"kind":"start","date":"2026-11-12"}]'::jsonb) || extra;
 $$;
 
-create function pg_temp.mapping(kind text, key text)
+create function pg_temp.mapping(entity text, ref text)
 returns public.crawl_source_entities language sql as $$
   select m.* from public.crawl_source_entities m join public.crawl_sources s on s.id = m.source_id
-  where s.source_key = 'london_theatre' and m.entity_kind = kind and m.external_key = key;
+  where s.source_key = 'london_theatre' and m.entity_kind = entity and m.external_key = ref;
 $$;
 
 insert into public.venues (id, name, city, country, catalogue_postcode, catalogue_auditorium, catalogue_granularity)

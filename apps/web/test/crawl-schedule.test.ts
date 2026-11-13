@@ -65,8 +65,8 @@ const schedule = (overrides: Partial<CrawlSchedule> = {}): CrawlSchedule => ({
 });
 
 test("run rows read in words", () => {
-  assert.equal(pagesText(run().per_source), "London Theatre 34 · Playbill 33");
-  assert.equal(pagesText({}), "No pages");
+  assert.equal(pagesText(run().per_source, { london_theatre: "London Theatre", playbill: "Playbill" }), "London Theatre 34 · Playbill 33");
+  assert.equal(pagesText({}, {}), "No pages");
   assert.equal(durationText("2026-11-12T12:17:00Z", "2026-11-12T12:26:05Z"), "9 min 05 s");
   assert.equal(durationText("2026-11-12T12:17:00Z", null), "Not finished");
   assert.equal(stopReasonText("daily_spend_cap"), "Daily model limit reached");

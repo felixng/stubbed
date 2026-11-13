@@ -311,6 +311,11 @@ export function parseEvent({ url, html }) {
 }
 
 export const playbill = {
+  key: 'playbill', displayName: 'Playbill', kind: 'aggregate',
+  hosts: ['playbill.com', 'www.playbill.com'], minIntervalMs: 5000, authority: 2,
+  scheduled: true, fixtures: 'playbill',
+  // One URL per stage that the fixture pages are parsed as in the adapter contract test.
+  fixtureUrls: { directory: ORIGIN + '/broadway-theatres', venue: ORIGIN + '/venue/fixture-east', event: ORIGIN + '/production/fixture-past' },
   version: 'playbill-v1',
   seeds: [
     { scope: 'broadway-directory', stage: 'directory', url: ORIGIN + '/broadway-theatres' },

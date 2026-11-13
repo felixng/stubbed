@@ -12,6 +12,14 @@ export function createFrontierStore(db = (sql, timeout = 15_000) => runPsql(sql,
   }
 
   return {
+    // Copies each adapter file's static facts into crawl_sources; never touches a switch or a pause.
+    async syncSources(list) {
+      const call = adapter => `perform public.sync_crawl_source(${sqlText(adapter.key)}, ${sqlText(adapter.displayName)},
+        ${sqlText(adapter.kind)}, (select coalesce(array_agg(h), '{}') from jsonb_array_elements_text(${jsonLiteral(adapter.hosts ?? [])}) h), ${Number(adapter.minIntervalMs)},
+        ${Number(adapter.authority)}, ${sqlText(adapter.version)});`;
+      await db(`do $sync$ begin ${list.map(call).join('\n')} end $sync$; select 'null'::jsonb`);
+    },
+
     async source(key) {
       const [source] = await db(`select to_jsonb(s) from public.crawl_sources s where s.source_key = ${sqlText(key)}`);
       return source;

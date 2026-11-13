@@ -262,6 +262,11 @@ export function parseEvent({ url, html }) {
 }
 
 export const londonTheatre = {
+  key: 'london_theatre', displayName: 'London Theatre', kind: 'aggregate',
+  hosts: ['www.londontheatre.co.uk', 'londontheatre.co.uk'], minIntervalMs: 5000, authority: 2,
+  scheduled: true, fixtures: 'london-theatre',
+  // One URL per stage that the fixture pages are parsed as in the adapter contract test.
+  fixtureUrls: { directory: ORIGIN + '/venues', venue: ORIGIN + '/venues/strand-theatre', event: ORIGIN + '/show/101-one-night' },
   version: 'london-theatre-v4',
   maxBytes: 6_000_000,
   seeds: [{ scope: 'venue-directory', stage: 'directory', url: ORIGIN + '/venues' }],

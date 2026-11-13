@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { RetryPublication } from "@/components/app/admin/RetryPublication";
 import { Section } from "@/components/app/admin/CrawlShell";
-import { recentActionText, shortDateTime, type AttentionItem, type CrawlOverview } from "@/lib/admin-crawl";
+import { recentActionText, shortDateTime, type AttentionItem, type CrawlOverview, type SourceNames } from "@/lib/admin-crawl";
 
 // "Nothing needs you." is a real answer, so the empty state says it.
 export function NeedsAttention({ items, children, hideWhenEmpty = false }: { items: AttentionItem[]; children?: React.ReactNode; hideWhenEmpty?: boolean }) {
@@ -30,14 +30,14 @@ export function NeedsAttention({ items, children, hideWhenEmpty = false }: { ite
   );
 }
 
-export function RecentChanges({ actions }: { actions: CrawlOverview["recent_actions"] }) {
+export function RecentChanges({ actions, names }: { actions: CrawlOverview["recent_actions"]; names: SourceNames }) {
   return (
     <Section id="recent-changes" title="Recent changes" hint="Who changed what, newest first. Answers “why is this paused?”">
       {actions.length === 0 ? <p className="text-subheadline text-label-secondary">No changes made from Backstage yet.</p> : (
         <ul className="flex flex-col divide-y divide-separator">
           {actions.map((action, index) => (
             <li key={index} className="flex flex-wrap justify-between gap-x-4 py-2 text-subheadline">
-              <span className="min-w-0">{recentActionText(action)}</span>
+              <span className="min-w-0">{recentActionText(action, names)}</span>
               <time dateTime={action.at} className="text-label-secondary">{shortDateTime(action.at)}</time>
             </li>
           ))}

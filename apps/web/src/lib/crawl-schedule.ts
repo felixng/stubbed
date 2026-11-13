@@ -1,7 +1,7 @@
 // What the crawler runs when, for the admin. The values below are copies of
 // supabase/scripts/crawl/schedule.mjs (which the crawler reads) and of the cron in
 // .github/workflows/catalogue-crawl.yml; test/crawl-schedule.test.ts fails if they drift.
-import { crawlSourceName } from "@/lib/admin-crawl";
+import { crawlSourceName, type SourceNames } from "@/lib/admin-crawl";
 
 export const CRON = "17,47 * * * *";
 export const CRON_MINUTES = [17, 47] as const;
@@ -92,8 +92,8 @@ export function durationText(startedAt: string, finishedAt: string | null): stri
 }
 
 // "London Theatre 34 · Playbill 33 · Official theatre sites 33"
-export function pagesText(perSource: WorkerRun["per_source"]): string {
-  const parts = Object.entries(perSource ?? {}).map(([key, value]) => `${crawlSourceName(key)} ${(value.pages ?? 0).toLocaleString("en-GB")}`);
+export function pagesText(perSource: WorkerRun["per_source"], names: SourceNames): string {
+  const parts = Object.entries(perSource ?? {}).map(([key, value]) => `${crawlSourceName(key, names)} ${(value.pages ?? 0).toLocaleString("en-GB")}`);
   return parts.length ? parts.join(" · ") : "No pages";
 }
 export const publishedRunDates = (perSource: WorkerRun["per_source"]) =>

@@ -32,10 +32,11 @@ returns jsonb language sql as $$
     'date_status', 'supported', 'dates', '[{"kind":"start","date":"2026-11-12"}]'::jsonb) || extra;
 $$;
 
-create function pg_temp.mapping(kind text, key text)
+-- Parameters are named so they cannot be read as crawl_sources columns (crawl_sources.kind, #540).
+create function pg_temp.mapping(entity text, ref text)
 returns public.crawl_source_entities language sql as $$
   select m.* from public.crawl_source_entities m join public.crawl_sources s on s.id = m.source_id
-  where s.source_key = 'london_theatre' and m.entity_kind = kind and m.external_key = key;
+  where s.source_key = 'london_theatre' and m.entity_kind = entity and m.external_key = ref;
 $$;
 
 insert into auth.users (id, email) values ('d4230000-0000-0000-0000-000000000001', 'identity@example.com');

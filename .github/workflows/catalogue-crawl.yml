@@ -7,10 +7,9 @@ on:
         required: false
         type: string
       source:
-        description: Optional source key for the scheduled worker
+        description: Optional source key for the scheduled worker (for example playbill)
         required: false
-        type: choice
-        options: ['', official, london_theatre, playbill]
+        type: string
       stage:
         description: Optional collection stage for aggregate sources
         required: false

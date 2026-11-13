@@ -65,14 +65,14 @@ export function modelBudget({ runBudgetUsd, dailySpendUsd, spentLast24hUsd }) {
 
 // Pages one source may read in a run: CRAWL_SOURCE_RUN_PAGES (default 150, official 50 from
 // CRAWL_OFFICIAL_RUN_PAGES), with CRAWL_SOURCE_RUN_PAGES_<SOURCE> (for example _PLAYBILL) to slow one
-// source without the others. Empty or invalid values fall back; nothing goes above MAX_RUN_PAGES.
-export function runPagesFor(key, env = process.env) {
+// source without the others. An adapter's own runPages replaces the default. Empty or invalid values fall back; nothing goes above MAX_RUN_PAGES.
+export function runPagesFor(key, env = process.env, adapter = null) {
   const read = (value, fallback) => {
     if (value === undefined || value === null || String(value).trim() === '') return fallback;
     const number = Number(value);
     return Number.isFinite(number) && number >= 0 ? Math.min(Math.floor(number), MAX_RUN_PAGES) : fallback;
   };
-  const base = key === 'official' ? read(env.CRAWL_OFFICIAL_RUN_PAGES, OFFICIAL_RUN_PAGES) : read(env.CRAWL_SOURCE_RUN_PAGES, SOURCE_RUN_PAGES);
+  const base = key === 'official' ? read(env.CRAWL_OFFICIAL_RUN_PAGES, OFFICIAL_RUN_PAGES) : read(env.CRAWL_SOURCE_RUN_PAGES, adapter?.runPages ?? SOURCE_RUN_PAGES);
   return read(env[`CRAWL_SOURCE_RUN_PAGES_${String(key).toUpperCase()}`], base);
 }
 

@@ -1,6 +1,6 @@
 import { cache } from "react";
 
-import type { CrawlOverview, CrawlSourceProgress } from "@/lib/admin-crawl";
+import type { CrawlOverview, CrawlSourceInfo, CrawlSourceProgress } from "@/lib/admin-crawl";
 import type { CrawlSummary } from "@/lib/crawl-summary";
 import type { CrawlDispatch, CrawlSchedule } from "@/lib/crawl-schedule";
 import { ownerContext } from "@/lib/supabase/data";
@@ -19,8 +19,11 @@ async function twice<T>(call: () => PromiseLike<Result<T>>): Promise<T | null> {
   return null;
 }
 
-// The two venue-first sources. The older official-sites crawler has its own shape.
-export const HUB_SOURCES = ["london_theatre", "playbill"] as const;
+// The registered sources (names, kind and switches come from the database, not from this file).
+export const getSources = cache(async () => {
+  const { supabase } = await ownerContext();
+  return twice<CrawlSourceInfo[]>(async () => (await supabase.rpc("admin_crawl_sources")) as unknown as Result<CrawlSourceInfo[]>);
+});
 
 // cache() makes the headline and the details share one database call per request.
 export const getProgress = cache(async (key: string) => {

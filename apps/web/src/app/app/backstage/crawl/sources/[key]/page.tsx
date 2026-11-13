@@ -9,11 +9,11 @@ import { CrawlShell, Section } from "@/components/app/admin/CrawlShell";
 import { OfficialSource } from "@/components/app/admin/OfficialSource";
 import { CrawlBar } from "@/components/app/admin/CrawlBar";
 import { PipelineDiagram, type PipelineStep } from "@/components/app/admin/PipelineDiagram";
-import { getSummary } from "@/lib/crawl-hub-data";
+import { getSources, getSummary } from "@/lib/crawl-hub-data";
 import { areaLines, areaName, sourceLine, stepsLine, type SourceSummary } from "@/lib/crawl-summary";
 import {
   CRAWL_BUCKETS, CRAWL_BUCKET_LABELS, CRAWL_STAGES, CRAWL_STEPS, attentionItems, crawlBuckets, crawlSourceName, crawlingState,
-  isCrawlSource, pagesHref, shortDate, shortDateTime, sourceKeyFromPath, sourcePath, stepName,
+  isCrawlSource, pagesHref, shortDate, shortDateTime, sourceKeyFromPath, sourceNamesOf, sourcePath, stepName,
   type CrawlOverview, type CrawlSourceProgress,
 } from "@/lib/admin-crawl";
 import { timeAgo } from "@/lib/reactions";
@@ -42,7 +42,10 @@ function stepsFor(publishing: boolean, summary: SourceSummary | undefined, waiti
 
 async function Source({ params, searchParams }: Pick<PageProps<"/app/backstage/crawl/sources/[key]">, "params" | "searchParams">) {
   const key = sourceKeyFromPath((await params).key);
-  if (!isCrawlSource(key)) notFound();
+  const sourceList = await getSources();
+  if (!sourceList) return <p>Couldn’t load this source.</p>;
+  const names = sourceNamesOf(sourceList);
+  if (!isCrawlSource(key, names)) notFound();
   if (key === "official") return <OfficialSource />;
   const input = await searchParams;
   // ?area= (older links used ?pass=) shows one earlier reading; without it the page covers every current area.
@@ -65,7 +68,7 @@ async function Source({ params, searchParams }: Pick<PageProps<"/app/backstage/c
   const state = crawlingState(source);
   const summary = summaryAll?.[key];
   const areas = summary?.areas ?? [];
-  const line = summary ? sourceLine(key, summary, state, new Date()) : null;
+  const line = summary ? sourceLine(crawlSourceName(key, names), summary, state, new Date()) : null;
   const filters = { source: key, step: "venue" as const, scan: chosen, page: 1 };
 
   const totals = CRAWL_STAGES.map(stage => crawlBuckets(data.stages[stage]));
@@ -73,7 +76,7 @@ async function Source({ params, searchParams }: Pick<PageProps<"/app/backstage/c
   const blocked = CRAWL_STAGES.reduce((sum, stage) => sum + data.stages[stage].blocked, 0);
   const canFix = chosen ? Boolean(scan?.is_current) : true;
   const areaIds = areas.map(area => area.id);
-  const items = attentionItems(overview, [source]);
+  const items = attentionItems(overview, [source], names);
   const waiting = extras?.unchecked_pages ?? 0;
   const lastPublished = overview.publication?.[key]?.last_published_at ?? null;
   const lastPublishedAgo = lastPublished ? timeAgo(lastPublished) : null;
@@ -202,7 +205,7 @@ async function Source({ params, searchParams }: Pick<PageProps<"/app/backstage/c
         </p>
       </Section>
 
-      <RecentChanges actions={overview.recent_actions} />
+      <RecentChanges actions={overview.recent_actions} names={names} />
 
       {data.scans.some(item => !item.is_current) && (
         <details className="min-w-0 rounded-md border border-separator bg-surface p-4">
@@ -264,6 +267,7 @@ export default function CrawlSourcePage(props: PageProps<"/app/backstage/crawl/s
 // The source's name as a heading, read from the route.
 async function SourceTitle({ params }: { params: PageProps<"/app/backstage/crawl/sources/[key]">["params"] }) {
   const key = sourceKeyFromPath((await params).key);
-  if (!isCrawlSource(key)) return null;
-  return <h2 className="font-display text-title-2">{crawlSourceName(key)}</h2>;
+  const names = sourceNamesOf((await getSources()) ?? []);
+  if (!isCrawlSource(key, names)) return null;
+  return <h2 className="font-display text-title-2">{crawlSourceName(key, names)}</h2>;
 }

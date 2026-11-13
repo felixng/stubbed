@@ -1834,9 +1834,12 @@ internal enum PublicSchema {
   internal struct CrawlSourcesSelect: Codable, Hashable, Sendable {
     internal let adapterVersion: String
     internal let allowedHosts: [String]
+    internal let authority: Int16
     internal let claimSequence: Int64
     internal let collectionEnabled: Bool
+    internal let displayName: String?
     internal let id: UUID
+    internal let kind: String
     internal let minIntervalMs: Int32
     internal let operatorPausedAt: String?
     internal let pausedReason: String?
@@ -1846,9 +1849,12 @@ internal enum PublicSchema {
     internal enum CodingKeys: String, CodingKey {
       case adapterVersion = "adapter_version"
       case allowedHosts = "allowed_hosts"
+      case authority = "authority"
       case claimSequence = "claim_sequence"
       case collectionEnabled = "collection_enabled"
+      case displayName = "display_name"
       case id = "id"
+      case kind = "kind"
       case minIntervalMs = "min_interval_ms"
       case operatorPausedAt = "operator_paused_at"
       case pausedReason = "paused_reason"
@@ -1860,9 +1866,12 @@ internal enum PublicSchema {
   internal struct CrawlSourcesInsert: Codable, Hashable, Sendable {
     internal let adapterVersion: String
     internal let allowedHosts: [String]?
+    internal let authority: Int16?
     internal let claimSequence: Int64?
     internal let collectionEnabled: Bool?
+    internal let displayName: String?
     internal let id: UUID?
+    internal let kind: String?
     internal let minIntervalMs: Int32?
     internal let operatorPausedAt: String?
     internal let pausedReason: String?
@@ -1872,9 +1881,12 @@ internal enum PublicSchema {
     internal enum CodingKeys: String, CodingKey {
       case adapterVersion = "adapter_version"
       case allowedHosts = "allowed_hosts"
+      case authority = "authority"
       case claimSequence = "claim_sequence"
       case collectionEnabled = "collection_enabled"
+      case displayName = "display_name"
       case id = "id"
+      case kind = "kind"
       case minIntervalMs = "min_interval_ms"
       case operatorPausedAt = "operator_paused_at"
       case pausedReason = "paused_reason"
@@ -1886,9 +1898,12 @@ internal enum PublicSchema {
   internal struct CrawlSourcesUpdate: Codable, Hashable, Sendable {
     internal let adapterVersion: String?
     internal let allowedHosts: [String]?
+    internal let authority: Int16?
     internal let claimSequence: Int64?
     internal let collectionEnabled: Bool?
+    internal let displayName: String?
     internal let id: UUID?
+    internal let kind: String?
     internal let minIntervalMs: Int32?
     internal let operatorPausedAt: String?
     internal let pausedReason: String?
@@ -1898,9 +1913,12 @@ internal enum PublicSchema {
     internal enum CodingKeys: String, CodingKey {
       case adapterVersion = "adapter_version"
       case allowedHosts = "allowed_hosts"
+      case authority = "authority"
       case claimSequence = "claim_sequence"
       case collectionEnabled = "collection_enabled"
+      case displayName = "display_name"
       case id = "id"
+      case kind = "kind"
       case minIntervalMs = "min_interval_ms"
       case operatorPausedAt = "operator_paused_at"
       case pausedReason = "paused_reason"

@@ -3,9 +3,8 @@ import {
   CRON_MINUTES, clock, dispatchText, durationText, nextRunAfter, nextRunPlan, pagesText, runAllowance, scheduleAlert, stopReasonText, todaysLimits,
   triggerLabel, viaLabel, type CrawlDispatch, type CrawlSchedule,
 } from "@/lib/crawl-schedule";
-import { crawlSourceName } from "@/lib/admin-crawl";
+import { crawlSourceName, sourceNamesOf, type CrawlSourceInfo } from "@/lib/admin-crawl";
 
-const SOURCES = ["london_theatre", "playbill"] as const;
 const number = new Intl.NumberFormat("en-GB");
 const Row = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div className="flex flex-col gap-0.5 sm:flex-row sm:gap-4">
@@ -17,14 +16,16 @@ const Log = ({ url }: { url: string | null }) => url
   ? <a href={url} target="_blank" rel="noopener noreferrer" className="text-tint-text">Log</a> : null;
 
 // What runs when: the schedule, what is running now, the last run, what the next one will do, and today's limits.
-export function ScheduleCard({ schedule, dispatch }: { schedule: CrawlSchedule; dispatch: CrawlDispatch | null }) {
+export function ScheduleCard({ schedule, dispatch, sources }: { schedule: CrawlSchedule; dispatch: CrawlDispatch | null; sources: CrawlSourceInfo[] }) {
+  const names = sourceNamesOf(sources);
+  const SOURCES = sources.filter(source => source.kind !== "official").map(source => source.source_key);
   const now = new Date(schedule.server_time);
   const alert = scheduleAlert(schedule);
   const limits = todaysLimits(schedule, [...SOURCES, "official"]);
   const last = schedule.last_run;
   const capNotes = SOURCES.flatMap(key => {
     const limit = limits.sources[key];
-    return limit.resumes ? [`${crawlSourceName(key)} hit today’s ${number.format(limit.cap)}-page limit; resumes about ${clock(limit.resumes)}.`] : [];
+    return limit.resumes ? [`${crawlSourceName(key, names)} hit today’s ${number.format(limit.cap)}-page limit; resumes about ${clock(limit.resumes)}.`] : [];
   });
   if (limits.model.resumes) capNotes.push(`The model hit today’s $${limits.model.cap} limit; model work resumes about ${clock(limits.model.resumes)}. Page crawling continues.`);
 
@@ -52,7 +53,7 @@ export function ScheduleCard({ schedule, dispatch }: { schedule: CrawlSchedule; 
         </Row>
         <Row label="Last run">
           {last
-            ? <>{clock(last.started_at)} · {durationText(last.started_at, last.finished_at)} · {pagesText(last.per_source)} · {stopReasonText(last.stop_reason, !last.finished_at)}.{viaLabel(last.started_via) ? ` ${viaLabel(last.started_via)}.` : ""} <Log url={last.log_url} /></>
+            ? <>{clock(last.started_at)} · {durationText(last.started_at, last.finished_at)} · {pagesText(last.per_source, names)} · {stopReasonText(last.stop_reason, !last.finished_at)}.{viaLabel(last.started_via) ? ` ${viaLabel(last.started_via)}.` : ""} <Log url={last.log_url} /></>
             : "No run recorded yet."}
         </Row>
         <Row label="Next run">
@@ -62,11 +63,11 @@ export function ScheduleCard({ schedule, dispatch }: { schedule: CrawlSchedule; 
               const forecast = schedule.forecast[key];
               const left = Math.max(0, limits.sources[key].cap - limits.sources[key].used);
               if (!forecast) return null;
-              if (!forecast.claimable) return <li key={key}>{crawlSourceName(key)}: paused or not enabled, so it will not run.</li>;
+              if (!forecast.claimable) return <li key={key}>{crawlSourceName(key, names)}: paused or not enabled, so it will not run.</li>;
               const plan = nextRunPlan(forecast, runAllowance(schedule.limits, key), left);
               return (
                 <li key={key}>
-                  {crawlSourceName(key)}: {number.format(plan.due)} due → about {number.format(plan.thisRun)} this run
+                  {crawlSourceName(key, names)}: {number.format(plan.due)} due → about {number.format(plan.thisRun)} this run
                   <span className="text-label-secondary"> ({number.format(forecast.new)} new, {number.format(forecast.retry)} retrying, {number.format(forecast.reread)} to re-read)</span>
                 </li>
               );
@@ -76,7 +77,7 @@ export function ScheduleCard({ schedule, dispatch }: { schedule: CrawlSchedule; 
         <Row label="Today’s limits">
           <ul className="flex flex-col gap-0.5">
             <li>Model spend ${limits.model.used.toFixed(2)} of ${limits.model.cap.toFixed(2)} in the last 24 hours.</li>
-            {SOURCES.map(key => <li key={key}>{crawlSourceName(key)}: {number.format(limits.sources[key].used)} of {number.format(limits.sources[key].cap)} pages in the last 24 hours.</li>)}
+            {SOURCES.map(key => <li key={key}>{crawlSourceName(key, names)}: {number.format(limits.sources[key].used)} of {number.format(limits.sources[key].cap)} pages in the last 24 hours.</li>)}
           </ul>
           {capNotes.map(note => <p key={note} className="mt-1 font-semibold">{note}</p>)}
         </Row>
