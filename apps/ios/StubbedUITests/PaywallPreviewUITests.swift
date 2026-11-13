@@ -75,7 +75,8 @@ final class PaywallPreviewUITests: XCTestCase {
     XCTAssertTrue(app.buttons["period-all"].exists)
     snapshot("paywall-period-sheet")
     app.buttons["All time"].tap()
-    XCTAssertTrue(app.staticTexts["paywall-unavailable"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.otherElements["paywall"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.navigationBars.buttons["Close"].waitForExistence(timeout: 5))
     snapshot("paywall-period-locked")
     app.buttons["Close"].tap()
     // The paywall opened over the period sheet, so closing it leaves the sheet; close that too.
