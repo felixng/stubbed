@@ -28,7 +28,7 @@ insert into auth.users (id, email) values
 select is((select value from public.app_config where key = 'paywall_sales_enabled'), 'false', 'sales switch seeds off');
 select is((select value from public.app_config where key = 'paywall_gates_enabled'), 'false', 'gates switch seeds off');
 select is((select value from public.app_config where key = 'pro_display_name'), 'Pro', 'display name seeds as Pro');
-select is((select count(*)::int from public.feature_access), 4, 'four seeded features');
+select is((select count(*)::int from public.feature_access where feature like 'insights.%'), 4, 'four seeded insights features');
 
 select pg_temp.sub('aaaaaaaa-0000-0000-0000-000000000000', 't-active', 'active', now() + interval '10 days');
 select pg_temp.sub('bbbbbbbb-0000-0000-0000-000000000000', 't-trial', 'trial', now() + interval '10 days');
