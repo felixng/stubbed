@@ -1,3 +1,5 @@
+import { EntryGallery } from "@/components/app/EntryGallery";
+import { signedEntryGallery } from "@/lib/entry-media";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -53,6 +55,7 @@ async function Entry({ params }: PageProps<"/e/[id]">) {
   const found = await getEntryForViewer(id);
   if (!found) notFound();
   const { entry, owner, photoUrl, supabase, viewerId, listed } = found;
+  const gallery = await signedEntryGallery(supabase, entry.id);
   const [reactions, comments, likers] = await Promise.all([
     getReactions(supabase, [entry.id]),
     listComments(supabase, entry.id),
@@ -97,6 +100,7 @@ async function Entry({ params }: PageProps<"/e/[id]">) {
           social={{ viewerId, reactions: social }}
         />
       )}
+      {gallery.length > 1 && <EntryGallery items={gallery} />}
       <CommentThread
         entryId={entry.id}
         ownerId={owner.id}

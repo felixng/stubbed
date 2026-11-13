@@ -2,7 +2,7 @@ import { connection } from "next/server";
 
 import type { CardSocial } from "@/components/profile/PublicEntryCard";
 import { ENTRY_SELECT, signPhotos, toEntryRow, TRIP_SELECT, type Collection, type EntryRow } from "@/lib/entries";
-import { ENTRY_MEDIA_BUCKET, entryMediaCover } from "@/lib/entry-media";
+import { ENTRY_MEDIA_BUCKET, entryMediaCover, signedEntryGallery } from "@/lib/entry-media";
 import { getReactions, listCommentPreviews, NO_REACTIONS } from "@/lib/reactions";
 import { createClient } from "@/lib/supabase/server";
 
@@ -33,6 +33,11 @@ export async function getOwnEntry(id: string) {
   }
   const urls = await signPhotos(supabase, [entry.photo_path]);
   return { entry, photoUrl: entry.photo_path ? (urls.get(entry.photo_path) ?? null) : null, nativeMediaId: null };
+}
+
+export async function getOwnEntryGallery(id: string) {
+  const { supabase, userId } = await ownerContext();
+  return userId ? signedEntryGallery(supabase, id) : [];
 }
 
 // Newest first. Owner-scale (tens to hundreds of entries), so no paging yet.

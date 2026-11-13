@@ -1,3 +1,4 @@
+import { EntryGallery } from "@/components/app/EntryGallery";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -10,7 +11,7 @@ import { RatingStars } from "@/components/ui/RatingStars";
 import { entryBack, readFrom, withFrom } from "@/lib/back-link";
 import { formatDate, SHOW_TYPE_LABELS, WITH_WEEKDAY } from "@/lib/entries";
 import type { CardData } from "@/lib/share-card";
-import { getShareCard } from "@/lib/supabase/data";
+import { getOwnEntryGallery, getShareCard } from "@/lib/supabase/data";
 
 export const metadata: Metadata = { title: "Entry" };
 
@@ -25,6 +26,7 @@ async function Entry({ params, searchParams }: PageProps<"/app/entries/[id]">) {
   const found = await getShareCard(id);
   if (!found) notFound();
   const { entry, photoUrl } = found;
+  const gallery = await getOwnEntryGallery(entry.id);
   const planned = entry.status === "planned";
   const where = [entry.venue?.name, entry.venue?.city].filter(Boolean).join(", ");
   const data: CardData = {
@@ -73,6 +75,7 @@ async function Entry({ params, searchParams }: PageProps<"/app/entries/[id]">) {
           Saved, but the photo didn’t upload. Edit the entry to add it again.
         </p>
       )}
+      {gallery.length > 0 && <EntryGallery items={gallery} editableEntryId={entry.id} />}
       {planned ? (
         // Nothing to share before the show: planned entries are owner-only.
         <div className="flex flex-col items-start gap-3 rounded-md border border-separator bg-surface p-4 shadow-sm">
