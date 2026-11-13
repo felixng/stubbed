@@ -326,7 +326,11 @@ export function ImportTool() {
           cropped = { ...await renderPhotoCrop(source, crop), requestId: crypto.randomUUID(), replacing: null };
         }
         const photo = cropped?.display ?? null;
-        if (cropped && d.photoIndex != null) updateDraft(d.key, { crop: { index: d.photoIndex, photo: cropped } });
+        if (cropped && d.photoIndex != null && d.crop?.index !== d.photoIndex) {
+          const previewUrl = URL.createObjectURL(cropped.display);
+          urls.current.push(previewUrl);
+          updateDraft(d.key, { crop: { index: d.photoIndex, previewUrl, photo: cropped } });
+        }
         const result = await saveDraft(supabase, userId, {
           show: d.show!,
           venue: d.venue!,
@@ -389,9 +393,13 @@ export function ImportTool() {
   return (
     <div className="flex flex-col gap-6">
       {cropSource && cropDraft && cropIndex != null && (
-        <PhotoCropDialog source={cropSource} onCancel={() => setCropKey(null)}
+        <PhotoCropDialog source={cropSource}
+          rectangle={cropDraft.crop?.index === cropIndex ? cropDraft.crop.photo.rectangle : undefined} onCancel={() => setCropKey(null)}
           onConfirm={(photo) => {
-            updateDraft(cropDraft.key, { crop: { index: cropIndex,
+            if (cropDraft.crop) URL.revokeObjectURL(cropDraft.crop.previewUrl);
+            const previewUrl = URL.createObjectURL(photo.display);
+            urls.current.push(previewUrl);
+            updateDraft(cropDraft.key, { crop: { index: cropIndex, previewUrl,
               photo: { ...photo, requestId: crypto.randomUUID(), replacing: null } } });
             setCropKey(null);
           }} />

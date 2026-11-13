@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
-import { renderPhotoCrop, squareCrop, type SquareCrop } from "@/lib/photo-crop";
+import { renderPhotoCrop, squareCrop, type SquareCrop, type CropRectangle } from "@/lib/photo-crop";
 
 export type CroppedPhoto = Awaited<ReturnType<typeof renderPhotoCrop>>;
 
-export function PhotoCropDialog({ source, initial, onCancel, onConfirm }: {
+export function PhotoCropDialog({ source, initial, rectangle, onCancel, onConfirm }: {
   source: Blob;
   initial?: SquareCrop;
+  rectangle?: CropRectangle;
   onCancel: () => void;
   onConfirm: (photo: CroppedPhoto) => void;
 }) {
@@ -81,7 +82,12 @@ export function PhotoCropDialog({ source, initial, onCancel, onConfirm }: {
             onLoad={(event) => {
               const { naturalWidth: width, naturalHeight: height } = event.currentTarget;
               setImage({ width, height });
-              setCrop((current) => current ?? squareCrop(width, height));
+              setCrop((current) => {
+                if (current) return current;
+                if (!rectangle) return squareCrop(width, height);
+                const [x, y, w, h] = rectangle;
+                return squareCrop(width, height, (x + w / 2) * width, (y + h / 2) * height, w * width);
+              });
             }}
             style={image && crop ? {
               width: `${image.width / crop.side * 100}%`,
