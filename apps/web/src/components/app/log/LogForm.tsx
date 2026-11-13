@@ -93,6 +93,7 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
   const [recropCandidate, setRecropCandidate] = useState<{ source: Blob; initial: SquareCrop; saved: boolean } | null>(null);
   const [cropCandidate, setCropCandidate] = useState<PreparedPhoto | null>(null);
   const [photo, setPhoto] = useState<Photo | null>(null);
+  const [removedPhoto, setRemovedPhoto] = useState(false);
   const [existingPhoto, setExistingPhoto] = useState<string | null>(initial?.photoUrl ?? null);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [detect, setDetect] = useState<Detect>({ step: "idle" });
@@ -405,7 +406,7 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
         const cover = initial ? await entryMediaCover(supabase, entryId) : null;
         replacement.current = { mediaId: cover?.media_id ?? null };
       }
-      const keptPath = existingPhoto || nativePhoto ? (initial?.photoPath ?? null) : null;
+      const keptPath = (!removedPhoto && !photo) || nativePhoto ? (initial?.photoPath ?? null) : null;
       const fields = {
         show_id: showId,
         venue_id: venueId,
@@ -434,7 +435,7 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
         if (link) throw link;
       }
 
-      if (initial?.nativeMediaId && !existingPhoto && !photo) {
+      if (initial?.nativeMediaId && removedPhoto && !photo) {
         const { error: remove } = await supabase.rpc("delete_entry_media", {
           p_entry_id: entryId, p_media_id: initial.nativeMediaId,
         });
@@ -630,6 +631,7 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
                 onClick={() => {
                   clearPhotoResults();
                   replacePhoto(null);
+                  setRemovedPhoto(true);
                   setExistingPhoto(null);
                 }}
                 className="min-h-11 rounded-pill px-3 text-subheadline font-semibold text-destructive hover:bg-fill focus-visible:outline-2 focus-visible:outline-focus"
