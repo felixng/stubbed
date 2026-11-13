@@ -15,7 +15,7 @@ export type MembershipInfo = {
   paywall_preview?: boolean;
 };
 
-export type ProConfig = { name: string; salesEnabled: boolean; gatesEnabled: boolean };
+export type ProConfig = { name: string; salesEnabled: boolean; gatesEnabled: boolean; mediaGalleries?: boolean; mediaVideo?: boolean };
 
 export const FREE: MembershipInfo = { tier: "free", source: null, expires_at: null, will_renew: false, is_trial: false, manage: [] };
 // A missing key means off, never a crash.
@@ -26,6 +26,8 @@ export function parseConfig(rows: { key: string; value: string }[] | null | unde
   const map = new Map((rows ?? []).map((r) => [r.key, r.value]));
   return {
     name: map.get("pro_display_name")?.trim() || DEFAULT_PRO_NAME,
+    ...(map.get("media_gallery_uploads_enabled") === "true" && { mediaGalleries: true }),
+    ...(map.get("media_video_uploads_enabled") === "true" && { mediaVideo: true }),
     salesEnabled: adminPreview || map.get("paywall_sales_enabled") === "true",
     gatesEnabled: adminPreview || map.get("paywall_gates_enabled") === "true",
   };

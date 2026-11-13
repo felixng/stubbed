@@ -9,7 +9,7 @@ import { PlaceholderRows } from "@/components/ui/PlaceholderRows";
 import { ProPreview } from "./ProPreview";
 import { track } from "@/lib/analytics";
 import { isPro, loadMembership } from "@/lib/membership";
-import { PAYWALL_BENEFITS, UNAVAILABLE_OFFER, buttonLabel, type PaywallSource } from "@/lib/paywall";
+import { availablePaywallBenefits, UNAVAILABLE_OFFER, buttonLabel, type PaywallSource } from "@/lib/paywall";
 import { createRevenueCatClient, webBillingKey } from "@/lib/revenuecat-web";
 import { createClient } from "@/lib/supabase/client";
 import { useMembership } from "@/lib/use-membership";
@@ -110,11 +110,11 @@ export function Paywall({ source, next, preview = false, userId, email = null, c
       </Link>
       <div className="flex flex-col gap-2">
         <h1 id="paywall-title" className="text-balance text-title font-bold tracking-tight">Look back at every year</h1>
-        <p className="text-pretty text-body text-label-secondary">{config.name} adds Show mix, earlier years and All time stats. Logging, your diary, trips and sharing stay free.</p>
+        <p className="text-pretty text-body text-label-secondary">Get more from your theatre diary with {config.name}.</p>
       </div>
       <ProPreview thisYear={new Date().getFullYear()} />
       <ul className="flex flex-col divide-y divide-separator rounded-md border border-separator bg-surface shadow-sm">
-        {PAYWALL_BENEFITS.map((b) => (
+        {availablePaywallBenefits(config).map((b) => (
           <li key={b.title} className="flex items-start gap-3 px-4 py-3">
             <svg viewBox="0 0 24 24" width={22} height={22} aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round" className="mt-px flex-none text-tint-text"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
             <span className="flex flex-col">
