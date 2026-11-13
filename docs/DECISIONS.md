@@ -1627,7 +1627,7 @@ The hub showed Playbill as 83% done because `crawl_source_progress` without a sc
 
 Publishing was the tail of a crawl run: 100 identities and 100 runs per source per run, about 200 an hour, and the oldest 100 items (waiting for a venue page) were picked first every time, so a backfill processed nothing (`deferred 100, processed 0`). Playbill had 5,609 extractions waiting. Publishing is pure SQL, so a `pg_cron` job now calls `run_crawl_publication()` every minute (the pattern of `catalogue-crawl-dispatch`), and the crawl run stops publishing (one publisher, one place to look). Both publishers order by when an item is next available, so deferred items go to the back. A tick makes up to 3 passes and stops starting calls after 20 seconds, because the functions hold an advisory lock for one transaction. The manual `--publish-identities` / `--publish-runs` flags stay. Migration `20261113215008_crawl_publication_in_database.sql`.
 
-Numbers: BEFORE_AFTER
+Numbers: hosted unpublished items 3509 before the push; 2609 three ticks (3 minutes) later and falling by about 300 a tick.
 
 
 ## Entry media schema (#141)
