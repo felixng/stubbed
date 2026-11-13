@@ -5,3 +5,4 @@ node_modules/
 .vercel
 *.tsbuildinfo
 /tmp/
+supabase/scripts/crawl/.probe/

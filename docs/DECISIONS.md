@@ -1642,6 +1642,11 @@ Adding a source touched about a dozen places (two crawler lists, the workflow's 
 The issue also required adapter fixtures to be parsed in the contract test; it was silent on which URL each stage's fixture is parsed as, so each adapter declares `fixtureUrls` (the URLs its own tests already use).
 
 
+### A probe and an add-source skill for onboarding with AI (2026-11-13, #541, epic #536)
+
+AI is used when a source is onboarded, never while the crawler runs (docs/CATALOGUE.md rule 1.7). The AI layer is a Claude Code skill (`.claude/skills/add-source/SKILL.md`), not a model call inside a script: an agent can read pages, write code, run tests and iterate, and a single API call that returns a whole adapter cannot test what it wrote; it also needs no key and adds no crawler spend. The probe (`probe.mjs`) uses no model so it is testable and repeatable; its classes are hints, and the skill's written rubric is the judgement. Code gates everything: an adapter is registered only when the contract test and a dry run pass, and new sources arrive switched off. A site that does not fit is filed as `needs-decision`, not forced. `--dry-run` for an adapter with no `crawl_sources` row builds the source from the adapter and makes no database call (the source lookup is the only read). The issue was silent on one detail: links that differ only by query string count as one page when ranking and sampling shapes, so the probe does not spend its budget on `?utm_source` variants; probe fixture copies live in `fixtures/probe/` (the adapters' own fixtures are untouched). No migration.
+
+
 ## Entry media schema (#141)
 
 Gallery order and the ready cover are derived from one media collection. Private source references live in an owner-only relation, and native revision files live in a private bucket outside the legacy photo write policies. See [the media contract](MEDIA.md) for crop geometry, compatibility and the upload interface.

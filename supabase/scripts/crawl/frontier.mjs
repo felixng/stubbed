@@ -278,6 +278,13 @@ function integer(value, name, min, max) {
   return number;
 }
 
+// The source a dry run uses when the adapter has no crawl_sources row yet (built from its static facts).
+export function adapterSource(adapter) {
+  return { source_key: adapter.key, allowed_hosts: adapter.hosts, min_interval_ms: adapter.minIntervalMs, collection_enabled: false };
+}
+// Nothing is queued and no host has been used, and no database call is made.
+export const dryRunStoreWithoutRow = { preview: async () => [], hostState: async () => null };
+
 export async function runFrontierCli(args = process.argv.slice(2), store = createFrontierStore()) {
   const { values } = parseArgs({ args, options: {
     source: { type: 'string' }, scope: { type: 'string' }, stage: { type: 'string', default: 'all' },
@@ -333,9 +340,15 @@ export async function runFrontierCli(args = process.argv.slice(2), store = creat
   }
   const maxPages = integer(values['max-pages'], '--max-pages', 1, 1000);
   const maxMinutes = integer(values['max-minutes'], '--max-minutes', 2, 55);
-  const source = await store.source(key);
-  if (!source) throw new Error('Crawl source missing in the database');
   const adapter = adapters[key];
+  let source = await store.source(key);
+  let runStore = store;
+  if (!source && values['dry-run']) {
+    // A new adapter has no crawl_sources row until its first real run; a dry run needs none.
+    source = adapterSource(adapter);
+    runStore = dryRunStoreWithoutRow;
+  }
+  if (!source) throw new Error('Crawl source missing in the database');
   let seeds = adapter.seeds;
   if (key === 'official') {
     if (!values.scope) throw new Error('Official frontier preview requires an explicit crawl site UUID in --scope');
@@ -346,7 +359,7 @@ export async function runFrontierCli(args = process.argv.slice(2), store = creat
   }
   const result = await runFrontier({
     source, adapter, seeds, stage: values.stage, scope: values.scope,
-    dryRun: values['dry-run'], refresh: values.refresh, reparse: values.reparse, maxPages, maxMinutes, store,
+    dryRun: values['dry-run'], refresh: values.refresh, reparse: values.reparse, maxPages, maxMinutes, store: runStore,
     geocoder: values['dry-run'] ? null : defaultGeocoder(),
   });
   console.log(JSON.stringify(result, null, 2));
