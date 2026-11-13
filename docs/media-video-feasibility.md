@@ -30,3 +30,15 @@ The Node probe inspects the file bytes with Mediabunny and enforces MP4, one H.2
 Do not use AVAsset duration alone as the acceptance check. The native export path must verify the output sample timeline, and shorten and retry an overshooting trim before upload. Repeated 29.9-second exports stayed under the limit for this fixture. A fixed subtraction is insufficient evidence for other frame rates and audio.
 
 The parser probe establishes a duration boundary, but does not establish production safety for arbitrary uploads. Before release, show that forged timelines and truncated media cannot pass, bound memory and CPU, and verify the parser in the actual quarantine runtime.
+
+## Chrome export with audio
+
+The native prototype also accepts a WAV path as its second argument and writes an `original-audio.mp4` source. With a synthetic 32-second 440 Hz tone, Chrome 156 exported H.264/AAC and loaded the resulting MP4 in its player.
+
+| Requested | Parsed output duration | Bytes | Export |
+| --- | --- | --- | --- |
+| 29.9 s | 29.9293 s | 489577 | 2611 ms |
+| 30.0 s | 30.0360 s | 491321 | 2520 ms |
+| 30.1 s | 30.1213 s | 493159 | 2538 ms |
+
+The browser producer also needs to validate the exported timeline and retry with a shorter range at the upper boundary. Audio packet duration can extend past the requested trim even when the video frames fit.

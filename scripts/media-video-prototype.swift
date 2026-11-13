@@ -40,6 +40,25 @@ let directory = URL(filePath: CommandLine.arguments[1], directoryHint: .isDirect
 let original = directory.appending(path: "original.mp4")
 try? FileManager.default.removeItem(at: original)
 try await fixture(original)
+if CommandLine.arguments.count > 2 {
+  let audio = AVURLAsset(url: URL(filePath: CommandLine.arguments[2]))
+  let video = AVURLAsset(url: original)
+  let composition = AVMutableComposition()
+  let videoTrack = try await video.loadTracks(withMediaType: .video).first!
+  let audioTrack = try await audio.loadTracks(withMediaType: .audio).first!
+  let duration = min(try await video.load(.duration), try await audio.load(.duration))
+  let range = CMTimeRange(start: .zero, duration: duration)
+  try composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)!
+    .insertTimeRange(range, of: videoTrack, at: .zero)
+  try composition.addMutableTrack(withMediaType: .audio, preferredTrackID: kCMPersistentTrackID_Invalid)!
+    .insertTimeRange(range, of: audioTrack, at: .zero)
+  let output = directory.appending(path: "original-audio.mp4")
+  try? FileManager.default.removeItem(at: output)
+  guard let export = AVAssetExportSession(asset: composition, presetName: AVAssetExportPreset1280x720)
+  else { throw CocoaError(.fileWriteUnknown) }
+  export.metadata = []
+  try await export.export(to: output, as: .mp4)
+}
 for length in [29.95, 29.9, 30.0, 30.1] {
   let input = AVURLAsset(url: original)
   let output = directory.appending(path: "trim-\(length).mp4")
