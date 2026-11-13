@@ -1,5 +1,7 @@
+import ImageIO
 import Testing
 import UIKit
+import UniformTypeIdentifiers
 @testable import Stubbed
 
 struct EntryPhotoCropTests {
@@ -18,6 +20,30 @@ struct EntryPhotoCropTests {
                               source: CGSize(width: 80, height: 40))
     #expect(crop.origin == CGPoint(x: 60, y: 0))
     #expect(crop.side == 20)
+  }
+
+  @Test(arguments: Array(1...8))
+  func retainedSourceAppliesExifOrientation(_ orientation: Int) throws {
+    let format = UIGraphicsImageRendererFormat()
+    format.scale = 1
+    let image = UIGraphicsImageRenderer(size: CGSize(width: 80, height: 40), format: format).image {
+      UIColor.orange.setFill()
+      $0.fill(CGRect(x: 0, y: 0, width: 80, height: 40))
+    }
+    let encoded = NSMutableData()
+    let destination = try #require(CGImageDestinationCreateWithData(
+      encoded, UTType.jpeg.identifier as CFString, 1, nil
+    ))
+    CGImageDestinationAddImage(destination, try #require(image.cgImage),
+                              [kCGImagePropertyOrientation: orientation] as CFDictionary)
+    try #require(CGImageDestinationFinalize(destination))
+    let retained = try Photo.resizedJPEG(from: encoded as Data, maxEdge: Photo.storedEdge)
+    let source = try #require(UIImage(data: retained)?.cgImage)
+    #expect(source.width == (orientation >= 5 ? 40 : 80))
+    #expect(source.height == (orientation >= 5 ? 80 : 40))
+    let crop = EntryPhotoCrop.centered(in: CGSize(width: source.width, height: source.height))
+    let result = try crop.derivatives(from: source)
+    #expect(UIImage(data: result.display)?.size == CGSize(width: 40, height: 40))
   }
 
   @Test func derivativesAreSquareAndSourceIsUnchanged() throws {

@@ -31,6 +31,13 @@ final class PhotoLogUITests: XCTestCase {
       XCTAssertTrue(filled.waitForExistence(timeout: 5))
     }
 
+    app.buttons["Edit crop"].tap()
+    let cropBar = app.navigationBars["Crop photo"]
+    XCTAssertTrue(cropBar.waitForExistence(timeout: 10))
+    cropBar.buttons["Cancel"].tap()
+    XCTAssertTrue(filled.exists, "Cancelling a recrop preserves the chosen venue")
+    XCTAssertTrue(app.buttons["Remove"].exists, "Cancelling a recrop preserves the photo")
+
     app.buttons["Remove"].tap()
     XCTAssertFalse(filled.waitForExistence(timeout: 3), "the photo's venue is cleared with the photo")
 
