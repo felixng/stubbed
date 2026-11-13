@@ -143,3 +143,11 @@ To test a local fixture in Swift 6, create an empty output directory and run:
 swift -swift-version 6 scripts/media-video-prototype.swift /path/to/output --source /path/to/fixture.mp4
 node scripts/media-video-probe/validate.mjs /path/to/output/trim-*.mp4
 ```
+
+### Native bitrate control
+
+For the silent upright SDR portrait fixture, the Swift 6 `--controlled` path streams frames from `AVAssetReader` to a file-backed `AVAssetWriter` at a 3 Mb/s H.264 target. The 30-second output was 11,260,320 bytes and took 2.01 seconds, down from 16,576,347 bytes with the preset. The independent validator accepted the 29.9-second and 30-second outputs and rejected the 30.1-second output. Across four exports, the Swift process reached 296,026,112 bytes peak RSS on macOS. The controlled probe currently checks silent, upright sources. Audio, orientation transforms, HDR conversion and mobile memory still need verification before adopting it as the full iOS exporter.
+
+```sh
+swift -swift-version 6 scripts/media-video-prototype.swift /path/to/output --source /path/to/portrait-vfr.mp4 --controlled
+```
