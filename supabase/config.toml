@@ -443,3 +443,9 @@ enabled = true
 # No schedule or hosted deployment is activated by this configuration.
 [functions.notification-worker]
 verify_jwt = false
+
+[functions.entry-media-cleanup]
+verify_jwt = false
+
+[functions.entry-media-finalize]
+verify_jwt = false

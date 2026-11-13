@@ -140,7 +140,7 @@ grant execute on function public.reserve_entry_media(uuid, uuid, text, uuid, jso
 
 -- Storage uses the same lease as the reservation. INSERT only makes every
 -- uploaded revision immutable, including before finalization.
-create function public.can_upload_entry_media(object_name text, object_metadata jsonb)
+create function public.can_upload_entry_media(object_name text)
 returns boolean
 language sql stable security definer set search_path = ''
 as $$
@@ -157,8 +157,8 @@ as $$
   );
 $$;
 
-revoke execute on function public.can_upload_entry_media(text, jsonb) from public, anon;
-grant execute on function public.can_upload_entry_media(text, jsonb) to authenticated;
+revoke execute on function public.can_upload_entry_media(text) from public, anon;
+grant execute on function public.can_upload_entry_media(text) to authenticated;
 
 -- Storage checks INSERT permission before it has populated object metadata.
 -- The bucket caps incoming photos and finalize verifies the persisted metadata.
@@ -167,7 +167,7 @@ where id = 'entry-media';
 
 create policy "Upload reserved media files" on storage.objects for insert
 to authenticated with check (
-  bucket_id = 'entry-media' and public.can_upload_entry_media(name, metadata)
+  bucket_id = 'entry-media' and public.can_upload_entry_media(name)
 );
 
 create function public.cancel_entry_media(p_reservation_id uuid)
@@ -430,5 +430,34 @@ grant execute on function public.record_entry_media_verification(uuid, jsonb) to
 -- visible only to the owner during the active reservation.
 create policy "Owners read reserved media files" on storage.objects for select
 to authenticated using (
-  bucket_id = 'entry-media' and public.can_upload_entry_media(name, null)
+  bucket_id = 'entry-media' and public.can_upload_entry_media(name)
 );
+
+-- Use a dedicated Vault secret for the scheduled caller. The Edge Function
+-- holds the Storage credential and only accepts this job's shared secret.
+create function public.dispatch_entry_media_cleanup()
+returns bigint
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  endpoint text;
+  token text;
+begin
+  select decrypted_secret into endpoint from vault.decrypted_secrets
+  where name = 'entry_media_cleanup_url' order by created_at desc limit 1;
+  select decrypted_secret into token from vault.decrypted_secrets
+  where name = 'entry_media_cleanup_secret' order by created_at desc limit 1;
+  if nullif(btrim(endpoint), '') is null or nullif(btrim(token), '') is null then
+    return null;
+  end if;
+  return net.http_post(
+    url := endpoint,
+    headers := jsonb_build_object('x-entry-media-cleanup-secret', token, 'content-type', 'application/json'),
+    body := '{}'::jsonb,
+    timeout_milliseconds := 25000
+  );
+end;
+$$;
+revoke execute on function public.dispatch_entry_media_cleanup() from public, anon, authenticated;
+
+select cron.schedule('entry-media-cleanup', '13,43 * * * *', 'select public.dispatch_entry_media_cleanup()');

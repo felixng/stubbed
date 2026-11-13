@@ -3,8 +3,9 @@ Deno.serve(async (request) => {
 
   const url = Deno.env.get("SUPABASE_URL");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!url || !serviceKey) return new Response(null, { status: 503 });
-  if (request.headers.get("authorization") !== `Bearer ${serviceKey}`) {
+  const secret = Deno.env.get("ENTRY_MEDIA_CLEANUP_SECRET");
+  if (!url || !serviceKey || !secret) return new Response(null, { status: 503 });
+  if (request.headers.get("x-entry-media-cleanup-secret") !== secret) {
     return new Response(null, { status: 401 });
   }
 
