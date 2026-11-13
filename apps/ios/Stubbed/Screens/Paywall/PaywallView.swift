@@ -309,6 +309,7 @@ struct ProNote: View {
 /// Lets a screen that hosts sheets present the paywall. Only the innermost registered host
 /// presents, so a Share sheet shows it on top of itself.
 private struct PaywallHost: ViewModifier {
+  let onDismiss: () -> Void
   @Environment(PaywallRouter.self) private var paywall
   @State private var id = UUID()
 
@@ -319,7 +320,8 @@ private struct PaywallHost: ViewModifier {
       .sheet(
         item: Binding(
           get: { paywall.activeHost == id ? paywall.request : nil },
-          set: { if $0 == nil { paywall.dismiss() } })
+          set: { if $0 == nil { paywall.dismiss() } }),
+        onDismiss: onDismiss
       ) { request in
         PaywallView(source: request.source)
       }
@@ -327,7 +329,9 @@ private struct PaywallHost: ViewModifier {
 }
 
 extension View {
-  func paywallHost() -> some View { modifier(PaywallHost()) }
+  func paywallHost(onDismiss: @escaping () -> Void = {}) -> some View {
+    modifier(PaywallHost(onDismiss: onDismiss))
+  }
 }
 
 /// Manage the plan where it was bought: the App Store's subscription sheet, or the web

@@ -33,6 +33,7 @@ struct LogView: View {
   @State private var existingPhoto: URL?
   @State private var photoItem: PhotosPickerItem?
   @State private var galleryPicker = false
+  @State private var resumeGalleryPicker = false
   @State private var gallerySelection: [PhotosPickerItem] = []
   @State private var pendingGallery: [PhotosPickerItem] = []
   @State private var additionalPhotos: [EntryMedia.PhotoDraft] = []
@@ -185,6 +186,11 @@ struct LogView: View {
         }
       }
     }
+    .paywallHost(onDismiss: {
+      guard resumeGalleryPicker else { return }
+      resumeGalleryPicker = false
+      galleryPicker = true
+    })
     .photosPicker(isPresented: $galleryPicker, selection: $gallerySelection,
       maxSelectionCount: max(1, 10 - mediaCount), matching: .images)
     .onChange(of: gallerySelection) { _, items in
@@ -887,7 +893,7 @@ struct LogView: View {
     if membership.canUse("media.multiple") {
       galleryPicker = true
     } else {
-      paywall.present(source: .additionalMedia) { galleryPicker = true }
+      paywall.present(source: .additionalMedia) { resumeGalleryPicker = true }
     }
   }
 
