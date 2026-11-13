@@ -291,7 +291,7 @@ export async function runScheduled({
     try{await appendFile(env.GITHUB_STEP_SUMMARY,await formatFrontierProgress(frontier,key));}
     catch{console.log(`Progress snapshot unavailable for ${key}; use the source progress view.`);}
    }
-   return {mine,endedAt:now(),report:{...result,source:key,...(result.publishError?{error:`Publication failed (${result.publishError})`}:{})}};
+   return {mine,endedAt:now(),report:{...result,source:key}};
   }catch(error){
    // Keep the error class and a URL- and secret-stripped message so the cause is visible; resume is unchanged.
    return {mine,endedAt:now(),report:{source:key,error:`Source operation failed (${safeError(error,300)}); saved leases and checkpoints will resume`.slice(0,400)}};
@@ -303,7 +303,7 @@ export async function runScheduled({
  if(fastExit)for(const row of eligible)perSource[row.source_key]={pages:0,cap_hit:false,stop:'nothing_due'};
  for(const {report,mine,endedAt} of outcomes){
   const pages=report.pages??0;
-  perSource[report.source]={pages,requests:report.requests,statuses:report.statuses,identities:report.identities,runs:report.runs,
+  perSource[report.source]={pages,requests:report.requests,statuses:report.statuses,
    ...(report.error?{error:report.error}:{}),...(report.spendUsd?{model_spend_usd:report.spendUsd}:{}),...(report.runId?{run_id:report.runId}:{}),
    stop:report.error?'failed':sourceStop({pages,allowance:mine,limitedBy:mine.limitedBy,timeLimited:endedAt>=deadline-90_000}),
    cap_hit:dailyLeft(report.source)-pages<=0};
@@ -329,7 +329,7 @@ ${fastExit?'Nothing was due for any source a few minutes ago, so this start exit
 `).join('')+
   (modelCapReached?`- model work skipped: today's $${daily.dailySpendUsd} model limit reached
 `:'')+
-  reports.map(report=>`- ${report.source}: ${report.error??JSON.stringify({pages:report.pages,allowance:allowances.get(report.source).pages,stopped:words(perSource[report.source].stop),requests:report.requests,statuses:report.statuses,identities:report.identities,runs:report.runs})}
+  reports.map(report=>`- ${report.source}: ${report.error??JSON.stringify({pages:report.pages,allowance:allowances.get(report.source).pages,stopped:words(perSource[report.source].stop),requests:report.requests,statuses:report.statuses})}
 `).join('');
  console.log(summary);
  if(env.GITHUB_STEP_SUMMARY)await appendFile(env.GITHUB_STEP_SUMMARY,summary);

@@ -1063,6 +1063,42 @@ internal enum PublicSchema {
       case runAvailableAt = "run_available_at"
     }
   }
+  internal struct CrawlPublicationTicksSelect: Codable, Hashable, Sendable, Identifiable {
+    internal let finishedAt: String
+    internal let id: Int64
+    internal let perSource: AnyJSON
+    internal let startedAt: String
+    internal enum CodingKeys: String, CodingKey {
+      case finishedAt = "finished_at"
+      case id = "id"
+      case perSource = "per_source"
+      case startedAt = "started_at"
+    }
+  }
+  internal struct CrawlPublicationTicksInsert: Codable, Hashable, Sendable, Identifiable {
+    internal let finishedAt: String
+    internal let id: Int64?
+    internal let perSource: AnyJSON
+    internal let startedAt: String
+    internal enum CodingKeys: String, CodingKey {
+      case finishedAt = "finished_at"
+      case id = "id"
+      case perSource = "per_source"
+      case startedAt = "started_at"
+    }
+  }
+  internal struct CrawlPublicationTicksUpdate: Codable, Hashable, Sendable, Identifiable {
+    internal let finishedAt: String?
+    internal let id: Int64?
+    internal let perSource: AnyJSON?
+    internal let startedAt: String?
+    internal enum CodingKeys: String, CodingKey {
+      case finishedAt = "finished_at"
+      case id = "id"
+      case perSource = "per_source"
+      case startedAt = "started_at"
+    }
+  }
   internal struct CrawlRepairCyclesSelect: Codable, Hashable, Sendable {
     internal let attempts: Int32
     internal let contentVersion: String

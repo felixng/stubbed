@@ -239,6 +239,7 @@ export type CrawlOverviewAttention = { stage: CrawlStage; status: "failed" | "bl
 export type CrawlOverview = {
   run_dates: { total: number; from_sources: number };
   sources: Record<string, { next_refresh_at: string | null; unchecked_pages: number; attention: CrawlOverviewAttention[] }>;
+  publication?: Record<string, { last_published_at: string | null }>;
   official: { sites: number; sites_needing_attention: number; last_run_at: string | null; last_run_status: string | null; findings_to_review: number };
   recent_actions: { at: string; source: string; operation: string; affected: number; who: string }[];
 };

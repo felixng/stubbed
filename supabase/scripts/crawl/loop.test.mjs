@@ -150,6 +150,4 @@ test('a failed source operation reports its error class and a stripped message, 
  const text=logs.join('\n');
  assert.match(text,/london_theatre: Source operation failed \(DB_TIMEOUT: Database operation timed out/);
  assert.doesNotMatch(text,/pw@|postgresql:/);
- const publish=await runScheduled({env,frontier,source:'london_theatre',runSource:async()=>({pages:1,publishError:'identities: DB_TIMEOUT: timed out'})}).catch(error=>error);
- assert.match(publish.message,/failed/);
 });

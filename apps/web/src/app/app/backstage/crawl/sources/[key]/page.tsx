@@ -16,6 +16,7 @@ import {
   isCrawlSource, pagesHref, shortDate, shortDateTime, sourceKeyFromPath, sourcePath, stepName,
   type CrawlOverview, type CrawlSourceProgress,
 } from "@/lib/admin-crawl";
+import { timeAgo } from "@/lib/reactions";
 import { ownerContext } from "@/lib/supabase/data";
 
 export const metadata: Metadata = { title: "Crawl source" };
@@ -74,6 +75,8 @@ async function Source({ params, searchParams }: Pick<PageProps<"/app/backstage/c
   const areaIds = areas.map(area => area.id);
   const items = attentionItems(overview, [source]);
   const waiting = extras?.unchecked_pages ?? 0;
+  const lastPublished = overview.publication?.[key]?.last_published_at ?? null;
+  const lastPublishedAgo = lastPublished ? timeAgo(lastPublished) : null;
   const id = data.identities, ev = data.evidence;
 
   return (
@@ -102,7 +105,7 @@ async function Source({ params, searchParams }: Pick<PageProps<"/app/backstage/c
             note={state.key === "off" ? "Not enabled for this source. This is set in the database." : state.key === "blocked" ? `Blocked by the site: ${source.paused_reason}` : undefined} />
           <CrawlSwitch kind={{ type: "publication", source: key }} label="Publication" checked={source.publication_enabled}
             disabled={!source.publication_enabled && Boolean(source.withdrawn_at)}
-            description="Put checked venues, shows and run dates from this source into the catalogue. Takes effect on the next crawl run, usually within a day."
+            description="Put checked venues, shows and run dates from this source into the catalogue. Takes effect within a minute."
             note={source.withdrawn_at && !source.publication_enabled ? "This source’s evidence is withdrawn. Reinstate it first."
               : waiting > 0 ? `${n(waiting)} ${waiting === 1 ? "page is" : "pages are"} read and waiting to be checked and published.` : undefined} />
         </div>
@@ -176,6 +179,7 @@ async function Source({ params, searchParams }: Pick<PageProps<"/app/backstage/c
         <ul className="flex flex-col gap-1 text-subheadline">
           <li><span className="font-semibold">{CRAWL_STEPS[3].name}:</span> {n(waiting)} {waiting === 1 ? "page" : "pages"} waiting to be checked.</li>
           <li><span className="font-semibold">{CRAWL_STEPS[4].name}:</span> {source.publication_enabled ? "On." : "Off, so nothing from this source reaches the catalogue."} {n(ev.published_runs)} run dates published.</li>
+          {lastPublishedAgo && <li>Last added to the catalogue {lastPublishedAgo === "now" ? "just now" : `${lastPublishedAgo} ago`}.</li>}
         </ul>
         <Link href={pagesHref(filters)} className="inline-flex min-h-11 items-center text-subheadline text-tint-text">See all crawled pages</Link>
         </div>

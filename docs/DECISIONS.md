@@ -1623,6 +1623,13 @@ The hub showed Playbill as 83% done because `crawl_source_progress` without a sc
 15 London Theatre pages failed on every publication pass with SQLSTATE 42P01. In `crawl_match_show`, `title` is a local variable, and PL/pgSQL only lets the function's name qualify parameters, so `crawl_match_show.title` in the pending-candidate update failed whenever a pending candidate's cleaned title, type, year or aliases had changed. The migration `20261113205344_fix_crawl_match_show_candidate_update.sql` adds a `<<fn>>` block label and writes `fn.title`. A label rather than a rename: a rename touches about twenty references and risks changing behaviour; the label is a two-line change and the body is otherwise identical.
 
 
+### Publish crawl results from inside the database every minute (2026-11-13, #538, epic #536)
+
+Publishing was the tail of a crawl run: 100 identities and 100 runs per source per run, about 200 an hour, and the oldest 100 items (waiting for a venue page) were picked first every time, so a backfill processed nothing (`deferred 100, processed 0`). Playbill had 5,609 extractions waiting. Publishing is pure SQL, so a `pg_cron` job now calls `run_crawl_publication()` every minute (the pattern of `catalogue-crawl-dispatch`), and the crawl run stops publishing (one publisher, one place to look). Both publishers order by when an item is next available, so deferred items go to the back. A tick makes up to 3 passes and stops starting calls after 20 seconds, because the functions hold an advisory lock for one transaction. The manual `--publish-identities` / `--publish-runs` flags stay. Migration `20261113215008_crawl_publication_in_database.sql`.
+
+Numbers: hosted unpublished items 3509 before the push; 2609 three ticks (3 minutes) later and falling by about 300 a tick.
+
+
 ## Entry media schema (#141)
 
 Gallery order and the ready cover are derived from one media collection. Private source references live in an owner-only relation, and native revision files live in a private bucket outside the legacy photo write policies. See [the media contract](MEDIA.md) for crop geometry, compatibility and the upload interface.
