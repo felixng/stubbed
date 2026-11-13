@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Stubbed video export probe</title>
+<label>Source video <input id="source" type="file" accept="video/*"></label>
+<label><input id="packet-copy" type="checkbox"> Test packet-copy trim</label>
+<button id="run" type="button">Run trim tests</button>
+<pre id="results" aria-live="polite"></pre>
+<video controls muted playsinline id="playback"></video>
+<a id="download" download="trimmed.mp4" hidden>Download in-limit preview</a>
+<script type="importmap">
+{"imports":{"mediabunny":"./node_modules/mediabunny/dist/bundles/mediabunny.mjs"}}
+</script>
+<script type="module">
+import {
+  ALL_FORMATS, BlobSource, BufferTarget, Conversion, Input, Mp4OutputFormat, Output,
+  canEncodeAudio, canEncodeVideo,
+} from "mediabunny";
+
+const source = document.querySelector("#source");
+const run = document.querySelector("#run");
+const results = document.querySelector("#results");
+const playback = document.querySelector("#playback");
+const download = document.querySelector("#download");
+
+function clearPreview() {
+  playback.removeAttribute("src");
+  playback.load();
+  download.removeAttribute("href");
+  download.hidden = true;
+  if (playbackUrl) URL.revokeObjectURL(playbackUrl);
+  playbackUrl = undefined;
+}
+let playbackUrl;
+let registeredAacEncoder = false;
+
+run.addEventListener("click", async () => {
+  const file = source.files[0];
+  const packetCopy = document.querySelector("#packet-copy").checked;
+  if (!file) return;
+  run.disabled = true;
+  clearPreview();
+  results.textContent = navigator.userAgent + "\n";
+  const [avc, aac] = await Promise.all([
+    canEncodeVideo("avc", { width: 1280, height: 720, bitrate: 3_000_000 }),
+    canEncodeAudio("aac", { numberOfChannels: 1, sampleRate: 48000, bitrate: 96_000 }),
+  ]);
+  results.textContent += JSON.stringify({ avc, aac }) + "\n";
+  if (!packetCopy && !aac && !registeredAacEncoder) {
+    try {
+      const { registerAacEncoder } = await import(
+        "./node_modules/@mediabunny/aac-encoder/dist/bundles/mediabunny-aac-encoder.mjs"
+      );
+      registerAacEncoder();
+      registeredAacEncoder = true;
+      results.textContent += "Using the WebAssembly AAC encoder.\n";
+    } catch (error) {
+      results.textContent += error.message + "\n";
+      run.disabled = false;
+      return;
+    }
+  }
+  const durations = [29.9, 30, 30.1];
+  let previewDuration = 0;
+  for (const duration of durations) {
+    const input = new Input({ source: new BlobSource(file), formats: ALL_FORMATS });
+    try {
+      const video = await input.getPrimaryVideoTrack();
+      if (!video || !await video.canDecode()) throw new Error("This browser cannot decode the source video.");
+      const [width, height] = await Promise.all([video.getDisplayWidth(), video.getDisplayHeight()]);
+      const scale = Math.min(1, 1280 / Math.max(width, height), 720 / Math.min(width, height));
+      const outputWidth = Math.max(2, 2 * Math.floor(width * scale / 2));
+      const outputHeight = Math.max(2, 2 * Math.floor(height * scale / 2));
+      const target = new BufferTarget();
+      const output = new Output({ format: new Mp4OutputFormat(), target });
+      const start = performance.now();
+      const conversion = await Conversion.init({
+        input, output, trim: { start: 1, end: 1 + duration }, tags: {},
+        copy: packetCopy ? { mode: "forced", boundaryPolicy: "shrink" } : undefined,
+        video: packetCopy ? { codec: "avc", allowTransformationMetadata: false } : {
+          codec: "avc", bitrate: 3_000_000, width: outputWidth, height: outputHeight,
+          fit: "contain", allowTransformationMetadata: false,
+        },
+        audio: packetCopy ? { codec: "aac" } : { codec: "aac", bitrate: 96_000 },
+      });
+      if (!conversion.isValid || conversion.discardedTracks.length) {
+        throw new Error(JSON.stringify(conversion.discardedTracks.map(({ reason }) => reason)));
+      }
+      await conversion.execute();
+      const elapsedMs = Math.round(performance.now() - start);
+      const clip = new Blob([target.buffer], { type: "video/mp4" });
+      const inspection = new Input({ source: new BlobSource(clip), formats: ALL_FORMATS });
+      let measuredDuration;
+      try {
+        const exportedVideo = await inspection.getPrimaryVideoTrack();
+        if (!exportedVideo) throw new Error("The export has no video track.");
+        const [measured, measuredWidth, measuredHeight] = await Promise.all([
+          inspection.computeDuration(), exportedVideo.getDisplayWidth(), exportedVideo.getDisplayHeight(),
+        ]);
+        measuredDuration = measured;
+        if (duration === 30 && measured > 30) {
+          const retry = 30 - (measured - 30) - 0.05;
+          if (retry > 0) durations.push(retry);
+        }
+        results.textContent += JSON.stringify({
+          requested: duration, duration: measured, bytes: clip.size, elapsedMs,
+          width: measuredWidth, height: measuredHeight,
+        }) + "\n";
+      } finally {
+        inspection.dispose();
+      }
+      if (measuredDuration > previewDuration && measuredDuration <= 30 && clip.size <= 15 * 1024 * 1024) {
+        previewDuration = measuredDuration;
+        clearPreview();
+        playback.src = playbackUrl = URL.createObjectURL(clip);
+        download.href = playbackUrl;
+        download.hidden = false;
+      }
+    } catch (error) {
+      results.textContent += `${duration}: ${error.message}\n`;
+    } finally {
+      input.dispose();
+    }
+  }
+  run.disabled = false;
+});
+</script>
+</html>
