@@ -191,3 +191,174 @@ to anon, authenticated using (
       and m.kind = 'video' and m.state = 'ready' and name = m.display_path
   )
 );
+
+alter table public.entry_media_reservations add column verified_video jsonb;
+
+create or replace function public.entry_media_verification_target(p_reservation_id uuid, p_owner uuid)
+returns jsonb
+language sql stable security definer set search_path = ''
+as $$
+  select jsonb_build_object('state', r.state, 'kind', r.kind,
+    'prefix', r.entry_id || '/' || r.media_id || '/' || r.revision || '/',
+    'source_revision', case when jsonb_array_length(r.assets) = 2 then s.source_revision else r.revision end,
+    'revision', r.revision)
+  from public.entry_media_reservations r join public.entries e on e.id = r.entry_id
+  left join public.entry_media_sources s on s.media_id = r.media_id
+  where r.id = p_reservation_id and e.user_id = p_owner
+    and (r.state = 'finalized' or (r.state = 'pending' and r.expires_at > statement_timestamp()));
+$$;
+
+create or replace function public.record_entry_media_verification(p_reservation_id uuid, p_geometry jsonb)
+returns void
+language sql security definer set search_path = ''
+as $$
+  update public.entry_media_reservations set verified_photo = p_geometry
+  where id = p_reservation_id and kind = 'photo' and state = 'pending' and expires_at > statement_timestamp()
+    and verified_photo is null;
+$$;
+
+create function public.record_entry_video_verification(p_reservation_id uuid, p_facts jsonb)
+returns void
+language sql security definer set search_path = ''
+as $$
+  update public.entry_media_reservations set verified_video = p_facts
+  where id = p_reservation_id and kind = 'video' and state = 'pending'
+    and expires_at > statement_timestamp() and verified_video is null
+    and (p_facts->>'duration_ms')::integer between 1 and 30000;
+$$;
+revoke execute on function public.record_entry_video_verification(uuid, jsonb) from public, anon, authenticated;
+grant execute on function public.record_entry_video_verification(uuid, jsonb) to service_role;
+
+create or replace function public.finalize_entry_media(p_reservation_id uuid)
+returns jsonb
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  reservation public.entry_media_reservations;
+  target public.entry_media;
+  prefix text;
+  geometry jsonb;
+begin
+  perform 1 from public.entries e
+  join public.entry_media_reservations r on r.entry_id = e.id
+  where e.user_id = auth.uid() and r.id = p_reservation_id for update of e;
+  if not found then raise exception 'MEDIA_RESERVATION_NOT_FOUND' using errcode = '42501'; end if;
+
+  select * into strict reservation from public.entry_media_reservations where id = p_reservation_id;
+  if reservation.state = 'finalized' then
+    return jsonb_build_object('media_id', reservation.media_id, 'revision', reservation.revision,
+      'position', reservation.position);
+  end if;
+  if reservation.state <> 'pending' or reservation.expires_at <= clock_timestamp() then
+    raise exception 'MEDIA_RESERVATION_EXPIRED' using errcode = '22023';
+  end if;
+  if reservation.kind = 'video' then
+    if (select value from public.app_config where key = 'media_video_uploads_enabled') is distinct from 'true' then
+      raise exception 'MEDIA_UPLOADS_DISABLED' using errcode = '42501';
+    end if;
+    if public.has_feature('media.video') is distinct from true then
+      raise exception 'MEDIA_PRO_REQUIRED' using errcode = '42501';
+    end if;
+    if exists (select 1 from public.entry_media where entry_id = reservation.entry_id) then
+      if (select value from public.app_config where key = 'media_gallery_uploads_enabled') is distinct from 'true' then
+        raise exception 'MEDIA_GALLERIES_DISABLED' using errcode = '42501';
+      end if;
+      if public.has_feature('media.multiple') is distinct from true then
+        raise exception 'MEDIA_PRO_REQUIRED' using errcode = '42501';
+      end if;
+    end if;
+
+    prefix := reservation.entry_id || '/' || reservation.media_id || '/' || reservation.revision || '/';
+    if reservation.verified_video is null or exists (
+      select 1 from jsonb_array_elements(reservation.assets) asset
+      where not exists (
+        select 1 from storage.objects o
+        where o.bucket_id = case when asset->>'role' = 'display' then 'entry-video' else 'entry-media' end
+          and o.name = prefix || (asset->>'role') || case when asset->>'role' = 'display' then '.mp4' else '.jpg' end
+          and o.metadata->>'mimetype' = asset->>'content_type'
+          and o.metadata->>'size' = asset->>'bytes'
+      )
+    ) then
+      raise exception 'MEDIA_ASSETS_UNVERIFIED' using errcode = '22023';
+    end if;
+
+    insert into public.entry_media (
+      id, entry_id, kind, position, revision, state, display_path, thumbnail_path, poster_path, duration_ms
+    ) values (
+      reservation.media_id, reservation.entry_id, 'video', reservation.position, reservation.revision, 'ready',
+      prefix || 'display.mp4', prefix || 'thumb.jpg', prefix || 'poster.jpg',
+      (reservation.verified_video->>'duration_ms')::integer
+    );
+    update public.entry_media_reservations set state = 'finalized' where id = reservation.id;
+    return jsonb_build_object('media_id', reservation.media_id, 'revision', reservation.revision,
+      'position', reservation.position);
+  end if;
+
+  if (select value from public.app_config where key = 'media_photo_uploads_enabled') is distinct from 'true' then
+    raise exception 'MEDIA_UPLOADS_DISABLED' using errcode = '42501';
+  end if;
+  if reservation.replace_media_id is not null then
+    select * into target from public.entry_media where id = reservation.replace_media_id
+      and entry_id = reservation.entry_id;
+    if not found then raise exception 'MEDIA_ITEM_NOT_FOUND' using errcode = '22023'; end if;
+  end if;
+  if jsonb_array_length(reservation.assets) = 3 and (target.kind = 'video' or exists (
+    select 1 from public.entry_media where entry_id = reservation.entry_id
+      and id is distinct from reservation.replace_media_id
+  )) then
+    if (select value from public.app_config where key = 'media_gallery_uploads_enabled') is distinct from 'true' then
+      raise exception 'MEDIA_GALLERIES_DISABLED' using errcode = '42501';
+    end if;
+    if public.has_feature('media.multiple') is distinct from true then
+      raise exception 'MEDIA_PRO_REQUIRED' using errcode = '42501';
+    end if;
+  end if;
+
+  prefix := reservation.entry_id || '/' || reservation.media_id || '/' || reservation.revision || '/';
+  geometry := reservation.verified_photo;
+  if geometry is null or exists (
+    select 1 from jsonb_array_elements(reservation.assets) asset
+    where not exists (
+      select 1 from storage.objects o where o.bucket_id = 'entry-media'
+        and o.name = prefix || (asset->>'role') || '.jpg'
+        and o.metadata->>'mimetype' = asset->>'content_type'
+        and o.metadata->>'size' = asset->>'bytes'
+    )
+  ) then
+    raise exception 'MEDIA_ASSETS_UNVERIFIED' using errcode = '22023';
+  end if;
+
+  insert into public.entry_media (
+    id, entry_id, kind, position, revision, state, display_path, thumbnail_path,
+    source_width, source_height, crop_x, crop_y, crop_width, crop_height
+  ) values (
+    reservation.media_id, reservation.entry_id, 'photo', coalesce(target.position, reservation.position),
+    reservation.revision, 'ready', prefix || 'display.jpg', prefix || 'thumb.jpg',
+    (geometry->>'source_width')::integer, (geometry->>'source_height')::integer,
+    (geometry->>'crop_x')::numeric, (geometry->>'crop_y')::numeric,
+    (geometry->>'crop_width')::numeric, (geometry->>'crop_height')::numeric
+  )
+  on conflict (id) do update set
+    legacy = false, kind = 'photo', revision = excluded.revision, display_path = excluded.display_path,
+    thumbnail_path = excluded.thumbnail_path, poster_path = null, duration_ms = null,
+    source_width = excluded.source_width, source_height = excluded.source_height, crop_x = excluded.crop_x,
+    crop_y = excluded.crop_y, crop_width = excluded.crop_width, crop_height = excluded.crop_height;
+
+  if jsonb_array_length(reservation.assets) = 3 then
+    insert into public.entry_media_sources (media_id, source_revision)
+    values (reservation.media_id, reservation.revision)
+    on conflict (media_id) do update set source_revision = excluded.source_revision;
+  end if;
+
+  if target.legacy then
+    update public.entries set photo_path = null
+    where id = reservation.entry_id and photo_path = target.display_path;
+  end if;
+
+  update public.entry_media_reservations set state = 'finalized',
+    position = coalesce(target.position, reservation.position) where id = reservation.id
+  returning * into reservation;
+  return jsonb_build_object('media_id', reservation.media_id, 'revision', reservation.revision,
+    'position', reservation.position);
+end;
+$$;

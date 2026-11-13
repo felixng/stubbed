@@ -41,11 +41,6 @@ Deno.serve(async (request) => {
     if (!target) return error("MEDIA_RESERVATION_NOT_FOUND", 404);
 
     if (target.state === "pending") {
-      const crop = body.crop;
-      if (!Array.isArray(crop) || crop.length !== 4 || !crop.every(Number.isFinite)) {
-        return error("MEDIA_INVALID_CROP", 400);
-      }
-      const [x, y, width, height] = crop;
       async function dimensions(role: string) {
         const prefix = role === "source"
           ? target.prefix.replace(/\d+\/$/, `${target.source_revision}/`)
@@ -63,27 +58,55 @@ Deno.serve(async (request) => {
         return [decoded.width, decoded.height];
       }
 
-      let source: number[];
-      try {
-        source = await dimensions("source");
-        for (const role of ["display", "thumb"]) {
-          const [w, h] = await dimensions(role);
-          if (w !== h) return error("MEDIA_INVALID_ASSETS", 422);
+      if (target.kind === "video") {
+        let facts;
+        try {
+          // Load the parser only for video so photos keep their existing startup path.
+          const { inspectVideo } = await import("./inspect-video.mjs");
+          const file = await fetch(`${url}/storage/v1/object/entry-video/${target.prefix}display.mp4`, {
+            headers: adminHeaders, signal: AbortSignal.timeout(10000),
+          });
+          facts = await inspectVideo(await readAsset(file, 15728640));
+          for (const [role, maxEdge] of [["poster", 1024], ["thumb", 256]] as const) {
+            const [w, h] = await dimensions(role);
+            if (w !== h || w > maxEdge) return error("MEDIA_INVALID_ASSETS", 422);
+          }
+        } catch {
+          return error("MEDIA_INVALID_ASSETS", 422);
         }
-      } catch {
-        return error("MEDIA_INVALID_ASSETS", 422);
-      }
-      if (x < 0 || y < 0 || width <= 0 || height <= 0 || x + width > 1 || y + height > 1 ||
-          Math.abs(width * source[0] - height * source[1]) > 1) return error("MEDIA_INVALID_CROP", 422);
+        const recorded = await rpc("record_entry_video_verification", {
+          p_reservation_id: id,
+          p_facts: { duration_ms: Math.ceil(facts.seconds * 1000), width: facts.width, height: facts.height },
+        });
+        if (!recorded.ok) return error("MEDIA_UNAVAILABLE", 502);
+      } else {
+        const crop = body.crop;
+        if (!Array.isArray(crop) || crop.length !== 4 || !crop.every(Number.isFinite)) {
+          return error("MEDIA_INVALID_CROP", 400);
+        }
+        const [x, y, width, height] = crop;
+        let source: number[];
+        try {
+          source = await dimensions("source");
+          for (const role of ["display", "thumb"]) {
+            const [w, h] = await dimensions(role);
+            if (w !== h) return error("MEDIA_INVALID_ASSETS", 422);
+          }
+        } catch {
+          return error("MEDIA_INVALID_ASSETS", 422);
+        }
+        if (x < 0 || y < 0 || width <= 0 || height <= 0 || x + width > 1 || y + height > 1 ||
+            Math.abs(width * source[0] - height * source[1]) > 1) return error("MEDIA_INVALID_CROP", 422);
 
-      const recorded = await rpc("record_entry_media_verification", {
-        p_reservation_id: id,
-        p_geometry: {
-          source_width: source[0], source_height: source[1],
-          crop_x: x, crop_y: y, crop_width: width, crop_height: height,
-        },
-      });
-      if (!recorded.ok) return error("MEDIA_UNAVAILABLE", 502);
+        const recorded = await rpc("record_entry_media_verification", {
+          p_reservation_id: id,
+          p_geometry: {
+            source_width: source[0], source_height: source[1],
+            crop_x: x, crop_y: y, crop_width: width, crop_height: height,
+          },
+        });
+        if (!recorded.ok) return error("MEDIA_UNAVAILABLE", 502);
+      }
     }
 
     const finalized = await rpc("finalize_entry_media", { p_reservation_id: id }, userHeaders);
