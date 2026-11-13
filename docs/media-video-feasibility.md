@@ -42,3 +42,5 @@ The native prototype also accepts a WAV path as its second argument and writes a
 | 30.1 s | 30.1213 s | 493159 | 2538 ms |
 
 The browser producer also needs to validate the exported timeline and retry with a shorter range at the upper boundary. Audio packet duration can extend past the requested trim even when the video frames fit.
+
+On a second Chrome 156 run, the 30.0-second request again produced 30.036 seconds. Subtracting the measured overshoot and a 50 ms margin yielded a 29.914-second request and a 29.9507-second output (489873 bytes, 3733 ms). Verify the retry output before passing its bytes to the uploader.

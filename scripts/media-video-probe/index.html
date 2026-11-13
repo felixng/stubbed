@@ -28,7 +28,8 @@ run.addEventListener("click", async () => {
     canEncodeAudio("aac", { numberOfChannels: 1, sampleRate: 48000, bitrate: 96_000 }),
   ]);
   results.textContent += JSON.stringify({ avc, aac }) + "\n";
-  for (const duration of [29.9, 30, 30.1]) {
+  const durations = [29.9, 30, 30.1];
+  for (const duration of durations) {
     const input = new Input({ source: new BlobSource(file), formats: ALL_FORMATS });
     try {
       const target = new BufferTarget();
@@ -47,8 +48,10 @@ run.addEventListener("click", async () => {
       const clip = new Blob([target.buffer], { type: "video/mp4" });
       const inspection = new Input({ source: new BlobSource(clip), formats: ALL_FORMATS });
       try {
+        const measured = await inspection.computeDuration();
+        if (duration === 30 && measured > 30) durations.push(30 - (measured - 30) - 0.05);
         results.textContent += JSON.stringify({
-          requested: duration, duration: await inspection.computeDuration(), bytes: clip.size, elapsedMs,
+          requested: duration, duration: measured, bytes: clip.size, elapsedMs,
         }) + "\n";
       } finally {
         inspection.dispose();
