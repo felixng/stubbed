@@ -180,3 +180,5 @@ Start at **/app/backstage/membership** (admins only). Look the person up by hand
 - **Cancelling and refunds.** The person cancels in the App Store (iOS) or from the web Membership page; Pro continues to the end of the period. Apple refunds go through Apple (reportaproblem.apple.com). Web refunds go through the RevenueCat dashboard. A refund makes the subscription `refunded` and the person Free at once.
 - **Turning sales or gates off without touching subscribers.** Set `paywall_sales_enabled` or `paywall_gates_enabled` to `false` in `app_config`. Off sales: no prompts or paywall, existing subscribers keep Pro. Off gates: everything is free again. No subscription rows change either way.
 - **Missing keys.** Any of the billing variables missing makes the billing routes answer 503 and the apps show "Upgrades aren't available yet"; nothing else is affected.
+
+The staged [entry media rollout](MEDIA.md) adds up to ten photos and videos per entry and videos up to 30 seconds as Pro benefits. Display each benefit once its capability is available. The first photo and square cropping are free.

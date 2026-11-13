@@ -53,7 +53,7 @@ Details and reasoning: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) and [`docs
 - `profiles`: id, handle (unique, can't be removed, reserved list in `is_reserved_handle`), display_name, avatar_url, bio, link, default_visibility (default `public`), is_private.
 - `venues`: name, city, country, lat, lng, `osm_id` (dedupe key), verified, created_by.
 - `shows`: title, type (musical, play, opera, dance, comedy, standup, concert, circus, other), verified, created_by. No unique title; `search_shows` is the dedupe step.
-- `entries`: user_id, show_id, venue_id (nullable), date, status (`planned` | `logged`), rating (nullable, half-star steps, none when planned), note, `photo_path` (one photo), visibility.
+- `entries`: user_id, show_id, venue_id (nullable), date, status (`planned` | `logged`), rating (nullable, half-star steps, none when planned), note, `photo_path` (legacy single-photo path), visibility.
 - `collections` (kind `trip` | `label`) and `entry_collections`: trips have required dates and hold only entries within them; labels are unused for now.
 - `follows` (status `pending` | `accepted`), `entry_likes`, `entry_comments` (≤ 500 characters).
 - `events` (write-only analytics: `entry_logged`, `card_shared`), `waitlist` (retired with the waitlist form; kept for the old list), `blocks` and `reports` (moderation; admins act at `/app/backstage/reports`).

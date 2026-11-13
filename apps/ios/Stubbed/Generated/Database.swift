@@ -2317,6 +2317,144 @@ internal enum PublicSchema {
       case userId = "user_id"
     }
   }
+  internal struct EntryMediaSelect: Codable, Hashable, Sendable {
+    internal let cropHeight: Decimal?
+    internal let cropWidth: Decimal?
+    internal let cropX: Decimal?
+    internal let cropY: Decimal?
+    internal let displayPath: String?
+    internal let durationMs: Int32?
+    internal let entryId: UUID
+    internal let id: UUID
+    internal let kind: String
+    internal let legacy: Bool
+    internal let position: Int16
+    internal let posterPath: String?
+    internal let revision: Int32
+    internal let sourceHeight: Int32?
+    internal let sourceWidth: Int32?
+    internal let state: String
+    internal let thumbnailPath: String?
+    internal enum CodingKeys: String, CodingKey {
+      case cropHeight = "crop_height"
+      case cropWidth = "crop_width"
+      case cropX = "crop_x"
+      case cropY = "crop_y"
+      case displayPath = "display_path"
+      case durationMs = "duration_ms"
+      case entryId = "entry_id"
+      case id = "id"
+      case kind = "kind"
+      case legacy = "legacy"
+      case position = "position"
+      case posterPath = "poster_path"
+      case revision = "revision"
+      case sourceHeight = "source_height"
+      case sourceWidth = "source_width"
+      case state = "state"
+      case thumbnailPath = "thumbnail_path"
+    }
+  }
+  internal struct EntryMediaInsert: Codable, Hashable, Sendable {
+    internal let cropHeight: Decimal?
+    internal let cropWidth: Decimal?
+    internal let cropX: Decimal?
+    internal let cropY: Decimal?
+    internal let displayPath: String?
+    internal let durationMs: Int32?
+    internal let entryId: UUID
+    internal let id: UUID?
+    internal let kind: String
+    internal let legacy: Bool?
+    internal let position: Int16
+    internal let posterPath: String?
+    internal let revision: Int32?
+    internal let sourceHeight: Int32?
+    internal let sourceWidth: Int32?
+    internal let state: String
+    internal let thumbnailPath: String?
+    internal enum CodingKeys: String, CodingKey {
+      case cropHeight = "crop_height"
+      case cropWidth = "crop_width"
+      case cropX = "crop_x"
+      case cropY = "crop_y"
+      case displayPath = "display_path"
+      case durationMs = "duration_ms"
+      case entryId = "entry_id"
+      case id = "id"
+      case kind = "kind"
+      case legacy = "legacy"
+      case position = "position"
+      case posterPath = "poster_path"
+      case revision = "revision"
+      case sourceHeight = "source_height"
+      case sourceWidth = "source_width"
+      case state = "state"
+      case thumbnailPath = "thumbnail_path"
+    }
+  }
+  internal struct EntryMediaUpdate: Codable, Hashable, Sendable {
+    internal let cropHeight: Decimal?
+    internal let cropWidth: Decimal?
+    internal let cropX: Decimal?
+    internal let cropY: Decimal?
+    internal let displayPath: String?
+    internal let durationMs: Int32?
+    internal let entryId: UUID?
+    internal let id: UUID?
+    internal let kind: String?
+    internal let legacy: Bool?
+    internal let position: Int16?
+    internal let posterPath: String?
+    internal let revision: Int32?
+    internal let sourceHeight: Int32?
+    internal let sourceWidth: Int32?
+    internal let state: String?
+    internal let thumbnailPath: String?
+    internal enum CodingKeys: String, CodingKey {
+      case cropHeight = "crop_height"
+      case cropWidth = "crop_width"
+      case cropX = "crop_x"
+      case cropY = "crop_y"
+      case displayPath = "display_path"
+      case durationMs = "duration_ms"
+      case entryId = "entry_id"
+      case id = "id"
+      case kind = "kind"
+      case legacy = "legacy"
+      case position = "position"
+      case posterPath = "poster_path"
+      case revision = "revision"
+      case sourceHeight = "source_height"
+      case sourceWidth = "source_width"
+      case state = "state"
+      case thumbnailPath = "thumbnail_path"
+    }
+  }
+  internal struct EntryMediaSourcesSelect: Codable, Hashable, Sendable {
+    internal let mediaId: UUID
+    internal let sourceRevision: Int32
+    internal enum CodingKeys: String, CodingKey {
+      case mediaId = "media_id"
+      case sourceRevision = "source_revision"
+    }
+  }
+  internal struct EntryMediaSourcesInsert: Codable, Hashable, Sendable {
+    internal let mediaId: UUID
+    internal let sourceRevision: Int32
+    internal enum CodingKeys: String, CodingKey {
+      case mediaId = "media_id"
+      case sourceRevision = "source_revision"
+    }
+  }
+  internal struct EntryMediaSourcesUpdate: Codable, Hashable, Sendable {
+    internal let mediaId: UUID?
+    internal let sourceRevision: Int32?
+    internal enum CodingKeys: String, CodingKey {
+      case mediaId = "media_id"
+      case sourceRevision = "source_revision"
+    }
+  }
   internal struct EventsSelect: Codable, Hashable, Sendable, Identifiable {
     internal let createdAt: String
     internal let id: Int64
@@ -3737,6 +3875,20 @@ internal enum PublicSchema {
       case supportEndDate = "support_end_date"
       case title = "title"
       case venueId = "venue_id"
+    }
+  }
+  internal struct EntryMediaCoversSelect: Codable, Hashable, Sendable {
+    internal let entryId: UUID?
+    internal let kind: String?
+    internal let legacy: Bool?
+    internal let mediaId: UUID?
+    internal let photoPath: String?
+    internal enum CodingKeys: String, CodingKey {
+      case entryId = "entry_id"
+      case kind = "kind"
+      case legacy = "legacy"
+      case mediaId = "media_id"
+      case photoPath = "photo_path"
     }
   }
 }
