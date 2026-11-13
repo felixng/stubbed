@@ -1618,6 +1618,11 @@ The hub showed Playbill as 83% done because `crawl_source_progress` without a sc
 - Migration `20261113120000_crawl_source_summary.sql`.
 
 
+### Fix the candidate update in `crawl_match_show` (2026-11-13, #537, epic #536)
+
+15 London Theatre pages failed on every publication pass with SQLSTATE 42P01. In `crawl_match_show`, `title` is a local variable, and PL/pgSQL only lets the function's name qualify parameters, so `crawl_match_show.title` in the pending-candidate update failed whenever a pending candidate's cleaned title, type, year or aliases had changed. The migration `20261113205344_fix_crawl_match_show_candidate_update.sql` adds a `<<fn>>` block label and writes `fn.title`. A label rather than a rename: a rename touches about twenty references and risks changing behaviour; the label is a two-line change and the body is otherwise identical.
+
+
 ## Entry media schema (#141)
 
 Gallery order and the ready cover are derived from one media collection. Private source references live in an owner-only relation, and native revision files live in a private bucket outside the legacy photo write policies. See [the media contract](MEDIA.md) for crop geometry, compatibility and the upload interface.
