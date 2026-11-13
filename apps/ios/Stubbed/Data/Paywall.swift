@@ -40,6 +40,8 @@ final class PaywallRouter {
     case showMix = "show_mix"
     case pastYear = "past_year"
     case allTime = "all_time"
+    case additionalMedia = "additional_media"
+    case video
   }
   struct Request: Identifiable {
     let id = UUID()

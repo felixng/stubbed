@@ -5,6 +5,14 @@ import SwiftUI
 /// The one paywall: what the paid tier adds and the offer the provider returns. Opened only
 /// through `PaywallRouter.present`, which also decides where to go back to.
 struct PaywallView: View {
+  private var headline: String {
+    switch source {
+    case .additionalMedia: "Keep more of the night"
+    case .video: "Add a video to this memory"
+    default: "Look back at every year"
+    }
+  }
+
   let source: PaywallRouter.Source
   @Environment(Membership.self) private var membership
   @Environment(PaywallRouter.self) private var paywall
@@ -66,7 +74,7 @@ struct PaywallView: View {
       List {
         Section {
           VStack(alignment: .leading, spacing: Space.s) {
-            Text("Look back at every year").font(.title.bold())
+            Text(headline).font(.title.bold())
             Text(
               "\(membership.name) adds Show mix, earlier years and All time stats. Logging, your diary, trips and sharing stay free."
             )
@@ -301,6 +309,7 @@ struct ProNote: View {
 /// Lets a screen that hosts sheets present the paywall. Only the innermost registered host
 /// presents, so a Share sheet shows it on top of itself.
 private struct PaywallHost: ViewModifier {
+  let onDismiss: () -> Void
   @Environment(PaywallRouter.self) private var paywall
   @State private var id = UUID()
 
@@ -311,7 +320,8 @@ private struct PaywallHost: ViewModifier {
       .sheet(
         item: Binding(
           get: { paywall.activeHost == id ? paywall.request : nil },
-          set: { if $0 == nil { paywall.dismiss() } })
+          set: { if $0 == nil { paywall.dismiss() } }),
+        onDismiss: onDismiss
       ) { request in
         PaywallView(source: request.source)
       }
@@ -319,7 +329,9 @@ private struct PaywallHost: ViewModifier {
 }
 
 extension View {
-  func paywallHost() -> some View { modifier(PaywallHost()) }
+  func paywallHost(onDismiss: @escaping () -> Void = {}) -> some View {
+    modifier(PaywallHost(onDismiss: onDismiss))
+  }
 }
 
 /// Manage the plan where it was bought: the App Store's subscription sheet, or the web

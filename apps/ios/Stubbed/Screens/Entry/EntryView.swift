@@ -12,6 +12,9 @@ struct EntryView: View {
   @Environment(\.dismiss) private var dismiss
   @State private var state: Loadable<Entry> = .loading
   @State private var photo: URL?
+  @State private var gallery: [EntryMedia.GalleryPhoto] = []
+  @State private var galleryIndex = 0
+  @State private var galleryError: String?
   @State private var cards: [RenderedCard]?
   @State private var cardsFailed = false
   /// The caption and public page for the share screen.
@@ -73,7 +76,38 @@ struct EntryView: View {
   /// then Delete on its own.
   private func form(_ entry: Entry) -> some View {
     Form {
-      if let photo {
+      if !gallery.isEmpty {
+        Section {
+          TabView(selection: $galleryIndex) {
+            ForEach(Array(gallery.enumerated()), id: \.element.id) { index, item in
+              Color.clear.overlay { RemoteImage(url: item.url) }.clipped()
+                .accessibilityLabel("Photo \(index + 1) of \(gallery.count) from \(entry.show.title)")
+                .tag(index)
+            }
+          }
+          .tabViewStyle(.page(indexDisplayMode: .never))
+          .aspectRatio(1, contentMode: .fit)
+          .accessibilityIdentifier("entry-photo")
+          if gallery.count > 1 {
+            Text("\(galleryIndex + 1) / \(gallery.count)")
+              .font(.footnote.monospacedDigit())
+              .foregroundStyle(.secondary)
+              .frame(maxWidth: .infinity)
+              .accessibilityLabel("Photo \(galleryIndex + 1) of \(gallery.count)")
+          }
+          if gallery.count > 1 {
+            Menu("Photo actions", systemImage: "ellipsis.circle") {
+              if galleryIndex > 0 {
+                Button("Make cover") { Task { await makeCover(entry) } }
+              }
+              Button("Remove photo", role: .destructive) { Task { await removeGalleryPhoto(entry) } }
+            }
+            .frame(maxWidth: .infinity)
+          }
+          if let galleryError { Text(galleryError).foregroundStyle(.red) }
+        }
+        .listRowInsets(EdgeInsets())
+      } else if let photo {
         Section {
           Color.clear
             .aspectRatio(4 / 5, contentMode: .fit)
@@ -186,12 +220,38 @@ struct EntryView: View {
     .accessibilityElement(children: .combine)
   }
 
+  private func makeCover(_ entry: Entry) async {
+    guard gallery.indices.contains(galleryIndex) else { return }
+    var order = gallery.map(\.id)
+    order.insert(order.remove(at: galleryIndex), at: 0)
+    do {
+      try await EntryMedia.reorder(entryID: entry.id, mediaIDs: order)
+      galleryIndex = 0
+      galleryError = nil
+      await load()
+    } catch {
+      galleryError = "Couldn’t change the cover. Try again."
+    }
+  }
+
+  private func removeGalleryPhoto(_ entry: Entry) async {
+    guard gallery.indices.contains(galleryIndex) else { return }
+    do {
+      try await EntryMedia.remove(entryID: entry.id, mediaID: gallery[galleryIndex].id)
+      galleryError = nil
+      await load()
+    } catch {
+      galleryError = "Couldn’t remove the photo. Try again."
+    }
+  }
+
   private func load() async {
     do {
       let entry = try await Entries.entry(id)
-      if let cover = try? await EntryMedia.cover(entryID: entry.id), !cover.legacy {
-        photo = try? await supabase.storage.from(EntryMedia.bucket)
-          .createSignedURL(path: cover.photo_path, expiresIn: 3600)
+      gallery = (try? await EntryMedia.galleryPhotos(entryID: entry.id)) ?? []
+      galleryIndex = min(galleryIndex, max(0, gallery.count - 1))
+      if let cover = gallery.first {
+        photo = cover.url
       } else if let path = entry.photoPath {
         photo = await Entries.signPhotos([path])[path]
       } else {
