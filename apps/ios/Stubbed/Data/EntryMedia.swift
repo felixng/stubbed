@@ -68,6 +68,49 @@ enum EntryMedia {
     return rows.first
   }
 
+  struct GalleryPhoto: Identifiable, Sendable {
+    let id: UUID
+    let url: URL
+  }
+
+  static func galleryPhotos(entryID: UUID) async throws -> [GalleryPhoto] {
+    struct Row: Decodable {
+      let id: UUID
+      let display_path: String
+      let legacy: Bool
+    }
+    let rows: [Row] = try await supabase.from("entry_media").select("id,display_path,legacy")
+      .eq("entry_id", value: entryID).eq("state", value: "ready").eq("kind", value: "photo")
+      .order("position").execute().value
+    let nativePaths = rows.filter { !$0.legacy }.map(\.display_path)
+    let legacy = await Entries.signPhotos(rows.filter(\.legacy).map(\.display_path))
+    var native: [String: URL] = [:]
+    if !nativePaths.isEmpty {
+      let signed = try await supabase.storage.from(bucket).createSignedURLs(paths: nativePaths, expiresIn: 3600)
+      for result in signed {
+        if case .success(let path, let url) = result { native[path] = url }
+      }
+    }
+    return rows.compactMap { row in
+      let url = row.legacy ? legacy[row.display_path] : native[row.display_path]
+      return url.map { GalleryPhoto(id: row.id, url: $0) }
+    }
+  }
+
+  static func reorder(entryID: UUID, mediaIDs: [UUID]) async throws {
+    struct Order: Encodable {
+      let p_entry_id: UUID
+      let p_media_ids: [UUID]
+    }
+    try await supabase.rpc("reorder_entry_media", params: Order(p_entry_id: entryID, p_media_ids: mediaIDs)).execute()
+  }
+
+  static func remove(entryID: UUID, mediaID: UUID) async throws {
+    try await supabase.rpc("delete_entry_media", params: [
+      "p_entry_id": entryID, "p_media_id": mediaID,
+    ]).execute()
+  }
+
   struct RetainedPhoto {
     let data: Data
     let rectangle: [Double]

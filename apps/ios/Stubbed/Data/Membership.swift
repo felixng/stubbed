@@ -23,6 +23,8 @@ struct ProConfig: Equatable, Sendable {
   var displayName = "Pro"
   var salesEnabled = false
   var gatesEnabled = false
+  var mediaGalleriesEnabled = false
+  var mediaVideoEnabled = false
 
   init(displayName: String = "Pro", salesEnabled: Bool = false, gatesEnabled: Bool = false) {
     self.displayName = displayName
@@ -35,6 +37,8 @@ struct ProConfig: Equatable, Sendable {
     if let name = rows["pro_display_name"], !name.isEmpty { displayName = name }
     salesEnabled = adminPreview || rows["paywall_sales_enabled"] == "true"
     gatesEnabled = adminPreview || rows["paywall_gates_enabled"] == "true"
+    mediaGalleriesEnabled = rows["media_gallery_uploads_enabled"] == "true"
+    mediaVideoEnabled = rows["media_video_uploads_enabled"] == "true"
   }
 }
 

@@ -12,6 +12,8 @@ struct LogView: View {
 
   @Environment(AppSession.self) private var session
   @Environment(AppRouter.self) private var router
+  @Environment(Membership.self) private var membership
+  @Environment(PaywallRouter.self) private var paywall
   @Environment(\.dismiss) private var dismiss
   @Environment(\.dynamicTypeSize) private var typeSize
 
@@ -30,6 +32,17 @@ struct LogView: View {
   @State private var preview: UIImage?
   @State private var existingPhoto: URL?
   @State private var photoItem: PhotosPickerItem?
+  @State private var galleryPicker = false
+  @State private var gallerySelection: [PhotosPickerItem] = []
+  @State private var pendingGallery: [PhotosPickerItem] = []
+  @State private var additionalPhotos: [EntryMedia.PhotoDraft] = []
+  @State private var savedGalleryCount = 0
+  @State private var removedCover = false
+  private var mediaCount: Int {
+    let retainedCount = max(0, savedGalleryCount - (removedCover ? 1 : 0))
+    return max(retainedCount, hasPhoto ? 1 : 0) + additionalPhotos.count
+  }
+
   @State private var photoError: String?
   @State private var savedCover: EntryMedia.Cover?
   @State private var cropCandidate: CropCandidate?
@@ -43,6 +56,7 @@ struct LogView: View {
     let lookup: PhotoLookup?
     var initialCrop: EntryPhotoCrop? = nil
     var recrop = false
+    var additional = false
   }
 
   @State private var picking: Picker?
@@ -119,6 +133,7 @@ struct LogView: View {
   private var planned: Bool { Day.status(date, today: today) == .planned }
   private var offeredTrips: [Trip] { context.trips.filter { $0.covers(date) } }
   private var hasChanges: Bool {
+    if removedCover || !additionalPhotos.isEmpty { return true }
     guard let editing else { return show != nil || venue != nil || rating != nil || !note.isEmpty || photo != nil }
     return show != ShowChoice(editing.show) || venue != editing.venue.map(VenueChoice.init) || date != editing.date
       || rating != editing.rating || note != (editing.note ?? "") || visibility != editing.visibility
@@ -170,7 +185,17 @@ struct LogView: View {
         }
       }
     }
-    .sheet(item: $cropCandidate) { candidate in
+    .photosPicker(isPresented: $galleryPicker, selection: $gallerySelection,
+      maxSelectionCount: max(1, 10 - mediaCount), matching: .images)
+    .onChange(of: gallerySelection) { _, items in
+      guard !items.isEmpty else { return }
+      pendingGallery = items
+      gallerySelection = []
+      Task { await nextGalleryCrop() }
+    }
+    .sheet(item: $cropCandidate, onDismiss: {
+      if !pendingGallery.isEmpty { Task { await nextGalleryCrop() } }
+    }) { candidate in
       EntryPhotoCropView(image: candidate.image, initialCrop: candidate.initialCrop) { acceptCrop($0, candidate: candidate) }
     }
     .interactiveDismissDisabled(hasChanges || importing != nil)
@@ -295,12 +320,17 @@ struct LogView: View {
         VStack(alignment: .leading, spacing: Space.xs) {
           HStack(spacing: Space.l) {
             PhotosPicker(hasPhoto ? "Change photo" : "Add photo", selection: $photoItem, matching: .images)
+            if membership.config.mediaGalleriesEnabled && hasPhoto {
+              Button(mediaCount >= 10 ? "10/10" : "Add more", systemImage: "plus") { addGalleryPhotos() }
+                .disabled(mediaCount >= 10 || membership.info == nil)
+            }
             if croppedPhoto != nil || savedCover?.legacy == false && existingPhoto != nil {
               Button("Edit crop") { Task { await reopenCrop() } }
             }
             if hasPhoto {
               Button("Remove", role: .destructive) {
                 clearPhotoResults()
+                removedCover = savedCover != nil || editing?.photoPath != nil
                 photo = nil
                 croppedPhoto = nil
                 preview = nil
@@ -323,6 +353,25 @@ struct LogView: View {
             }
             .font(.footnote)
             .foregroundStyle(.secondary)
+          }
+        }
+      }
+      ForEach(Array(additionalPhotos.enumerated()), id: \.element.requestID) { index, item in
+        HStack {
+          if let image = UIImage(data: item.thumbnail) {
+            Image(uiImage: image).resizable().scaledToFill()
+              .frame(width: 48, height: 48).clipped().accessibilityHidden(true)
+          }
+          Text("Photo \(index + 2)")
+          Spacer()
+          Menu("Photo actions", systemImage: "ellipsis.circle") {
+            if index > 0 {
+              Button("Move earlier") { additionalPhotos.swapAt(index - 1, index) }
+            }
+            if index + 1 < additionalPhotos.count {
+              Button("Move later") { additionalPhotos.swapAt(index, index + 1) }
+            }
+            Button("Remove photo", role: .destructive) { additionalPhotos.remove(at: index) }
           }
         }
       }
@@ -747,6 +796,7 @@ struct LogView: View {
       context = try await Entries.formContext(userId: userId)
       if !touchedVisibility { visibility = context.visibility }
       if let id = editing?.id {
+        savedGalleryCount = (try? await EntryMedia.galleryPhotos(entryID: id).count) ?? 0
         savedCover = try? await EntryMedia.cover(entryID: id)
       }
       if let cover = savedCover, !cover.legacy {
@@ -832,6 +882,33 @@ struct LogView: View {
     cropCandidate = CropCandidate(source: source, image: image, original: original, lookup: lookup)
   }
 
+  private func addGalleryPhotos() {
+    guard mediaCount < 10, membership.config.mediaGalleriesEnabled, membership.info != nil else { return }
+    if membership.canUse("media.multiple") {
+      galleryPicker = true
+    } else {
+      paywall.present(source: .additionalMedia) { galleryPicker = true }
+    }
+  }
+
+  private func nextGalleryCrop() async {
+    while !pendingGallery.isEmpty && mediaCount < 10 {
+      let item = pendingGallery.removeFirst()
+      do {
+        guard let data = try await item.loadTransferable(type: Data.self) else { throw Photo.Failure.unreadable }
+        let source = try await Task.detached(priority: .userInitiated) {
+          try Photo.resizedJPEG(from: data, maxEdge: Photo.storedEdge)
+        }.value
+        guard let image = UIImage(data: source)?.cgImage else { throw Photo.Failure.unreadable }
+        cropCandidate = CropCandidate(source: source, image: image, original: nil, lookup: nil, additional: true)
+        return
+      } catch {
+        photoError = "Couldn’t read one of those photos."
+      }
+    }
+    pendingGallery.removeAll()
+  }
+
   private func reopenCrop() async {
     do {
       let source: Data
@@ -864,6 +941,12 @@ struct LogView: View {
     do {
       let derivatives = try crop.derivatives(from: candidate.image)
       let size = CGSize(width: candidate.image.width, height: candidate.image.height)
+      if candidate.additional {
+        additionalPhotos.append(EntryMedia.PhotoDraft(source: candidate.source, display: derivatives.display,
+          thumbnail: derivatives.thumbnail, rectangle: crop.normalized(in: size)))
+        return
+      }
+      removedCover = false
       if candidate.original != nil { clearPhotoResults() }
       croppedPhoto = EntryMedia.PhotoDraft(source: candidate.source, display: derivatives.display,
         thumbnail: derivatives.thumbnail, rectangle: crop.normalized(in: size), recrop: candidate.recrop, replacing: savedCover?.media_id)
@@ -902,12 +985,15 @@ struct LogView: View {
       id: editing?.id ?? draftEntryID, show: show, venue: venue, date: date, rating: rating, note: note,
       visibility: visibility, tripIds: tripIds.filter { id in offeredTrips.contains { $0.id == id } }, photo: photo,
       keepPhoto: existingPhoto != nil, croppedPhoto: croppedPhoto,
-      removedMediaID: existingPhoto == nil && photo == nil && savedCover?.legacy == false ? savedCover?.media_id : nil)
+      removedMediaID: removedCover && photo == nil && savedCover?.legacy == false ? savedCover?.media_id : nil)
     do {
       let saved = try await Entries.save(draft, userId: userId, editing: editing)
       if saved.photoFailed && croppedPhoto != nil {
         error = "The entry was saved, but the photo couldn’t upload. Tap Save to retry."
         return
+      }
+      for additional in additionalPhotos {
+        try await EntryMedia.savePhoto(additional, entryID: saved.id)
       }
       if editing == nil, !planned {
         var props: [String: AnyJSON] = [
