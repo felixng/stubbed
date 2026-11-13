@@ -3,6 +3,7 @@
 <meta charset="utf-8">
 <title>Stubbed video export probe</title>
 <label>Source video <input id="source" type="file" accept="video/*"></label>
+<label><input id="packet-copy" type="checkbox"> Test packet-copy trim</label>
 <button id="run" type="button">Run trim tests</button>
 <pre id="results" aria-live="polite"></pre>
 <video controls muted playsinline id="playback"></video>
@@ -35,6 +36,7 @@ let registeredAacEncoder = false;
 
 run.addEventListener("click", async () => {
   const file = source.files[0];
+  const packetCopy = document.querySelector("#packet-copy").checked;
   if (!file) return;
   run.disabled = true;
   clearPreview();
@@ -44,7 +46,7 @@ run.addEventListener("click", async () => {
     canEncodeAudio("aac", { numberOfChannels: 1, sampleRate: 48000, bitrate: 96_000 }),
   ]);
   results.textContent += JSON.stringify({ avc, aac }) + "\n";
-  if (!aac && !registeredAacEncoder) {
+  if (!packetCopy && !aac && !registeredAacEncoder) {
     try {
       const { registerAacEncoder } = await import(
         "./node_modules/@mediabunny/aac-encoder/dist/bundles/mediabunny-aac-encoder.mjs"
@@ -74,11 +76,12 @@ run.addEventListener("click", async () => {
       const start = performance.now();
       const conversion = await Conversion.init({
         input, output, trim: { start: 1, end: 1 + duration }, tags: {},
-        video: {
+        copy: packetCopy ? { mode: "forced", boundaryPolicy: "shrink" } : undefined,
+        video: packetCopy ? { codec: "avc", allowTransformationMetadata: false } : {
           codec: "avc", bitrate: 3_000_000, width: outputWidth, height: outputHeight,
           fit: "contain", allowTransformationMetadata: false,
         },
-        audio: { codec: "aac", bitrate: 96_000 },
+        audio: packetCopy ? { codec: "aac" } : { codec: "aac", bitrate: 96_000 },
       });
       if (!conversion.isValid || conversion.discardedTracks.length) {
         throw new Error(JSON.stringify(conversion.discardedTracks.map(({ reason }) => reason)));
