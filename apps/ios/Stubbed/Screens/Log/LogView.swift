@@ -31,9 +31,23 @@ struct LogView: View {
   @State private var existingPhoto: URL?
   @State private var photoItem: PhotosPickerItem?
   @State private var photoError: String?
+  @State private var savedCover: EntryMedia.Cover?
+  @State private var cropCandidate: CropCandidate?
+  @State private var croppedPhoto: EntryMedia.PhotoDraft?
+
+  private struct CropCandidate: Identifiable {
+    let id = UUID()
+    let source: Data
+    let image: CGImage
+    let original: Data?
+    let lookup: PhotoLookup?
+    var initialCrop: EntryPhotoCrop? = nil
+    var recrop = false
+  }
 
   @State private var picking: Picker?
   @State private var saving = false
+  @State private var draftEntryID = UUID()
   @State private var error: String?
   @State private var confirmDiscard = false
   @State private var confirmStop = false
@@ -155,6 +169,9 @@ struct LogView: View {
           VenueSearch(nearby: nearby, suggestions: venueSuggestions, place: venuePlace) { pickVenue($0) }
         }
       }
+    }
+    .sheet(item: $cropCandidate) { candidate in
+      EntryPhotoCropView(image: candidate.image, initialCrop: candidate.initialCrop) { acceptCrop($0, candidate: candidate) }
     }
     .interactiveDismissDisabled(hasChanges || importing != nil)
     .task { await load() }
@@ -278,10 +295,14 @@ struct LogView: View {
         VStack(alignment: .leading, spacing: Space.xs) {
           HStack(spacing: Space.l) {
             PhotosPicker(hasPhoto ? "Change photo" : "Add photo", selection: $photoItem, matching: .images)
+            if croppedPhoto != nil || savedCover?.legacy == false && existingPhoto != nil {
+              Button("Edit crop") { Task { await reopenCrop() } }
+            }
             if hasPhoto {
               Button("Remove", role: .destructive) {
                 clearPhotoResults()
                 photo = nil
+                croppedPhoto = nil
                 preview = nil
                 existingPhoto = nil
               }
@@ -725,7 +746,15 @@ struct LogView: View {
     do {
       context = try await Entries.formContext(userId: userId)
       if !touchedVisibility { visibility = context.visibility }
-      if let path = editing?.photoPath { existingPhoto = await Entries.signPhotos([path])[path] }
+      if let id = editing?.id {
+        savedCover = try? await EntryMedia.cover(entryID: id)
+      }
+      if let cover = savedCover, !cover.legacy {
+        existingPhoto = try? await supabase.storage.from(EntryMedia.bucket)
+          .createSignedURL(path: cover.photo_path, expiresIn: 3600)
+      } else if let path = editing?.photoPath {
+        existingPhoto = await Entries.signPhotos([path])[path]
+      }
       preselectTrip()
     } catch {
       Log.data.error("Loading the log form failed: \(error.localizedDescription, privacy: .public)")
@@ -743,26 +772,18 @@ struct LogView: View {
   }
 
   private func takePhoto(_ item: PhotosPickerItem) async {
-    clearPhotoResults()
+    run += 1
     started = true
     let token = run
-    // Show the spinner at once: fetching the original can mean an iCloud download.
     loadingPhoto = true
     do {
       guard let data = try await item.loadTransferable(type: Data.self) else { throw Photo.Failure.unreadable }
-      // Nearby and Vision start now; the encode below doesn't hold them up.
       let lookup = PhotoLookup(data: data)
       let jpeg = try await Task.detached(priority: .userInitiated) {
         try Photo.resizedJPEG(from: data, maxEdge: Photo.storedEdge)
       }.value
-      // The user picked another photo meanwhile: that one wins.
       guard token == run else { return }
-      photo = jpeg
-      preview = UIImage(data: jpeg)
-      existingPhoto = nil
-      loadingPhoto = false
-      // Detection reads the original (its EXIF); only the clean copy is stored.
-      await detect(from: data, lookup: lookup)
+      try offerCrop(source: jpeg, original: data, lookup: lookup)
     } catch {
       // A newer photo owns the spinner now.
       guard token == run else { return }
@@ -795,10 +816,64 @@ struct LogView: View {
       detect = .idle
       return
     }
-    photo = jpeg
-    preview = UIImage(data: jpeg)
+    do {
+      try offerCrop(source: jpeg, original: prepared.original, lookup: prepared.lookup)
+    } catch {
+      loadingPhoto = false
+      detect = .idle
+      photoError = "Couldn’t prepare this photo for cropping."
+    }
+  }
+
+  private func offerCrop(source: Data, original: Data, lookup: PhotoLookup) throws {
+    guard let image = UIImage(data: source)?.cgImage else { throw Photo.Failure.unreadable }
     loadingPhoto = false
-    await detect(from: prepared.original, lookup: prepared.lookup)
+    detect = .idle
+    cropCandidate = CropCandidate(source: source, image: image, original: original, lookup: lookup)
+  }
+
+  private func reopenCrop() async {
+    do {
+      let source: Data
+      let rectangle: [Double]
+      let recrop: Bool
+      if let croppedPhoto {
+        source = croppedPhoto.source
+        rectangle = croppedPhoto.rectangle
+        recrop = croppedPhoto.recrop
+      } else if let id = editing?.id, let savedCover {
+        let retained = try await EntryMedia.retainedPhoto(entryID: id, mediaID: savedCover.media_id)
+        source = retained.data
+        rectangle = retained.rectangle
+        recrop = true
+      } else { return }
+
+      guard let image = UIImage(data: source)?.cgImage else { throw Photo.Failure.unreadable }
+      let size = CGSize(width: image.width, height: image.height)
+      let center = CGPoint(x: (rectangle[0] + rectangle[2] / 2) * size.width,
+                           y: (rectangle[1] + rectangle[3] / 2) * size.height)
+      let initial = EntryPhotoCrop(center: center, side: rectangle[2] * size.width, source: size)
+      cropCandidate = CropCandidate(source: source, image: image, original: nil, lookup: nil,
+                                    initialCrop: initial, recrop: recrop)
+    } catch {
+      photoError = "Couldn’t load the original photo."
+    }
+  }
+
+  private func acceptCrop(_ crop: EntryPhotoCrop, candidate: CropCandidate) {
+    do {
+      let derivatives = try crop.derivatives(from: candidate.image)
+      let size = CGSize(width: candidate.image.width, height: candidate.image.height)
+      if candidate.original != nil { clearPhotoResults() }
+      croppedPhoto = EntryMedia.PhotoDraft(source: candidate.source, display: derivatives.display,
+        thumbnail: derivatives.thumbnail, rectangle: crop.normalized(in: size), recrop: candidate.recrop, replacing: savedCover?.media_id)
+      photo = derivatives.display
+      preview = UIImage(data: derivatives.display)
+      existingPhoto = nil
+      if let original = candidate.original { Task { await detect(from: original, lookup: candidate.lookup) } }
+    } catch {
+      photoError = "Couldn’t crop this photo. Try another crop."
+    }
   }
 
   /// For entry_logged. Show detection is gone (#281), so this is "none" with a
@@ -824,11 +899,16 @@ struct LogView: View {
     saving = true
     defer { saving = false }
     let draft = Entries.Draft(
-      id: editing?.id ?? UUID(), show: show, venue: venue, date: date, rating: rating, note: note,
+      id: editing?.id ?? draftEntryID, show: show, venue: venue, date: date, rating: rating, note: note,
       visibility: visibility, tripIds: tripIds.filter { id in offeredTrips.contains { $0.id == id } }, photo: photo,
-      keepPhoto: existingPhoto != nil)
+      keepPhoto: existingPhoto != nil, croppedPhoto: croppedPhoto,
+      removedMediaID: existingPhoto == nil && photo == nil && savedCover?.legacy == false ? savedCover?.media_id : nil)
     do {
       let saved = try await Entries.save(draft, userId: userId, editing: editing)
+      if saved.photoFailed && croppedPhoto != nil {
+        error = "The entry was saved, but the photo couldn’t upload. Tap Save to retry."
+        return
+      }
       if editing == nil, !planned {
         var props: [String: AnyJSON] = [
           "method": .string(photo != nil ? "photo" : "manual"), "detection": .string(detectionLabel),

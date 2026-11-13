@@ -127,6 +127,13 @@ extension XCTestCase {
     cell.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
   }
 
+  @MainActor
+  func confirmPhotoCrop(_ app: XCUIApplication) {
+    let accept = app.navigationBars["Crop photo"].buttons["Use photo"]
+    XCTAssertTrue(accept.waitForExistence(timeout: 15), app.debugDescription)
+    accept.tap()
+  }
+
   /// A button whose label starts with `prefix` (rows with a second line read
   /// as "Title, Subtitle").
   @MainActor

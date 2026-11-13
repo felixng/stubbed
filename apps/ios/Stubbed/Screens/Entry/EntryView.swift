@@ -1,3 +1,4 @@
+import Supabase
 import SwiftUI
 
 /// One of your entries, with its photo, show details and sharing actions.
@@ -117,7 +118,7 @@ struct EntryView: View {
         }
       }
 
-      if entry.photoPath == nil {
+      if photo == nil {
         Section {
           Button("Add a photo", systemImage: "photo.badge.plus") { router.edit(entry) }
         }
@@ -188,7 +189,10 @@ struct EntryView: View {
   private func load() async {
     do {
       let entry = try await Entries.entry(id)
-      if let path = entry.photoPath {
+      if let cover = try? await EntryMedia.cover(entryID: entry.id), !cover.legacy {
+        photo = try? await supabase.storage.from(EntryMedia.bucket)
+          .createSignedURL(path: cover.photo_path, expiresIn: 3600)
+      } else if let path = entry.photoPath {
         photo = await Entries.signPhotos([path])[path]
       } else {
         photo = nil
