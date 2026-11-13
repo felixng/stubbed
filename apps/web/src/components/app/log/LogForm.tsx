@@ -22,6 +22,11 @@ import {
   type Venue,
   type Visibility,
 } from "@/lib/entries";
+import { clearGalleryCheckout, readGalleryCheckout, rememberGalleryCheckout } from "@/lib/gallery-checkout-draft";
+import { ENTRY_MEDIA_BUCKET, entryGallery, entryMediaCover, saveEntryPhoto, type EntryPhotoDraft } from "@/lib/entry-media";
+import { squareCrop, type SquareCrop } from "@/lib/photo-crop";
+import { Paywall } from "../pro/Paywall";
+import { PhotoCropDialog, type CroppedPhoto } from "./PhotoCropDialog";
 import { lookupNearby, preparePhoto, type Place, type PreparedPhoto } from "@/lib/import/photo-pipeline";
 import { rpcFetcher, SuggestionSession, type ShowSource, type ShowSuggestion } from "@/lib/show-suggestions";
 import { createClient } from "@/lib/supabase/client";
@@ -42,9 +47,25 @@ export type EntryDraft = {
   collectionIds: string[];
   photoUrl: string | null;
   photoPath: string | null;
+  nativeMediaId?: string | null;
 };
 
-type Photo = { stored: Blob; previewUrl: string };
+type Photo = Omit<EntryPhotoDraft, "replacing"> & { previewUrl: string };
+
+type GalleryCheckoutDraft = {
+  entryId: string | null;
+  show: Show | NewShow | null;
+  venue: VenueChoice | null;
+  date: string;
+  rating: number | null;
+  note: string;
+  visibility: Visibility;
+  collectionIds: string[];
+  photo: Photo | null;
+  additional: Photo[];
+  removedPhoto: boolean;
+  pendingFiles: File[];
+};
 
 // What the photo tells us, step by step. Each step fills only fields the
 // user hasn't set, and only when it's confident; otherwise it offers a chip.
@@ -84,7 +105,22 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
 
   // Photo first for new entries; "fill in by hand" skips straight to the form.
   const [started, setStarted] = useState(editing);
+  const draftId = useRef<string | null>(null);
+  const replacement = useRef<{ mediaId: string | null } | null>(null);
+  const pendingDrop = useRef<File[]>([]);
+  const galleryPicker = useRef<HTMLInputElement>(null);
+  const [galleryEnabled, setGalleryEnabled] = useState(false);
+  const [savedMediaCount, setSavedMediaCount] = useState(0);
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [galleryCandidate, setGalleryCandidate] = useState<Blob | null>(null);
+  const [additional, setAdditional] = useState<Photo[]>([]);
+  const galleryPaywall = useRef<HTMLDialogElement>(null);
+  const [galleryPickerReady, setGalleryPickerReady] = useState(false);
+  const [galleryUpgrade, setGalleryUpgrade] = useState(false);
+  const [recropCandidate, setRecropCandidate] = useState<{ source: Blob; initial: SquareCrop; saved: boolean } | null>(null);
+  const [cropCandidate, setCropCandidate] = useState<PreparedPhoto | null>(null);
   const [photo, setPhoto] = useState<Photo | null>(null);
+  const [removedPhoto, setRemovedPhoto] = useState(false);
   const [existingPhoto, setExistingPhoto] = useState<string | null>(initial?.photoUrl ?? null);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [detect, setDetect] = useState<Detect>({ step: "idle" });
@@ -249,8 +285,7 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
   }
 
   async function onPhoto(file: File) {
-    clearPhotoResults();
-    const token = run.current;
+    const token = ++run.current;
     const current = () => token === run.current;
     setStarted(true);
     setDetect({ step: "reading" });
@@ -265,8 +300,157 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
       return;
     }
     if (!current()) return;
-    const { meta, stored } = prepared;
-    replacePhoto({ stored, previewUrl: URL.createObjectURL(stored) });
+    setDetect({ step: "idle" });
+    setCropCandidate(prepared);
+  }
+
+  useEffect(() => {
+    const client = createClient();
+    void client.from("app_config").select("value").eq("key", "media_gallery_uploads_enabled").maybeSingle()
+      .then(({ data }) => setGalleryEnabled(data?.value === "true"));
+    if (initial?.id) void entryGallery(client, initial.id).then((items) =>
+      setSavedMediaCount(items.length)).catch(() => {});
+  }, [initial?.id]);
+
+  const mediaCount = Math.max(savedMediaCount - Number(removedPhoto), photo || existingPhoto ? 1 : 0) + additional.length;
+
+  const restoredCheckout = useRef<string | null>(null);
+  const checkoutKey = initial?.id ?? "new";
+  useEffect(() => {
+    if (!userId) return;
+    const key = `${userId}/${checkoutKey}`;
+    if (restoredCheckout.current === key) return;
+    let ignore = false;
+    void readGalleryCheckout<GalleryCheckoutDraft>(userId, checkoutKey).then((draft) => {
+      if (ignore) return;
+      restoredCheckout.current = key;
+      if (!draft) return;
+      draftId.current = draft.entryId;
+      touched.current = { ...touched.current, show: true, venue: true, date: true, collections: true };
+      setShow(draft.show);
+      setVenue(draft.venue);
+      setDate(draft.date);
+      setRating(draft.rating);
+      setNote(draft.note);
+      setVisibility(draft.visibility);
+      setCollectionIds(draft.collectionIds);
+      setRemovedPhoto(draft.removedPhoto);
+      if (draft.removedPhoto || draft.photo) setExistingPhoto(null);
+      if (draft.photo) setPhoto({ ...draft.photo, previewUrl: URL.createObjectURL(draft.photo.display) });
+      setAdditional(draft.additional.map((item) => ({ ...item, previewUrl: URL.createObjectURL(item.display) })));
+      pendingDrop.current = draft.pendingFiles ?? [];
+      if (pendingDrop.current.length) setDropNote("Extra photos are ready. Choose Add more to continue.");
+      setStarted(true);
+    }).catch(() => {});
+    return () => { ignore = true; };
+  }, [userId, checkoutKey]);
+
+  function closeGalleryUpgrade() {
+    galleryPaywall.current?.close();
+    void clearGalleryCheckout().catch(() => {});
+  }
+
+  async function addMore() {
+    if (!galleryEnabled || mediaCount >= 10) return;
+    const { data, error } = await createClient().rpc("has_feature", { feature: "media.multiple" });
+    if (error) return setPhotoError("Couldn’t check photo access. Try again.");
+    if (data === true) resumeGallerySelection(true);
+    else {
+      if (!userId) return;
+      try {
+        await rememberGalleryCheckout<GalleryCheckoutDraft>(userId, checkoutKey, {
+          entryId: draftId.current, show, venue, date, rating, note, visibility, collectionIds,
+          photo, additional, removedPhoto, pendingFiles: pendingDrop.current,
+        });
+      } catch {
+        return setPhotoError("Couldn’t store the draft for checkout. Your current draft is still here.");
+      }
+      setGalleryUpgrade(true);
+      galleryPaywall.current?.showModal();
+    }
+  }
+
+  function resumeGallerySelection(requireGesture = false) {
+    const files = pendingDrop.current.splice(0);
+    if (files.length) {
+      const remaining = Math.max(0, 10 - mediaCount);
+      setDropNote(files.length > remaining ? "An entry can hold up to 10 items." : null);
+      void nextGalleryCrop(files.slice(0, remaining));
+    } else if (requireGesture) {
+      setGalleryPickerReady(true);
+    } else {
+      setGalleryPickerReady(false);
+      galleryPicker.current?.click();
+    }
+  }
+
+  async function nextGalleryCrop(files: File[]) {
+    const [file, ...remaining] = files;
+    setGalleryFiles(remaining);
+    if (!file) return setGalleryCandidate(null);
+    try {
+      setGalleryCandidate((await preparePhoto(file)).stored);
+    } catch {
+      setPhotoError("Couldn’t read one of those photos.");
+      await nextGalleryCrop(remaining);
+    }
+  }
+
+  function moveAdditional(index: number, offset: number) {
+    setAdditional((items) => {
+      const next = [...items];
+      [next[index], next[index + offset]] = [next[index + offset], next[index]];
+      return next;
+    });
+  }
+
+  function removeAdditional(index: number) {
+    URL.revokeObjectURL(additional[index].previewUrl);
+    setAdditional(additional.filter((_, itemIndex) => itemIndex !== index));
+  }
+
+  async function reopenCrop() {
+    try {
+      const supabase = createClient();
+      let source: Blob;
+      let rectangle: readonly number[];
+      if (photo) {
+        ({ source, rectangle } = photo);
+      } else if (initial?.nativeMediaId) {
+        const mediaId = initial.nativeMediaId;
+        const [retained, geometry] = await Promise.all([
+          supabase.from("entry_media_sources").select("source_revision").eq("media_id", mediaId).single(),
+          supabase.from("entry_media").select("crop_x,crop_y,crop_width,crop_height").eq("id", mediaId).single(),
+        ]);
+        if (retained.error || geometry.error) throw retained.error ?? geometry.error;
+        const file = await supabase.storage.from(ENTRY_MEDIA_BUCKET)
+          .download(`${initial.id}/${mediaId}/${retained.data.source_revision}/source.jpg`);
+        if (file.error) throw file.error;
+        source = file.data;
+        const g = geometry.data;
+        rectangle = [g.crop_x, g.crop_y, g.crop_width, g.crop_height];
+      } else return;
+
+      const bitmap = await createImageBitmap(source);
+      try {
+        const [x, y, w, h] = rectangle;
+        setRecropCandidate({ source, saved: photo?.recrop ?? !photo,
+          initial: squareCrop(bitmap.width, bitmap.height, (x + w / 2) * bitmap.width,
+            (y + h / 2) * bitmap.height, w * bitmap.width) });
+      } finally { bitmap.close(); }
+    } catch {
+      setPhotoError("Couldn’t load the original photo.");
+    }
+  }
+
+  async function confirmCrop(prepared: PreparedPhoto, cropped: CroppedPhoto) {
+    setCropCandidate(null);
+    clearPhotoResults();
+    const token = run.current;
+    const current = () => token === run.current;
+    const { meta } = prepared;
+    replacement.current = null;
+    replacePhoto({ ...cropped, requestId: crypto.randomUUID(), previewUrl: URL.createObjectURL(cropped.display) });
     setExistingPhoto(null);
     if (meta.date && !touched.current.date) {
       fromPhoto.current.date = true;
@@ -318,7 +502,7 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
     session.current?.cancel();
     setSaving(true);
     const supabase = createClient();
-    const entryId = initial?.id ?? crypto.randomUUID();
+    const entryId = initial?.id ?? (draftId.current ??= crypto.randomUUID());
     // Which step failed, so the message can say (owner-only app, so the
     // raw error is useful rather than alarming).
     let step = "show";
@@ -347,7 +531,14 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
       // The entry first, so a failed photo upload never loses it. Upsert, so
       // retrying after a later step failed doesn't trip over the same id.
       step = "entry";
-      const keptPath = existingPhoto ? (initial?.photoPath ?? null) : null;
+      const { data: uploadFlag } = photo ? await supabase.from("app_config").select("value")
+        .eq("key", "media_photo_uploads_enabled").maybeSingle() : { data: null };
+      const nativePhoto = photo && (uploadFlag?.value === "true" || photo.recrop) ? photo : null;
+      if (nativePhoto && !replacement.current) {
+        const cover = initial ? await entryMediaCover(supabase, entryId) : null;
+        replacement.current = { mediaId: cover?.media_id ?? null };
+      }
+      const keptPath = (!removedPhoto && !photo) || nativePhoto ? (initial?.photoPath ?? null) : null;
       const fields = {
         show_id: showId,
         venue_id: venueId,
@@ -376,13 +567,23 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
         if (link) throw link;
       }
 
+      if (initial?.nativeMediaId && removedPhoto && !photo) {
+        const { error: remove } = await supabase.rpc("delete_entry_media", {
+          p_entry_id: entryId, p_media_id: initial.nativeMediaId,
+        });
+        if (remove) throw remove;
+      }
+
       // The photo last: if it fails, the entry is still saved without it.
       let photoFailed = false;
-      if (photo) {
+      if (nativePhoto) {
+        step = "photo (the entry was saved; retry to finish the upload)";
+        await saveEntryPhoto(supabase, entryId, { ...nativePhoto, replacing: replacement.current?.mediaId ?? null });
+      } else if (photo) {
         const path = photoPath(userId, entryId);
         const { error: upload } = await supabase.storage
           .from(PHOTO_BUCKET)
-          .upload(path, photo.stored, { contentType: "image/jpeg", upsert: true, cacheControl: "3600" });
+          .upload(path, photo.display, { contentType: "image/jpeg", upsert: true, cacheControl: "3600" });
         const { error: link } = upload
           ? { error: upload }
           : await supabase.from("entries").update({ photo_path: path }).eq("id", entryId);
@@ -390,6 +591,11 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
           console.error("Saving the photo failed", link);
           photoFailed = true;
         }
+      }
+
+      for (const item of additional) {
+        step = "gallery photo (the entry was saved; retry to finish the upload)";
+        await saveEntryPhoto(supabase, entryId, { ...item, replacing: null });
       }
 
       // How new entries get logged: photo or by hand, and how far detection got.
@@ -410,6 +616,9 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
       if (!editing) params.set("new", "1");
       if (photoFailed) params.set("photo", "failed");
       if (from) params.set("from", from);
+      replacePhoto(null);
+      additional.forEach((item) => URL.revokeObjectURL(item.previewUrl));
+      void clearGalleryCheckout().catch(() => {});
       onSaved();
       router.push(`/app/entries/${entryId}${params.size ? `?${params}` : ""}`);
       router.refresh();
@@ -438,11 +647,19 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
       if (!e.dataTransfer.types.includes("Files")) return;
       e.preventDefault();
       setDragging(false);
-      const images = [...e.dataTransfer.files].filter(
+      const files = [...e.dataTransfer.files];
+      const images = files.filter(
         (f) => f.type.startsWith("image/") || /\.(jpe?g|png|heic|heif|webp|gif)$/i.test(f.name),
       );
-      setDropNote(images.length > 1 ? "One photo per show, so the first is used. To add several shows at once, use Import." : null);
-      if (images[0]) void onPhoto(images[0]);
+      const extras = galleryEnabled && mediaCount > 0 ? images : images.slice(1);
+      pendingDrop.current = galleryEnabled ? extras.slice(0, 10) : [];
+      setDropNote(files.length !== images.length ? "Video uploads aren’t available yet. Photos can still be added." :
+        extras.length ? (galleryEnabled ? "Extra photos are ready. Choose Add more to continue." :
+          "One photo per show. To add several shows at once, use Import.") : null);
+      if (images[0]) {
+        if (galleryEnabled && mediaCount > 0) void addMore();
+        else void onPhoto(images[0]);
+      }
       else {
         setStarted(true);
         setPhotoError("That isn’t a photo. Drop a JPEG, PNG or HEIC.");
@@ -512,6 +729,65 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
         : null;
   return (
     <form onSubmit={save} className="flex flex-col gap-6" noValidate>
+      <input ref={galleryPicker} type="file" accept="image/*" multiple hidden
+        onChange={(event) => {
+          const files = Array.from(event.currentTarget.files ?? []);
+          event.currentTarget.value = "";
+          if (files.length > 10 - mediaCount) setPhotoError("An entry can hold up to 10 items.");
+          void nextGalleryCrop(files.slice(0, 10 - mediaCount));
+        }} />
+      {galleryCandidate && (
+        <PhotoCropDialog key={galleryFiles.length} source={galleryCandidate}
+          onCancel={() => void nextGalleryCrop(galleryFiles)}
+          onConfirm={(cropped) => {
+            setAdditional((items) => [...items, { ...cropped, requestId: crypto.randomUUID(),
+              previewUrl: URL.createObjectURL(cropped.display) }]);
+            void nextGalleryCrop(galleryFiles);
+          }} />
+      )}
+      <dialog ref={galleryPaywall} aria-label="Upgrade for more photos"
+        onClose={() => { setGalleryUpgrade(false); void clearGalleryCheckout().catch(() => {}); }}
+        className="fixed inset-x-0 bottom-0 top-auto mx-auto max-h-[90dvh] w-full max-w-lg overflow-auto rounded-t-xl bg-surface p-5 text-label backdrop:bg-black/60">
+        {galleryUpgrade && userId && (
+          <Paywall source="additional_media" next="/app/log" userId={userId}
+            onClose={closeGalleryUpgrade}
+            onConfirmed={() => {
+              closeGalleryUpgrade();
+              resumeGallerySelection(true);
+            }} />
+        )}
+      </dialog>
+      {recropCandidate && (
+        <PhotoCropDialog source={recropCandidate.source} initial={recropCandidate.initial}
+          onCancel={() => setRecropCandidate(null)}
+          onConfirm={(cropped) => {
+            replacement.current = null;
+            replacePhoto({ ...cropped, recrop: recropCandidate.saved, requestId: crypto.randomUUID(),
+              previewUrl: URL.createObjectURL(cropped.display) });
+            setRecropCandidate(null);
+          }} />
+      )}
+      {additional.length > 0 && (
+        <ul aria-label="Additional photos" className="flex flex-wrap gap-3">
+          {additional.map((item, index) => (
+            <li key={item.requestId}>
+              {/* eslint-disable-next-line @next/next/no-img-element -- local blob */}
+              <img src={item.previewUrl} alt={`Additional photo ${index + 1}`} className="size-20 rounded object-cover" />
+              <div className="flex gap-2">
+                <button type="button" className="min-h-11" disabled={index === 0 || saving}
+                  onClick={() => moveAdditional(index, -1)} aria-label={`Move photo ${index + 1} earlier`}>Earlier</button>
+                <button type="button" className="min-h-11" disabled={index === additional.length - 1 || saving}
+                  onClick={() => moveAdditional(index, 1)} aria-label={`Move photo ${index + 1} later`}>Later</button>
+                <button type="button" className="min-h-11" disabled={saving} onClick={() => removeAdditional(index)}>Remove</button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      {cropCandidate && (
+        <PhotoCropDialog source={cropCandidate.stored} onCancel={() => setCropCandidate(null)}
+          onConfirm={(cropped) => void confirmCrop(cropCandidate, cropped)} />
+      )}
       {/* Photo (drop another here to replace it) */}
       <div
         {...dropProps}
@@ -537,12 +813,23 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
             >
               {previewUrl ? "Change photo" : "Add photo"}
             </label>
+            {galleryEnabled && mediaCount > 0 && (
+              <button type="button" disabled={mediaCount >= 10} className="min-h-11 px-3 text-tint-text"
+                onClick={() => galleryPickerReady ? resumeGallerySelection() : void addMore()}>
+                {mediaCount >= 10 ? "10/10" : galleryPickerReady ? "Choose photos" : "Add more +"}
+              </button>
+            )}
+            {(photo || (existingPhoto && initial?.nativeMediaId)) && (
+              <button type="button" className="min-h-11 px-3 text-subheadline text-tint-text"
+                onClick={() => void reopenCrop()}>Edit crop</button>
+            )}
             {previewUrl && (
               <button
                 type="button"
                 onClick={() => {
                   clearPhotoResults();
                   replacePhoto(null);
+                  setRemovedPhoto(true);
                   setExistingPhoto(null);
                 }}
                 className="min-h-11 rounded-pill px-3 text-subheadline font-semibold text-destructive hover:bg-fill focus-visible:outline-2 focus-visible:outline-focus"

@@ -36,8 +36,9 @@ function mockClient(trial: boolean): PurchasesClient {
 // The one paywall page. Offer copy comes from RevenueCat; when membership says Pro it goes on to
 // `next`. A purchase is never trusted from the client: only my_membership(), after the server has
 // refreshed from RevenueCat, moves the person on, and a success in the URL does nothing.
-export function Paywall({ source, next, preview = false, userId, email = null, checkout = null }: {
+export function Paywall({ source, next, preview = false, userId, email = null, checkout = null, onClose, onConfirmed }: {
   source: PaywallSource; next: string; preview?: boolean; userId: string; email?: string | null; checkout?: CheckoutPreview | null;
+  onClose?: () => void; onConfirmed?: () => void;
 }) {
   const router = useRouter();
   const { membership, config, ready, failed, leave } = useMembership(preview);
@@ -69,7 +70,8 @@ export function Paywall({ source, next, preview = false, userId, email = null, c
   const finish = () => {
     void track(supabase, "purchase_completed", { source, platform: "web" });
     leave();
-    router.replace(next);
+    if (onConfirmed) onConfirmed();
+    else router.replace(next);
   };
   const confirm = () => confirmMembership({
     refresh: () => fetch("/api/billing/refresh", { method: "POST" }),
@@ -93,8 +95,9 @@ export function Paywall({ source, next, preview = false, userId, email = null, c
   useEffect(() => {
     if (!pro || busy(state) || state === "pro") return;
     leave();
-    router.replace(next);
-  }, [pro, state, next, router, leave]);
+    if (onConfirmed) onConfirmed();
+    else router.replace(next);
+  }, [pro, state, next, router, leave, onConfirmed]);
 
   if (failed) return <p role="alert" className="text-subheadline text-label-secondary">Couldn’t check your membership. Try again in a moment.</p>;
   if (!ready || pro) return <PlaceholderRows rows={3} />;
@@ -104,12 +107,14 @@ export function Paywall({ source, next, preview = false, userId, email = null, c
   const working = busy(state);
   return (
     <section aria-labelledby="paywall-title" className="flex flex-col gap-6">
+      {onClose ? <button type="button" onClick={onClose} className="min-h-11 self-start text-tint-text">Not now</button> : (
       <Link href={next} onClick={leave} className="-mt-2 inline-flex min-h-11 items-center gap-1 self-start text-body text-tint-text focus-visible:outline-2 focus-visible:outline-focus">
         <svg viewBox="0 0 24 24" width={18} height={18} aria-hidden="true" focusable="false" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round"><path d="m15 5-7 7 7 7" /></svg>
         Not now
       </Link>
+      )}
       <div className="flex flex-col gap-2">
-        <h1 id="paywall-title" className="text-balance text-title font-bold tracking-tight">Look back at every year</h1>
+        <h1 id="paywall-title" className="text-balance text-title font-bold tracking-tight">{source === "additional_media" ? "Keep more of the night" : source === "video" ? "Add a video to this memory" : "Look back at every year"}</h1>
         <p className="text-pretty text-body text-label-secondary">Get more from your theatre diary with {config.name}.</p>
       </div>
       <ProPreview thisYear={new Date().getFullYear()} />

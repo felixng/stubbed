@@ -2,9 +2,9 @@ import type { ProConfig } from "./membership";
 // The one paywall (#261, docs/PAYWALL.md section 7). Pure helpers: where it was opened from, where
 // to return to, what it offers, and the development-only preview. No React, no network.
 
-export type PaywallSource = "profile" | "show_mix" | "past_year" | "all_time";
+export type PaywallSource = "profile" | "show_mix" | "past_year" | "all_time" | "additional_media" | "video";
 
-const SOURCES: readonly PaywallSource[] = ["profile", "show_mix", "past_year", "all_time"];
+const SOURCES: readonly PaywallSource[] = ["profile", "show_mix", "past_year", "all_time", "additional_media", "video"];
 
 export function parseSource(value: string | null | undefined): PaywallSource {
   return (SOURCES as readonly string[]).includes(value ?? "") ? (value as PaywallSource) : "profile";

@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { connection } from "next/server";
 import { cache } from "react";
 
+import { ENTRY_MEDIA_BUCKET, entryMediaCover } from "@/lib/entry-media";
 import { ENTRY_SELECT, signPhotos, toEntryRow, TRIP_SELECT, tripNights, type Collection, type EntryRow } from "@/lib/entries";
 import { viewerContext } from "@/lib/follows";
 import { createPublicClient } from "@/lib/supabase/public";
@@ -88,11 +89,15 @@ async function readEntry(supabase: SupabaseClient, id: string): Promise<PublicEn
   // Every profile with public entries has a handle (set at /welcome).
   if (!owner?.handle) return null;
   const entry = toEntryRow(raw as never);
-  const photos = await signPhotos(supabase, [entry.photo_path]);
+  const cover = await entryMediaCover(supabase, id).catch(() => null);
+  const native = cover && !cover.legacy
+    ? await supabase.storage.from(ENTRY_MEDIA_BUCKET).createSignedUrl(cover.photo_path, 3600)
+    : null;
+  const photos = native?.data ? null : await signPhotos(supabase, [entry.photo_path]);
   return {
     entry,
     owner,
-    photoUrl: entry.photo_path ? (photos.get(entry.photo_path) ?? null) : null,
+    photoUrl: native?.data?.signedUrl ?? (entry.photo_path ? photos?.get(entry.photo_path) ?? null : null),
     version: versionOf(row.updated_at),
   };
 }
