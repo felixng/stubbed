@@ -984,7 +984,7 @@ struct LogView: View {
     let draft = Entries.Draft(
       id: editing?.id ?? draftEntryID, show: show, venue: venue, date: date, rating: rating, note: note,
       visibility: visibility, tripIds: tripIds.filter { id in offeredTrips.contains { $0.id == id } }, photo: photo,
-      keepPhoto: existingPhoto != nil, croppedPhoto: croppedPhoto,
+      keepPhoto: !removedCover && photo == nil, croppedPhoto: croppedPhoto,
       removedMediaID: removedCover && photo == nil && savedCover?.legacy == false ? savedCover?.media_id : nil)
     do {
       let saved = try await Entries.save(draft, userId: userId, editing: editing)
@@ -992,8 +992,15 @@ struct LogView: View {
         error = "The entry was saved, but the photo couldn’t upload. Tap Save to retry."
         return
       }
-      for additional in additionalPhotos {
-        try await EntryMedia.savePhoto(additional, entryID: saved.id)
+      while let additional = additionalPhotos.first {
+        do {
+          try await EntryMedia.savePhoto(additional, entryID: saved.id)
+          additionalPhotos.removeFirst()
+          savedGalleryCount = max(savedGalleryCount, hasPhoto ? 1 : 0) + 1
+        } catch {
+          self.error = "The entry was saved, but a photo couldn’t upload. Tap Save to retry."
+          return
+        }
       }
       if editing == nil, !planned {
         var props: [String: AnyJSON] = [
