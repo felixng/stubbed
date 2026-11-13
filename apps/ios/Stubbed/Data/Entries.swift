@@ -213,6 +213,8 @@ enum Entries {
     var tripIds: Set<UUID>
     var photo: Data?
     var keepPhoto: Bool
+    var croppedPhoto: EntryMedia.PhotoDraft? = nil
+    var removedMediaID: UUID? = nil
   }
 
   struct Saved: Sendable {
@@ -251,7 +253,11 @@ enum Entries {
 
       step = "entry"
       let planned = Day.status(draft.date) == .planned
-      let keptPath = draft.keepPhoto ? original?.photoPath : nil
+      struct UploadFlag: Decodable { let value: String }
+      let flags: [UploadFlag]? = draft.croppedPhoto == nil ? nil : try? await supabase
+        .from("app_config").select("value").eq("key", value: "media_photo_uploads_enabled").execute().value
+      let nativePhoto = flags?.first?.value == "true" || draft.croppedPhoto?.recrop == true ? draft.croppedPhoto : nil
+      let keptPath = draft.keepPhoto || nativePhoto != nil ? original?.photoPath : nil
       struct Fields: Encodable {
         let id: UUID
         let show_id: UUID
@@ -290,8 +296,21 @@ enum Entries {
           .upsert(added.map { Link(entry_id: draft.id, collection_id: $0) }, ignoreDuplicates: true).execute()
       }
 
+      if let mediaID = draft.removedMediaID, draft.photo == nil {
+        try await supabase.rpc("delete_entry_media", params: [
+          "p_entry_id": draft.id, "p_media_id": mediaID,
+        ]).execute()
+      }
+
       var photoFailed = false
-      if let photo = draft.photo {
+      if let nativePhoto {
+        do {
+          try await EntryMedia.savePhoto(nativePhoto, entryID: draft.id)
+        } catch {
+          Log.data.error("Saving cropped photo failed: \(error.localizedDescription, privacy: .public)")
+          photoFailed = true
+        }
+      } else if let photo = draft.photo {
         let path = photoPath(userId: userId, entryId: draft.id)
         do {
           try await supabase.storage.from(photoBucket)
