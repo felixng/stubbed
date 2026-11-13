@@ -111,7 +111,7 @@ The parser reads indexed packet payloads and rejects empty tracks, empty payload
 
 ### Near-limit payload and exact duration
 
-FFmpeg 7.1.1 generated a 29.9-second noisy test pattern at 1280 × 720 and 60 fps with AAC audio. It contained 15,221,408 bytes. The updated Edge probe accepted it in 356 ms and accepted a synthetic 720 × 1280 clip at exactly 30.000 seconds. It rejected the over-limit native fixture when it encountered the first packet extending beyond 30 seconds.
+FFmpeg 7.1 generated a 29.9-second noisy test pattern at 1280 × 720 and 60 fps with AAC audio. It contained 15,221,408 bytes. The updated Edge probe accepted it in 356 ms and accepted a synthetic 720 × 1280 clip at exactly 30.000 seconds. It rejected the over-limit native fixture when it encountered the first packet extending beyond 30 seconds.
 
 Removing the last 4096 bytes of the near-limit fixture left the fast-start sample index intact. The original parser accepted this file because the packet reader returned the indexed sample size even at EOF. The probe now checks that all top-level MP4 boxes fit within the actual file and rejects the truncated fixture with HTTP 422. It also checks each packet endpoint at the track's time resolution and enforces both coded and display dimensions. This validates MP4 structure and indexed sample bounds, with elementary-stream decode and corruption still to verify.
 
@@ -125,4 +125,21 @@ ffmpeg -f lavfi -i 'testsrc2=size=1280x720:rate=60,noise=alls=25:allf=t+u' \
   -c:v libx264 -threads 4 -pix_fmt yuv420p -preset veryfast \
   -b:v 3890k -minrate 3890k -maxrate 3890k -bufsize 7780k -x264-params nal-hrd=cbr \
   -c:a aac -b:a 96k -movflags +faststart 720p60-high.mp4
+```
+
+## Portrait VFR and long HEVC
+
+The browser probe now fits the source display aspect ratio into the 1280 × 720 bounds in either orientation, rounds both output dimensions to even values, and bakes orientation into the frames. It reports dimensions from the exported track.
+
+The silent 32-second 720 × 1280 H.264 fixture dropped every fifth frame at offset two from a 30 fps source. Desktop Safari 26.6.2 and Firefox 146 both reported 29.900, 30.000 and 30.100-second output timelines at the three requested boundaries. The 30-second Safari output was 5,916,578 bytes (3,875 ms), and Firefox produced 11,299,310 bytes (3,845 ms). On macOS, AVFoundation's 1280x720 preset produced a 16,576,347-byte output for the same 30-second request, exceeding the 15 MiB hard cap. The production iOS path needs an explicit bitrate-controlled encode and a post-export byte check. Its 720p preset alone is insufficient.
+
+A silent 65-second, 3840 × 2160, 12 fps HEVC Main 10 fixture carried BT.2020/PQ tags and used a flat pattern. AVFoundation converted it to 1280 × 720 8-bit H.264 with BT.709 tags. The strict validator accepted the 29.9-second selection (29.9167 s, 28,146 bytes, 1.84 s export) and the exact 30-second selection (30.000 s, 28,201 bytes, 1.60 s export). The 30.1-second selection exceeded the timeline limit. Peak RSS for the Swift process across its four exports was 254,017,536 bytes. These measurements establish format conversion and timeline bounds for this fixture. They leave visual tone mapping quality and high-motion HDR performance open.
+
+Firefox 146 reported that it could not decode the Main 10 source. Desktop and simulator Safari loaded the 65-second fixtures but did not report a completed conversion in the observed run. Treat HEVC/HDR browser decoding and export as unverified for those runtimes. An in-app fallback for unsupported source codecs remains a separate question from the validated AAC encoder fallback.
+
+To test a local fixture in Swift 6, create an empty output directory and run:
+
+```sh
+swift -swift-version 6 scripts/media-video-prototype.swift /path/to/output --source /path/to/fixture.mp4
+node scripts/media-video-probe/validate.mjs /path/to/output/trim-*.mp4
 ```

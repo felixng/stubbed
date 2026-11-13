@@ -36,12 +36,23 @@ func fixture(_ url: URL) async throws {
   if let error = writer.error { throw error }
 }
 
-let directory = URL(filePath: CommandLine.arguments[1], directoryHint: .isDirectory)
-let original = directory.appending(path: "original.mp4")
-try? FileManager.default.removeItem(at: original)
-try await fixture(original)
-if CommandLine.arguments.count > 2 {
-  let audio = AVURLAsset(url: URL(filePath: CommandLine.arguments[2]))
+let arguments = Array(CommandLine.arguments.dropFirst())
+guard let outputPath = arguments.first else {
+  throw CocoaError(.fileNoSuchFile)
+}
+let directory = URL(filePath: outputPath, directoryHint: .isDirectory)
+let sourceIndex = arguments.firstIndex(of: "--source")
+let original: URL
+if let sourceIndex {
+  guard arguments.indices.contains(sourceIndex + 1) else { throw CocoaError(.fileNoSuchFile) }
+  original = URL(filePath: arguments[sourceIndex + 1])
+} else {
+  original = directory.appending(path: "original.mp4")
+  try? FileManager.default.removeItem(at: original)
+  try await fixture(original)
+}
+if sourceIndex == nil, arguments.count > 1 {
+  let audio = AVURLAsset(url: URL(filePath: arguments[1]))
   let video = AVURLAsset(url: original)
   let composition = AVMutableComposition()
   let videoTrack = try await video.loadTracks(withMediaType: .video).first!
