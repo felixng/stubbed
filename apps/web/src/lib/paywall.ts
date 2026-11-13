@@ -1,3 +1,4 @@
+import type { ProConfig } from "./membership";
 // The one paywall (#261, docs/PAYWALL.md section 7). Pure helpers: where it was opened from, where
 // to return to, what it offers, and the development-only preview. No React, no network.
 
@@ -70,3 +71,12 @@ export const PAYWALL_BENEFITS = [
 ] as const;
 
 export const benefitsLine = (name: string) => `${name} adds Show mix, earlier years and All time stats.`;
+
+
+export function availablePaywallBenefits(config: ProConfig) {
+  return [
+    ...PAYWALL_BENEFITS,
+    ...(config.mediaGalleries ? [{ title: config.mediaVideo ? "Up to 10 photos and videos per entry" : "Up to 10 photos per entry", text: "Keep more of the night in one memory." }] : []),
+    ...(config.mediaVideo ? [{ title: "Videos up to 30 seconds", text: "Save a short clip alongside your photos." }] : []),
+  ];
+}

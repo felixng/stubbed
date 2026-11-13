@@ -89,6 +89,12 @@ struct PaywallView: View {
           benefit("Show mix", "How your shows split across musicals, plays, opera and more.", "chart.pie")
           benefit("Earlier years", "Insights for any year you’ve logged, not just this one.", "calendar")
           benefit("All time", "Every show you’ve logged, together.", "infinity")
+          if membership.config.mediaGalleriesEnabled {
+            benefit(membership.config.mediaVideoEnabled ? "Up to 10 photos and videos per entry" : "Up to 10 photos per entry", "Keep more of the night in one memory.", "photo.on.rectangle")
+          }
+          if membership.config.mediaVideoEnabled {
+            benefit("Videos up to 30 seconds", "Save a short clip alongside your photos.", "video")
+          }
         }
         if membership.isPro {
           Section { ManageMembershipButton() } header: { Text("You’re a \(membership.name) member") }
@@ -240,8 +246,8 @@ struct ProBanner: View {
     if membership.salesEnabled {
       VStack(alignment: .leading, spacing: Space.l) {
         VStack(alignment: .leading, spacing: Space.xs) {
-          Text("Unlock all your stats").font(.title2.bold())
-          Text("Unlock these stats with \(membership.name).")
+          Text("Unlock all features").font(.title2.bold())
+          Text("Get more from your theatre diary with \(membership.name).")
             .font(.body).foregroundStyle(.white.opacity(0.85))
         }
         Button {
