@@ -150,6 +150,11 @@ enum EntryMedia {
     let requestID = UUID()
     let file: URL
     var uploadLocation: URL?
+    var reservationID: UUID?
+  }
+
+  static func cancelVideoReservation(_ id: UUID) async {
+    _ = try? await supabase.rpc("cancel_entry_media", params: ["p_reservation_id": id]).execute()
   }
 
   static func saveVideo(_ video: inout VideoDraft, entryID: UUID) async throws {
@@ -163,6 +168,7 @@ enum EntryMedia {
         + derivatives.map { Asset(role: $0.0, bytes: $0.1.count) }
     )).execute().value
     guard lease.state != "finalized" else { return }
+    video.reservationID = lease.reservation_id
     guard let path = lease.paths["display"] else { throw Photo.Failure.unreadable }
     let token = try await supabase.auth.session.accessToken
     try await EntryVideoUpload.upload(file: video.file, bytes: bytes, path: path,

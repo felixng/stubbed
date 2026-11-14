@@ -234,7 +234,7 @@ struct LogView: View {
         .onDisappear { try? FileManager.default.removeItem(at: candidate.source) }
     }
     .onDisappear {
-      for clip in preparedVideos { try? FileManager.default.removeItem(at: clip.file) }
+      for clip in preparedVideos { discardVideo(clip) }
       preparedVideos.removeAll()
     }
     .interactiveDismissDisabled(hasChanges || importing != nil)
@@ -408,7 +408,7 @@ struct LogView: View {
           Spacer()
           Button("Remove video", role: .destructive) {
             preparedVideos.removeAll { $0.requestID == clip.requestID }
-            try? FileManager.default.removeItem(at: clip.file)
+            discardVideo(clip)
           }
           .disabled(saving)
         }
@@ -939,6 +939,13 @@ struct LogView: View {
     cropCandidate = CropCandidate(source: source, image: image, original: original, lookup: lookup)
   }
 
+  private func discardVideo(_ video: EntryMedia.VideoDraft) {
+    try? FileManager.default.removeItem(at: video.file)
+    if let id = video.reservationID {
+      Task { await EntryMedia.cancelVideoReservation(id) }
+    }
+  }
+
   private func prepareVideo(_ item: PhotosPickerItem) async {
     guard !loadingVideo, mediaCount < 10, membership.config.mediaVideoEnabled,
           membership.info != nil, membership.canUse("media.video"),
@@ -1088,6 +1095,8 @@ struct LogView: View {
         } catch {
           if let index = preparedVideos.firstIndex(where: { $0.requestID == video.requestID }) {
             preparedVideos[index] = video
+          } else {
+            discardVideo(video)
           }
           self.error = "The entry was saved, but a video couldn’t upload. Tap Save to retry."
           return
