@@ -312,7 +312,7 @@ function integer(value, name, min, max) {
 
 // The source a dry run uses when the adapter has no crawl_sources row yet (built from its static facts).
 export function adapterSource(adapter) {
-  return { source_key: adapter.key, allowed_hosts: adapter.hosts, min_interval_ms: adapter.minIntervalMs, collection_enabled: false };
+  return { source_key: adapter.key, allowed_hosts: adapter.hosts ?? [], min_interval_ms: adapter.minIntervalMs, collection_enabled: false };
 }
 // Nothing is queued and no host has been used, and no database call is made.
 export const dryRunStoreWithoutRow = { preview: async () => [], hostState: async () => null };

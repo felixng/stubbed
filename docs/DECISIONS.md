@@ -1687,6 +1687,11 @@ After C4 the publication tick started failing with a statement timeout (21 of 40
 One entry point for every kind of link, because the owner should not have to decide whether a link is a directory or a show page. Requests are rows the crawler picks up, not a call from the browser to the crawler: the web app has no server for the crawl, and a row survives a failed run. The RPC refuses private-looking hosts (localhost, IP and IPv6 literals, `.local` and similar, names with no dot, credentials, ports) up front and the crawler checks the resolved address again when it fetches, so a clever DNS name still cannot reach a private address. The same link is refused for a day instead of queued twice. Migration `20261114133552_crawl_link_requests.sql`.
 
 
+### A pasted show page is read first (2026-11-14, #564, epic #562)
+
+A pasted show page is an `event` task at priority 3 in a per-source `pasted` generation. The claim now ranks priority 3 first even before the first read; before this, a never-read page was always class 2, so priority could not jump the queue (existing priority-3 tasks are all pages that have already been read, so nothing else changes). Known sites use their own adapter. Any other site goes to one shared source, **Pasted links** (`web_links`), whose hosts are added as links are pasted, rather than one source per host: one place to switch publication, one row in the hub. `sync_crawl_source` keeps the stored hosts when an adapter states none. The generic reader only trusts schema.org event data; a page with none is reported as not a show page instead of guessed at. Pasted links are the one place a source starts with Crawling on (an admin asked for exactly this page); Publication stays off until the owner turns it on for the source. A show needs its venue to match before it publishes, so the reader queues a `venue` task on the same page and the event waits (the existing `awaiting_venue_detail` rule) until the venue is matched. Migration `20261114134726_pasted_show_pages.sql`.
+
+
 ## Entry media schema (#141)
 
 Gallery order and the ready cover are derived from one media collection. Private source references live in an owner-only relation, and native revision files live in a private bucket outside the legacy photo write policies. See [the media contract](MEDIA.md) for crop geometry, compatibility and the upload interface.

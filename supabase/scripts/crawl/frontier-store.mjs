@@ -15,7 +15,7 @@ export function createFrontierStore(db = (sql, timeout = 15_000) => runPsql(sql,
     // Copies each adapter file's static facts into crawl_sources; never touches a switch or a pause.
     async syncSources(list) {
       const call = adapter => `perform public.sync_crawl_source(${sqlText(adapter.key)}, ${sqlText(adapter.displayName)},
-        ${sqlText(adapter.kind)}, (select coalesce(array_agg(h), '{}') from jsonb_array_elements_text(${jsonLiteral(adapter.hosts ?? [])}) h), ${Number(adapter.minIntervalMs)},
+        ${sqlText(adapter.kind)}, ${adapter.hosts === null ? 'null::text[]' : `(select coalesce(array_agg(h), '{}') from jsonb_array_elements_text(${jsonLiteral(adapter.hosts ?? [])}) h)`}, ${Number(adapter.minIntervalMs)},
         ${Number(adapter.authority)}, ${sqlText(adapter.version)});`;
       await db(`do $sync$ begin ${list.map(call).join('\n')} end $sync$; select 'null'::jsonb`);
     },
@@ -23,6 +23,18 @@ export function createFrontierStore(db = (sql, timeout = 15_000) => runPsql(sql,
     async source(key) {
       const [source] = await db(`select to_jsonb(s) from public.crawl_sources s where s.source_key = ${sqlText(key)}`);
       return source;
+    },
+
+    // Pasted links (#562).
+    async linkRequestsToProcess(limit) {
+      const [rows] = await db(`select public.crawl_link_requests_to_process(${Math.max(0, Math.min(50, Number(limit) || 0))})`);
+      return rows;
+    },
+    async queuePastedShowPage(request, source) {
+      return scalar(`public.queue_pasted_show_page(${uuidLiteral(request)}, ${sqlText(source)})`);
+    },
+    async finishLinkRequest(request, status, kind, note, result = {}) {
+      return scalar(`public.finish_crawl_link_request(${uuidLiteral(request)}, ${sqlText(status)}, ${sqlText(kind)}, ${sqlText(note)}, ${jsonLiteral(result)})`);
     },
 
     // A page failed its extraction checks: ask the setup lane to repair the site (frontier sites only).

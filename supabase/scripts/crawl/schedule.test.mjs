@@ -103,15 +103,15 @@ const everything=pages=>({pages,statuses:{}});
 test('sources run at the same time, each with its own allowance',async()=>{
  const store=fakeStore();
  const seen=[];let started=0,release;const together=new Promise(resolve=>{release=resolve;});
- const meet=async()=>{if(++started===4)release();await Promise.race([together,new Promise((_,reject)=>setTimeout(()=>reject(new Error('one after another')),1000))]);};
+ const meet=async()=>{if(++started===5)release();await Promise.race([together,new Promise((_,reject)=>setTimeout(()=>reject(new Error('one after another')),1000))]);};
  await runScheduled({env,now:()=>0,frontier,workerRuns:store,
   // Official runs as two lanes: setup (25 pages) and reading (the whole official allowance of 50).
   runSource:async(row,options)=>{await meet();seen.push([row.source_key,options.maxPages]);return everything(options.maxPages);},
   runOfficial:async(_,options)=>{await meet();seen.push(['official-setup',options.maxPages]);return everything(options.maxPages);}});
- assert.deepEqual(seen.sort(),[['london_theatre',150],['official',50],['official-setup',25],['playbill',150]].sort());
+ assert.deepEqual(seen.sort(),[['london_theatre',150],['official',50],['official-setup',25],['playbill',150],['web_links',150]].sort());
  const [finished]=store.calls.finished;
  assert.equal(finished.stopReason,'page_allowance');
- assert.deepEqual(Object.fromEntries(Object.entries(finished.perSource).map(([key,value])=>[key,value.stop])),{london_theatre:'page_allowance',playbill:'page_allowance',official:'page_allowance'});
+ assert.deepEqual(Object.fromEntries(Object.entries(finished.perSource).map(([key,value])=>[key,value.stop])),{london_theatre:'page_allowance',playbill:'page_allowance',web_links:'page_allowance',official:'page_allowance'});
 });
 
 test('repository variables change the allowances, and one source can be slowed alone',async()=>{
@@ -119,7 +119,7 @@ test('repository variables change the allowances, and one source can be slowed a
  await runScheduled({env:{...env,CRAWL_SOURCE_RUN_PAGES:'200',CRAWL_SOURCE_RUN_PAGES_PLAYBILL:'30',CRAWL_OFFICIAL_RUN_PAGES:'20'},now:()=>0,frontier,workerRuns:fakeStore(),
   runSource:async(row,options)=>{seen.push([row.source_key,options.maxPages]);return everything(0);},
   runOfficial:async()=>everything(0)});
- assert.deepEqual(seen.sort(),[['london_theatre',200],['official',20],['playbill',30]],'the official reading lane takes the whole official allowance');
+ assert.deepEqual(seen.sort(),[['london_theatre',200],['official',20],['playbill',30],['web_links',200]],'the official reading lane takes the whole official allowance');
 });
 
 test('a source at its daily cap gets no pages and the others are not affected',async()=>{
@@ -128,7 +128,7 @@ test('a source at its daily cap gets no pages and the others are not affected',a
  await runScheduled({env,now:()=>0,frontier,workerRuns:store,
   runSource:async(row,options)=>{if(row.source_key!=='official')seen.push([row.source_key,options.maxPages]);return everything(row.source_key==='official'?options.maxPages+1:options.maxPages);},
   runOfficial:async(_,options)=>{if(!options.engine)seen.push(['official',options.maxPages]);return everything(options.maxPages);}});
- assert.deepEqual(seen.sort(),[['london_theatre',150],['official',25]]);
+ assert.deepEqual(seen.sort(),[['london_theatre',150],['official',25],['web_links',150]]);
  const [finished]=store.calls.finished;
  assert.deepEqual(finished.perSource.playbill,{pages:0,cap_hit:true,stop:'daily_cap'});
 });
@@ -139,7 +139,7 @@ test('the daily cap trims one source part way and that source reports the daily 
  await runScheduled({env,now:()=>0,frontier,workerRuns:store,
   runSource:async(row,options)=>{if(row.source_key!=='official')seen.push([row.source_key,options.maxPages]);return everything(row.source_key==='official'?options.maxPages+1:options.maxPages);},
   runOfficial:async(_,options)=>{if(!options.engine)seen.push(['official',options.maxPages]);return everything(options.maxPages);}});
- assert.deepEqual(seen.sort(),[['london_theatre',150],['official',25],['playbill',20]],'playbill is held to its last 20 pages');
+ assert.deepEqual(seen.sort(),[['london_theatre',150],['official',25],['playbill',20],['web_links',150]],'playbill is held to its last 20 pages');
  const [finished]=store.calls.finished;
  assert.equal(finished.perSource.playbill.stop,'daily_cap');
  assert.equal(finished.perSource.playbill.cap_hit,true);
@@ -153,7 +153,7 @@ test('one source failing does not stop the others, and the run is still recorded
  await assert.rejects(runScheduled({env,now:()=>0,frontier,workerRuns:store,
   runSource:async row=>{if(row.source_key==='playbill')throw new Error('boom');if(row.source_key!=='official')seen.push(row.source_key);return everything(5);},
   runOfficial:async(_,options)=>{if(!options.engine)seen.push('official');return everything(5);}}),/failed/);
- assert.deepEqual(seen.sort(),['london_theatre','official'],'the other sources ran');
+ assert.deepEqual(seen.sort(),['london_theatre','official','web_links'],'the other sources ran');
  const [finished]=store.calls.finished;
  assert.equal(finished.stopReason,'failed');
  assert.equal(finished.perSource.playbill.stop,'failed');
@@ -166,7 +166,7 @@ test('running out of time is a checkpoint for that source only',async()=>{
  let clock=0;
  const result=await runScheduled({env,now:()=>clock,frontier,workerRuns:store,source:undefined,stage:'venue',
   runSource:async row=>{if(row.source_key==='playbill'){await new Promise(resolve=>setTimeout(resolve,20));clock=1_200_000;return everything(40);}return everything(10);}});
- assert.equal(result.length,2);
+ assert.equal(result.length,3);
  const [finished]=store.calls.finished;
  assert.equal(finished.perSource.playbill.stop,'time_limit','playbill finished after the window closed');
  assert.equal(finished.perSource.london_theatre.stop,'nothing_due','london finished early with nothing more due');
@@ -174,7 +174,7 @@ test('running out of time is a checkpoint for that source only',async()=>{
 });
 
 test('a start right behind a run that left nothing due exits at once',async()=>{
- const nothing={age_seconds:120,per_source:{london_theatre:{stop:'nothing_due'},playbill:{stop:'nothing_due'},official:{stop:'nothing_due'}}};
+ const nothing={age_seconds:120,per_source:{london_theatre:{stop:'nothing_due'},playbill:{stop:'nothing_due'},web_links:{stop:'nothing_due'},official:{stop:'nothing_due'}}};
  const store=fakeStore({previous:nothing});
  const never=async()=>assert.fail('a start with nothing to do must not read pages');
  assert.deepEqual(await runScheduled({env,now:()=>0,frontier,workerRuns:store,runSource:never,runOfficial:never}),[]);
@@ -186,7 +186,7 @@ test('a start right behind a run that left nothing due exits at once',async()=>{
  await runScheduled({env,now:()=>0,frontier,workerRuns:fakeStore({previous:{...nothing,age_seconds:700}}),runSource:run,runOfficial:official});
  await runScheduled({env,now:()=>0,frontier,workerRuns:fakeStore({previous:{...nothing,per_source:{...nothing.per_source,playbill:{stop:'page_allowance'}}}}),runSource:run,runOfficial:official});
  await runScheduled({env:{...env,GITHUB_EVENT_NAME:'workflow_dispatch'},now:()=>0,frontier,workerRuns:fakeStore({previous:nothing}),runSource:run,runOfficial:official});
- assert.equal(ran.length,12,'all three starts read every source (official in two lanes)');
+ assert.equal(ran.length,15,'all three starts read every source (official in two lanes)');
 });
 
 test('the daily model cap skips model work and says so, while page crawling continues',async()=>{

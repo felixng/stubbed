@@ -86,14 +86,14 @@ test('scheduled dispatch gives each source its own allowance, runs them together
  const frontier={source:async key=>({source_key:key,collection_enabled:true,operator_paused_at:key==='playbill'?'paused':null})};
  // Each lane waits for the others to start, so a sequential loop would never finish.
  let started=0,release;const allStarted=new Promise(resolve=>{release=resolve;});
- const meet=async()=>{if(++started===3)release();await Promise.race([allStarted,new Promise((_,reject)=>setTimeout(()=>reject(new Error('sources ran one after another')),1000))]);};
+ const meet=async()=>{if(++started===4)release();await Promise.race([allStarted,new Promise((_,reject)=>setTimeout(()=>reject(new Error('sources ran one after another')),1000))]);};
  const result=await runScheduled({
   env,now,frontier,
   runSource:async(row,options)=>{await meet();seen.push([row.source_key,options.maxPages]);return {pages:12};},
   runOfficial:async(_,options)=>{await meet();seen.push(['official',options.maxPages,'setup',options.dailyModelUsd,options.deadline]);return {pages:options.maxPages};},
  });
- assert.deepEqual(seen.sort(),[['london_theatre',150],['official',25,'setup',1,1_200_000],['official',50]].sort(),'each source has its own allowance and the whole 20 minutes; official reads 50 pages and sets up with 25 and the whole model budget');
- assert.equal(result.reduce((sum,row)=>sum+row.pages,0),12+25+12);
+ assert.deepEqual(seen.sort(),[['london_theatre',150],['web_links',150],['official',25,'setup',1,1_200_000],['official',50]].sort(),'each source has its own allowance and the whole 20 minutes; official reads 50 pages and sets up with 25 and the whole model budget');
+ assert.equal(result.reduce((sum,row)=>sum+row.pages,0),12+12+25+12);
  assert.deepEqual(await runScheduled({env:{},frontier:{source:()=>assert.fail('Master switch must short circuit')}}),[]);
 });
 

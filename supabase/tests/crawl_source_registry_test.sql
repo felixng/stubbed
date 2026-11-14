@@ -69,7 +69,7 @@ reset role;
 select set_config('request.jwt.claims', '{"sub":"d5400000-0000-0000-0000-000000000002","role":"authenticated","app_metadata":{"role":"admin"}}', true);
 set local role authenticated;
 select is((select jsonb_agg(s->>'source_key') from jsonb_array_elements(public.admin_crawl_sources()) s),
-  '["london_theatre","playbill","registry_low","official"]'::jsonb, 'aggregate sources come first by name, official last');
+  '["london_theatre","web_links","playbill","registry_low","official"]'::jsonb, 'aggregate sources come first by name, official last');
 reset role;
 
 select * from finish();

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { adapters } from './sources/index.mjs';
+import { makeLinkFetcher, processLinkRequests } from './link-requests.mjs';
 import { adapterScopes, formatFrontierProgress, HostDeferred, hostGate, runFrontierCli, safeError, runScheduledSource, scheduledSources } from './frontier.mjs';
 import { createFrontierStore } from './frontier-store.mjs';
 import { canonicalTaskUrl } from './frontier-url.mjs';
@@ -290,6 +291,8 @@ export async function runScheduled({
  if(!limits.enabled){console.log('Crawl loop disabled. Set CRAWL_LOOP_ENABLED=true to start.');return [];}
  // The adapter files are the source of truth for static facts; a run with unknown source facts must not proceed.
  await frontier.syncSources?.(Object.values(adapters));
+ // Links an admin pasted in Backstage: a show page is queued ahead of everything else. A failure here never stops the crawl.
+ if(frontier.linkRequestsToProcess)await processLinkRequests({store:frontier,adapters,fetchPage:makeLinkFetcher()}).catch(()=>{});
  if(!['all','directory','venue','event'].includes(stage))throw new Error('Unknown crawl stage');
  if(source && ![...scheduledSources,'official'].includes(source))throw new Error('Unknown crawl source');
  if(source==='official'&&stage!=='all')throw new Error('The official-site loop uses the complete site workflow');

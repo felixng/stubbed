@@ -22,7 +22,7 @@ test('syncing the adapters copies static facts and never touches a switch', {
       assert.equal(rows[adapter.key].adapter_version, adapter.version);
       assert.equal(rows[adapter.key].display_name, adapter.displayName);
       assert.equal(rows[adapter.key].authority, adapter.authority);
-      assert.deepEqual(rows[adapter.key].allowed_hosts, adapter.hosts);
+      if (adapter.hosts) assert.deepEqual(rows[adapter.key].allowed_hosts, adapter.hosts);
     }
     assert.equal(rows[key].collection_enabled, false, 'a new source arrives switched off');
     assert.equal(rows[key].publication_enabled, false);
