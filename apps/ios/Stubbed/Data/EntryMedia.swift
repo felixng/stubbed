@@ -1,6 +1,4 @@
-import AVFoundation
 import Foundation
-import UIKit
 import Supabase
 
 enum EntryMedia {
@@ -158,22 +156,7 @@ enum EntryMedia {
     struct VideoCompletion: Encodable { let reservation_id: UUID }
     let bytes = try video.file.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
     guard bytes > 0, bytes <= 15 * 1024 * 1024 else { throw CocoaError(.fileReadCorruptFile) }
-    let generator = AVAssetImageGenerator(asset: AVURLAsset(url: video.file))
-    generator.maximumSize = CGSize(width: 1024, height: 1024)
-    generator.appliesPreferredTrackTransform = true
-    let frame = try await generator.image(at: .zero).image
-    let derivatives = try [("poster", 1024), ("thumb", 256)].map { role, limit in
-      let edge = min(frame.width, frame.height)
-      guard let crop = frame.cropping(to: CGRect(x: (frame.width - edge) / 2,
-        y: (frame.height - edge) / 2, width: edge, height: edge)) else { throw Photo.Failure.unreadable }
-      let size = CGSize(width: min(edge, limit), height: min(edge, limit))
-      let format = UIGraphicsImageRendererFormat()
-      format.scale = 1
-      let data = UIGraphicsImageRenderer(size: size, format: format).jpegData(withCompressionQuality: 0.8) {
-        _ in UIImage(cgImage: crop).draw(in: CGRect(origin: .zero, size: size))
-      }
-      return (role, data)
-    }
+    let derivatives = try await EntryVideoDerivatives.make(from: video.file)
     let lease: Lease = try await supabase.rpc("reserve_entry_media", params: Request(
       p_entry_id: entryID, p_request_id: video.requestID, p_kind: "video", p_replace_media_id: nil,
       p_assets: [Asset(role: "display", content_type: "video/mp4", bytes: bytes)]
