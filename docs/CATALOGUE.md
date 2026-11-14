@@ -377,3 +377,13 @@ The adapter file is the registry of a source's static facts; the database holds 
 
 At the start of every run the worker copies the adapter's name, kind, hosts, pacing, authority and version into `crawl_sources` (`sync_crawl_source`). It never writes a switch, so **a new source arrives with Crawling and Publication off**; the owner turns it on in Backstage. A parser version bump is only a change to the adapter's `version`: do not write `update crawl_sources set adapter_version` migrations any more. The web app reads source names and kinds from `admin_crawl_sources()`; no source key is written into `apps/web/src` (a test checks).
 
+## Official sites: two lanes (#544)
+
+Official theatre sites are read by the page queue and set up by a small AI lane, decided per site by `crawl_sites.engine` (`legacy` or `frontier`). Sites on `legacy` keep working as before through the old per-site loop.
+
+- **Reading lane (no AI).** A `frontier` site has one generation (`scope_key` = the site's uuid): its what's-on page and its archive's first page are `venue`-stage tasks. The official adapter reads them with the site's saved rules or structured data, checks the result against the task's previous extraction, queues the archive's next page, and `publish_official_findings` publishes the findings (see Publishing). A page that fails its checks fails at once and flags the site (`repair_requested_at`, `repair_reason`).
+- **Setup lane (AI).** `crawl_setup_work` lists `frontier` sites that are pending or flagged for repair. The existing loop (`runLoop`) finds the what's-on link and writes or repairs rules (at most three repairs per failing version, then `needs_attention`, as before); its crawl step only queues the site: `seed_official_site`, with a fresh generation after a repair.
+- **Shares while both engines exist.** Of the official page allowance the legacy lane gets half, the setup lane a quarter and the reading lane a quarter; the legacy and setup lanes get half the model budget each. The totals (50 pages, $1 a run, $2 a day) are unchanged.
+- **Admin-started runs** (a saved `run_id`) always use the old code for the venues the admin chose.
+- **Moving a site back:** write a migration with `update public.crawl_sites set engine = 'legacy' where id = '<site>'` (or all of them: `where engine = 'frontier'`). Nothing is deleted either way.
+

@@ -222,7 +222,7 @@ export async function runFrontier({
           const reason = parsed.reason ?? 'Parser did not recognise the page';
           // The same page with the same rules gives the same result, so a parser can ask to skip the retry ladder.
           const outcome = parsed.retry === false ? await finishAttempt(task, 'failed', null, reason, true) : await fail(task, reason);
-          if (adapter.onInvalid) {
+          if (adapter.onInvalid && !dryRun) {
             try { await adapter.onInvalid({ task, reason, store }); }
             catch { result.statuses.hook_failed = (result.statuses.hook_failed ?? 0) + 1; }
           }
