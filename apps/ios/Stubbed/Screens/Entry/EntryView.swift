@@ -16,6 +16,7 @@ struct EntryView: View {
   @State private var gallery: [EntryMedia.GalleryItem] = []
   @State private var galleryIndex = 0
   @State private var videoPlayer: AVPlayer?
+  @State private var videoHasStarted = false
   @Environment(\.scenePhase) private var scenePhase
   @State private var galleryError: String?
   @State private var cards: [RenderedCard]?
@@ -90,6 +91,16 @@ struct EntryView: View {
               Group {
                 if index == galleryIndex, let videoPlayer {
                   VideoPlayer(player: videoPlayer)
+                    .accessibilityIdentifier(videoHasStarted ? "entry-video-playing" : "entry-video-player")
+                    .task(id: ObjectIdentifier(videoPlayer)) {
+                      while !Task.isCancelled && !videoHasStarted {
+                        if videoPlayer.currentTime().seconds > 0 {
+                          videoHasStarted = true
+                          break
+                        }
+                        do { try await Task.sleep(for: .milliseconds(200)) } catch { break }
+                      }
+                    }
                     .onDisappear { videoPlayer.pause() }
                 } else {
                   Color.clear.overlay { RemoteImage(url: item.url) }.clipped()
@@ -248,6 +259,7 @@ struct EntryView: View {
   private func stopVideo() {
     videoPlayer?.pause()
     videoPlayer = nil
+    videoHasStarted = false
   }
 
   private func makeCover(_ entry: Entry) async {

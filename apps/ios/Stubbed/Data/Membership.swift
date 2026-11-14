@@ -100,13 +100,19 @@ final class Membership {
       }
     #endif
     do {
+      // Confirm Auth has installed the session before issuing the protected RPC.
+      let session = try await supabase.auth.session
+      guard session.user.id == userId, !Task.isCancelled else { return }
       struct ConfigRow: Decodable { let key: String; let value: String }
       struct PolicyRow: Decodable { let feature: String; let tier: String }
-      async let membership: MembershipInfo = supabase.rpc("my_membership").execute().value
+      async let membership: MembershipInfo = supabase.rpc("my_membership")
+        .setHeader(name: "Authorization", value: "Bearer \(session.accessToken)").execute().value
       async let configRows: [ConfigRow] = supabase.from("app_config").select("key, value").execute().value
       async let policyRows: [PolicyRow] = supabase.from("feature_access").select("feature, tier").execute().value
       let (m, c, p) = try await (membership, configRows, policyRows)
-      guard self.loadedFor == nil || self.loadedFor == userId else { return }
+      guard !Task.isCancelled,
+            (try await supabase.auth.session).user.id == userId,
+            self.loadedFor == nil || self.loadedFor == userId else { return }
       apply(
         info: m,
         config: ProConfig(

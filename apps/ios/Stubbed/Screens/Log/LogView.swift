@@ -396,10 +396,9 @@ struct LogView: View {
         }
       }
       if membership.config.mediaVideoEnabled && (mediaCount == 0 || membership.config.mediaGalleriesEnabled) {
-        PhotosPicker(selection: $videoItem, matching: .videos, preferredItemEncoding: .current) {
-          Label("Add video", systemImage: "video")
-        }
-        .disabled(mediaCount >= 10 || membership.info == nil || loadingVideo || saving)
+        PhotosPicker("Add video", selection: $videoItem, matching: .videos, preferredItemEncoding: .current)
+          .accessibilityIdentifier("entry-add-video")
+          .disabled(mediaCount >= 10 || membership.info == nil || loadingVideo || saving)
       }
       if loadingVideo { ProgressView("Loading video…") }
       ForEach(preparedVideos, id: \.requestID) { clip in
