@@ -150,14 +150,37 @@ async function createVideoPosters(display: Blob, signal: AbortSignal) {
       if (!context) throw new Error("Couldn’t create a video poster.");
       context.drawImage(video, (video.videoWidth - side) / 2, (video.videoHeight - side) / 2,
         side, side, 0, 0, size, size);
-      return new Promise<Blob>((resolve, reject) => canvas.toBlob((blob) => {
+      const jpeg = await new Promise<Blob>((resolve, reject) => canvas.toBlob((blob) => {
         if (blob) resolve(blob);
         else reject(new Error("Couldn’t create a video poster."));
       }, "image/jpeg", 0.8));
+      return stripJpegMetadata(jpeg);
     }));
   } finally {
     video.removeAttribute("src");
     video.load();
     URL.revokeObjectURL(url);
   }
+}
+
+
+async function stripJpegMetadata(jpeg: Blob) {
+  const buffer = await jpeg.arrayBuffer();
+  const view = new DataView(buffer);
+  const parts: BlobPart[] = [buffer.slice(0, 2)];
+  // WebKit adds EXIF when encoding a canvas. Drop APP1 and comments while
+  // preserving the color profile, coding tables, and compressed scan.
+  for (let offset = 2; offset + 4 <= view.byteLength;) {
+    const marker = view.getUint16(offset);
+    if (marker === 0xffda) {
+      parts.push(buffer.slice(offset));
+      return new Blob(parts, { type: "image/jpeg" });
+    }
+    const length = view.getUint16(offset + 2);
+    const end = offset + 2 + length;
+    if ((marker & 0xff00) !== 0xff00 || length < 2 || end > view.byteLength) break;
+    if (marker !== 0xffe1 && marker !== 0xfffe) parts.push(buffer.slice(offset, end));
+    offset = end;
+  }
+  throw new Error("Couldn’t create a video poster.");
 }
