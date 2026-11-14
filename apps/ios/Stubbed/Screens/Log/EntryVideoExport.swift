@@ -68,9 +68,11 @@ enum EntryVideoExport {
     for output in outputs {
       while let sample = output.copyNextSampleBuffer() {
         try Task.checkCancellation()
-        let sampleEnd = sample.presentationTimeStamp + sample.duration
-        guard sampleEnd.isNumeric else { throw CocoaError(.fileReadCorruptFile) }
-        end = max(end, sampleEnd)
+        for timing in try sample.sampleTimingInfos() {
+          let sampleEnd = timing.presentationTimeStamp + timing.duration
+          guard sampleEnd.isNumeric else { throw CocoaError(.fileReadCorruptFile) }
+          end = max(end, sampleEnd)
+        }
       }
     }
     guard reader.status == .completed else { throw reader.error ?? CocoaError(.fileReadCorruptFile) }
