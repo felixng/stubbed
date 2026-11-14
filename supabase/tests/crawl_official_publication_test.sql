@@ -84,6 +84,19 @@ select is((select (per_source->'official'->>'processed')::int from public.crawl_
 select ok((select processed_at is not null from public.crawl_publication_queue q join public.crawl_extractions e on e.id = q.extraction_id
   where e.content_hash = repeat('f', 64)), 'and marks it processed');
 
+-- Findings of a second site go into their own run for the day (a run stays small).
+insert into public.crawl_sites (id, whats_on_url) values ('b5430000-0000-0000-0000-000000000002', 'https://bridge-site-two.test/whats-on/');
+set local role service_role;
+select public.start_crawl_generation('official', 'b5430000-0000-0000-0000-000000000002', 'venue', 'https://bridge-site-two.test/whats-on/', 'b5430000-0000-0000-0000-000000000002');
+reset role;
+update public.crawl_tasks set status = 'leased', lease_owner = 'fixture', lease_token = 'c5430000-0000-0000-0000-000000000002', lease_expires_at = now() + interval '5 minutes'
+  where canonical_url = 'https://bridge-site-two.test/whats-on/';
+select public.acknowledge_crawl_task((select id from public.crawl_tasks where canonical_url = 'https://bridge-site-two.test/whats-on/'),
+  'c5430000-0000-0000-0000-000000000002', 'official-v2', repeat('8', 64), '[]', jsonb_build_array(pg_temp.obs('Second Site Play', '2027-07-01', '{"fetched_url":"https://bridge-site-two.test/whats-on/"}')));
+select public.publish_official_findings(25);
+select is((select count(distinct r.id) from public.crawl_runs r where r.pipeline = 'frontier' and r.summary->>'site' = 'b5430000-0000-0000-0000-000000000002'), 1::bigint, 'a second site has its own frontier run');
+select ok((select count(*) from public.crawl_runs where pipeline = 'frontier') >= 2, 'so a day has one frontier run per site');
+
 -- A forced failure is counted, recorded and backed off.
 select pg_temp.extract('9', jsonb_build_array(pg_temp.obs('Broken Play', '2027-06-01', '{"venue_id": "not-a-uuid"}')));
 set local role service_role;
