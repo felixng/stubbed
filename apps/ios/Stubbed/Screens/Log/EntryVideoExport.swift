@@ -26,7 +26,9 @@ enum EntryVideoExport {
     let sourceDuration = try await asset.load(.duration).seconds
     guard sourceDuration.isFinite, end <= sourceDuration else { throw CocoaError(.fileReadCorruptFile) }
     let output = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString + ".mp4")
-    var duration = end - start
+    // AVAssetReader can hide AAC padding beyond the MP4 edit list. Leave
+    // room for the encoded track tail when exporting near the server cap.
+    var duration = min(end - start, 29.9)
     do {
       for attempt in 0..<2 {
         try Task.checkCancellation()
