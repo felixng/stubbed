@@ -356,6 +356,15 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
       setVideos(draft.videos ?? []);
       if (pendingDrop.current.length) setDropNote("Extra photos are ready. Choose Add more to continue.");
       setStarted(true);
+      if (draft.pendingVideo) {
+        const file = draft.pendingVideo;
+        void createClient().rpc("has_feature", { feature: "media.video" }).then(({ data }) => {
+          if (ignore || data !== true) return;
+          setPendingVideo(null);
+          setVideoCandidate(file);
+          void clearGalleryCheckout().catch(() => {});
+        });
+      }
     }).catch(() => {});
     return () => { ignore = true; };
   }, [userId, checkoutKey]);
@@ -375,7 +384,7 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
       try {
         await rememberGalleryCheckout<GalleryCheckoutDraft>(userId, checkoutKey, {
           entryId: draftId.current, show, venue, date, rating, note, visibility, collectionIds,
-          photo, additional, removedPhoto, pendingFiles: pendingDrop.current,
+          photo, additional, removedPhoto, pendingFiles: pendingDrop.current, pendingVideo: pendingVideo ?? undefined, videos,
         });
       } catch {
         return setPhotoError("Couldn’t store the draft for checkout. Your current draft is still here.");
