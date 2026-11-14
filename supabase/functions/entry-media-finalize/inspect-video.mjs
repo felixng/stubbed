@@ -20,6 +20,27 @@ function checkBoxExtents(bytes) {
   }
 }
 
+// MP4 AVC samples contain length-prefixed NAL units. Validate the framing
+// against avcC and require a coded picture in every video sample.
+function checkAvcPacket(bytes, lengthBytes) {
+  let hasPicture = false;
+  for (let offset = 0; offset < bytes.length;) {
+    if (bytes.length - offset <= lengthBytes) throw new Error("MEDIA_VIDEO_AVC");
+    let length = 0;
+    for (let index = 0; index < lengthBytes; index++) {
+      length = length * 256 + bytes[offset++];
+    }
+    if (!length || length > bytes.length - offset || (bytes[offset] & 0x80)) {
+      throw new Error("MEDIA_VIDEO_AVC");
+    }
+    const type = bytes[offset] & 0x1f;
+    if (!type || type >= 24) throw new Error("MEDIA_VIDEO_AVC");
+    if (type >= 1 && type <= 5 && length > 1) hasPicture = true;
+    offset += length;
+  }
+  if (!hasPicture) throw new Error("MEDIA_VIDEO_AVC");
+}
+
 export async function inspectVideo(bytes) {
   const size = bytes.byteLength;
   if (size <= 0 || size > limit) throw new Error("MEDIA_VIDEO_SIZE");
@@ -44,6 +65,13 @@ export async function inspectVideo(bytes) {
         throw new Error("MEDIA_VIDEO_DIMENSIONS");
       }
     }
+    const description = (await video[0].getDecoderConfig())?.description;
+    const avcc = ArrayBuffer.isView(description)
+      ? new Uint8Array(description.buffer, description.byteOffset, description.byteLength)
+      : new Uint8Array(description ?? 0);
+    if (avcc.length < 7 || avcc[0] !== 1) throw new Error("MEDIA_VIDEO_AVC");
+    const lengthBytes = (avcc[4] & 3) + 1;
+    if (lengthBytes === 3) throw new Error("MEDIA_VIDEO_AVC");
     // Read each sample payload as well as the timeline so truncated media
     // cannot pass by supplying a complete sample index alone.
     let seconds = 0;
@@ -53,6 +81,7 @@ export async function inspectVideo(bytes) {
       const timeResolution = await track.getTimeResolution();
       let trackSamples = 0;
       for await (const packet of new EncodedPacketSink(track).packets()) {
+        if (track.id === video[0].id) checkAvcPacket(packet.data, lengthBytes);
         const end = Math.round((packet.timestamp + packet.duration) * timeResolution) / timeResolution;
         if (!Number.isFinite(end) || !Number.isFinite(packet.duration) || packet.duration <= 0 || end > 30) {
           throw new Error(`MEDIA_VIDEO_DURATION (${end}s)`);
