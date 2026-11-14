@@ -2532,6 +2532,7 @@ internal enum PublicSchema {
     internal let entryId: UUID
     internal let expiresAt: String
     internal let id: UUID
+    internal let kind: String
     internal let mediaId: UUID
     internal let position: Int16
     internal let replaceMediaId: UUID?
@@ -2539,11 +2540,13 @@ internal enum PublicSchema {
     internal let revision: Int32
     internal let state: String
     internal let verifiedPhoto: AnyJSON?
+    internal let verifiedVideo: AnyJSON?
     internal enum CodingKeys: String, CodingKey {
       case assets = "assets"
       case entryId = "entry_id"
       case expiresAt = "expires_at"
       case id = "id"
+      case kind = "kind"
       case mediaId = "media_id"
       case position = "position"
       case replaceMediaId = "replace_media_id"
@@ -2551,6 +2554,7 @@ internal enum PublicSchema {
       case revision = "revision"
       case state = "state"
       case verifiedPhoto = "verified_photo"
+      case verifiedVideo = "verified_video"
     }
   }
   internal struct EntryMediaReservationsInsert: Codable, Hashable, Sendable {
@@ -2558,6 +2562,7 @@ internal enum PublicSchema {
     internal let entryId: UUID
     internal let expiresAt: String
     internal let id: UUID?
+    internal let kind: String?
     internal let mediaId: UUID
     internal let position: Int16
     internal let replaceMediaId: UUID?
@@ -2565,11 +2570,13 @@ internal enum PublicSchema {
     internal let revision: Int32
     internal let state: String?
     internal let verifiedPhoto: AnyJSON?
+    internal let verifiedVideo: AnyJSON?
     internal enum CodingKeys: String, CodingKey {
       case assets = "assets"
       case entryId = "entry_id"
       case expiresAt = "expires_at"
       case id = "id"
+      case kind = "kind"
       case mediaId = "media_id"
       case position = "position"
       case replaceMediaId = "replace_media_id"
@@ -2577,6 +2584,7 @@ internal enum PublicSchema {
       case revision = "revision"
       case state = "state"
       case verifiedPhoto = "verified_photo"
+      case verifiedVideo = "verified_video"
     }
   }
   internal struct EntryMediaReservationsUpdate: Codable, Hashable, Sendable {
@@ -2584,6 +2592,7 @@ internal enum PublicSchema {
     internal let entryId: UUID?
     internal let expiresAt: String?
     internal let id: UUID?
+    internal let kind: String?
     internal let mediaId: UUID?
     internal let position: Int16?
     internal let replaceMediaId: UUID?
@@ -2591,11 +2600,13 @@ internal enum PublicSchema {
     internal let revision: Int32?
     internal let state: String?
     internal let verifiedPhoto: AnyJSON?
+    internal let verifiedVideo: AnyJSON?
     internal enum CodingKeys: String, CodingKey {
       case assets = "assets"
       case entryId = "entry_id"
       case expiresAt = "expires_at"
       case id = "id"
+      case kind = "kind"
       case mediaId = "media_id"
       case position = "position"
       case replaceMediaId = "replace_media_id"
@@ -2603,6 +2614,7 @@ internal enum PublicSchema {
       case revision = "revision"
       case state = "state"
       case verifiedPhoto = "verified_photo"
+      case verifiedVideo = "verified_video"
     }
   }
   internal struct EntryMediaSourcesSelect: Codable, Hashable, Sendable {
