@@ -330,6 +330,8 @@ The crawler runs **twice an hour**, at :17 and :47 UTC. **Supabase starts it** (
 
 **Failing and parked items** (#539). An item that fails waits 5, 10, 20, 40, then 60 minutes between tries; the tenth failure in a row parks it (`parked_at`, `parked_reason` = the error text, e.g. `identity_transaction:42P01`). An item still waiting for a venue page 14 days after it was queued is parked as `venue_never_resolved`; waiting is not counted as an attempt. Parked items are skipped and show in Backstage as one "pages were read but could not be added to the catalogue" row per source with a **Try again** button (`admin_retry_crawl_publication(source)`), which resets them and logs a `retry_publication` action. Dropping parked items is #509's.
 
+**Official sites** (#543). The tick also calls `publish_official_findings(100)`. It turns the `official_finding` observations of official-site extractions (read through the page queue) back into `crawl_findings` rows under one `crawl_runs` row per UTC day (`pipeline = 'frontier'`, created already `done`), then calls the existing `publish_legacy_crawl_findings` and `queue_crawl_titles`, so publication rules, run review, titles to review and the diary score are unchanged. An extraction that is no longer the task's current one, or whose generation is not current, is skipped. Writing to `runs` is not gated by the official source's Publication switch (as before); that switch still gates only the evidence layer. The aggregate publishers answer `inactive` for the official source.
+
 | Limit | Default | Repository variable |
 |---|---|---|
 | Pages per source per run | 150 (at most 400) | `CRAWL_SOURCE_RUN_PAGES` |
