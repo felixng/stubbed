@@ -5,13 +5,15 @@ import { Suspense } from "react";
 import { CrawlBar } from "@/components/app/admin/CrawlBar";
 import { CrawlSwitch } from "@/components/app/admin/CrawlSwitch";
 import { NeedsAttention } from "@/components/app/admin/CrawlOverviewParts";
+import { AddLink } from "@/components/app/admin/AddLink";
 import { CrawlShell, Section } from "@/components/app/admin/CrawlShell";
 import {
-  CRAWL_HUB_PATH, OFFICIAL_SITES_PATH, attentionItems, crawlSourceName, crawlingState, hubHeadline, pagesHref, sourceNamesOf, sourcePath, type AttentionItem,
+  CRAWL_HUB_PATH, OFFICIAL_SITES_PATH, attentionItems, crawlSourceName, crawlingState, hubHeadline, linkRequestText, pagesHref, shortDateTime, sourceNamesOf, sourcePath, type AttentionItem, type CrawlLinkRequest,
 } from "@/lib/admin-crawl";
 import { getDispatch, getFlags, getOverview, getSchedule, getSources, getSummary } from "@/lib/crawl-hub-data";
 import { clock, dispatchFailing, durationText, nextRunAfter, scheduleAlert, todaysLimits } from "@/lib/crawl-schedule";
 import { sourceLine, type SourceSummary } from "@/lib/crawl-summary";
+import { ownerContext } from "@/lib/supabase/data";
 
 export const metadata: Metadata = { title: "Catalogue crawler" };
 
@@ -99,6 +101,28 @@ async function SourcesBlock() {
   );
 }
 
+// Paste a link; recent requests say what each became.
+async function Links() {
+  const { supabase } = await ownerContext();
+  const { data } = await supabase.from("crawl_link_requests").select("id, url, host, status, kind, note, created_at").order("created_at", { ascending: false }).limit(6);
+  const rows = (data ?? []) as unknown as CrawlLinkRequest[];
+  return (
+    <Section id="links" title="Add a link" hint="A directory of venues, a directory of shows, or one show page.">
+      <AddLink />
+      {rows.length > 0 && (
+        <ul className="flex flex-col divide-y divide-separator">
+          {rows.map(row => (
+            <li key={row.id} className="flex flex-col gap-0.5 py-2">
+              <span className="min-w-0 break-words text-subheadline"><span className="font-semibold">{row.host}</span> <time dateTime={row.created_at} className="text-label-secondary">{shortDateTime(row.created_at)}</time></span>
+              <span className="text-footnote text-label-secondary">{linkRequestText(row)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Section>
+  );
+}
+
 // Only rendered when something needs the owner.
 async function AttentionBlock() {
   const [summary, overview, schedule, dispatch, list] = await Promise.all([getSummary(), getOverview(), getSchedule(), getDispatch(), getSources()]);
@@ -150,6 +174,7 @@ export default function CrawlHubPage() {
   return (
     <CrawlShell back={{ href: "/app/backstage", label: "Backstage" }} title="Catalogue crawler">
       <Suspense fallback={loading}><Headline /></Suspense>
+      <Suspense fallback={null}><Links /></Suspense>
       <Suspense fallback={loading}><SourcesBlock /></Suspense>
       <Suspense fallback={null}><AttentionBlock /></Suspense>
       <Suspense fallback={null}><Suggestions /></Suspense>

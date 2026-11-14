@@ -406,3 +406,7 @@ Official theatre sites are read by the page queue and set up by a small AI lane,
 - **Admin-started runs** (a saved `run_id`) always use the old code for the venues the admin chose.
 - **Moving a site back:** write a migration with `update public.crawl_sites set engine = 'legacy' where id = '<site>'` (or all of them: `where engine = 'frontier'`). Nothing is deleted either way.
 
+## Paste a link (#562)
+
+The hub has an **Add a link** box. A pasted link becomes a row in `crawl_link_requests` (admin-only; `admin_add_crawl_link` cleans it: http(s) only, no login or port, a public-looking host, no fragment or tracking parameters, and the same link is refused for a day). The crawler works out what the link is and acts: a show page is read on the next run ahead of the backlog; a directory becomes a source with both switches off. Until a later step handles a request it shows "Waiting". The crawler checks the address again when it fetches the page.
+

@@ -1682,6 +1682,11 @@ The scheduled crawl now has one reading engine. The official source runs two lan
 After C4 the publication tick started failing with a statement timeout (21 of 40 ticks from 04:18 UTC, taking the aggregate sources' publishing down with it). Cause: C2 put the frontier's findings in one `crawl_runs` row per UTC day, and `publish_legacy_crawl_findings` republishes every eligible finding of a run, matching each title against the show catalogue (`similar_shows`, about half a second each). With about 20 sites read, one day's run held hundreds of findings and each official item republished all of them. The issue's one-run-per-day decision was written without that cost in view; the reading that changes the least is one frontier run per site per day (a few dozen findings each, keyed by `summary->>'site'`), plus a 15-second budget after which a tick stops starting official items (the rest wait for the next minute). `publish_legacy_crawl_findings`, the review screens and the diary score are untouched. Migration `20261114050208_official_publication_per_site_runs.sql`. The release check for #546 was held until publication was healthy again.
 
 
+### Paste a link into Backstage (2026-11-14, #563, epic #562)
+
+One entry point for every kind of link, because the owner should not have to decide whether a link is a directory or a show page. Requests are rows the crawler picks up, not a call from the browser to the crawler: the web app has no server for the crawl, and a row survives a failed run. The RPC refuses private-looking hosts (localhost, IP and IPv6 literals, `.local` and similar, names with no dot, credentials, ports) up front and the crawler checks the resolved address again when it fetches, so a clever DNS name still cannot reach a private address. The same link is refused for a day instead of queued twice. Migration `20261114133552_crawl_link_requests.sql`.
+
+
 ## Entry media schema (#141)
 
 Gallery order and the ready cover are derived from one media collection. Private source references live in an owner-only relation, and native revision files live in a private bucket outside the legacy photo write policies. See [the media contract](MEDIA.md) for crop geometry, compatibility and the upload interface.

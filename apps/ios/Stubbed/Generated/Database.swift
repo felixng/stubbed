@@ -859,6 +859,78 @@ internal enum PublicSchema {
       case requests = "requests"
     }
   }
+  internal struct CrawlLinkRequestsSelect: Codable, Hashable, Sendable {
+    internal let createdAt: String
+    internal let host: String
+    internal let id: UUID
+    internal let kind: String?
+    internal let note: String?
+    internal let requestedBy: UUID?
+    internal let result: AnyJSON
+    internal let status: String
+    internal let updatedAt: String
+    internal let url: String
+    internal enum CodingKeys: String, CodingKey {
+      case createdAt = "created_at"
+      case host = "host"
+      case id = "id"
+      case kind = "kind"
+      case note = "note"
+      case requestedBy = "requested_by"
+      case result = "result"
+      case status = "status"
+      case updatedAt = "updated_at"
+      case url = "url"
+    }
+  }
+  internal struct CrawlLinkRequestsInsert: Codable, Hashable, Sendable {
+    internal let createdAt: String?
+    internal let host: String
+    internal let id: UUID?
+    internal let kind: String?
+    internal let note: String?
+    internal let requestedBy: UUID?
+    internal let result: AnyJSON?
+    internal let status: String?
+    internal let updatedAt: String?
+    internal let url: String
+    internal enum CodingKeys: String, CodingKey {
+      case createdAt = "created_at"
+      case host = "host"
+      case id = "id"
+      case kind = "kind"
+      case note = "note"
+      case requestedBy = "requested_by"
+      case result = "result"
+      case status = "status"
+      case updatedAt = "updated_at"
+      case url = "url"
+    }
+  }
+  internal struct CrawlLinkRequestsUpdate: Codable, Hashable, Sendable {
+    internal let createdAt: String?
+    internal let host: String?
+    internal let id: UUID?
+    internal let kind: String?
+    internal let note: String?
+    internal let requestedBy: UUID?
+    internal let result: AnyJSON?
+    internal let status: String?
+    internal let updatedAt: String?
+    internal let url: String?
+    internal enum CodingKeys: String, CodingKey {
+      case createdAt = "created_at"
+      case host = "host"
+      case id = "id"
+      case kind = "kind"
+      case note = "note"
+      case requestedBy = "requested_by"
+      case result = "result"
+      case status = "status"
+      case updatedAt = "updated_at"
+      case url = "url"
+    }
+  }
   internal struct CrawlMissedSelect: Codable, Hashable, Sendable {
     internal let createdAt: String
     internal let id: UUID
