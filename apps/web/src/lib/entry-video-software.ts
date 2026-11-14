@@ -40,6 +40,9 @@ export async function exportVideoInSoftware(file: Blob, start: number, end: numb
     const data = await ffmpeg.readFile("/trim.mp4");
     if (typeof data === "string") throw new Error("Couldn’t read the exported video.");
     return new Blob([Uint8Array.from(data)], { type: "video/mp4" });
+  } catch (error) {
+    signal.throwIfAborted();
+    throw new Error("The video converter couldn’t finish. Try a shorter selection.", { cause: error });
   } finally {
     signal.removeEventListener("abort", cancel);
     ffmpeg.terminate();

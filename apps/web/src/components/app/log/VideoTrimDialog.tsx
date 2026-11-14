@@ -71,6 +71,10 @@ export function VideoTrimDialog({ file, onCancel, onConfirm }: {
     if (preview.current?.readyState) preview.current.currentTime = next;
   }
 
+  function updateEnd(value: number) {
+    setEnd(Math.min(duration, start + 30, Math.max(start + 0.1, value)));
+  }
+
   return (
     <dialog ref={dialog} aria-labelledby="video-trim-title"
       className="m-auto w-[min(92vw,36rem)] rounded-lg bg-background p-5 text-foreground backdrop:bg-black/50"
@@ -86,6 +90,15 @@ export function VideoTrimDialog({ file, onCancel, onConfirm }: {
           onTimeUpdate={(event) => { if (end > 0 && event.currentTarget.currentTime >= end) event.currentTarget.pause(); }} />
         {duration > 0 && (
           <fieldset disabled={progress !== null} className="grid grid-cols-2 gap-3">
+            <label className="grid gap-1">Start
+              <input type="range" step="0.01" min={0} max={Math.max(0, duration - 0.1)}
+                value={start} onChange={(event) => updateStart(Number(event.target.value))} />
+            </label>
+            <label className="grid gap-1">End
+              <input type="range" step="0.01" min={Math.min(duration, start + 0.1)}
+                max={Math.min(duration, start + 30)} value={end}
+                onChange={(event) => updateEnd(Number(event.target.value))} />
+            </label>
             <label className="grid gap-1">Start (s)
               <input type="number" step="0.01" min={0} max={Math.max(0, duration - 0.1)}
                 value={start} onChange={(event) => updateStart(Number(event.target.value))} />
@@ -93,8 +106,7 @@ export function VideoTrimDialog({ file, onCancel, onConfirm }: {
             <label className="grid gap-1">End (s)
               <input type="number" step="0.01" min={Math.min(duration, start + 0.1)}
                 max={Math.min(duration, start + 30)} value={end}
-                onChange={(event) => setEnd(Math.min(duration, start + 30,
-                  Math.max(start + 0.1, Number(event.target.value))))} />
+                onChange={(event) => updateEnd(Number(event.target.value))} />
             </label>
             <output className="col-span-2">{(end - start).toFixed(2)} seconds selected</output>
           </fieldset>
