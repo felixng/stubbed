@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import { adapters, scheduledSources } from './sources/index.mjs';
 
 const STAGES = ['directory', 'venue', 'event'];
-const onHosts = (url, hosts) => hosts.includes(new URL(url).hostname);
+const onHosts = (url, hosts) => hosts === null || hosts.includes(new URL(url).hostname);
 
 test('the index lists every adapter once, keyed by its own key', () => {
   for (const [key, adapter] of Object.entries(adapters)) assert.equal(adapter.key, key);
@@ -18,13 +18,14 @@ for (const adapter of Object.values(adapters)) {
     assert.ok(adapter.displayName?.trim(), 'display name');
     assert.ok(['aggregate', 'official'].includes(adapter.kind));
     assert.match(adapter.version, /^[a-z0-9-]+-v[0-9]+$/);
-    assert.ok(Array.isArray(adapter.hosts));
-    for (const host of adapter.hosts) assert.equal(host, host.toLowerCase());
+    // A source with dynamic hosts (pasted links) has them added by the database; its adapter states none.
+    if (adapter.dynamicHosts) assert.equal(adapter.hosts, null); else assert.ok(Array.isArray(adapter.hosts));
+    for (const host of adapter.hosts ?? []) assert.equal(host, host.toLowerCase());
     assert.ok(Number.isInteger(adapter.minIntervalMs) && adapter.minIntervalMs >= 1000);
     assert.ok(Number.isInteger(adapter.authority) && adapter.authority >= 1 && adapter.authority <= 3);
     assert.equal(typeof adapter.scheduled, 'boolean');
     if (adapter.runPages !== undefined) assert.ok(Number.isInteger(adapter.runPages) && adapter.runPages >= 0);
-    if (adapter.kind === 'aggregate') {
+    if (adapter.kind === 'aggregate' && !adapter.dynamicHosts) {
       assert.ok(adapter.hosts.length > 0);
       assert.ok(adapter.seeds.length > 0);
       for (const seed of adapter.seeds) {

@@ -3,8 +3,9 @@
 import { londonTheatre } from './london-theatre.mjs';
 import { official } from './official.mjs';
 import { playbill } from './playbill.mjs';
+import { webLinks } from './web-links.mjs';
 
-const list = [londonTheatre, playbill, official];
+const list = [londonTheatre, playbill, webLinks, official];
 
 export const adapters = Object.fromEntries(list.map(adapter => [adapter.key, adapter]));
 export const scheduledSources = list.filter(adapter => adapter.scheduled).map(adapter => adapter.key);
