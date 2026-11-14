@@ -21,7 +21,7 @@ export async function entryVideoDuration(file: Blob) {
 
 export async function exportEntryVideo(file: Blob, start: number, end: number,
   signal: AbortSignal, onProgress: (fraction: number) => void): Promise<EntryVideoDraft> {
-  if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end <= start || end - start > 30) {
+  if (!Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end <= start || end > start + 30) {
     throw new Error("Choose up to 30 seconds.");
   }
   const input = new Input({ source: new BlobSource(file), formats: ALL_FORMATS });
