@@ -1,20 +1,27 @@
-import { FFmpeg, FFFSType } from "@ffmpeg/ffmpeg";
+import type { FFmpeg, FFFSType } from "@ffmpeg/ffmpeg";
 
 export async function exportVideoInSoftware(file: Blob, start: number, end: number,
   signal: AbortSignal, onProgress: (fraction: number) => void): Promise<Blob> {
   const core = process.env.NEXT_PUBLIC_VIDEO_SOFTWARE_CORE;
   if (!core) throw new Error("Software video conversion is unavailable on this deployment.");
   signal.throwIfAborted();
-  const ffmpeg = new FFmpeg();
+  const root = new URL(core, location.href);
+  if (root.origin !== location.origin) throw new Error("Invalid video converter URL.");
+  const wrapper = new URL("wrapper/index.js", root).href;
+  const { FFmpeg: Converter } = await import(/* webpackIgnore: true */ /* turbopackIgnore: true */ wrapper) as {
+    FFmpeg: typeof FFmpeg;
+  };
+  signal.throwIfAborted();
+  const ffmpeg = new Converter();
   const cancel = () => ffmpeg.terminate();
   signal.addEventListener("abort", cancel, { once: true });
   ffmpeg.on("progress", ({ progress }) => onProgress(Math.max(0, Math.min(progress, 1))));
   try {
-    await ffmpeg.load({ coreURL: new URL("ffmpeg-core.js", new URL(core, location.href)).href,
-      wasmURL: new URL("ffmpeg-core.wasm", new URL(core, location.href)).href });
+    await ffmpeg.load({ coreURL: new URL("ffmpeg-core.js", root).href,
+      wasmURL: new URL("ffmpeg-core.wasm", root).href });
     signal.throwIfAborted();
     await ffmpeg.createDir("/input");
-    await ffmpeg.mount(FFFSType.WORKERFS, { blobs: [{ name: "source", data: file }] }, "/input");
+    await ffmpeg.mount("WORKERFS" as FFFSType, { blobs: [{ name: "source", data: file }] }, "/input");
     const scale = "scale=w='if(gte(iw,ih),min(iw,1280),min(iw,720))':h='if(gte(iw,ih),min(ih,720),min(ih,1280))':force_original_aspect_ratio=decrease:force_divisible_by=2";
     const status = await ffmpeg.exec([
       "-ss", String(start), "-i", "/input/source", "-t", String(Math.min(end - start, 29.9)),
