@@ -118,7 +118,7 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
   const [videos, setVideos] = useState<EntryVideoDraft[]>([]);
   const [videoProgress, setVideoProgress] = useState<number | null>(null);
   const videoUpload = useRef<AbortController | null>(null);
-  const pendingVideo = useRef<File | null>(null);
+  const [pendingVideo, setPendingVideo] = useState<File | null>(null);
   const [upgradeSource, setUpgradeSource] = useState<"additional_media" | "video">("additional_media");
   const [galleryEnabled, setGalleryEnabled] = useState(false);
   const [savedMediaCount, setSavedMediaCount] = useState(0);
@@ -352,7 +352,7 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
       if (draft.photo) setPhoto({ ...draft.photo, previewUrl: URL.createObjectURL(draft.photo.display) });
       setAdditional(draft.additional.map((item) => ({ ...item, previewUrl: URL.createObjectURL(item.display) })));
       pendingDrop.current = draft.pendingFiles ?? [];
-      pendingVideo.current = draft.pendingVideo ?? null;
+      setPendingVideo(draft.pendingVideo ?? null);
       setVideos(draft.videos ?? []);
       if (pendingDrop.current.length) setDropNote("Extra photos are ready. Choose Add more to continue.");
       setStarted(true);
@@ -386,17 +386,22 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
     }
   }
 
+  function isVideo(file: File) {
+    return file.type.startsWith("video/") || /\.(mp4|mov|m4v|webm|mkv|avi|3gp)$/i.test(file.name);
+  }
+
   async function chooseVideo(file: File) {
     if (!videoEnabled || mediaCount >= 10 || !userId || saving) return;
+    setStarted(true);
     const client = createClient();
     const { data, error } = await client.rpc("has_feature", { feature: "media.video" });
     if (error) return setPhotoError("Couldn’t check video access. Try again.");
     if (data === true) {
-      pendingVideo.current = null;
+      setPendingVideo(null);
       setVideoCandidate(file);
       return;
     }
-    pendingVideo.current = file;
+    setPendingVideo(file);
     try {
       await rememberGalleryCheckout<GalleryCheckoutDraft>(userId, checkoutKey, {
         entryId: draftId.current, show, venue, date, rating, note, visibility, collectionIds,
@@ -407,8 +412,13 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
     }
     setUpgradeSource("video");
     setGalleryUpgrade(true);
-    galleryPaywall.current?.showModal();
   }
+
+  useEffect(() => {
+    if (galleryUpgrade && galleryPaywall.current && !galleryPaywall.current.open) {
+      galleryPaywall.current.showModal();
+    }
+  }, [galleryUpgrade]);
 
   function resumeGallerySelection(requireGesture = false) {
     const files = pendingDrop.current.splice(0);
@@ -688,6 +698,7 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
   // Dropping a photo works like choosing one: on the start screen, or on the
   // photo row to replace it. An entry has a single photo, so with several
   // dropped the first image is used and the rest are pointed at Import.
+  const acceptsVideo = videoEnabled && (!started || mediaCount === 0);
   const dropProps = {
     onDragOver: (e: React.DragEvent) => {
       if (!e.dataTransfer.types.includes("Files")) return;
@@ -703,12 +714,19 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
       e.preventDefault();
       setDragging(false);
       const files = [...e.dataTransfer.files];
+      const droppedVideo = files.find(isVideo);
+      if (videoEnabled && droppedVideo && (files.length === 1 || !mediaCount && isVideo(files[0]))) {
+        setDropNote(files.length > 1 ? "Add the remaining files after trimming this video." : null);
+        void chooseVideo(droppedVideo);
+        return;
+      }
       const images = files.filter(
         (f) => f.type.startsWith("image/") || /\.(jpe?g|png|heic|heif|webp|gif)$/i.test(f.name),
       );
       const extras = galleryEnabled && mediaCount > 0 ? images : images.slice(1);
       pendingDrop.current = galleryEnabled ? extras.slice(0, 10) : [];
-      setDropNote(files.length !== images.length ? "Video uploads aren’t available yet. Photos can still be added." :
+      setDropNote(files.length !== images.length ? (videoEnabled ? "Add videos separately from this drop." :
+        "Video uploads aren’t available yet. Photos can still be added.") :
         extras.length ? (galleryEnabled ? "Extra photos are ready. Choose Add more to continue." :
           "One photo per show. To add several shows at once, use Import.") : null);
       if (images[0]) {
@@ -726,13 +744,14 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
     <input
       id={`${id}-photo`}
       type="file"
-      accept="image/*"
+      accept={acceptsVideo ? "image/*,video/*" : "image/*"}
       className="sr-only"
       onChange={(e) => {
         const file = e.target.files?.[0];
         e.target.value = "";
         setDropNote(null);
-        if (file) void onPhoto(file);
+        if (file && acceptsVideo && isVideo(file)) void chooseVideo(file);
+        else if (file) void onPhoto(file);
       }}
     />
   );
@@ -752,16 +771,16 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
             <path d="M3 8.5A2.5 2.5 0 0 1 5.5 6h1.8l1.2-2h7l1.2 2h1.8A2.5 2.5 0 0 1 21 8.5v9a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5z" />
             <circle cx="12" cy="13" r="3.5" />
           </svg>
-          <span className="text-headline text-label">Start with a photo</span>
+          <span className="text-headline text-label">{acceptsVideo ? "Start with a photo or video" : "Start with a photo"}</span>
           <span className="max-w-[280px] text-subheadline text-label-secondary">
             The curtain, the stage, the Playbill or your ticket. We’ll fill in the date and theatre if the photo has them.
           </span>
           <span className="mt-2 inline-flex min-h-[50px] items-center rounded-pill bg-tint px-6 text-headline text-on-tint shadow-btn">
-            Choose photo
+            {acceptsVideo ? "Choose photo or video" : "Choose photo"}
           </span>
           {/* Only where there's a mouse; phones can't drag files in. */}
           <span className="hidden text-footnote text-label-secondary [@media(pointer:fine)]:block">
-            {dragging ? "Drop it here" : "or drag a photo here"}
+            {dragging ? "Drop it here" : acceptsVideo ? "or drag a photo or video here" : "or drag a photo here"}
           </span>
         </label>
         <button
@@ -826,8 +845,8 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
             onConfirmed={() => {
               closeGalleryUpgrade();
               if (upgradeSource === "video") {
-                const file = pendingVideo.current;
-                pendingVideo.current = null;
+                const file = pendingVideo;
+                setPendingVideo(null);
                 if (file) setVideoCandidate(file);
               } else {
                 resumeGallerySelection(true);
@@ -889,7 +908,7 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
               htmlFor={`${id}-photo`}
               className="inline-flex min-h-11 cursor-pointer items-center rounded-pill px-3 text-subheadline font-semibold text-tint-text hover:bg-tint-fill focus-within:outline-2 focus-within:outline-focus"
             >
-              {previewUrl ? "Change photo" : "Add photo"}
+              {previewUrl ? "Change photo" : acceptsVideo ? "Add photo or video" : "Add photo"}
             </label>
             {galleryEnabled && mediaCount > 0 && (
               <button type="button" disabled={mediaCount >= 10} className="min-h-11 px-3 text-tint-text"
@@ -897,7 +916,7 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
                 {mediaCount >= 10 ? "10/10" : galleryPickerReady ? "Choose photos" : "Add more +"}
               </button>
             )}
-            {videoEnabled && (mediaCount === 0 || galleryEnabled) && (
+            {videoEnabled && galleryEnabled && mediaCount > 0 && (
               <>
                 <input id={`${id}-video`} type="file" accept="video/*" className="sr-only"
                   disabled={saving || mediaCount >= 10}
@@ -909,12 +928,12 @@ function EntryForm({ initial, from, onSaved }: { initial?: EntryDraft; from?: Fr
                 <label htmlFor={`${id}-video`} className="inline-flex min-h-11 cursor-pointer items-center px-3 text-tint-text">
                   Add video
                 </label>
-                {pendingVideo.current && (
-                  <button type="button" disabled={saving} onClick={() => {
-                    if (pendingVideo.current) void chooseVideo(pendingVideo.current);
-                  }}>Resume video</button>
-                )}
               </>
+            )}
+            {pendingVideo && (
+              <button type="button" disabled={saving} onClick={() => {
+                if (pendingVideo) void chooseVideo(pendingVideo);
+              }}>Resume video</button>
             )}
             {(photo || (existingPhoto && initial?.nativeMediaId)) && (
               <button type="button" className="min-h-11 px-3 text-subheadline text-tint-text"
