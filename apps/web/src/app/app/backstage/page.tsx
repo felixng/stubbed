@@ -25,7 +25,7 @@ const PAGES = [
   {
     href: "/app/backstage/crawl",
     title: "Catalogue crawler",
-    text: "Where the crawler is and what needs you: sources, progress, publishing, suggestions to members, and the older official-sites runs and review.",
+    text: "Where the crawler is and what needs you: sources, progress, publishing, suggestions to members, and official-sites runs and review.",
   },
   {
     href: "/app/backstage/membership",

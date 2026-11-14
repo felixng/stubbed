@@ -66,7 +66,8 @@ select is(jsonb_array_length(public.crawl_source_summary('playbill')#>'{playbill
 select is((select sum((a->>'known')::int) from jsonb_array_elements(public.crawl_source_summary('playbill')#>'{playbill,areas}') a),(public.crawl_source_summary('playbill')#>>'{playbill,totals,known}')::bigint,'the areas add up to the source total');
 select is((select sum((s.value->>'known')::int) from jsonb_each(public.crawl_source_summary('playbill')#>'{playbill,stages}') s),(public.crawl_source_summary('playbill')#>>'{playbill,totals,known}')::bigint,'the steps add up to the source total');
 select is(public.crawl_source_summary('london_theatre')#>>'{london_theatre,totals,known}' is null,false,'a source with no pages still has numeric totals');
-select ok(not (public.crawl_source_summary() ? 'official'),'the official-sites crawler has no areas and is not summarised here');
+select ok(public.crawl_source_summary() ? 'official','official sites are summarised like any source since #546');
+select is(public.crawl_source_summary('official')#>'{official,areas}','[]'::jsonb,'an official source with no sites read yet has no areas');
 select ok((public.crawl_source_summary())->'london_theatre' is not null and (public.crawl_source_summary())->'playbill' is not null,'with no source named, both venue-first sources are returned');
 
 -- The pages list can cover every area, or just one.

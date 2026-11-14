@@ -86,32 +86,32 @@ test('scheduled dispatch gives each source its own allowance, runs them together
  const frontier={source:async key=>({source_key:key,collection_enabled:true,operator_paused_at:key==='playbill'?'paused':null})};
  // Each lane waits for the others to start, so a sequential loop would never finish.
  let started=0,release;const allStarted=new Promise(resolve=>{release=resolve;});
- const meet=async()=>{if(++started===4)release();await Promise.race([allStarted,new Promise((_,reject)=>setTimeout(()=>reject(new Error('sources ran one after another')),1000))]);};
+ const meet=async()=>{if(++started===3)release();await Promise.race([allStarted,new Promise((_,reject)=>setTimeout(()=>reject(new Error('sources ran one after another')),1000))]);};
  const result=await runScheduled({
   env,now,frontier,
   runSource:async(row,options)=>{await meet();seen.push([row.source_key,options.maxPages]);return {pages:12};},
-  runOfficial:async(_,options)=>{await meet();seen.push(['official',options.maxPages,options.engine??'legacy',options.dailyModelUsd,options.deadline]);return {pages:options.maxPages};},
+  runOfficial:async(_,options)=>{await meet();seen.push(['official',options.maxPages,'setup',options.dailyModelUsd,options.deadline]);return {pages:options.maxPages};},
  });
- assert.deepEqual(seen.sort(),[['london_theatre',150],['official',12,'frontier',0.5,1_200_000],['official',25,'legacy',0.5,1_200_000],['official',12]].sort(),'each source has its own allowance and the whole 20 minutes; official is shared out as 25 + 12 + 12');
- assert.equal(result.reduce((sum,row)=>sum+row.pages,0),12+25+12+12);
+ assert.deepEqual(seen.sort(),[['london_theatre',150],['official',25,'setup',1,1_200_000],['official',50]].sort(),'each source has its own allowance and the whole 20 minutes; official reads 50 pages and sets up with 25 and the whole model budget');
+ assert.equal(result.reduce((sum,row)=>sum+row.pages,0),12+25+12);
  assert.deepEqual(await runScheduled({env:{},frontier:{source:()=>assert.fail('Master switch must short circuit')}}),[]);
 });
 
-test('the three official lanes merge into one report, and a failing lane does not stop the others',async()=>{
+test('the two official lanes merge into one report, and a failing lane does not stop the other',async()=>{
  const env={CRAWL_LOOP_ENABLED:'true'};
  const frontier={source:async key=>({source_key:key,collection_enabled:true})};
  const lanes=await runOfficialLanes({env,row:{source_key:'official'},pages:50,deadline:1000,now:()=>0,model:{budgetUsd:1},frontier,
-  runOfficial:async(_,options)=>options.engine==='frontier'?Promise.reject(new Error('setup lane broke')):{pages:20,spendUsd:0.25,runId:'run-legacy',sites:[{}]},
+  runOfficial:async()=>Promise.reject(new Error('setup lane broke')),
   runSource:async()=>({pages:7,requests:9,statuses:{succeeded:7}})});
- assert.equal(lanes.pages,27,'the lanes that finished add up');
- assert.equal(lanes.runId,'run-legacy');
- assert.equal(lanes.spendUsd,0.25);
+ assert.equal(lanes.pages,7,'the lane that finished counts');
  assert.deepEqual(lanes.frontier,{pages:7,requests:9,statuses:{succeeded:7}});
  assert.deepEqual(lanes.setup,{pages:0,sites:0});
  assert.match(lanes.error,/setup lane: .*setup lane broke/);
  const clean=await runOfficialLanes({env,row:{source_key:'official'},pages:50,deadline:1000,now:()=>0,model:{budgetUsd:1},frontier,
-  runOfficial:async(_,options)=>options.engine==='frontier'?{pages:10,sites:[{},{}]}:{pages:20,spendUsd:0.1,runId:'r'},runSource:async()=>({pages:5})});
- assert.equal(clean.pages,35);
+  runOfficial:async()=>({pages:10,sites:[{},{}],spendUsd:0.1,runId:'r'}),runSource:async()=>({pages:5})});
+ assert.equal(clean.pages,15);
+ assert.equal(clean.spendUsd,0.1);
+ assert.equal(clean.runId,'r');
  assert.deepEqual(clean.setup,{pages:10,sites:2});
  assert.equal(clean.error,undefined);
 });
@@ -203,9 +203,4 @@ test('a failed repair leaves the frontier site unseeded and records what the leg
  assert.deepEqual(seeded,[]);
  assert.equal(result.sites[0].reason,'known_shows_missing');
  assert.ok(statuses.includes('pending')||statuses.includes('needs_attention'));
-});
-
-test('the frontier engine only runs scheduled and never for a saved run',async()=>{
- await assert.rejects(main({CRAWL_LOOP_ENABLED:'true'},{engine:'frontier',runId:'00000000-0000-0000-0000-000000000000',scheduled:true}),/only in scheduled mode/);
- await assert.rejects(main({CRAWL_LOOP_ENABLED:'true'},{engine:'frontier'}),/only in scheduled mode/);
 });

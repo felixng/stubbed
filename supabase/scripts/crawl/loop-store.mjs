@@ -2,7 +2,6 @@ import {runPsql} from './db.mjs';
 import {jsonLiteral,uuidLiteral,readVenues} from './load.mjs';
 import {readSite} from './site-store.mjs';
 import {canonicalTaskUrl} from './frontier-url.mjs';
-export async function work(limit,db=runPsql){const [rows]=await db(`select public.crawl_work(${Math.max(0,Math.min(100,Number(limit)||0))})`);return rows;}
 // Frontier sites that need the AI lane (setup, or a repair the reader asked for).
 export async function setupWork(limit,db=runPsql){const [rows]=await db(`select public.crawl_setup_work(${Math.max(0,Math.min(100,Number(limit)||0))})`);return rows;}
 // Ready frontier sites with no current generation yet.

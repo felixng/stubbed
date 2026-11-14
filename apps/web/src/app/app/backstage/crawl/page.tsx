@@ -52,6 +52,7 @@ async function SourcesBlock() {
   const now = schedule ? new Date(schedule.server_time) : new Date();
   const official = overview?.official;
   const model = schedule ? todaysLimits(schedule, []).model : null;
+  const officialLine = summary.official ? sourceLine(names.official ?? "official", summary.official, stateOf(summary.official), now) : null;
   return (
     <section aria-label="Sources" className="flex flex-col divide-y divide-separator rounded-md border border-separator bg-surface">
       {list.filter(source => source.kind !== "official" && summary[source.source_key]).map(({ source_key: key, display_name }) => {
@@ -78,8 +79,14 @@ async function SourcesBlock() {
         <div className="relative flex flex-col gap-1 p-4">
           <div className="flex items-center gap-3">
             <Link href={sourcePath("official")} className="min-w-0 flex-1 text-headline text-label after:absolute after:inset-0">{crawlSourceName("official", names)}</Link>
+            {officialLine && (
+              <div className="w-20 shrink-0 sm:w-32">
+                <CrawlBar done={officialLine.read} stuck={officialLine.stuck} total={officialLine.known} label={`${n(officialLine.read)} of ${n(officialLine.known)} pages read`} />
+              </div>
+            )}
             <span className="text-subheadline tabular-nums text-label-secondary">{n(official.sites)} sites</span>
           </div>
+          {officialLine && <p className="text-subheadline text-label-secondary tabular-nums">{n(officialLine.read)} of {n(officialLine.known)} pages read</p>}
           <p className="text-subheadline">
             {official.sites_needing_attention > 0
               ? <Link href={`${OFFICIAL_SITES_PATH}?attention=1`} className="relative z-10 font-semibold text-destructive">{n(official.sites_needing_attention)} need you →</Link>

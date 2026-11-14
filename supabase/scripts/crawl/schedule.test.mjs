@@ -103,12 +103,12 @@ const everything=pages=>({pages,statuses:{}});
 test('sources run at the same time, each with its own allowance',async()=>{
  const store=fakeStore();
  const seen=[];let started=0,release;const together=new Promise(resolve=>{release=resolve;});
- const meet=async()=>{if(++started===5)release();await Promise.race([together,new Promise((_,reject)=>setTimeout(()=>reject(new Error('one after another')),1000))]);};
+ const meet=async()=>{if(++started===4)release();await Promise.race([together,new Promise((_,reject)=>setTimeout(()=>reject(new Error('one after another')),1000))]);};
  await runScheduled({env,now:()=>0,frontier,workerRuns:store,
-  // Official runs as three lanes (legacy 25, setup 12, reading 12); the reading lane here reads one more page so the total is the whole allowance.
-  runSource:async(row,options)=>{await meet();seen.push([row.source_key,options.maxPages]);return everything(row.source_key==='official'?options.maxPages+1:options.maxPages);},
-  runOfficial:async(_,options)=>{await meet();seen.push(['official',options.maxPages,options.engine??'legacy']);return everything(options.maxPages);}});
- assert.deepEqual(seen.sort(),[['london_theatre',150],['official',12],['official',12,'frontier'],['official',25,'legacy'],['playbill',150]].sort());
+  // Official runs as two lanes: setup (25 pages) and reading (the whole official allowance of 50).
+  runSource:async(row,options)=>{await meet();seen.push([row.source_key,options.maxPages]);return everything(options.maxPages);},
+  runOfficial:async(_,options)=>{await meet();seen.push(['official-setup',options.maxPages]);return everything(options.maxPages);}});
+ assert.deepEqual(seen.sort(),[['london_theatre',150],['official',50],['official-setup',25],['playbill',150]].sort());
  const [finished]=store.calls.finished;
  assert.equal(finished.stopReason,'page_allowance');
  assert.deepEqual(Object.fromEntries(Object.entries(finished.perSource).map(([key,value])=>[key,value.stop])),{london_theatre:'page_allowance',playbill:'page_allowance',official:'page_allowance'});
@@ -117,9 +117,9 @@ test('sources run at the same time, each with its own allowance',async()=>{
 test('repository variables change the allowances, and one source can be slowed alone',async()=>{
  const seen=[];
  await runScheduled({env:{...env,CRAWL_SOURCE_RUN_PAGES:'200',CRAWL_SOURCE_RUN_PAGES_PLAYBILL:'30',CRAWL_OFFICIAL_RUN_PAGES:'20'},now:()=>0,frontier,workerRuns:fakeStore(),
-  runSource:async(row,options)=>{if(row.source_key!=='official')seen.push([row.source_key,options.maxPages]);return everything(0);},
-  runOfficial:async(_,options)=>{if(!options.engine)seen.push(['official',options.maxPages]);return everything(0);}});
- assert.deepEqual(seen.sort(),[['london_theatre',200],['official',10],['playbill',30]],'official 20 is shared out; the legacy lane has half');
+  runSource:async(row,options)=>{seen.push([row.source_key,options.maxPages]);return everything(0);},
+  runOfficial:async()=>everything(0)});
+ assert.deepEqual(seen.sort(),[['london_theatre',200],['official',20],['playbill',30]],'the official reading lane takes the whole official allowance');
 });
 
 test('a source at its daily cap gets no pages and the others are not affected',async()=>{
@@ -186,7 +186,7 @@ test('a start right behind a run that left nothing due exits at once',async()=>{
  await runScheduled({env,now:()=>0,frontier,workerRuns:fakeStore({previous:{...nothing,age_seconds:700}}),runSource:run,runOfficial:official});
  await runScheduled({env,now:()=>0,frontier,workerRuns:fakeStore({previous:{...nothing,per_source:{...nothing.per_source,playbill:{stop:'page_allowance'}}}}),runSource:run,runOfficial:official});
  await runScheduled({env:{...env,GITHUB_EVENT_NAME:'workflow_dispatch'},now:()=>0,frontier,workerRuns:fakeStore({previous:nothing}),runSource:run,runOfficial:official});
- assert.equal(ran.length,15,'all three starts read every source (official in three lanes)');
+ assert.equal(ran.length,12,'all three starts read every source (official in two lanes)');
 });
 
 test('the daily model cap skips model work and says so, while page crawling continues',async()=>{
@@ -195,13 +195,13 @@ test('the daily model cap skips model work and says so, while page crawling cont
  await runScheduled({env,now:()=>0,frontier,workerRuns:store,
   runSource:async()=>everything(10),
   runOfficial:async(_,options)=>{official.push(options.dailyModelUsd);return {pages:10,spendUsd:0};}});
- assert.deepEqual(official,[0,0],'both AI lanes get none');
+ assert.deepEqual(official,[0],'the setup lane gets none');
  assert.equal(store.calls.finished[0].stopReason,'daily_spend_cap');
  const partial=fakeStore({spendUsd:1.5});
  const left=[];
  await runScheduled({env,now:()=>0,frontier,workerRuns:partial,runSource:async()=>everything(1),runOfficial:async(_,options)=>{left.push(options.dailyModelUsd);return {pages:1,spendUsd:0.4};}});
- assert.deepEqual(left,[0.25,0.25],'half of what is left each');
- assert.equal(partial.calls.finished[0].modelSpendUsd,0.8,'the legacy and setup lanes both spent 0.4');
+ assert.deepEqual(left,[0.5],'the setup lane gets all that is left');
+ assert.equal(partial.calls.finished[0].modelSpendUsd,0.4);
 });
 
 test('every run is recorded with its trigger, who started it and its limits, and a recording failure never stops the crawl',async()=>{
