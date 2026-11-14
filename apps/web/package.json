@@ -13,6 +13,8 @@
     "cms:seed": "node --env-file-if-exists=.env.local --import ./test/setup.mjs --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/seed-cms.ts"
   },
   "dependencies": {
+    "@ffmpeg/core": "0.12.10",
+    "@ffmpeg/ffmpeg": "0.12.15",
     "@mediabunny/aac-encoder": "1.65.2",
     "@revenuecat/purchases-js": "1.73.1",
     "@sanity/client": "^8.14.1",

@@ -1,0 +1,35 @@
+import { FFmpeg, FFFSType } from "@ffmpeg/ffmpeg";
+
+export async function exportVideoInSoftware(file: Blob, start: number, end: number,
+  signal: AbortSignal, onProgress: (fraction: number) => void): Promise<Blob> {
+  const core = process.env.NEXT_PUBLIC_VIDEO_SOFTWARE_CORE;
+  if (!core) throw new Error("Software video conversion is unavailable on this deployment.");
+  signal.throwIfAborted();
+  const ffmpeg = new FFmpeg();
+  const cancel = () => ffmpeg.terminate();
+  signal.addEventListener("abort", cancel, { once: true });
+  ffmpeg.on("progress", ({ progress }) => onProgress(Math.max(0, Math.min(progress, 1))));
+  try {
+    await ffmpeg.load({ coreURL: new URL("ffmpeg-core.js", new URL(core, location.href)).href,
+      wasmURL: new URL("ffmpeg-core.wasm", new URL(core, location.href)).href });
+    signal.throwIfAborted();
+    await ffmpeg.createDir("/input");
+    await ffmpeg.mount(FFFSType.WORKERFS, { blobs: [{ name: "source", data: file }] }, "/input");
+    const scale = "scale=w='if(gte(iw,ih),min(iw,1280),min(iw,720))':h='if(gte(iw,ih),min(ih,720),min(ih,1280))':force_original_aspect_ratio=decrease:force_divisible_by=2";
+    const status = await ffmpeg.exec([
+      "-ss", String(start), "-i", "/input/source", "-t", String(Math.min(end - start, 29.9)),
+      "-map", "0:v:0", "-map", "0:a:0?", "-vf", scale,
+      "-c:v", "libx264", "-preset", "ultrafast", "-b:v", "3M", "-maxrate", "3M", "-bufsize", "6M",
+      "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "96k",
+      "-map_metadata", "-1", "-map_chapters", "-1", "-movflags", "+faststart", "/trim.mp4",
+    ], 180_000);
+    signal.throwIfAborted();
+    if (status !== 0) throw new Error("This video couldn’t be converted. Try a shorter selection.");
+    const data = await ffmpeg.readFile("/trim.mp4");
+    if (typeof data === "string") throw new Error("Couldn’t read the exported video.");
+    return new Blob([Uint8Array.from(data)], { type: "video/mp4" });
+  } finally {
+    signal.removeEventListener("abort", cancel);
+    ffmpeg.terminate();
+  }
+}

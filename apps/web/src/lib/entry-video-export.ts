@@ -28,12 +28,13 @@ export async function exportEntryVideo(file: Blob, start: number, end: number,
   try {
     signal.throwIfAborted();
     const video = await input.getPrimaryVideoTrack();
-    if (!video || !await video.canDecode()) throw new Error("This browser couldn’t decode the selected video.");
+    if (!video) throw new Error("Choose a video with a picture track.");
+    let useSoftware = !await video.canDecode();
     const [width, height] = await Promise.all([video.getDisplayWidth(), video.getDisplayHeight()]);
     const scale = Math.min(1, 1280 / Math.max(width, height), 720 / Math.min(width, height));
     const outputWidth = Math.max(2, 2 * Math.floor(width * scale / 2));
     const outputHeight = Math.max(2, 2 * Math.floor(height * scale / 2));
-    const encodeVideo = await canEncodeVideo("avc", { width: outputWidth, height: outputHeight, bitrate: 3_000_000 });
+    const encodeVideo = !useSoftware && await canEncodeVideo("avc", { width: outputWidth, height: outputHeight, bitrate: 3_000_000 });
     if (encodeVideo && await input.getPrimaryAudioTrack() &&
         !await canEncodeAudio("aac", { numberOfChannels: 2, sampleRate: 48000, bitrate: 96_000 })) {
       aacEncoder ??= import("@mediabunny/aac-encoder").then(({ registerAacEncoder }) => registerAacEncoder())
@@ -42,32 +43,41 @@ export async function exportEntryVideo(file: Blob, start: number, end: number,
     }
     for (let attempt = 0; attempt < 2; attempt++) {
       signal.throwIfAborted();
-      const target = new BufferTarget();
-      const conversion = await Conversion.init({
-        input, output: new Output({ format: new Mp4OutputFormat(), target }),
-        trim: { start, end }, tags: {},
-        copy: encodeVideo ? undefined : { mode: "forced", boundaryPolicy: "shrink" },
-        video: encodeVideo ? {
-          codec: "avc", bitrate: 3_000_000, width: outputWidth, height: outputHeight,
-          fit: "contain", allowTransformationMetadata: false,
-        } : { codec: "avc", allowTransformationMetadata: false },
-        audio: encodeVideo ? { codec: "aac", bitrate: 96_000 } : { codec: "aac" },
-      });
-      if (!conversion.isValid || conversion.discardedTracks.length) {
-        throw new Error("This video couldn’t be exported in this browser.");
-      }
-      conversion.onProgress = onProgress;
-      const cancel = () => { void conversion.cancel().catch(() => undefined); };
-      signal.addEventListener("abort", cancel, { once: true });
-      try {
+      let display: Blob | undefined;
+      if (!useSoftware) {
+        const target = new BufferTarget();
+        const conversion = await Conversion.init({
+          input, output: new Output({ format: new Mp4OutputFormat(), target }),
+          trim: { start, end }, tags: {},
+          copy: encodeVideo ? undefined : { mode: "forced", boundaryPolicy: "shrink" },
+          video: encodeVideo ? {
+            codec: "avc", bitrate: 3_000_000, width: outputWidth, height: outputHeight,
+            fit: "contain", allowTransformationMetadata: false,
+          } : { codec: "avc", allowTransformationMetadata: false },
+          audio: encodeVideo ? { codec: "aac", bitrate: 96_000 } : { codec: "aac" },
+        });
+        if (!conversion.isValid || conversion.discardedTracks.length) {
+          useSoftware = true;
+        } else {
+        conversion.onProgress = onProgress;
+        const cancel = () => { void conversion.cancel().catch(() => undefined); };
+        signal.addEventListener("abort", cancel, { once: true });
+        try {
+          signal.throwIfAborted();
+          await conversion.execute();
+        } finally {
+          signal.removeEventListener("abort", cancel);
+        }
         signal.throwIfAborted();
-        await conversion.execute();
-      } finally {
-        signal.removeEventListener("abort", cancel);
+        if (!target.buffer || target.buffer.byteLength > maxBytes) throw new Error("Choose a shorter video selection.");
+        display = new Blob([target.buffer], { type: "video/mp4" });
+        }
       }
-      signal.throwIfAborted();
-      if (!target.buffer || target.buffer.byteLength > maxBytes) throw new Error("Choose a shorter video selection.");
-      const display = new Blob([target.buffer], { type: "video/mp4" });
+      if (!display) {
+        const { exportVideoInSoftware } = await import("./entry-video-software");
+        display = await exportVideoInSoftware(file, start, end, signal, onProgress);
+      }
+      if (display.size <= 0 || display.size > maxBytes) throw new Error("Choose a shorter video selection.");
       const output = new Input({ source: new BlobSource(display), formats: ALL_FORMATS });
       try {
         const seconds = await output.computeDuration();
