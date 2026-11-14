@@ -22,5 +22,10 @@ To test the pinned software video converter locally, run
 installing workspace dependencies. Set
 `NEXT_PUBLIC_VIDEO_SOFTWARE_CORE=/video-core/` in the web app's local environment
 and restart the dev server. The generated directory is excluded from Git.
-Production packaging and corresponding-source distribution are tracked under
-[#525](https://github.com/felixng/stubbed/issues/525).
+For a build with the software converter enabled, stage the exact corresponding
+source (including dependency revisions, build instructions, and notices) at
+`public/video-core/source/ffmpeg-core.tar.gz` and
+`public/video-core/source/mediabunny-aac.tar.gz` first. The build checks both
+paths before staging the runtime assets. The AAC build recipe and license texts
+are also copied to `/video-core/notices/`. Hosted archive preparation and
+verification are tracked in [#525](https://github.com/felixng/stubbed/issues/525).
