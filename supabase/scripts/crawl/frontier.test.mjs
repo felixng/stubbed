@@ -172,3 +172,42 @@ test('an off-host redirect is rejected before a connection, as are nonpublic add
     assert.equal(isPublicCrawlAddress(address), true, address);
   }
 });
+
+test('an adapter with contextFor gets its context in the parser and fetches on the context hosts', async () => {
+  const state = fixture([{ stage: 'venue', canonical_url: 'https://site-a.test/whats-on/', generation_id: 'g1' }, { stage: 'venue', canonical_url: 'https://site-a.test/archive/', generation_id: 'g1' }]);
+  const calls = [];
+  const contextAdapter = {
+    version: 'ctx-1',
+    contextFor: async (task, _store, cached) => { calls.push([task.canonical_url, Boolean(cached)]); return { allowedHosts: ['site-a.test'], rules: 'r', previous: task.canonical_url }; },
+    parsers: { venue: ({ context }) => ({ children: [], observations: [{ rules: context.rules, previous: context.previous }] }) },
+  };
+  const hosts = [];
+  const result = await runFrontier({
+    source: { ...source, allowed_hosts: ['fixture.test'] }, adapter: contextAdapter, seeds: [], store: state.store,
+    request: async url => { hosts.push(url.hostname); return url.pathname === '/robots.txt' ? robots('') : html(); },
+  });
+  assert.equal(result.statuses.succeeded, 2);
+  assert.ok(hosts.every(host => host === 'site-a.test'), 'every request went to the context host');
+  assert.deepEqual(calls.map(([, cached]) => cached), [false, true], 'the second task reuses the generation context');
+  const acks = state.writes.filter(([kind]) => kind === 'ack').map(([, , , payload]) => payload.observations[0].previous).sort();
+  assert.deepEqual(acks, ['https://site-a.test/archive/', 'https://site-a.test/whats-on/'], 'previous is per task');
+});
+
+test('an invalid page with retry false fails after one attempt and the hook runs once', async () => {
+  const state = fixture([{ stage: 'event', canonical_url: root + '/bad' }, { stage: 'event', canonical_url: root + '/soft' }]);
+  const hooked = [];
+  const hookAdapter = {
+    version: '3', parsers: { event: ({ url }) => ({ status: 'invalid', reason: 'nope', ...(url.endsWith('/bad') ? { retry: false } : {}) }) },
+    onInvalid: async ({ task, reason }) => { hooked.push([task.canonical_url, reason]); throw new Error('hook failed'); },
+  };
+  const result = await runFrontier({
+    source, adapter: hookAdapter, seeds: [], store: state.store,
+    request: async url => url.pathname === '/robots.txt' ? robots('') : html(),
+  });
+  assert.equal(result.statuses.failed, 1);
+  assert.equal(result.statuses.retry_wait, 1, 'without retry false the ladder still applies');
+  assert.equal(result.statuses.hook_failed, 2, 'a throwing hook is counted and does not change the outcome');
+  assert.deepEqual(hooked.map(([url]) => url.slice(root.length)).sort(), ['/bad', '/soft']);
+  const bad = state.writes.find(([kind, task]) => kind === 'outcome' && task.canonical_url.endsWith('/bad'));
+  assert.deepEqual([bad[2], bad[3], bad[5]], ['failed', null, true]);
+});

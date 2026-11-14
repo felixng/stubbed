@@ -25,6 +25,28 @@ export function createFrontierStore(db = (sql, timeout = 15_000) => runPsql(sql,
       return source;
     },
 
+    // A generation's official site, its active rules and its venues; null when there is no site.
+    async officialContext(generationId, siteId = null) {
+      const [row] = await db(`select jsonb_build_object(
+          'site', jsonb_build_object('id', s.id, 'whats_on_url', s.whats_on_url, 'archive_url', s.archive_url),
+          'rules', r.rules, 'rule_id', r.id,
+          'venues', coalesce((select jsonb_agg(jsonb_build_object('id', v.id, 'name', v.name, 'whats_on_url', v.whats_on_url) order by v.name)
+            from public.venues v where v.crawl_site_id = s.id), '[]'::jsonb))
+        from public.crawl_sites s
+        left join public.crawl_rules r on r.site_id = s.id and r.status = 'active'
+        where s.id = coalesce((select g.site_id from public.crawl_generations g where g.id = ${generationId ? uuidLiteral(generationId) : 'null'}),
+          ${siteId ? uuidLiteral(siteId) : 'null'})`);
+      return row ?? null;
+    },
+
+    // The observations of a task's newest extraction, or null.
+    async latestObservations(taskId) {
+      if (!taskId) return null;
+      const [row] = await db(`select e.observations from public.crawl_extractions e
+        where e.task_id = ${uuidLiteral(taskId)} order by e.extracted_at desc limit 1`);
+      return row ?? null;
+    },
+
     async officialSite(scope) {
       const [site] = await db(`select jsonb_build_object('id', id, 'url', whats_on_url) from public.crawl_sites
         where id = ${uuidLiteral(scope)}`);
