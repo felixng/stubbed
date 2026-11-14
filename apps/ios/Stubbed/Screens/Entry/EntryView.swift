@@ -1,3 +1,4 @@
+import AVKit
 import Supabase
 import SwiftUI
 
@@ -12,8 +13,11 @@ struct EntryView: View {
   @Environment(\.dismiss) private var dismiss
   @State private var state: Loadable<Entry> = .loading
   @State private var photo: URL?
-  @State private var gallery: [EntryMedia.GalleryPhoto] = []
+  @State private var gallery: [EntryMedia.GalleryItem] = []
   @State private var galleryIndex = 0
+  @State private var videoPlayer: AVPlayer?
+  @State private var videoHasStarted = false
+  @Environment(\.scenePhase) private var scenePhase
   @State private var galleryError: String?
   @State private var cards: [RenderedCard]?
   @State private var cardsFailed = false
@@ -56,6 +60,10 @@ struct EntryView: View {
       }
     }
     .task(id: "\(router.dataVersion)-\(membership.version)") { await load() }
+    .onChange(of: galleryIndex) { _, _ in stopVideo() }
+    .onChange(of: sharing) { _, isSharing in if isSharing { stopVideo() } }
+    .onChange(of: scenePhase) { _, phase in if phase != .active { stopVideo() } }
+    .onDisappear { stopVideo() }
     .sheet(isPresented: $sharing) {
       if let share {
         ShareScreen {
@@ -80,9 +88,37 @@ struct EntryView: View {
         Section {
           TabView(selection: $galleryIndex) {
             ForEach(Array(gallery.enumerated()), id: \.element.id) { index, item in
-              Color.clear.overlay { RemoteImage(url: item.url) }.clipped()
-                .accessibilityLabel("Photo \(index + 1) of \(gallery.count) from \(entry.show.title)")
-                .tag(index)
+              Group {
+                if index == galleryIndex, let videoPlayer {
+                  VideoPlayer(player: videoPlayer)
+                    .accessibilityIdentifier(videoHasStarted ? "entry-video-playing" : "entry-video-player")
+                    .task(id: ObjectIdentifier(videoPlayer)) {
+                      while !Task.isCancelled && !videoHasStarted {
+                        if videoPlayer.currentTime().seconds > 0 {
+                          videoHasStarted = true
+                          break
+                        }
+                        do { try await Task.sleep(for: .milliseconds(200)) } catch { break }
+                      }
+                    }
+                    .onDisappear { videoPlayer.pause() }
+                } else {
+                  Color.clear.overlay { RemoteImage(url: item.url) }.clipped()
+                    .accessibilityLabel("\(item.video == nil ? "Photo" : "Video") \(index + 1) of \(gallery.count) from \(entry.show.title)")
+                    .overlay {
+                      if index == galleryIndex, let url = item.video {
+                        Button("Play video", systemImage: "play.fill") {
+                          let player = AVPlayer(url: url)
+                          player.isMuted = true
+                          videoPlayer = player
+                          player.play()
+                        }
+                        .buttonStyle(.borderedProminent)
+                      }
+                    }
+                }
+              }
+              .tag(index)
             }
           }
           .tabViewStyle(.page(indexDisplayMode: .never))
@@ -96,11 +132,11 @@ struct EntryView: View {
               .accessibilityLabel("Photo \(galleryIndex + 1) of \(gallery.count)")
           }
           if gallery.count > 1 {
-            Menu("Photo actions", systemImage: "ellipsis.circle") {
+            Menu("Media actions", systemImage: "ellipsis.circle") {
               if galleryIndex > 0 {
                 Button("Make cover") { Task { await makeCover(entry) } }
               }
-              Button("Remove photo", role: .destructive) { Task { await removeGalleryPhoto(entry) } }
+              Button("Remove item", role: .destructive) { Task { await removeGalleryItem(entry) } }
             }
             .frame(maxWidth: .infinity)
           }
@@ -220,6 +256,12 @@ struct EntryView: View {
     .accessibilityElement(children: .combine)
   }
 
+  private func stopVideo() {
+    videoPlayer?.pause()
+    videoPlayer = nil
+    videoHasStarted = false
+  }
+
   private func makeCover(_ entry: Entry) async {
     guard gallery.indices.contains(galleryIndex) else { return }
     var order = gallery.map(\.id)
@@ -234,7 +276,7 @@ struct EntryView: View {
     }
   }
 
-  private func removeGalleryPhoto(_ entry: Entry) async {
+  private func removeGalleryItem(_ entry: Entry) async {
     guard gallery.indices.contains(galleryIndex) else { return }
     do {
       try await EntryMedia.remove(entryID: entry.id, mediaID: gallery[galleryIndex].id)
@@ -248,7 +290,8 @@ struct EntryView: View {
   private func load() async {
     do {
       let entry = try await Entries.entry(id)
-      gallery = (try? await EntryMedia.galleryPhotos(entryID: entry.id)) ?? []
+      stopVideo()
+      gallery = (try? await EntryMedia.galleryItems(entryID: entry.id)) ?? []
       galleryIndex = min(galleryIndex, max(0, gallery.count - 1))
       if let cover = gallery.first {
         photo = cover.url

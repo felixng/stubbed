@@ -22,14 +22,14 @@ enum EntryMedia {
 
   private struct Asset: Encodable {
     let role: String
-    let content_type = "image/jpeg"
+    var content_type = "image/jpeg"
     let bytes: Int
   }
 
   private struct Request: Encodable {
     let p_entry_id: UUID
     let p_request_id: UUID
-    let p_kind = "photo"
+    var p_kind = "photo"
     let p_replace_media_id: UUID?
     let p_assets: [Asset]
 
@@ -68,21 +68,24 @@ enum EntryMedia {
     return rows.first
   }
 
-  struct GalleryPhoto: Identifiable, Sendable {
+  struct GalleryItem: Identifiable, Sendable {
     let id: UUID
     let url: URL
+    let video: URL?
   }
 
-  static func galleryPhotos(entryID: UUID) async throws -> [GalleryPhoto] {
+  static func galleryItems(entryID: UUID) async throws -> [GalleryItem] {
     struct Row: Decodable {
       let id: UUID
       let display_path: String
       let legacy: Bool
+      let kind: String
+      let poster_path: String?
     }
-    let rows: [Row] = try await supabase.from("entry_media").select("id,display_path,legacy")
-      .eq("entry_id", value: entryID).eq("state", value: "ready").eq("kind", value: "photo")
+    let rows: [Row] = try await supabase.from("entry_media").select("id,display_path,legacy,kind,poster_path")
+      .eq("entry_id", value: entryID).eq("state", value: "ready")
       .order("position").execute().value
-    let nativePaths = rows.filter { !$0.legacy }.map(\.display_path)
+    let nativePaths = rows.filter { !$0.legacy }.compactMap { $0.kind == "video" ? $0.poster_path : $0.display_path }
     let legacy = await Entries.signPhotos(rows.filter(\.legacy).map(\.display_path))
     var native: [String: URL] = [:]
     if !nativePaths.isEmpty {
@@ -91,9 +94,18 @@ enum EntryMedia {
         if case .success(let path, let url) = result { native[path] = url }
       }
     }
+    let videoPaths = rows.filter { $0.kind == "video" }.map(\.display_path)
+    var videos: [String: URL] = [:]
+    if !videoPaths.isEmpty, let signed = try? await supabase.storage.from("entry-video")
+      .createSignedURLs(paths: videoPaths, expiresIn: 3600) {
+      for result in signed {
+        if case .success(let path, let url) = result { videos[path] = url }
+      }
+    }
     return rows.compactMap { row in
-      let url = row.legacy ? legacy[row.display_path] : native[row.display_path]
-      return url.map { GalleryPhoto(id: row.id, url: $0) }
+      let path = row.poster_path ?? row.display_path
+      let url = row.legacy ? legacy[path] : native[path]
+      return url.map { GalleryItem(id: row.id, url: $0, video: videos[row.display_path]) }
     }
   }
 
@@ -132,6 +144,46 @@ enum EntryMedia {
     let path = "\(entryID.uuidString.lowercased())/\(mediaID.uuidString.lowercased())/\(retained.source_revision)/source.jpg"
     let data = try await supabase.storage.from(bucket).download(path: path)
     return RetainedPhoto(data: data, rectangle: [crop.crop_x, crop.crop_y, crop.crop_width, crop.crop_height])
+  }
+
+  struct VideoDraft {
+    let requestID = UUID()
+    let file: URL
+    var uploadLocation: URL?
+    var reservationID: UUID?
+  }
+
+  static func cancelVideoReservation(_ id: UUID) async {
+    _ = try? await supabase.rpc("cancel_entry_media", params: ["p_reservation_id": id]).execute()
+  }
+
+  static func saveVideo(_ video: inout VideoDraft, entryID: UUID) async throws {
+    struct VideoCompletion: Encodable { let reservation_id: UUID }
+    let bytes = try video.file.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
+    guard bytes > 0, bytes <= 15 * 1024 * 1024 else { throw CocoaError(.fileReadCorruptFile) }
+    let derivatives = try await EntryVideoDerivatives.make(from: video.file)
+    let lease: Lease = try await supabase.rpc("reserve_entry_media", params: Request(
+      p_entry_id: entryID, p_request_id: video.requestID, p_kind: "video", p_replace_media_id: nil,
+      p_assets: [Asset(role: "display", content_type: "video/mp4", bytes: bytes)]
+        + derivatives.map { Asset(role: $0.0, bytes: $0.1.count) }
+    )).execute().value
+    guard lease.state != "finalized" else { return }
+    video.reservationID = lease.reservation_id
+    guard let path = lease.paths["display"] else { throw Photo.Failure.unreadable }
+    let token = try await supabase.auth.session.accessToken
+    try await EntryVideoUpload.upload(file: video.file, bytes: bytes, path: path,
+      token: token, location: &video.uploadLocation)
+    for (role, data) in derivatives {
+      guard let path = lease.paths[role] else { throw Photo.Failure.unreadable }
+      do {
+        try await supabase.storage.from(bucket).upload(path, data: data,
+          options: FileOptions(contentType: "image/jpeg", upsert: false))
+      } catch let error as StorageError where error.statusCode == "409" {
+        // Retry reuses the already uploaded immutable derivative.
+      }
+    }
+    let _: Result = try await supabase.functions.invoke("entry-media-finalize",
+      options: FunctionInvokeOptions(body: VideoCompletion(reservation_id: lease.reservation_id)))
   }
 
   static func savePhoto(_ photo: PhotoDraft, entryID: UUID) async throws {

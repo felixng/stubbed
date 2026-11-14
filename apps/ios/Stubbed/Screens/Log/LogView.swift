@@ -32,6 +32,17 @@ struct LogView: View {
   @State private var preview: UIImage?
   @State private var existingPhoto: URL?
   @State private var photoItem: PhotosPickerItem?
+  @State private var videoItem: PhotosPickerItem?
+  @State private var pendingVideo: PhotosPickerItem?
+  @State private var resumeVideoPicker = false
+  @State private var videoCandidate: VideoCandidate?
+  @State private var preparedVideos: [EntryMedia.VideoDraft] = []
+  @State private var loadingVideo = false
+
+  private struct VideoCandidate: Identifiable {
+    let id = UUID()
+    let source: URL
+  }
   @State private var galleryPicker = false
   @State private var resumeGalleryPicker = false
   @State private var gallerySelection: [PhotosPickerItem] = []
@@ -41,7 +52,7 @@ struct LogView: View {
   @State private var removedCover = false
   private var mediaCount: Int {
     let retainedCount = max(0, savedGalleryCount - (removedCover ? 1 : 0))
-    return max(retainedCount, hasPhoto ? 1 : 0) + additionalPhotos.count
+    return max(retainedCount, hasPhoto ? 1 : 0) + additionalPhotos.count + preparedVideos.count
   }
 
   @State private var photoError: String?
@@ -134,7 +145,7 @@ struct LogView: View {
   private var planned: Bool { Day.status(date, today: today) == .planned }
   private var offeredTrips: [Trip] { context.trips.filter { $0.covers(date) } }
   private var hasChanges: Bool {
-    if removedCover || !additionalPhotos.isEmpty { return true }
+    if removedCover || !additionalPhotos.isEmpty || !preparedVideos.isEmpty { return true }
     guard let editing else { return show != nil || venue != nil || rating != nil || !note.isEmpty || photo != nil }
     return show != ShowChoice(editing.show) || venue != editing.venue.map(VenueChoice.init) || date != editing.date
       || rating != editing.rating || note != (editing.note ?? "") || visibility != editing.visibility
@@ -187,6 +198,10 @@ struct LogView: View {
       }
     }
     .paywallHost(onDismiss: {
+      if resumeVideoPicker {
+        resumeVideoPicker = false
+        if let item = pendingVideo { Task { await prepareVideo(item) } }
+      }
       guard resumeGalleryPicker else { return }
       resumeGalleryPicker = false
       galleryPicker = true
@@ -203,6 +218,24 @@ struct LogView: View {
       if !pendingGallery.isEmpty { Task { await nextGalleryCrop() } }
     }) { candidate in
       EntryPhotoCropView(image: candidate.image, initialCrop: candidate.initialCrop) { acceptCrop($0, candidate: candidate) }
+    }
+    .onChange(of: videoItem) { _, item in
+      guard let item else { return }
+      videoItem = nil
+      if membership.canUse("media.video") && (mediaCount == 0 || membership.canUse("media.multiple")) {
+        Task { await prepareVideo(item) }
+      } else {
+        pendingVideo = item
+        paywall.present(source: .video) { resumeVideoPicker = true }
+      }
+    }
+    .sheet(item: $videoCandidate) { candidate in
+      EntryVideoTrimView(source: candidate.source) { preparedVideos.append(.init(file: $0)) }
+        .onDisappear { try? FileManager.default.removeItem(at: candidate.source) }
+    }
+    .onDisappear {
+      for clip in preparedVideos { discardVideo(clip) }
+      preparedVideos.removeAll()
     }
     .interactiveDismissDisabled(hasChanges || importing != nil)
     .task { await load() }
@@ -360,6 +393,23 @@ struct LogView: View {
             .font(.footnote)
             .foregroundStyle(.secondary)
           }
+        }
+      }
+      if membership.config.mediaVideoEnabled && (mediaCount == 0 || membership.config.mediaGalleriesEnabled) {
+        PhotosPicker("Add video", selection: $videoItem, matching: .videos, preferredItemEncoding: .current)
+          .accessibilityIdentifier("entry-add-video")
+          .disabled(mediaCount >= 10 || membership.info == nil || loadingVideo || saving)
+      }
+      if loadingVideo { ProgressView("Loading video…") }
+      ForEach(preparedVideos, id: \.requestID) { clip in
+        HStack {
+          Label("Video ready", systemImage: "video")
+          Spacer()
+          Button("Remove video", role: .destructive) {
+            preparedVideos.removeAll { $0.requestID == clip.requestID }
+            discardVideo(clip)
+          }
+          .disabled(saving)
         }
       }
       ForEach(Array(additionalPhotos.enumerated()), id: \.element.requestID) { index, item in
@@ -802,7 +852,7 @@ struct LogView: View {
       context = try await Entries.formContext(userId: userId)
       if !touchedVisibility { visibility = context.visibility }
       if let id = editing?.id {
-        savedGalleryCount = (try? await EntryMedia.galleryPhotos(entryID: id).count) ?? 0
+        savedGalleryCount = (try? await EntryMedia.galleryItems(entryID: id).count) ?? 0
         savedCover = try? await EntryMedia.cover(entryID: id)
       }
       if let cover = savedCover, !cover.legacy {
@@ -886,6 +936,33 @@ struct LogView: View {
     loadingPhoto = false
     detect = .idle
     cropCandidate = CropCandidate(source: source, image: image, original: original, lookup: lookup)
+  }
+
+  private func discardVideo(_ video: EntryMedia.VideoDraft) {
+    try? FileManager.default.removeItem(at: video.file)
+    if let id = video.reservationID {
+      Task { await EntryMedia.cancelVideoReservation(id) }
+    }
+  }
+
+  private func prepareVideo(_ item: PhotosPickerItem) async {
+    guard !loadingVideo, mediaCount < 10, membership.config.mediaVideoEnabled,
+          membership.info != nil, membership.canUse("media.video"),
+          mediaCount == 0 || membership.config.mediaGalleriesEnabled && membership.canUse("media.multiple") else {
+      return
+    }
+    pendingVideo = nil
+    photoError = nil
+    loadingVideo = true
+    defer { loadingVideo = false }
+    do {
+      guard let source = try await item.loadTransferable(type: EntryVideoSource.self) else {
+        throw CocoaError(.fileReadUnknown)
+      }
+      videoCandidate = VideoCandidate(source: source.url)
+    } catch {
+      photoError = "Couldn’t load this video. If it’s in iCloud, download it and try again."
+    }
   }
 
   private func addGalleryPhotos() {
@@ -1005,6 +1082,22 @@ struct LogView: View {
           savedGalleryCount = max(savedGalleryCount, hasPhoto ? 1 : 0) + 1
         } catch {
           self.error = "The entry was saved, but a photo couldn’t upload. Tap Save to retry."
+          return
+        }
+      }
+      while var video = preparedVideos.first {
+        do {
+          try await EntryMedia.saveVideo(&video, entryID: saved.id)
+          preparedVideos.removeFirst()
+          try? FileManager.default.removeItem(at: video.file)
+          savedGalleryCount = max(savedGalleryCount, hasPhoto ? 1 : 0) + 1
+        } catch {
+          if let index = preparedVideos.firstIndex(where: { $0.requestID == video.requestID }) {
+            preparedVideos[index] = video
+          } else {
+            discardVideo(video)
+          }
+          self.error = "The entry was saved, but a video couldn’t upload. Tap Save to retry."
           return
         }
       }
