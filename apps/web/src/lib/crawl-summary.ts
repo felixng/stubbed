@@ -4,7 +4,7 @@ import { type CrawlingState } from "@/lib/admin-crawl";
 
 export type StageCounts = { known: number; read: number; waiting?: number; stuck?: number; retrying?: number };
 export type AreaSummary = {
-  id: string; scope_key: string; started_at: string; enumeration_status: string;
+  id: string; scope_key: string; label?: string | null; started_at: string; enumeration_status: string;
   known: number; read: number; waiting: number; due: number; stuck: number; read_3h: number; last_read_at: string | null;
   stages: Record<string, { known: number; read: number }>;
 };
@@ -24,6 +24,8 @@ const dateTime = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "shor
 const AREA_NAMES: Record<string, string> = {
   "broadway-directory": "Broadway", "london-listing": "London", "venue-directory": "All venues", directory: "All venues",
 };
+// An area's label (an official site's host) when it has one, else the tidied scope key.
+export const areaLabel = (area: { scope_key: string; label?: string | null }) => area.label ?? areaName(area.scope_key);
 const SMALL = new Set(["of", "the", "in", "and", "at"]);
 export function areaName(scopeKey: string): string {
   if (AREA_NAMES[scopeKey]) return AREA_NAMES[scopeKey];
@@ -87,7 +89,7 @@ export function areaLines(summary: SourceSummary): AreaLine[] {
   return summary.areas.map(area => {
     const shows = area.stages.event ?? null;
     const counts = shows && shows.known > 0 ? `${n(shows.read)} of ${n(shows.known)} show pages` : `${n(area.read)} of ${n(area.known)} pages`;
-    const name = areaName(area.scope_key);
+    const name = areaLabel(area);
     if (area.waiting === 0 && area.known > 0) return { name, text: "done", state: "done" as const };
     if (area.enumeration_status === "enumerating" && area.read_3h > 0) return { name, text: `${counts} · reading now, still finding pages`, state: "finding" as const };
     if (area.read_3h > 0) return { name, text: `${counts} · reading now`, state: "reading" as const };

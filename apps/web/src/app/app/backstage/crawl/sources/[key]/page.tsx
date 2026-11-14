@@ -10,7 +10,7 @@ import { OfficialSource } from "@/components/app/admin/OfficialSource";
 import { CrawlBar } from "@/components/app/admin/CrawlBar";
 import { PipelineDiagram, type PipelineStep } from "@/components/app/admin/PipelineDiagram";
 import { getSources, getSummary } from "@/lib/crawl-hub-data";
-import { areaLines, areaName, sourceLine, stepsLine, type SourceSummary } from "@/lib/crawl-summary";
+import { areaLabel, areaLines, sourceLine, stepsLine, type SourceSummary } from "@/lib/crawl-summary";
 import {
   CRAWL_BUCKETS, CRAWL_BUCKET_LABELS, CRAWL_STAGES, CRAWL_STEPS, attentionItems, crawlBuckets, crawlSourceName, crawlingState,
   isCrawlSource, pagesHref, shortDate, shortDateTime, sourceKeyFromPath, sourceNamesOf, sourcePath, stepName,
@@ -213,7 +213,7 @@ async function Source({ params, searchParams }: Pick<PageProps<"/app/backstage/c
           <ul className="mt-2 flex flex-col divide-y divide-separator">
             {data.scans.filter(item => !item.is_current).map(item => (
               <li key={item.id} className="flex flex-wrap justify-between gap-x-4 py-2 text-subheadline">
-                <span>{areaName(item.scope_key)}, started {shortDate(item.started_at)}</span>
+                <span>{areaLabel(item)}, started {shortDate(item.started_at)}</span>
                 <Link href={`${sourcePath(key)}?area=${item.id}`} className="inline-flex min-h-11 items-center text-tint-text">View</Link>
               </li>
             ))}
@@ -244,7 +244,7 @@ async function Source({ params, searchParams }: Pick<PageProps<"/app/backstage/c
             </p>
             <div className="flex flex-wrap gap-2">
               {areas.map(area => (
-                <CrawlSourceControl key={area.id} source={key} operation="rediscover" scan={area.id} label={areas.length > 1 ? `Start a fresh pass: ${areaName(area.scope_key)}` : undefined}
+                <CrawlSourceControl key={area.id} source={key} operation="rediscover" scan={area.id} label={areas.length > 1 ? `Start a fresh pass: ${areaLabel(area)}` : undefined}
                   disabled={!source.collection_enabled || Boolean(source.operator_paused_at || source.paused_reason)} />
               ))}
             </div>

@@ -19,7 +19,7 @@ import {discoverLinks,searchCandidates} from './discover.mjs';
 import {writeRules} from './write-rules.mjs';
 import {checkFindings,rulesReader} from './rules.mjs';
 import {structuredReader} from './sources/theatre-site.mjs';
-import {dailyLimits,modelBudget,runPagesFor,sourceAllowance,sourceStop,stopReason,FAST_EXIT_MINUTES,MAX_RUN_PAGES,RUN_MINUTES} from './schedule.mjs';
+import {dailyLimits,modelBudget,runPagesFor,sourceAllowance,sourceStop,stopReason,FAST_EXIT_MINUTES,MAX_RUN_PAGES,OFFICIAL_SETUP_RUN_PAGES,RUN_MINUTES} from './schedule.mjs';
 import * as workerRunStore from './worker-runs.mjs';
 
 export function loopLimits(env=process.env){
@@ -169,9 +169,9 @@ export function frontierCrawlStep(siteStore){
   return {status:'ok',findings:0,note:'queued for reading'};
  }};
 }
-export async function main(env=process.env,{runId,scheduled,deadline,maxPages,dailyModelUsd,engine='legacy',publishRunId=true}={}) {
- // The frontier engine only sets sites up and repairs them; the page queue reads their pages (#544).
- if(engine==='frontier'&&(!scheduled||runId))throw new Error('The frontier engine runs only in scheduled mode');
+// Without a saved run this is the official setup lane: it finds and repairs sites, and the page queue reads their pages (#544, #546).
+// With a saved run (an admin start) it keeps the old per-site reader for the venues the admin chose.
+export async function main(env=process.env,{runId,scheduled,deadline,maxPages,dailyModelUsd}={}) {
  let run=runId?await readRun(runId):null;
  if(runId && (!run || run.status!=='queued'))throw new Error('Run is missing or already started');
  const limits=executionLimits(env,run);
@@ -230,23 +230,23 @@ export async function main(env=process.env,{runId,scheduled,deadline,maxPages,da
  const search=async query=>{const page=await fetchPage(`https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`);return page.status==='ok'?searchCandidates(page.html):page.status==='deferred'||page.status==='rate_limited'?page:[];};
  if(run)await startRun(run.id);
  else run=await createRun({pipeline:'discover',venueIds:[],method:'rules',branch:env.GITHUB_REF_NAME,commitSha:env.GITHUB_SHA,budgetUsd:limits.budgetUsd});
- if(env.GITHUB_ENV&&publishRunId)await appendFile(env.GITHUB_ENV,`CRAWL_RUN_ID=${run.id}\n`);
+ if(env.GITHUB_ENV)await appendFile(env.GITHUB_ENV,`CRAWL_RUN_ID=${run.id}\n`);
  const checkpoint=async summary=>finishRun(run.id,{status:'running',summary,costUsd:spend.usd});
  const seedFailures=[];
  const {crawl:frontierCrawl}=frontierCrawlStep(store);
  try {
-  if(engine==='frontier'){
+  if(!runId){
    for(const row of await store.sitesToSeed(25)){
     try{await store.seedOfficialSite(row,{refresh:false});}
     catch(error){seedFailures.push(`${row.id}: ${safeError(error,120)}`);}
    }
   }
-  const result=await runLoop({limits,deadline,deps:{exhausted:scheduled?()=>pages>=maxPages:undefined,reserveRepair:scheduled?store.reserveRepair:undefined,work:async count=>{const rows=runId?await store.selectedWork(run.venue_ids):engine==='frontier'?await store.setupWork(count):await store.work(count);if(!runId)await store.setRunVenues(run.id,rows.map(v=>v.id));return rows;},loadSite:store.loadWorkSite,model,manual:Boolean(runId),claim:(id,owner)=>store.claim(id,run.id,owner),release:store.release,
+  const result=await runLoop({limits,deadline,deps:{exhausted:scheduled?()=>pages>=maxPages:undefined,reserveRepair:scheduled?store.reserveRepair:undefined,work:async count=>{const rows=runId?await store.selectedWork(run.venue_ids):await store.setupWork(count);if(!runId)await store.setRunVenues(run.id,rows.map(v=>v.id));return rows;},loadSite:store.loadWorkSite,model,manual:Boolean(runId),claim:(id,owner)=>store.claim(id,run.id,owner),release:store.release,
    hasStructured:async site=>{const page=await fetchPage(site.whats_on_url);return page.status==='ok'&&checkFindings(page.html,structuredReader({url:site.whats_on_url,html:page.html},{venues:site.venues})??[]).some(f=>f.start_date);},
    discover:args=>discoverLinks({...args,fetchPage,lookupWebsite,search}),saveLinks:store.saveLinks,recordSite:store.recordSite,recordVenue:store.recordVenue,
    activatePrepared:(site,result)=>store.adoptVersion(site,result.ruleId,result.validation),
    writeRules:async args=>writeRules({...args,fetchPage,proposed:await store.proposed(args.site),saveVersion:(rules,author,check)=>store.saveVersion(args.site,rules,author,check),activate:(id,check)=>store.activate(args.site,id,check)}),
-   crawl:engine==='frontier'?frontierCrawl:(site,options)=>{const cache=Object.fromEntries((site.pages??[]).filter(p=>p.status==='ok'&&p.rule_id===site.rule_id).map(p=>[p.url,{etag:p.etag,lastModified:p.last_modified}]));return crawlPersistentSite({site,venues:site.venues,run,spend,readers:[rulesReader,structuredReader],fetchPage:makeFetcher(cache),bounded:scheduled,store:{page:savePage,site:saveSite},load:(url,findings)=>loadSite(run.id,url,findings),publish:()=>publish(run.id),...options});},checkpoint}});
+   crawl:!runId?frontierCrawl:(site,options)=>{const cache=Object.fromEntries((site.pages??[]).filter(p=>p.status==='ok'&&p.rule_id===site.rule_id).map(p=>[p.url,{etag:p.etag,lastModified:p.last_modified}]));return crawlPersistentSite({site,venues:site.venues,run,spend,readers:[rulesReader,structuredReader],fetchPage:makeFetcher(cache),bounded:scheduled,store:{page:savePage,site:saveSite},load:(url,findings)=>loadSite(run.id,url,findings),publish:()=>publish(run.id),...options});},checkpoint}});
   if(scheduled) result.pages=pages;
   result.spendUsd=spend.usd;
   result.runId=run.id;
@@ -256,29 +256,26 @@ export async function main(env=process.env,{runId,scheduled,deadline,maxPages,da
   await finishRun(run.id,{status:allFailed?'failed':'done',summary:{...result,progress,findings},costUsd:spend.usd});
   const words=value=>String(value).split('_').join(' ');
   const detail=site=>`${site.venue_name??site.venue_id}: ${site.status}${site.reason?` (${words(site.reason)}${site.detail?`: ${words(site.detail)}`:''})`:''}`;
-  const report=`# Crawl loop${engine==='frontier'?' (setup lane)':''}\n\n${result.sites.length} sites, ${findings} findings, ${result.searches} searches, $${spend.usd.toFixed(4)}.${allFailed?'\n\nEvery attempted theatre failed or needs attention.':''}\n\n${Object.entries(progress).map(([key,value])=>`- ${key}: ${value}`).join('\n')}\n\n${result.sites.map(site=>`- ${detail(site)}`).join('\n')}\n${seedFailures.map(line=>`- could not queue ${line}`).join('\n')}`;
+  const report=`# Crawl loop${runId?'':' (setup lane)'}\n\n${result.sites.length} sites, ${findings} findings, ${result.searches} searches, $${spend.usd.toFixed(4)}.${allFailed?'\n\nEvery attempted theatre failed or needs attention.':''}\n\n${Object.entries(progress).map(([key,value])=>`- ${key}: ${value}`).join('\n')}\n\n${result.sites.map(site=>`- ${detail(site)}`).join('\n')}\n${seedFailures.map(line=>`- could not queue ${line}`).join('\n')}`;
   console.log(report);if(env.GITHUB_STEP_SUMMARY)await appendFile(env.GITHUB_STEP_SUMMARY,report);
   result.allFailed=allFailed;
   return result;
  } catch(error){await finishRun(run.id,{status:'failed',summary:{...(await readRun(run.id))?.summary,error:'Loop interrupted'},costUsd:spend.usd});throw error;}
 }
-// Official sites in three lanes at the same time (#544). While both engines exist the totals the owner set are shared out:
-// the legacy lane gets half the pages and half the model budget, the setup lane a quarter of the pages and half the
-// model budget, and the reading lane (the page queue, no model) a quarter of the pages. One lane failing never stops the others.
+// Official sites in two lanes at the same time (#544, #546): setup (AI finds the page and writes or repairs the reading
+// rules; a fixed page allowance, the whole model budget) and reading (the page queue; the official page allowance, no model).
+// One lane failing never stops the other.
 export async function runOfficialLanes({env,row,pages,deadline,now,model,runOfficial,runSource,frontier}){
- const legacyPages=Math.ceil(pages/2),laneBudget=model.budgetUsd/2,quarter=Math.floor(pages/4);
  const lanes=[
-  ['legacy',()=>runOfficial(env,{scheduled:true,deadline,maxPages:legacyPages,dailyModelUsd:laneBudget})],
-  ['setup',()=>runOfficial(env,{scheduled:true,deadline,maxPages:quarter,dailyModelUsd:laneBudget,engine:'frontier',publishRunId:false})],
-  ['reading',()=>runSource(row,{stage:'all',maxPages:quarter,stopSignal:AbortSignal.timeout(Math.max(1,deadline-now()-90_000)),geocoder:null},frontier)],
+  ['setup',()=>runOfficial(env,{scheduled:true,deadline,maxPages:OFFICIAL_SETUP_RUN_PAGES,dailyModelUsd:model.budgetUsd})],
+  ['reading',()=>runSource(row,{stage:'all',maxPages:pages,stopSignal:AbortSignal.timeout(Math.max(1,deadline-now()-90_000)),geocoder:null},frontier)],
  ];
  const settled=await Promise.allSettled(lanes.map(([,run])=>run()));
  const value=index=>settled[index].status==='fulfilled'?settled[index].value??{}:{};
- const [legacy,setup,reading]=[value(0),value(1),value(2)];
+ const [setup,reading]=[value(0),value(1)];
  const errors=settled.flatMap((outcome,index)=>outcome.status==='rejected'?[`${lanes[index][0]} lane: ${safeError(outcome.reason,120)}`]:[]);
- const total=[legacy,setup,reading].reduce((sum,lane)=>sum+(lane.pages??0),0);
  return {
-  ...legacy,pages:total,spendUsd:(legacy.spendUsd??0)+(setup.spendUsd??0),runId:legacy.runId,
+  ...setup,pages:(setup.pages??0)+(reading.pages??0),spendUsd:setup.spendUsd??0,runId:setup.runId,
   requests:reading.requests,statuses:reading.statuses,
   frontier:{pages:reading.pages??0,requests:reading.requests??0,statuses:reading.statuses??{}},
   setup:{pages:setup.pages??0,sites:setup.sites?.length??0},

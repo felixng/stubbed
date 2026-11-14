@@ -3,7 +3,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { test } from "node:test";
 
 import {
-  CRON, CRON_MINUTES, DEFAULT_DAILY_SPEND_USD, DEFAULT_SOURCE_DAILY_PAGES, FAST_EXIT_MINUTES, INTERRUPTED_AFTER_MINUTES, JOB_TIMEOUT_MINUTES, MAX_RUN_PAGES, OFFICIAL_RUN_PAGES, SOURCE_RUN_PAGES,
+  CRON, CRON_MINUTES, DEFAULT_DAILY_SPEND_USD, DEFAULT_SOURCE_DAILY_PAGES, FAST_EXIT_MINUTES, INTERRUPTED_AFTER_MINUTES, JOB_TIMEOUT_MINUTES, MAX_RUN_PAGES, OFFICIAL_RUN_PAGES, OFFICIAL_SETUP_RUN_PAGES, SOURCE_RUN_PAGES,
   REREAD_DAYS, RETRY_DELAYS_SECONDS, RUN_MINUTES, dispatchFailing, dispatchText, durationText, nextActionText, nextRunAfter, nextRunPlan, pagesText, runAllowance, viaLabel,
   publishedRunDates, resumesAt, scheduleAlert, stopReasonText, todaysLimits, type CrawlDispatch, type CrawlSchedule,
 } from "@/lib/crawl-schedule";
@@ -21,6 +21,7 @@ test("the schedule the admin shows is the schedule the workflow and the crawler 
   assert.deepEqual(REREAD_DAYS, scripts.REREAD_DAYS);
   assert.equal(SOURCE_RUN_PAGES, scripts.SOURCE_RUN_PAGES);
   assert.equal(OFFICIAL_RUN_PAGES, scripts.OFFICIAL_RUN_PAGES);
+  assert.equal(OFFICIAL_SETUP_RUN_PAGES, scripts.OFFICIAL_SETUP_RUN_PAGES);
   assert.equal(MAX_RUN_PAGES, scripts.MAX_RUN_PAGES);
   assert.equal(FAST_EXIT_MINUTES, scripts.FAST_EXIT_MINUTES);
   assert.match(workflow, new RegExp(`vars.CRAWL_SOURCE_RUN_PAGES \\|\\| '${SOURCE_RUN_PAGES}'`));

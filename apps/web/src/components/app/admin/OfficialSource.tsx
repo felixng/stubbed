@@ -4,13 +4,13 @@ import { CrawlProgress } from "@/components/app/admin/CrawlProgress";
 import { NeedsAttention } from "@/components/app/admin/CrawlOverviewParts";
 import { Section } from "@/components/app/admin/CrawlShell";
 import { RefreshCrawl, StartCrawl } from "@/components/app/admin/StartCrawl";
-import { OFFICIAL_SITES_PATH, attentionItems, runPath, settingsLine, shortDateTime, sourceNamesOf, type CrawlOverview, type RunSettings } from "@/lib/admin-crawl";
+import { OFFICIAL_SITES_PATH, attentionItems, pagesHref, runPath, settingsLine, shortDateTime, sourceNamesOf, type CrawlOverview, type RunSettings } from "@/lib/admin-crawl";
 import { getSources } from "@/lib/crawl-hub-data";
 import { ownerContext } from "@/lib/supabase/data";
 
 type Run = RunSettings & { status: string; kind: string; created_at: string; summary: { findings?: number } | null; log_url: string | null };
 
-// The older, AI-assisted crawler: pick theatres, find their what's-on pages, write reading rules, crawl, then review findings.
+// Official theatre sites: AI finds the what's-on page and writes the reading rules once; after that the pages are read like any other source.
 // Its runs, sites and review all live under this source.
 export async function OfficialSource() {
   const { supabase } = await ownerContext();
@@ -34,13 +34,18 @@ export async function OfficialSource() {
   return (
     <>
       <p className="font-display text-title-2">
-        The older, AI-assisted crawler. {o.last_run_at ? `Last run ${shortDateTime(o.last_run_at)} (${o.last_run_status}).` : "No runs yet."}{" "}
+        AI finds each theatre’s page and writes the reading rules once; after that the pages are read like any other source. {o.last_run_at ? `Last run ${shortDateTime(o.last_run_at)} (${o.last_run_status}).` : "No runs yet."}{" "}
         {o.sites_needing_attention > 0 ? `${o.sites_needing_attention} of ${o.sites} sites need attention.` : "Nothing needs you."}
       </p>
 
       <NeedsAttention items={attentionItems(overview, [{ source_key: "official", paused_reason: null }], sourceNamesOf(sourceList ?? []))} />
 
       <CrawlProgress />
+
+      <Section id="pages" title="Pages">
+        <p className="text-subheadline text-label-secondary">Every page the crawler reads for these sites, with its status, by site.</p>
+        <Link href={pagesHref({ source: "official", step: "venue", page: 1 })} className="inline-flex min-h-11 items-center text-subheadline text-tint-text">Open pages</Link>
+      </Section>
 
       <Section id="sites" title="Sites and reading rules">
         <p className="text-subheadline text-label-secondary">Each theatre site, how it is read, and the rules that read it.</p>

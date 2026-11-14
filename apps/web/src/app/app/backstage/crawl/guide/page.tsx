@@ -5,7 +5,7 @@ import { CrawlShell, Section } from "@/components/app/admin/CrawlShell";
 import { CRAWL_BUCKETS, CRAWL_BUCKET_LABELS, CRAWL_HUB_PATH, CRAWL_STEPS } from "@/lib/admin-crawl";
 import {
   CRON_MINUTES, DEFAULT_DAILY_SPEND_USD, DEFAULT_RUN_SPEND_USD, DEFAULT_SOURCE_DAILY_PAGES, FAST_EXIT_MINUTES, JOB_TIMEOUT_MINUTES,
-  MAX_RUN_PAGES, OFFICIAL_RUN_PAGES, REREAD_DAYS, RETRY_DELAYS_SECONDS, RUN_MINUTES, SOURCE_RUN_PAGES,
+  MAX_RUN_PAGES, OFFICIAL_RUN_PAGES, OFFICIAL_SETUP_RUN_PAGES, REREAD_DAYS, RETRY_DELAYS_SECONDS, RUN_MINUTES, SOURCE_RUN_PAGES,
 } from "@/lib/crawl-schedule";
 
 export const metadata: Metadata = { title: "How the crawler works" };
@@ -59,8 +59,11 @@ export default function CrawlGuidePage() {
         </p>
         <p className="text-subheadline">
           Sources are read at the same time, each with its own allowance, because they are different sites and each site is still paced on its own.
-          A source reads up to {SOURCE_RUN_PAGES} pages a run ({OFFICIAL_RUN_PAGES} for the official sites), and the whole run stops after {RUN_MINUTES} minutes (the job is cut off at {JOB_TIMEOUT_MINUTES}).
+          A source reads up to {SOURCE_RUN_PAGES} pages a run ({OFFICIAL_RUN_PAGES} for the official sites, plus {OFFICIAL_SETUP_RUN_PAGES} for the lane where AI sets sites up), and the whole run stops after {RUN_MINUTES} minutes (the job is cut off at {JOB_TIMEOUT_MINUTES}).
           Stopping on time is a checkpoint: the source carries on in the next run.
+        </p>
+        <p className="text-subheadline">
+          Official theatre sites: AI finds the page and writes the reading rules once; after that the pages are read like any other source.
         </p>
         <div className="overflow-x-auto">
           <table className="w-full min-w-[30rem] border-collapse text-left text-subheadline">

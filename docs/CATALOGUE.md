@@ -82,8 +82,8 @@ Implemented with the switch off. The owner deferred live acceptance runs until c
 
 **#420 frontier.** `crawl_sources` holds adapter version, allowlisted hosts,
 minimum request interval and independent collection and publication switches.
-London Theatre and Playbill start with both switches off. The legacy
-official-site runner continues to use its existing controls and checkpoints.
+London Theatre and Playbill start with both switches off. (Since #536 official
+sites are read through the same queue; see "How the crawler is put together".)
 
 - `crawl_generations` identifies one scan per source and scope. Its completion
   timestamp records that all reached directory pages were acknowledged. Venue
@@ -127,10 +127,10 @@ claiming and cancels requests 90 seconds before its declared deadline.
 - `--dry-run` reads due tasks and proposes extractions without any mutations
   or model calls. It uses local pacing and respects observed database
   cooldowns. Run live dry runs separately from live collection for that host.
-- This slice installs the staged runner and an explicit scoped preview that
-  reuses the official structured reader. The existing official loop and
-  archive checkpoints continue to serve current manual and scheduled runs.
-  The publication queue has no consumer yet.
+- This slice installed the staged runner and an explicit scoped preview that
+  reused the official structured reader. (Superseded: the publication queue is
+  consumed every minute from the database, and official sites are read through
+  the queue; see "How the crawler is put together".)
 
 **#422 London Theatre.** The deterministic adapter starts at the source's
 venue directory and follows observed pagination. Each venue detail queues
@@ -297,6 +297,24 @@ Follow `supabase/scripts/sync-wikidata.mjs`: Node 24+, **no npm packages** (the 
 
 Rollout state, validation results and the operations runbook: [`CATALOGUE_ROLLOUT.md`](CATALOGUE_ROLLOUT.md).
 
+## How the crawler is put together (#536)
+
+**One queue.** Every page any source reads is a row in `crawl_tasks` (the frontier), partitioned by source and stage, one generation per scan. A page's result, the links found on it and its next due date are saved in one transaction (`finish_crawl_fetch`). Pages are not split into queues by kind or by source: the limit on speed is the gap between requests to one site, which separate queues would not change.
+
+**Three workers**, each limited by something different:
+
+| Worker | What limits it | Where it runs |
+|---|---|---|
+| Reading pages (every source, official sites included) | Politeness to each site | GitHub Actions at :17 and :47, started by `pg_cron` |
+| Publishing what was read into the catalogue | Nothing outside the database | Postgres, every minute (`catalogue-publication`) |
+| AI setup and repair for official sites | Model budget | GitHub Actions, its own lane of the same run |
+
+Postgres stays the queue (no message bus): a newly found link is inserted in the same transaction as its parent page, and "due again in 7 days" and "5 seconds per site" cannot be said to a bus.
+
+**Adding a source** costs one adapter file, its fixtures and one line in `sources/index.mjs`; AI is used only at that point, through the probe and the `add-source` skill (see "Adding a source"). AI is never used while the crawler runs, except in the setup lane for official sites, where it finds a site's what's-on page and writes or repairs its reading rules once; after that the pages are read like any other source.
+
+**What is still on the old code:** admin-started runs ("Crawl chosen theatres", `dispatch-run.mjs` with a saved `run_id`) and the model-reader pilot (`index.mjs`) still use `crawlPersistentSite` and `crawl_pages`, because they are the owner's review tool. Whether they should move to the queue is an open decision (see the follow-up issue filed with #546). No table, column or function was dropped; `crawl_sites.engine` stays as the rollback handle.
+
 ## Crawler admin map (#504)
 
 One entry in Backstage, **Catalogue crawler**, then a tree. Every page has one back link to its parent.
@@ -306,7 +324,7 @@ One entry in Backstage, **Catalogue crawler**, then a tree. Every page has one b
 | Hub | `/app/backstage/crawl` | Where are we, and what needs me? A headline sentence, one two-line row per source (percent and bar, whether it is moving, when it finishes, pages that need you), Needs attention only when something does, the member suggestion switches, and one line for the next and last run |
 | Source | `/app/backstage/crawl/sources/london-theatre`, `.../playbill` | The same summary line, bigger; fixes for what is stuck (Retry covers every area); an Areas list; the steps collapsed behind a one-line summary; switches; what it added to the catalogue; recent changes; cost; a fresh pass per area under Advanced |
 | Pages | `.../sources/<source>/pages?area=&step=&status=` | Every page found, by area (default All areas), step tab and status chip (done, to do, retrying, stuck), with what each page produced |
-| Official source | `/app/backstage/crawl/sources/official` | The older AI-assisted crawler: start a crawl, runs list, progress, link to sites |
+| Official source | `/app/backstage/crawl/sources/official` | Official theatre sites: the hub row shows pages read; this page has sites, the pages list, start-a-crawl for chosen theatres, and the runs list |
 | Official sites | `.../sources/official/sites` | Sites that need attention, reading rules |
 | Run review | `/app/backstage/crawl/runs/[id]` | Mark findings right or wrong, add missed titles, then publish and send to show review |
 | Run history | `/app/backstage/crawl/runs` | When the crawler runs and what limits it (the schedule card, the trigger and token state, today's limits), every run so far, and recent changes |
@@ -335,7 +353,8 @@ The crawler runs **twice an hour**, at :17 and :47 UTC. **Supabase starts it** (
 | Limit | Default | Repository variable |
 |---|---|---|
 | Pages per source per run | 150 (at most 400) | `CRAWL_SOURCE_RUN_PAGES` |
-| Pages per run, official sites | 50 (they use the model) | `CRAWL_OFFICIAL_RUN_PAGES` |
+| Pages per run, official sites (reading) | 50 | `CRAWL_OFFICIAL_RUN_PAGES` |
+| Pages per run, official setup lane (AI) | 25, the whole model budget | `OFFICIAL_SETUP_RUN_PAGES` in `schedule.mjs` |
 | One source only | the two above | `CRAWL_SOURCE_RUN_PAGES_PLAYBILL`, `_LONDON_THEATRE`, `_OFFICIAL` (empty or unset means the default; 0 pauses it) |
 | Pages per source, rolling 24 hours | 1,000 | `CRAWL_SOURCE_DAILY_PAGES` |
 | Model spend, rolling 24 hours | $2 | `CRAWL_DAILY_SPEND_USD` |
@@ -379,11 +398,11 @@ At the start of every run the worker copies the adapter's name, kind, hosts, pac
 
 ## Official sites: two lanes (#544)
 
-Official theatre sites are read by the page queue and set up by a small AI lane, decided per site by `crawl_sites.engine` (`legacy` or `frontier`). Sites on `legacy` keep working as before through the old per-site loop.
+Official theatre sites are read by the page queue and set up by a small AI lane, decided per site by `crawl_sites.engine` (`legacy` or `frontier`). Since #545 every site is on `frontier`, new sites default to it, and the old per-site loop runs only for admin-started runs.
 
 - **Reading lane (no AI).** A `frontier` site has one generation (`scope_key` = the site's uuid): its what's-on page and its archive's first page are `venue`-stage tasks. The official adapter reads them with the site's saved rules or structured data, checks the result against the task's previous extraction, queues the archive's next page, and `publish_official_findings` publishes the findings (see Publishing). A page that fails its checks fails at once and flags the site (`repair_requested_at`, `repair_reason`).
 - **Setup lane (AI).** `crawl_setup_work` lists `frontier` sites that are pending or flagged for repair. The existing loop (`runLoop`) finds the what's-on link and writes or repairs rules (at most three repairs per failing version, then `needs_attention`, as before); its crawl step only queues the site: `seed_official_site`, with a fresh generation after a repair.
-- **Shares while both engines exist.** Of the official page allowance the legacy lane gets half, the setup lane a quarter and the reading lane a quarter; the legacy and setup lanes get half the model budget each. The totals (50 pages, $1 a run, $2 a day) are unchanged.
+- **Allowances.** The reading lane gets the whole official page allowance (`CRAWL_OFFICIAL_RUN_PAGES`, 50). The setup lane gets its own 25 pages a run and the whole model budget. Both count as `official` for the rolling daily cap. (While both engines existed, #544 and #545, the pages were shared out half, a quarter and a quarter.)
 - **Admin-started runs** (a saved `run_id`) always use the old code for the venues the admin chose.
 - **Moving a site back:** write a migration with `update public.crawl_sites set engine = 'legacy' where id = '<site>'` (or all of them: `where engine = 'frontier'`). Nothing is deleted either way.
 

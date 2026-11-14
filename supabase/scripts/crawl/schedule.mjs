@@ -14,6 +14,9 @@ export const RETRY_DELAYS_SECONDS = [60, 300, 1800, 7200, 43200];
 // different hosts, and per-host pacing is unchanged). Stopping on time is a checkpoint, not a failure.
 export const SOURCE_RUN_PAGES = 150;
 export const OFFICIAL_RUN_PAGES = 50;
+// The official setup lane (AI finds the page and writes the rules) fetches few pages and is limited by money, not pages.
+// Reading official sites uses the whole official allowance above. Both lanes count as `official` for the daily cap.
+export const OFFICIAL_SETUP_RUN_PAGES = 25;
 export const MAX_RUN_PAGES = 400;
 // A start that finds the previous run finished this recently with nothing due for every source exits at once.
 export const FAST_EXIT_MINUTES = 10;

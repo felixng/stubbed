@@ -103,6 +103,7 @@ export type CrawlSource = {
 export type CrawlScan = {
   id: string;
   scope_key: string;
+  label?: string | null;
   enumeration_status: "enumerating" | "enumerated" | "not_applicable";
   started_at: string;
   completed_at: string | null;

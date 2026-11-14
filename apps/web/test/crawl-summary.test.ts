@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { areaLines, areaName, finishText, hubTotals, readingRate, sourceLine, stepsLine, type AreaSummary, type CrawlSummary, type SourceSummary } from "@/lib/crawl-summary";
+import { areaLabel, areaLines, areaName, finishText, hubTotals, readingRate, sourceLine, stepsLine, type AreaSummary, type CrawlSummary, type SourceSummary } from "@/lib/crawl-summary";
 import { crawlingState } from "@/lib/admin-crawl";
 
 const now = new Date("2026-11-12T23:20:00Z");
@@ -128,4 +128,10 @@ test("rate and finish estimates read the way a person says them", () => {
   assert.equal(finishText(100, 0, now), null);
   assert.equal(finishText(150, 100, now), "about 2 hours");
   assert.equal(finishText(100, 100, now), "about 1 hour");
+});
+
+test("an area with a label shows it; one without falls back to its tidied scope key", () => {
+  assert.equal(areaLabel({ scope_key: "b5460000-0000-0000-0000-000000000001", label: "almeida.co.uk" }), "almeida.co.uk");
+  assert.equal(areaLabel({ scope_key: "london-listing", label: null }), areaName("london-listing"));
+  assert.equal(areaLabel({ scope_key: "broadway-directory" }), "Broadway");
 });

@@ -9,6 +9,7 @@ export const RETRY_DELAYS_SECONDS = [60, 300, 1800, 7200, 43200] as const;
 // Each source has its own allowance per run, and sources are read at the same time.
 export const SOURCE_RUN_PAGES = 150;
 export const OFFICIAL_RUN_PAGES = 50;
+export const OFFICIAL_SETUP_RUN_PAGES = 25;
 export const MAX_RUN_PAGES = 400;
 export const FAST_EXIT_MINUTES = 10;
 export const RUN_MINUTES = 20;
