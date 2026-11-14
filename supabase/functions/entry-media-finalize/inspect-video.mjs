@@ -48,6 +48,12 @@ export async function inspectVideo(bytes) {
   const input = new Input({ source: new BufferSource(bytes), formats: [MP4] });
   try {
     if (await input.getFormat() !== MP4) throw new Error("MEDIA_VIDEO_CONTAINER");
+    // Allow technical encoder and MP4 creation fields used by the measured
+    // exporters. Descriptive tags and other raw metadata are disallowed.
+    const { creationTime: _creationTime, raw = {}, ...descriptive } = await input.getMetadataTags();
+    if (Object.keys(descriptive).length || Object.keys(raw).some(key => key !== "©too")) {
+      throw new Error("MEDIA_VIDEO_METADATA");
+    }
     const [video, audio, tracks] = await Promise.all([
       input.getVideoTracks(), input.getAudioTracks(), input.getTracks(),
     ]);
