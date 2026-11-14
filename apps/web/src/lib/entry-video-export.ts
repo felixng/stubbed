@@ -59,23 +59,26 @@ export async function exportEntryVideo(file: Blob, start: number, end: number,
         if (!conversion.isValid || conversion.discardedTracks.length) {
           useSoftware = true;
         } else {
-        conversion.onProgress = onProgress;
-        const cancel = () => { void conversion.cancel().catch(() => undefined); };
-        signal.addEventListener("abort", cancel, { once: true });
-        try {
+          conversion.onProgress = onProgress;
+          const cancel = () => { void conversion.cancel().catch(() => undefined); };
+          signal.addEventListener("abort", cancel, { once: true });
+          try {
+            signal.throwIfAborted();
+            await conversion.execute();
+          } finally {
+            signal.removeEventListener("abort", cancel);
+          }
           signal.throwIfAborted();
-          await conversion.execute();
-        } finally {
-          signal.removeEventListener("abort", cancel);
-        }
-        signal.throwIfAborted();
-        if (!target.buffer || target.buffer.byteLength > maxBytes) throw new Error("Choose a shorter video selection.");
-        display = new Blob([target.buffer], { type: "video/mp4" });
+          if (!target.buffer || target.buffer.byteLength > maxBytes) throw new Error("Choose a shorter video selection.");
+          display = new Blob([target.buffer], { type: "video/mp4" });
         }
       }
       if (!display) {
         const { exportVideoInSoftware } = await import("./entry-video-software");
-        display = await exportVideoInSoftware(file, start, end, signal, onProgress);
+        const hdr = await video.hasHighDynamicRange();
+        display = await exportVideoInSoftware(file, start, end, {
+          width: outputWidth, height: outputHeight, hdr, signal, onProgress,
+        });
       }
       if (display.size <= 0 || display.size > maxBytes) throw new Error("Choose a shorter video selection.");
       const output = new Input({ source: new BlobSource(display), formats: ALL_FORMATS });
