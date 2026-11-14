@@ -3,6 +3,7 @@ import { signPhotos } from "./entries";
 import type { renderPhotoCrop } from "./photo-crop";
 
 export const ENTRY_MEDIA_BUCKET = "entry-media";
+export const ENTRY_VIDEO_BUCKET = "entry-video";
 
 export type EntryPhotoDraft = Awaited<ReturnType<typeof renderPhotoCrop>> & {
   requestId: string;
@@ -62,15 +63,19 @@ export type GalleryItem = { id: string; url: string; kind: "photo" | "video"; po
 export async function signedEntryGallery(client: SupabaseClient, id: string): Promise<GalleryItem[]> {
   const rows = await entryGallery(client, id).catch(() => []);
   const paths = rows.filter((row) => !row.legacy).flatMap((row) =>
-    row.poster_path ? [row.display_path, row.poster_path] : [row.display_path]);
-  const [legacy, native] = await Promise.all([
+    row.kind === "video" ? (row.poster_path ? [row.poster_path] : []) : [row.display_path]);
+  const videoPaths = rows.filter((row) => row.kind === "video").map((row) => row.display_path);
+  const [legacy, native, video] = await Promise.all([
     signPhotos(client, rows.filter((row) => row.legacy).map((row) => row.display_path)),
     paths.length ? client.storage.from(ENTRY_MEDIA_BUCKET).createSignedUrls(paths, 3600) : null,
+    videoPaths.length ? client.storage.from(ENTRY_VIDEO_BUCKET).createSignedUrls(videoPaths, 3600) : null,
   ]);
   const signed = new Map(native?.data?.flatMap((row) =>
     row.path && row.signedUrl ? [[row.path, row.signedUrl] as const] : []));
+  const signedVideos = new Map(video?.data?.flatMap((row) =>
+    row.path && row.signedUrl ? [[row.path, row.signedUrl] as const] : []));
   return rows.flatMap((row) => {
-    const url = (row.legacy ? legacy : signed).get(row.display_path);
+    const url = (row.kind === "video" ? signedVideos : row.legacy ? legacy : signed).get(row.display_path);
     return url ? [{ id: row.id, kind: row.kind, url,
       poster: row.poster_path ? signed.get(row.poster_path) ?? null : null }] : [];
   });

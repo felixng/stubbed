@@ -3,7 +3,33 @@
 import { useRouter } from "next/navigation";
 import { reorderEntryGallery, type GalleryItem } from "@/lib/entry-media";
 import { createClient } from "@/lib/supabase/client";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+function GalleryVideo({ item }: { item: GalleryItem }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    const pauseWhenHidden = () => {
+      if (document.hidden) video.pause();
+    };
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) video.pause();
+    });
+    observer.observe(video);
+    document.addEventListener("visibilitychange", pauseWhenHidden);
+    return () => {
+      video.pause();
+      observer.disconnect();
+      document.removeEventListener("visibilitychange", pauseWhenHidden);
+    };
+  }, []);
+
+  return (
+    <video ref={videoRef} src={item.url} poster={item.poster ?? undefined}
+      controls muted playsInline preload="none" className="size-full object-contain" />
+  );
+}
 
 export function EntryGallery({ items, editableEntryId }: { items: GalleryItem[]; editableEntryId?: string }) {
   const router = useRouter();
@@ -51,8 +77,7 @@ export function EntryGallery({ items, editableEntryId }: { items: GalleryItem[];
     <section aria-label="Entry media" className="grid gap-2">
       <div className="aspect-square overflow-hidden rounded-md bg-black">
         {item.kind === "video" ? (
-          <video key={item.id} src={item.url} poster={item.poster ?? undefined} controls playsInline
-            className="size-full object-contain" />
+          <GalleryVideo key={item.id} item={item} />
         ) : (
           // Signed images are short-lived and already sized for display.
           // eslint-disable-next-line @next/next/no-img-element
