@@ -75,7 +75,9 @@ export async function exportEntryVideo(file: Blob, start: number, end: number,
       }
       if (!display) {
         const { exportVideoInSoftware } = await import("./entry-video-software");
-        const hdr = await video.hasHighDynamicRange();
+        // FFmpeg needs an identified transfer function for linear-light tone mapping.
+        const transfer: string | null | undefined = (await video.getColorSpace()).transfer;
+        const hdr = transfer === "pq" || transfer === "hlg";
         display = await exportVideoInSoftware(file, start, end, {
           width: outputWidth, height: outputHeight, hdr, signal, onProgress,
         });
