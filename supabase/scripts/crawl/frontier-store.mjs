@@ -25,6 +25,12 @@ export function createFrontierStore(db = (sql, timeout = 15_000) => runPsql(sql,
       return source;
     },
 
+    // A page failed its extraction checks: ask the setup lane to repair the site (frontier sites only).
+    async flagOfficialRepair(task, reason) {
+      const [flagged] = await db(`select to_jsonb(public.flag_official_site_repair(${uuidLiteral(task.id)}, ${sqlText(reason)}))`);
+      return flagged;
+    },
+
     // A generation's official site, its active rules and its venues; null when there is no site.
     async officialContext(generationId, siteId = null) {
       const [row] = await db(`select jsonb_build_object(

@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import {shortlistLinks,homepageNamesVenue,discoverLinks,searchCandidates} from './discover.mjs';
 import {writeRules,checkRules,trimmedHtml} from './write-rules.mjs';
 import {createModel} from './model.mjs';
-import {runLoop,loopLimits,runScheduled} from './loop.mjs';
+import {runLoop,loopLimits,runScheduled,runOfficialLanes,main,frontierCrawlStep} from './loop.mjs';
 const html=readFileSync(new URL('./fixtures/almeida-archive.html',import.meta.url),'utf8');
 const rules=JSON.parse(readFileSync(new URL('./almeida-rules.json',import.meta.url)));
 const venues=[{id:'v',name:'Almeida Theatre'}];
@@ -84,17 +84,36 @@ test('scheduled dispatch gives each source its own allowance, runs them together
  const seen=[];
  const env={CRAWL_LOOP_ENABLED:'true'};
  const frontier={source:async key=>({source_key:key,collection_enabled:true,operator_paused_at:key==='playbill'?'paused':null})};
- // Each source waits for the other to start, so a sequential loop would never finish.
- let started=0,release;const bothStarted=new Promise(resolve=>{release=resolve;});
- const meet=async()=>{if(++started===2)release();await Promise.race([bothStarted,new Promise((_,reject)=>setTimeout(()=>reject(new Error('sources ran one after another')),1000))]);};
+ // Each lane waits for the others to start, so a sequential loop would never finish.
+ let started=0,release;const allStarted=new Promise(resolve=>{release=resolve;});
+ const meet=async()=>{if(++started===4)release();await Promise.race([allStarted,new Promise((_,reject)=>setTimeout(()=>reject(new Error('sources ran one after another')),1000))]);};
  const result=await runScheduled({
   env,now,frontier,
   runSource:async(row,options)=>{await meet();seen.push([row.source_key,options.maxPages]);return {pages:12};},
-  runOfficial:async(_,options)=>{await meet();seen.push(['official',options.maxPages,options.deadline]);return {pages:options.maxPages};},
+  runOfficial:async(_,options)=>{await meet();seen.push(['official',options.maxPages,options.engine??'legacy',options.dailyModelUsd,options.deadline]);return {pages:options.maxPages};},
  });
- assert.deepEqual(seen.sort(),[['london_theatre',150],['official',50,1_200_000]],'each source has its own allowance and the whole 20 minutes');
- assert.equal(result.reduce((sum,row)=>sum+row.pages,0),62);
+ assert.deepEqual(seen.sort(),[['london_theatre',150],['official',12,'frontier',0.5,1_200_000],['official',25,'legacy',0.5,1_200_000],['official',12]].sort(),'each source has its own allowance and the whole 20 minutes; official is shared out as 25 + 12 + 12');
+ assert.equal(result.reduce((sum,row)=>sum+row.pages,0),12+25+12+12);
  assert.deepEqual(await runScheduled({env:{},frontier:{source:()=>assert.fail('Master switch must short circuit')}}),[]);
+});
+
+test('the three official lanes merge into one report, and a failing lane does not stop the others',async()=>{
+ const env={CRAWL_LOOP_ENABLED:'true'};
+ const frontier={source:async key=>({source_key:key,collection_enabled:true})};
+ const lanes=await runOfficialLanes({env,row:{source_key:'official'},pages:50,deadline:1000,now:()=>0,model:{budgetUsd:1},frontier,
+  runOfficial:async(_,options)=>options.engine==='frontier'?Promise.reject(new Error('setup lane broke')):{pages:20,spendUsd:0.25,runId:'run-legacy',sites:[{}]},
+  runSource:async()=>({pages:7,requests:9,statuses:{succeeded:7}})});
+ assert.equal(lanes.pages,27,'the lanes that finished add up');
+ assert.equal(lanes.runId,'run-legacy');
+ assert.equal(lanes.spendUsd,0.25);
+ assert.deepEqual(lanes.frontier,{pages:7,requests:9,statuses:{succeeded:7}});
+ assert.deepEqual(lanes.setup,{pages:0,sites:0});
+ assert.match(lanes.error,/setup lane: .*setup lane broke/);
+ const clean=await runOfficialLanes({env,row:{source_key:'official'},pages:50,deadline:1000,now:()=>0,model:{budgetUsd:1},frontier,
+  runOfficial:async(_,options)=>options.engine==='frontier'?{pages:10,sites:[{},{}]}:{pages:20,spendUsd:0.1,runId:'r'},runSource:async()=>({pages:5})});
+ assert.equal(clean.pages,35);
+ assert.deepEqual(clean.setup,{pages:10,sites:2});
+ assert.equal(clean.error,undefined);
 });
 
 test('a scheduled run can be limited to one seed scope of a named aggregate source',async()=>{
@@ -150,4 +169,43 @@ test('a failed source operation reports its error class and a stripped message, 
  const text=logs.join('\n');
  assert.match(text,/london_theatre: Source operation failed \(DB_TIMEOUT: Database operation timed out/);
  assert.doesNotMatch(text,/pw@|postgresql:/);
+});
+
+test('the frontier engine sets a pending site up and seeds it, and never reads its pages itself',async()=>{
+ const seeded=[];
+ const {crawl}=frontierCrawlStep({seedOfficialSite:async(site,options)=>{seeded.push([site.id,options.refresh]);}});
+ const deps=loopDeps([{id:'a'}]);deps.crawl=crawl;
+ const result=await runLoop({limits:config,deps});
+ assert.deepEqual(deps.events,['links','rules','ready'],'setup runs, the page-reading crawl does not');
+ assert.equal(result.sites[0].status,'done');
+ assert.deepEqual(seeded,[['s',false]]);
+});
+
+test('a repair-flagged frontier site is repaired once and then seeded with a fresh generation',async()=>{
+ const seeded=[];let attempts=0;
+ const step=frontierCrawlStep({seedOfficialSite:async(site,options)=>{seeded.push([site.id,options.refresh]);}});
+ const deps=loopDeps([{id:'a'}]);
+ deps.loadSite=async()=>({id:'s',rules,venues,pages:[],repair_attempts:0,repair_requested_at:'2026-11-13T00:00:00Z',repair_reason:'extraction: junk_titles'});
+ deps.crawl=step.crawl;deps.writeRules=async()=>({ok:true});deps.recordSite=async(_,s)=>{if(s.attempt)attempts++;};
+ const result=await runLoop({limits:config,deps});
+ assert.equal(result.sites[0].status,'done');
+ assert.equal(attempts,1,'one repair attempt');
+ assert.deepEqual(seeded,[['s',true]],'seeded once, with refresh');
+});
+
+test('a failed repair leaves the frontier site unseeded and records what the legacy engine would',async()=>{
+ const seeded=[];const statuses=[];
+ const step=frontierCrawlStep({seedOfficialSite:async()=>{seeded.push('seed');}});
+ const deps=loopDeps([{id:'a'}]);
+ deps.loadSite=async()=>({id:'s',rules,venues,pages:[],repair_attempts:0,repair_requested_at:'2026-11-13T00:00:00Z'});
+ deps.crawl=step.crawl;deps.writeRules=async()=>({failed:true,reason:'known_shows_missing'});deps.recordSite=async(_,s)=>statuses.push(s.status);
+ const result=await runLoop({limits:config,deps});
+ assert.deepEqual(seeded,[]);
+ assert.equal(result.sites[0].reason,'known_shows_missing');
+ assert.ok(statuses.includes('pending')||statuses.includes('needs_attention'));
+});
+
+test('the frontier engine only runs scheduled and never for a saved run',async()=>{
+ await assert.rejects(main({CRAWL_LOOP_ENABLED:'true'},{engine:'frontier',runId:'00000000-0000-0000-0000-000000000000',scheduled:true}),/only in scheduled mode/);
+ await assert.rejects(main({CRAWL_LOOP_ENABLED:'true'},{engine:'frontier'}),/only in scheduled mode/);
 });

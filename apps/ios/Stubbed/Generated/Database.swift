@@ -1655,12 +1655,15 @@ internal enum PublicSchema {
     internal let archiveSource: String?
     internal let archiveStatus: String
     internal let archiveUrl: String?
+    internal let engine: String
     internal let health: AnyJSON
     internal let id: UUID
     internal let lastCrawledAt: String?
     internal let linkSource: String?
     internal let reason: String?
     internal let repairAttempts: Int32
+    internal let repairReason: String?
+    internal let repairRequestedAt: String?
     internal let status: String
     internal let updatedAt: String
     internal let websiteUrl: String?
@@ -1669,12 +1672,15 @@ internal enum PublicSchema {
       case archiveSource = "archive_source"
       case archiveStatus = "archive_status"
       case archiveUrl = "archive_url"
+      case engine = "engine"
       case health = "health"
       case id = "id"
       case lastCrawledAt = "last_crawled_at"
       case linkSource = "link_source"
       case reason = "reason"
       case repairAttempts = "repair_attempts"
+      case repairReason = "repair_reason"
+      case repairRequestedAt = "repair_requested_at"
       case status = "status"
       case updatedAt = "updated_at"
       case websiteUrl = "website_url"
@@ -1685,12 +1691,15 @@ internal enum PublicSchema {
     internal let archiveSource: String?
     internal let archiveStatus: String?
     internal let archiveUrl: String?
+    internal let engine: String?
     internal let health: AnyJSON?
     internal let id: UUID?
     internal let lastCrawledAt: String?
     internal let linkSource: String?
     internal let reason: String?
     internal let repairAttempts: Int32?
+    internal let repairReason: String?
+    internal let repairRequestedAt: String?
     internal let status: String?
     internal let updatedAt: String?
     internal let websiteUrl: String?
@@ -1699,12 +1708,15 @@ internal enum PublicSchema {
       case archiveSource = "archive_source"
       case archiveStatus = "archive_status"
       case archiveUrl = "archive_url"
+      case engine = "engine"
       case health = "health"
       case id = "id"
       case lastCrawledAt = "last_crawled_at"
       case linkSource = "link_source"
       case reason = "reason"
       case repairAttempts = "repair_attempts"
+      case repairReason = "repair_reason"
+      case repairRequestedAt = "repair_requested_at"
       case status = "status"
       case updatedAt = "updated_at"
       case websiteUrl = "website_url"
@@ -1715,12 +1727,15 @@ internal enum PublicSchema {
     internal let archiveSource: String?
     internal let archiveStatus: String?
     internal let archiveUrl: String?
+    internal let engine: String?
     internal let health: AnyJSON?
     internal let id: UUID?
     internal let lastCrawledAt: String?
     internal let linkSource: String?
     internal let reason: String?
     internal let repairAttempts: Int32?
+    internal let repairReason: String?
+    internal let repairRequestedAt: String?
     internal let status: String?
     internal let updatedAt: String?
     internal let websiteUrl: String?
@@ -1729,12 +1744,15 @@ internal enum PublicSchema {
       case archiveSource = "archive_source"
       case archiveStatus = "archive_status"
       case archiveUrl = "archive_url"
+      case engine = "engine"
       case health = "health"
       case id = "id"
       case lastCrawledAt = "last_crawled_at"
       case linkSource = "link_source"
       case reason = "reason"
       case repairAttempts = "repair_attempts"
+      case repairReason = "repair_reason"
+      case repairRequestedAt = "repair_requested_at"
       case status = "status"
       case updatedAt = "updated_at"
       case websiteUrl = "website_url"

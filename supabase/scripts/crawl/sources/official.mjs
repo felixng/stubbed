@@ -54,6 +54,8 @@ export const official = {
   hosts: [], minIntervalMs: 2000, authority: 3, scheduled: false,
   version: 'official-v2', seeds: [],
   contextFor,
+  // A failed extraction asks for a repair instead of retrying (the setup lane repairs at most three times per failing version).
+  onInvalid: ({ task, reason, store }) => store.flagOfficialRepair(task, reason),
   parsers: {
     async venue({ url, html, context }) {
       const notes = [];

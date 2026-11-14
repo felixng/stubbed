@@ -1,7 +1,22 @@
 import {runPsql} from './db.mjs';
 import {jsonLiteral,uuidLiteral,readVenues} from './load.mjs';
 import {readSite} from './site-store.mjs';
+import {canonicalTaskUrl} from './frontier-url.mjs';
 export async function work(limit,db=runPsql){const [rows]=await db(`select public.crawl_work(${Math.max(0,Math.min(100,Number(limit)||0))})`);return rows;}
+// Frontier sites that need the AI lane (setup, or a repair the reader asked for).
+export async function setupWork(limit,db=runPsql){const [rows]=await db(`select public.crawl_setup_work(${Math.max(0,Math.min(100,Number(limit)||0))})`);return rows;}
+// Ready frontier sites with no current generation yet.
+export async function sitesToSeed(limit,db=runPsql){const [rows]=await db(`select public.official_sites_to_seed(${Math.max(0,Math.min(100,Number(limit)||0))})`);return rows;}
+// One generation per site: its what's-on page and its archive's first page as page-queue tasks.
+export async function seedOfficialSite(site,{refresh=false}={},db=runPsql){
+ const hostsOf=value=>{const host=new URL(value).hostname;return [host,host.startsWith('www.')?host.slice(4):`www.${host}`];};
+ const clean=value=>{try{return canonicalTaskUrl(value,{allowedHosts:hostsOf(value)});}catch{return null;}};
+ const whatsOn=clean(site.whats_on_url);
+ if(!whatsOn)throw new Error('The what\u2019s-on URL is not crawlable');
+ const archive=site.archive_url?clean(site.archive_url):null;
+ const [generation]=await db(`select to_jsonb(public.seed_official_site(${uuidLiteral(site.id)},${jsonLiteral(whatsOn)}#>>'{}',${archive?`${jsonLiteral(archive)}#>>'{}'`:'null'},${refresh?'true':'false'}))`);
+ return generation;
+}
 export async function loadWorkSite(venue,db=runPsql){const [site]=await readSite([venue.id],db);if(!site)return null;const [ids]=await db(`select coalesce(jsonb_agg(id),'[]'::jsonb) from public.venues where crawl_site_id=${uuidLiteral(site.id)}`);return {...site,venues:await readVenues(ids,db)};}
 export async function saveLinks(venue,links,db=runPsql){
  await db(`begin;
