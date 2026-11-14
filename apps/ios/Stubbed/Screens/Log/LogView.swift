@@ -32,6 +32,17 @@ struct LogView: View {
   @State private var preview: UIImage?
   @State private var existingPhoto: URL?
   @State private var photoItem: PhotosPickerItem?
+  @State private var videoItem: PhotosPickerItem?
+  @State private var pendingVideo: PhotosPickerItem?
+  @State private var resumeVideoPicker = false
+  @State private var videoCandidate: VideoCandidate?
+  @State private var preparedVideos: [URL] = []
+  @State private var loadingVideo = false
+
+  private struct VideoCandidate: Identifiable {
+    let id = UUID()
+    let source: URL
+  }
   @State private var galleryPicker = false
   @State private var resumeGalleryPicker = false
   @State private var gallerySelection: [PhotosPickerItem] = []
@@ -41,7 +52,7 @@ struct LogView: View {
   @State private var removedCover = false
   private var mediaCount: Int {
     let retainedCount = max(0, savedGalleryCount - (removedCover ? 1 : 0))
-    return max(retainedCount, hasPhoto ? 1 : 0) + additionalPhotos.count
+    return max(retainedCount, hasPhoto ? 1 : 0) + additionalPhotos.count + preparedVideos.count
   }
 
   @State private var photoError: String?
@@ -134,7 +145,7 @@ struct LogView: View {
   private var planned: Bool { Day.status(date, today: today) == .planned }
   private var offeredTrips: [Trip] { context.trips.filter { $0.covers(date) } }
   private var hasChanges: Bool {
-    if removedCover || !additionalPhotos.isEmpty { return true }
+    if removedCover || !additionalPhotos.isEmpty || !preparedVideos.isEmpty { return true }
     guard let editing else { return show != nil || venue != nil || rating != nil || !note.isEmpty || photo != nil }
     return show != ShowChoice(editing.show) || venue != editing.venue.map(VenueChoice.init) || date != editing.date
       || rating != editing.rating || note != (editing.note ?? "") || visibility != editing.visibility
@@ -187,6 +198,10 @@ struct LogView: View {
       }
     }
     .paywallHost(onDismiss: {
+      if resumeVideoPicker {
+        resumeVideoPicker = false
+        if let item = pendingVideo { Task { await prepareVideo(item) } }
+      }
       guard resumeGalleryPicker else { return }
       resumeGalleryPicker = false
       galleryPicker = true
@@ -203,6 +218,24 @@ struct LogView: View {
       if !pendingGallery.isEmpty { Task { await nextGalleryCrop() } }
     }) { candidate in
       EntryPhotoCropView(image: candidate.image, initialCrop: candidate.initialCrop) { acceptCrop($0, candidate: candidate) }
+    }
+    .onChange(of: videoItem) { _, item in
+      guard let item else { return }
+      videoItem = nil
+      if membership.canUse("media.video") && (mediaCount == 0 || membership.canUse("media.multiple")) {
+        Task { await prepareVideo(item) }
+      } else {
+        pendingVideo = item
+        paywall.present(source: .video) { resumeVideoPicker = true }
+      }
+    }
+    .sheet(item: $videoCandidate) { candidate in
+      EntryVideoTrimView(source: candidate.source) { preparedVideos.append($0) }
+        .onDisappear { try? FileManager.default.removeItem(at: candidate.source) }
+    }
+    .onDisappear {
+      for clip in preparedVideos { try? FileManager.default.removeItem(at: clip) }
+      preparedVideos.removeAll()
     }
     .interactiveDismissDisabled(hasChanges || importing != nil)
     .task { await load() }
@@ -359,6 +392,23 @@ struct LogView: View {
             }
             .font(.footnote)
             .foregroundStyle(.secondary)
+          }
+        }
+      }
+      if membership.config.mediaVideoEnabled && (mediaCount == 0 || membership.config.mediaGalleriesEnabled) {
+        PhotosPicker(selection: $videoItem, matching: .videos, preferredItemEncoding: .current) {
+          Label("Add video", systemImage: "video")
+        }
+        .disabled(mediaCount >= 10 || membership.info == nil || loadingVideo || saving)
+      }
+      if loadingVideo { ProgressView("Loading video…") }
+      ForEach(preparedVideos, id: \.self) { clip in
+        HStack {
+          Label("Video ready", systemImage: "video")
+          Spacer()
+          Button("Remove video", role: .destructive) {
+            preparedVideos.removeAll { $0 == clip }
+            try? FileManager.default.removeItem(at: clip)
           }
         }
       }
@@ -888,6 +938,26 @@ struct LogView: View {
     cropCandidate = CropCandidate(source: source, image: image, original: original, lookup: lookup)
   }
 
+  private func prepareVideo(_ item: PhotosPickerItem) async {
+    guard !loadingVideo, mediaCount < 10, membership.config.mediaVideoEnabled,
+          membership.info != nil, membership.canUse("media.video"),
+          mediaCount == 0 || membership.config.mediaGalleriesEnabled && membership.canUse("media.multiple") else {
+      return
+    }
+    pendingVideo = nil
+    photoError = nil
+    loadingVideo = true
+    defer { loadingVideo = false }
+    do {
+      guard let source = try await item.loadTransferable(type: EntryVideoSource.self) else {
+        throw CocoaError(.fileReadUnknown)
+      }
+      videoCandidate = VideoCandidate(source: source.url)
+    } catch {
+      photoError = "Couldn’t load this video. If it’s in iCloud, download it and try again."
+    }
+  }
+
   private func addGalleryPhotos() {
     guard mediaCount < 10, membership.config.mediaGalleriesEnabled, membership.info != nil else { return }
     if membership.canUse("media.multiple") {
@@ -971,6 +1041,10 @@ struct LogView: View {
 
   private func save() async {
     error = nil
+    guard preparedVideos.isEmpty else {
+      error = "Video upload is unavailable."
+      return
+    }
     guard let show else {
       return error = "Pick a show."
     }
