@@ -1,6 +1,6 @@
 import {
   ALL_FORMATS, BlobSource, BufferTarget, Conversion, Input, Mp4OutputFormat, Output,
-  VideoSampleSink, canEncodeAudio, canEncodeVideo,
+  canEncodeAudio, canEncodeVideo,
 } from "mediabunny";
 import type { EntryVideoDraft } from "./entry-video-upload";
 
@@ -32,9 +32,13 @@ export async function exportEntryVideo(file: Blob, start: number, end: number,
     let useSoftware = !await video.canDecode();
     const [width, height] = await Promise.all([video.getDisplayWidth(), video.getDisplayHeight()]);
     const scale = Math.min(1, 1280 / Math.max(width, height), 720 / Math.min(width, height));
+    if (!Number.isFinite(scale) || scale <= 0 || width * height > 4096 * 2160) {
+      throw new Error("Choose a video at 4K resolution or lower.");
+    }
     const outputWidth = Math.max(2, 2 * Math.floor(width * scale / 2));
     const outputHeight = Math.max(2, 2 * Math.floor(height * scale / 2));
     const encodeVideo = !useSoftware && await canEncodeVideo("avc", { width: outputWidth, height: outputHeight, bitrate: 3_000_000 });
+    if (!encodeVideo && scale < 1) useSoftware = true;
     if (encodeVideo && await input.getPrimaryAudioTrack() &&
         !await canEncodeAudio("aac", { numberOfChannels: 2, sampleRate: 48000, bitrate: 96_000 })) {
       aacEncoder ??= import("@mediabunny/aac-encoder").then(({ registerAacEncoder }) => registerAacEncoder())
@@ -69,8 +73,12 @@ export async function exportEntryVideo(file: Blob, start: number, end: number,
             signal.removeEventListener("abort", cancel);
           }
           signal.throwIfAborted();
-          if (!target.buffer || target.buffer.byteLength > maxBytes) throw new Error("Choose a shorter video selection.");
-          display = new Blob([target.buffer], { type: "video/mp4" });
+          if (!target.buffer) throw new Error("Couldn’t read the exported video.");
+          if (!encodeVideo && target.buffer.byteLength > maxBytes) {
+            useSoftware = true;
+          } else {
+            display = new Blob([target.buffer], { type: "video/mp4" });
+          }
         }
       }
       if (!display) {
@@ -96,30 +104,9 @@ export async function exportEntryVideo(file: Blob, start: number, end: number,
             Math.max(await track.getCodedWidth(), await track.getCodedHeight()) > 1280) {
           throw new Error("This browser couldn’t resize the video.");
         }
-        const sample = await new VideoSampleSink(track).getSample(await track.getFirstTimestamp());
-        if (!sample) throw new Error("Couldn’t create a video poster.");
-        try {
-          const [poster, thumb] = await Promise.all([1024, 256].map(async (size) => {
-            const canvas = document.createElement("canvas");
-            canvas.width = canvas.height = size;
-            const context = canvas.getContext("2d");
-            if (!context) throw new Error("Couldn’t create a video poster.");
-            const side = Math.max(sample.displayWidth, sample.displayHeight);
-            const scale = size / Math.min(sample.displayWidth, sample.displayHeight);
-            const width = sample.displayWidth * scale;
-            const height = sample.displayHeight * scale;
-            if (!side) throw new Error("Couldn’t create a video poster.");
-            sample.draw(context, (size - width) / 2, (size - height) / 2, width, height);
-            return new Promise<Blob>((resolve, reject) => canvas.toBlob((blob) => {
-              if (blob) resolve(blob);
-              else reject(new Error("Couldn’t create a video poster."));
-            }, "image/jpeg", 0.8));
-          }));
-          signal.throwIfAborted();
-          return { requestId: crypto.randomUUID(), display, poster, thumb };
-        } finally {
-          sample.close();
-        }
+        const [poster, thumb] = await createVideoPosters(display, signal);
+        signal.throwIfAborted();
+        return { requestId: crypto.randomUUID(), display, poster, thumb };
       } finally {
         output.dispose();
       }
@@ -127,5 +114,50 @@ export async function exportEntryVideo(file: Blob, start: number, end: number,
     throw new Error("Choose a shorter video selection.");
   } finally {
     input.dispose();
+  }
+}
+
+
+async function createVideoPosters(display: Blob, signal: AbortSignal) {
+  const video = document.createElement("video");
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = "auto";
+  const url = URL.createObjectURL(display);
+  try {
+    await new Promise<void>((resolve, reject) => {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(fail, 10_000);
+      function finish(error?: unknown) {
+        window.clearTimeout(timeout);
+        controller.abort();
+        if (error) reject(error);
+        else resolve();
+      }
+      function fail() { finish(new Error("Couldn’t decode the exported video for playback.")); }
+      signal.addEventListener("abort", () => finish(signal.reason), { signal: controller.signal });
+      video.addEventListener("loadeddata", () => finish(), { signal: controller.signal });
+      video.addEventListener("error", fail, { signal: controller.signal });
+      if (signal.aborted) finish(signal.reason);
+      else video.src = url;
+    });
+    const side = Math.min(video.videoWidth, video.videoHeight);
+    if (!side) throw new Error("Couldn’t create a video poster.");
+    return await Promise.all([1024, 256].map(async (size) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = size;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("Couldn’t create a video poster.");
+      context.drawImage(video, (video.videoWidth - side) / 2, (video.videoHeight - side) / 2,
+        side, side, 0, 0, size, size);
+      return new Promise<Blob>((resolve, reject) => canvas.toBlob((blob) => {
+        if (blob) resolve(blob);
+        else reject(new Error("Couldn’t create a video poster."));
+      }, "image/jpeg", 0.8));
+    }));
+  } finally {
+    video.removeAttribute("src");
+    video.load();
+    URL.revokeObjectURL(url);
   }
 }
