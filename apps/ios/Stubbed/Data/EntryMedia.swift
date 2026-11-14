@@ -70,21 +70,24 @@ enum EntryMedia {
     return rows.first
   }
 
-  struct GalleryPhoto: Identifiable, Sendable {
+  struct GalleryItem: Identifiable, Sendable {
     let id: UUID
     let url: URL
+    let video: URL?
   }
 
-  static func galleryPhotos(entryID: UUID) async throws -> [GalleryPhoto] {
+  static func galleryItems(entryID: UUID) async throws -> [GalleryItem] {
     struct Row: Decodable {
       let id: UUID
       let display_path: String
       let legacy: Bool
+      let kind: String
+      let poster_path: String?
     }
-    let rows: [Row] = try await supabase.from("entry_media").select("id,display_path,legacy")
-      .eq("entry_id", value: entryID).eq("state", value: "ready").eq("kind", value: "photo")
+    let rows: [Row] = try await supabase.from("entry_media").select("id,display_path,legacy,kind,poster_path")
+      .eq("entry_id", value: entryID).eq("state", value: "ready")
       .order("position").execute().value
-    let nativePaths = rows.filter { !$0.legacy }.map(\.display_path)
+    let nativePaths = rows.filter { !$0.legacy }.compactMap { $0.kind == "video" ? $0.poster_path : $0.display_path }
     let legacy = await Entries.signPhotos(rows.filter(\.legacy).map(\.display_path))
     var native: [String: URL] = [:]
     if !nativePaths.isEmpty {
@@ -93,9 +96,18 @@ enum EntryMedia {
         if case .success(let path, let url) = result { native[path] = url }
       }
     }
+    let videoPaths = rows.filter { $0.kind == "video" }.map(\.display_path)
+    var videos: [String: URL] = [:]
+    if !videoPaths.isEmpty, let signed = try? await supabase.storage.from("entry-video")
+      .createSignedURLs(paths: videoPaths, expiresIn: 3600) {
+      for result in signed {
+        if case .success(let path, let url) = result { videos[path] = url }
+      }
+    }
     return rows.compactMap { row in
-      let url = row.legacy ? legacy[row.display_path] : native[row.display_path]
-      return url.map { GalleryPhoto(id: row.id, url: $0) }
+      let path = row.poster_path ?? row.display_path
+      let url = row.legacy ? legacy[path] : native[path]
+      return url.map { GalleryItem(id: row.id, url: $0, video: videos[row.display_path]) }
     }
   }
 

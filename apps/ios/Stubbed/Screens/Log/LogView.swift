@@ -853,7 +853,7 @@ struct LogView: View {
       context = try await Entries.formContext(userId: userId)
       if !touchedVisibility { visibility = context.visibility }
       if let id = editing?.id {
-        savedGalleryCount = (try? await EntryMedia.galleryPhotos(entryID: id).count) ?? 0
+        savedGalleryCount = (try? await EntryMedia.galleryItems(entryID: id).count) ?? 0
         savedCover = try? await EntryMedia.cover(entryID: id)
       }
       if let cover = savedCover, !cover.legacy {
