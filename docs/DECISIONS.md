@@ -1667,6 +1667,11 @@ Reading an official site's pages moves to the page queue; the AI lane only sets 
 The C3 gate's premise is that the canary sites are known-good. One of the three, brasseriezedel.com (`/api/get_calendar.php`), answers 404 now (checked from a browser-like request and with the crawler's user agent), so it can never show a successful read and its frontier task would climb the retry ladder to `failed`. The gate's G1 and G2 would fail because of the site, not the engine. The issue was silent on this; the reading that changes the least live behaviour: put that one site back on the legacy lane (which repairs a moved link) and retire its frontier generation (tasks kept, not claimed), and take the next site by the same ranking (menierchocolatefactory.com, which answers 200) as the third canary. The gate restarts for that site; the other two canaries (Hampstead, Wyndham's) already read successfully.
 
 
+### Move every official site to the two lanes (2026-11-14, #545, epic #536, step C4)
+
+Data only, so a failed gate is one migration (no code revert): every site moves to `engine = 'frontier'` and new sites default to it. Sites in `needs_attention` move too and stay parked (the setup lane skips them as the old engine did; they wait for the owner or #509's Drop). Venues with no site move to the setup lane (`crawl_work` now takes only sites that are explicitly legacy; `crawl_setup_work` also takes no-site venues behind the same venue-level gate), because discovery of new sites is AI work and there must be exactly one place that does it. Counts before: needs_attention 78 and pending 21 (all legacy), ready 25 legacy plus 3 frontier (R = 28). Counts after the gate are on #545. Migration `20261114024937_official_sites_to_frontier.sql`.
+
+
 ## Entry media schema (#141)
 
 Gallery order and the ready cover are derived from one media collection. Private source references live in an owner-only relation, and native revision files live in a private bucket outside the legacy photo write policies. See [the media contract](MEDIA.md) for crop geometry, compatibility and the upload interface.
