@@ -6,3 +6,6 @@ node_modules/
 *.tsbuildinfo
 /tmp/
 supabase/scripts/crawl/.probe/
+
+# Generated local video conversion assets
+/apps/web/public/video-core/
