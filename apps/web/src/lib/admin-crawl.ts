@@ -245,6 +245,23 @@ export type CrawlOverview = {
   recent_actions: { at: string; source: string; operation: string; affected: number; who: string }[];
 };
 
+// A pasted link (crawl_link_requests): what the owner sees as its status, in plain words.
+export type CrawlLinkRequest = {
+  id: string; url: string; host: string; status: "new" | "working" | "done" | "unsupported" | "failed";
+  kind: "venue_directory" | "show_directory" | "show_page" | "unsupported" | null; note: string | null; created_at: string;
+};
+const linkKinds = { venue_directory: "A directory of venues", show_directory: "A directory of shows", show_page: "A show page" } as const;
+export function linkRequestText(row: Pick<CrawlLinkRequest, "status" | "kind" | "note">): string {
+  const what = row.kind && row.kind !== "unsupported" ? linkKinds[row.kind] : null;
+  if (row.status === "new") return "Waiting";
+  if (row.status === "working") return what ? `${what}: reading it` : "Reading it";
+  if (row.status === "unsupported") return `Not something we can read yet${row.note ? `: ${row.note}` : ""}`;
+  if (row.status === "failed") return `Couldn’t read it${row.note ? `: ${row.note}` : ""}`;
+  if (row.kind === "show_page") return "A show page: read on the next run";
+  if (what) return `${what}: set up, switched off until you turn it on`;
+  return "Done";
+}
+
 // "1 show page is retrying", "26 show pages are retrying".
 function attentionText(item: CrawlOverviewAttention) {
   const noun = `${n(item.n)} ${stepNoun[item.stage]}${item.n === 1 ? "" : "s"}`;

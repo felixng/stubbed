@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { attentionItems, crawlBuckets, crawlingState, crawlPagesFilters, hubHeadline, legacySourcesRedirect, pagesHref, publicationParkedReason, recentActionText, sourceKeyFromPath, sourcePath, sourceStatusSentence, summariseCrawlShow, summariseCrawlTask, rerunCommand, scoreLine, settingsLine, shareRight, sumScores, UUID } from "@/lib/admin-crawl";
+import { attentionItems, crawlBuckets, crawlingState, crawlPagesFilters, hubHeadline, legacySourcesRedirect, linkRequestText, pagesHref, publicationParkedReason, recentActionText, sourceKeyFromPath, sourcePath, sourceStatusSentence, summariseCrawlShow, summariseCrawlTask, rerunCommand, scoreLine, settingsLine, shareRight, sumScores, UUID } from "@/lib/admin-crawl";
 
 const names = { london_theatre: "London Theatre", playbill: "Playbill", official: "Official theatre sites" };
 const score = { right: 3, wrong: 1, unsure: 1, unreviewed: 2, findings: 7, missed: 2 };
@@ -164,4 +164,13 @@ test("a parked source shows one entry with a retry and no raw code in the headli
   assert.equal(item.text, "15 pages were read but could not be added to the catalogue");
   assert.equal(item.retryPublication, "london_theatre");
   assert.doesNotMatch(item.text, /42P01/);
+});
+
+test("a pasted link's status reads in plain words", () => {
+  assert.equal(linkRequestText({ status: "new", kind: null, note: null }), "Waiting");
+  assert.equal(linkRequestText({ status: "working", kind: null, note: null }), "Reading it");
+  assert.equal(linkRequestText({ status: "done", kind: "show_page", note: null }), "A show page: read on the next run");
+  assert.equal(linkRequestText({ status: "done", kind: "venue_directory", note: null }), "A directory of venues: set up, switched off until you turn it on");
+  assert.equal(linkRequestText({ status: "unsupported", kind: "unsupported", note: "the facts load with scripts" }), "Not something we can read yet: the facts load with scripts");
+  assert.equal(linkRequestText({ status: "failed", kind: null, note: null }), "Couldn’t read it");
 });
