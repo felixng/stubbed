@@ -132,18 +132,18 @@ export async function runFrontier({
 
   const pending = [];
   const seen = new Set();
-  function propose(task) {
+  function propose(task, site = task.site ?? null) {
     if (stage !== 'all' && task.stage !== stage) return;
     const key = `${task.stage} ${task.url}`;
     if (!seen.has(key)) {
       seen.add(key);
-      pending.push({ canonical_url: task.url, stage: task.stage });
+      pending.push({ canonical_url: task.url, stage: task.stage, site_id: site });
     }
   }
 
   if (dryRun) {
     for (const task of await store.preview(source.source_key, stage, scope, maxPages)) propose(task);
-    relevantSeeds.forEach(propose);
+    relevantSeeds.forEach(seed => propose(seed));
   } else {
     for (const seed of relevantSeeds) {
       if (stopSignal.aborted) break;
@@ -152,11 +152,32 @@ export async function runFrontier({
     if (reparse && !stopSignal.aborted) await store.reparse(source.source_key, scope);
   }
 
-  const fetchPage = createGuardedFetcher({
-    allowUrl: policy, request, minDelayMs: source.min_interval_ms, maxBytes: adapter.maxBytes,
-    onResponse: dryRun ? response => result.responses.push(response) : undefined,
-    gate: hostGate({ store, now, dryRun, onRequest: () => result.requests++ }),
-  });
+  // One guarded fetcher per distinct host list. An adapter without contextFor always uses the source's own list.
+  const gate = hostGate({ store, now, dryRun, onRequest: () => result.requests++ });
+  const fetchers = new Map();
+  function fetcherFor(hosts) {
+    const key = [...hosts].sort().join(',');
+    if (!fetchers.has(key)) {
+      fetchers.set(key, createGuardedFetcher({
+        allowUrl: value => canonicalTaskUrl(value, { allowedHosts: hosts }), request, minDelayMs: source.min_interval_ms, maxBytes: adapter.maxBytes,
+        onResponse: dryRun ? response => result.responses.push(response) : undefined, gate,
+      }));
+    }
+    return fetchers.get(key);
+  }
+  // Per-task context (an official site's rules and venues). Shared by generation for the run, except `previous`.
+  const contexts = new Map();
+  async function contextFor(task) {
+    if (!adapter.contextFor) return undefined;
+    const key = task.generation_id ?? task.site_id ?? 'none';
+    // Workers run side by side: the first task of a generation builds the shared part, the rest wait for it.
+    if (!contexts.has(key)) {
+      contexts.set(key, adapter.contextFor(task, store).then(full => { const { previous: _previous, ...shared } = full; return { shared, full }; }));
+      return (await contexts.get(key).catch(error => { contexts.delete(key); throw error; })).full;
+    }
+    const { shared } = await contexts.get(key);
+    return adapter.contextFor(task, store, shared);
+  }
   const owner = randomUUID();
 
   async function finishAttempt(task, outcome, nextAt, reason, countFailure = false) {
@@ -177,7 +198,9 @@ export async function runFrontier({
     const stopHeartbeat = dryRun ? () => {} : startHeartbeat(store, task, lease);
     try {
       const prior = task.has_extraction && task.parser_version === adapter.version;
-      const page = await fetchPage(task.canonical_url, {
+      const context = await contextFor(task);
+      const hosts = context?.allowedHosts ?? allowedHosts;
+      const page = await fetcherFor(hosts)(task.canonical_url, {
         etag: prior ? task.etag : null, lastModified: prior ? task.last_modified : null, signal, context: task,
       });
       signal.throwIfAborted();
@@ -194,18 +217,27 @@ export async function runFrontier({
       } else {
         const parse = adapter.parsers[task.stage];
         if (!parse) return await fail(task, 'Adapter does not support this stage');
-        const parsed = await parse({ url: page.url, html: page.html });
-        if (parsed?.status === 'invalid') return await fail(task, parsed.reason ?? 'Parser did not recognise the page');
+        const parsed = await parse({ url: page.url, html: page.html, ...(context ? { context } : {}) });
+        if (parsed?.status === 'invalid') {
+          const reason = parsed.reason ?? 'Parser did not recognise the page';
+          // The same page with the same rules gives the same result, so a parser can ask to skip the retry ladder.
+          const outcome = parsed.retry === false ? await finishAttempt(task, 'failed', null, reason, true) : await fail(task, reason);
+          if (adapter.onInvalid) {
+            try { await adapter.onInvalid({ task, reason, store }); }
+            catch { result.statuses.hook_failed = (result.statuses.hook_failed ?? 0) + 1; }
+          }
+          return outcome;
+        }
         // Venue pages without coordinates get a cached free geocode (worker only; failure leaves them as parsed).
         if (geocoder && task.stage === 'venue' && parsed?.observations) {
           parsed.observations = await geocodeVenueObservations(parsed.observations, geocoder);
         }
-        payload = { ...extraction(parsed, page.url, allowedHosts, task.stage), etag: page.etag, lastModified: page.lastModified };
+        payload = { ...extraction(parsed, page.url, hosts, task.stage), etag: page.etag, lastModified: page.lastModified };
       }
       signal.throwIfAborted();
       if (dryRun) {
         result.proposed.push({ url: task.canonical_url, stage: task.stage, ...payload });
-        payload.children?.forEach(propose);
+        payload.children?.forEach(child => propose(child, task.site_id ?? null));
         return 'succeeded';
       }
       return await store.acknowledge(task, adapter.version, payload) ? 'succeeded' : 'stale';
