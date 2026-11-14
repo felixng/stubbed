@@ -36,7 +36,7 @@ struct LogView: View {
   @State private var pendingVideo: PhotosPickerItem?
   @State private var resumeVideoPicker = false
   @State private var videoCandidate: VideoCandidate?
-  @State private var preparedVideos: [URL] = []
+  @State private var preparedVideos: [EntryMedia.VideoDraft] = []
   @State private var loadingVideo = false
 
   private struct VideoCandidate: Identifiable {
@@ -230,11 +230,11 @@ struct LogView: View {
       }
     }
     .sheet(item: $videoCandidate) { candidate in
-      EntryVideoTrimView(source: candidate.source) { preparedVideos.append($0) }
+      EntryVideoTrimView(source: candidate.source) { preparedVideos.append(.init(file: $0)) }
         .onDisappear { try? FileManager.default.removeItem(at: candidate.source) }
     }
     .onDisappear {
-      for clip in preparedVideos { try? FileManager.default.removeItem(at: clip) }
+      for clip in preparedVideos { try? FileManager.default.removeItem(at: clip.file) }
       preparedVideos.removeAll()
     }
     .interactiveDismissDisabled(hasChanges || importing != nil)
@@ -402,14 +402,15 @@ struct LogView: View {
         .disabled(mediaCount >= 10 || membership.info == nil || loadingVideo || saving)
       }
       if loadingVideo { ProgressView("Loading video…") }
-      ForEach(preparedVideos, id: \.self) { clip in
+      ForEach(preparedVideos, id: \.requestID) { clip in
         HStack {
           Label("Video ready", systemImage: "video")
           Spacer()
           Button("Remove video", role: .destructive) {
-            preparedVideos.removeAll { $0 == clip }
-            try? FileManager.default.removeItem(at: clip)
+            preparedVideos.removeAll { $0.requestID == clip.requestID }
+            try? FileManager.default.removeItem(at: clip.file)
           }
+          .disabled(saving)
         }
       }
       ForEach(Array(additionalPhotos.enumerated()), id: \.element.requestID) { index, item in
@@ -1041,10 +1042,6 @@ struct LogView: View {
 
   private func save() async {
     error = nil
-    guard preparedVideos.isEmpty else {
-      error = "Video upload is unavailable."
-      return
-    }
     guard let show else {
       return error = "Pick a show."
     }
@@ -1079,6 +1076,20 @@ struct LogView: View {
           savedGalleryCount = max(savedGalleryCount, hasPhoto ? 1 : 0) + 1
         } catch {
           self.error = "The entry was saved, but a photo couldn’t upload. Tap Save to retry."
+          return
+        }
+      }
+      while var video = preparedVideos.first {
+        do {
+          try await EntryMedia.saveVideo(&video, entryID: saved.id)
+          preparedVideos.removeFirst()
+          try? FileManager.default.removeItem(at: video.file)
+          savedGalleryCount = max(savedGalleryCount, hasPhoto ? 1 : 0) + 1
+        } catch {
+          if let index = preparedVideos.firstIndex(where: { $0.requestID == video.requestID }) {
+            preparedVideos[index] = video
+          }
+          self.error = "The entry was saved, but a video couldn’t upload. Tap Save to retry."
           return
         }
       }

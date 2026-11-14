@@ -1,4 +1,6 @@
+import AVFoundation
 import Foundation
+import UIKit
 import Supabase
 
 enum EntryMedia {
@@ -22,14 +24,14 @@ enum EntryMedia {
 
   private struct Asset: Encodable {
     let role: String
-    let content_type = "image/jpeg"
+    var content_type = "image/jpeg"
     let bytes: Int
   }
 
   private struct Request: Encodable {
     let p_entry_id: UUID
     let p_request_id: UUID
-    let p_kind = "photo"
+    var p_kind = "photo"
     let p_replace_media_id: UUID?
     let p_assets: [Asset]
 
@@ -132,6 +134,55 @@ enum EntryMedia {
     let path = "\(entryID.uuidString.lowercased())/\(mediaID.uuidString.lowercased())/\(retained.source_revision)/source.jpg"
     let data = try await supabase.storage.from(bucket).download(path: path)
     return RetainedPhoto(data: data, rectangle: [crop.crop_x, crop.crop_y, crop.crop_width, crop.crop_height])
+  }
+
+  struct VideoDraft {
+    let requestID = UUID()
+    let file: URL
+    var uploadLocation: URL?
+  }
+
+  static func saveVideo(_ video: inout VideoDraft, entryID: UUID) async throws {
+    struct VideoCompletion: Encodable { let reservation_id: UUID }
+    let bytes = try video.file.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
+    guard bytes > 0, bytes <= 15 * 1024 * 1024 else { throw CocoaError(.fileReadCorruptFile) }
+    let generator = AVAssetImageGenerator(asset: AVURLAsset(url: video.file))
+    generator.maximumSize = CGSize(width: 1024, height: 1024)
+    generator.appliesPreferredTrackTransform = true
+    let frame = try await generator.image(at: .zero).image
+    let derivatives = try [("poster", 1024), ("thumb", 256)].map { role, limit in
+      let edge = min(frame.width, frame.height)
+      guard let crop = frame.cropping(to: CGRect(x: (frame.width - edge) / 2,
+        y: (frame.height - edge) / 2, width: edge, height: edge)) else { throw Photo.Failure.unreadable }
+      let size = CGSize(width: min(edge, limit), height: min(edge, limit))
+      let format = UIGraphicsImageRendererFormat()
+      format.scale = 1
+      let data = UIGraphicsImageRenderer(size: size, format: format).jpegData(withCompressionQuality: 0.8) {
+        _ in UIImage(cgImage: crop).draw(in: CGRect(origin: .zero, size: size))
+      }
+      return (role, data)
+    }
+    let lease: Lease = try await supabase.rpc("reserve_entry_media", params: Request(
+      p_entry_id: entryID, p_request_id: video.requestID, p_kind: "video", p_replace_media_id: nil,
+      p_assets: [Asset(role: "display", content_type: "video/mp4", bytes: bytes)]
+        + derivatives.map { Asset(role: $0.0, bytes: $0.1.count) }
+    )).execute().value
+    guard lease.state != "finalized" else { return }
+    guard let path = lease.paths["display"] else { throw Photo.Failure.unreadable }
+    let token = try await supabase.auth.session.accessToken
+    try await EntryVideoUpload.upload(file: video.file, bytes: bytes, path: path,
+      token: token, location: &video.uploadLocation)
+    for (role, data) in derivatives {
+      guard let path = lease.paths[role] else { throw Photo.Failure.unreadable }
+      do {
+        try await supabase.storage.from(bucket).upload(path, data: data,
+          options: FileOptions(contentType: "image/jpeg", upsert: false))
+      } catch let error as StorageError where error.statusCode == "409" {
+        // Retry reuses the already uploaded immutable derivative.
+      }
+    }
+    let _: Result = try await supabase.functions.invoke("entry-media-finalize",
+      options: FunctionInvokeOptions(body: VideoCompletion(reservation_id: lease.reservation_id)))
   }
 
   static func savePhoto(_ photo: PhotoDraft, entryID: UUID) async throws {
