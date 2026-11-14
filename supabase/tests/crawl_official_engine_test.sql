@@ -12,7 +12,7 @@ insert into public.venues (id, name, city, whats_on_url) values
 update public.crawl_sites set engine = 'frontier', status = 'pending' where whats_on_url = 'https://engine-a.test/whats-on/';
 update public.crawl_sites set engine = 'frontier', status = 'ready', repair_requested_at = now(), repair_reason = 'x' where whats_on_url = 'https://engine-b.test/whats-on/';
 update public.crawl_sites set engine = 'frontier', status = 'needs_attention', repair_requested_at = now() where whats_on_url = 'https://engine-c.test/whats-on/';
-update public.crawl_sites set status = 'pending' where whats_on_url = 'https://engine-d.test/whats-on/';
+update public.crawl_sites set engine = 'legacy', status = 'pending' where whats_on_url = 'https://engine-d.test/whats-on/';
 update public.crawl_sites set engine = 'frontier', status = 'ready', archive_url = 'https://archive.engine-e.test/past/' where whats_on_url = 'https://engine-e.test/whats-on/';
 update public.crawl_sources set collection_enabled = true, paused_reason = null where source_key = 'official';
 
@@ -24,9 +24,9 @@ select ok(not has_function_privilege('authenticated', 'public.seed_official_site
 set local role service_role;
 select is((select jsonb_agg(w->>'name' order by w->>'name') from jsonb_array_elements(public.crawl_work(100)) w
   where w->>'name' in ('Pending Frontier','Flagged Frontier','Attention Frontier','Legacy Pending','Ready Frontier','No Site')),
-  '["Legacy Pending", "No Site"]'::jsonb, 'the legacy lane skips frontier sites and keeps venues with no site');
+  '["Legacy Pending"]'::jsonb, 'the legacy lane takes only venues whose site is explicitly legacy');
 select is((select jsonb_agg(w->>'name' order by w->>'name') from jsonb_array_elements(public.crawl_setup_work(100)) w),
-  '["Flagged Frontier", "Pending Frontier"]'::jsonb, 'the setup lane takes a pending and a repair-flagged frontier site, not needs_attention or legacy');
+  '["Flagged Frontier", "No Site", "Pending Frontier"]'::jsonb, 'the setup lane takes a pending and a repair-flagged frontier site and a venue with no site, not needs_attention or legacy');
 
 -- Flagging.
 reset role;
@@ -79,6 +79,11 @@ select is((select count(*) from public.crawl_generations g join public.crawl_sit
   where s.whats_on_url = 'https://engine-e.test/whats-on/'), 2::bigint, 'the old generation is kept');
 select ok((select repair_requested_at is null and repair_reason is null from public.crawl_sites where whats_on_url = 'https://engine-e.test/whats-on/'), 'seeding clears the repair flag');
 select ok((select count(*) from public.crawl_tasks) >= :old_tasks, 'old tasks are kept');
+
+-- New sites default to the frontier engine (#545).
+reset role;
+insert into public.crawl_sites (id, whats_on_url) values ('b5440000-0000-0000-0000-0000000000f1', 'https://engine-new.test/whats-on/');
+select is((select engine from public.crawl_sites where id = 'b5440000-0000-0000-0000-0000000000f1'), 'frontier', 'a new site defaults to the frontier engine');
 
 select * from finish();
 rollback;
